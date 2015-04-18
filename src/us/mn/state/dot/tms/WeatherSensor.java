@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2012  Minnesota Department of Transportation
- * Copyright (C) 2011  AHMCT, University of California
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package us.mn.state.dot.tms;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public interface WeatherSensor extends Device {
 
@@ -33,11 +34,23 @@ public interface WeatherSensor extends Device {
 	/** Get air temp in C (null for missing) */
 	Integer getAirTemp();
 
+	/** Get surface temps in C (never null; entries null for missing) */
+	Integer[] getSurfaceTemps();
+
+	/** Get subsurface temps in C (never null; entries null for missing) */
+	Integer[] getSubsurfaceTemps();
+
 	/** Get wind speed in KPH (null for missing) */
 	Integer getWindSpeed();
 
 	/** Get average wind direction in degrees (null for missing) */
 	Integer getWindDir();
+
+	/** Get wind gust speed in KPH (null for missing) */
+	Integer getGustSpeed();
+
+	/** Get wind gust direction in degrees (null for missing) */
+	Integer getGustDir();
 
 	/** Get precipitation rate in mm/hr (null for missing) */
 	Integer getPrecipRate();
@@ -47,4 +60,8 @@ public interface WeatherSensor extends Device {
 
 	/** Get the latest sample time stamp */
 	long getStamp();
+
+	/** Get the observation time of the latest sample */
+	long getObsTime();
+
 }

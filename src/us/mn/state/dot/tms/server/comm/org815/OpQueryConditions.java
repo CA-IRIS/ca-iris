@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +26,7 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  * Controller operation to query weather conditions from an ORG-815.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class OpQueryConditions extends OpOrg815 {
 
@@ -54,7 +56,8 @@ public class OpQueryConditions extends OpOrg815 {
 			sensor.setWindDirNotify(null);
 			sensor.setVisibilityNotify(null);
 			sensor.updateAccumulation(
-				Math.round(cond.getAccumulation() * 1000), now);
+				Math.round(cond.getAccumulation() * 1000),
+				now, true);
 			PrecipitationType pt = cond.getPrecipitationType();
 			if(pt != null)
 				sensor.setPrecipitationType(pt, now);

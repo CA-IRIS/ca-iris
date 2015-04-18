@@ -291,11 +291,13 @@ public class RwisRec {
 
 	/** Update the weather sensor precip accumulation */
 	private void updateAccumulation(WeatherSensorImpl ws) {
+		
+		//FIXME merge issue with UCD#430
 		if(precip_accum != null && precip_accum.value >= 0) {
 			ws.updateAccumulation(precip_accum.round(MICROMETERS),
-				create_time);
+				create_time, true);
 		} else
-			ws.updateAccumulation(null, create_time);
+			ws.updateAccumulation(null, create_time, true);
 	}
 
 	/** Update the weather sensor visibility */
