@@ -290,16 +290,49 @@ public class MultiRenderer extends MultiAdapter {
 		x--;
 		y--;
 		RasterGraphic rg = GraphicHelper.createRaster(g);
-		if (rg != null) {
-			try {
-				raster.copy(rg, x, y, fg);
+		try {
+			if (rg instanceof BitmapGraphic)
+				renderBitmap((BitmapGraphic)rg, fg, x, y);
+			else if (rg instanceof PixmapGraphic)
+				renderPixmap((PixmapGraphic)rg, x, y);
+			else
+				syntax_err = MultiSyntaxError.graphicNotDefined;
+		}
+		catch (IndexOutOfBoundsException e) {
+			// No MULTI syntax error for graphic too big
+			syntax_err = MultiSyntaxError.other;
+		}
+	}
+
+	/** Render a bitmap graphic onto the raster.
+	 * @param bg BitmapGraphic to render.
+	 * @param fg Foreground color.
+	 * @param x X-position on raster (0-based)
+	 * @param y Y-position on raster (0-based) */
+	private void renderBitmap(BitmapGraphic bg, DmsColor fg, int x, int y) {
+		int w = bg.getWidth();
+		int h = bg.getHeight();
+		for (int yy = 0; yy < h; yy++) {
+			for (int xx = 0; xx < w; xx++) {
+				if (bg.getPixel(xx, yy).isLit())
+					raster.setPixel(x + xx, y + yy, fg);
 			}
-			catch (IndexOutOfBoundsException e) {
-				// No MULTI syntax error for graphic too big
-				syntax_err = MultiSyntaxError.other;
+		}
+	}
+
+	/** Render a pixmap graphic onto the raster.
+	 * @param pg PixmapGraphic to render.
+	 * @param x X-position on raster (0-based)
+	 * @param y Y-position on raster (0-based) */
+	private void renderPixmap(PixmapGraphic pg, int x, int y) {
+		int w = pg.getWidth();
+		int h = pg.getHeight();
+		for (int yy = 0; yy < h; yy++) {
+			for (int xx = 0; xx < w; xx++) {
+				DmsColor c = pg.getPixel(xx, yy);
+				raster.setPixel(x + xx, y + yy, c);
 			}
-		} else
-			syntax_err = MultiSyntaxError.graphicNotDefined;
+		}
 	}
 
 	/** A block of text to be rendered */
@@ -335,11 +368,16 @@ public class MultiRenderer extends MultiAdapter {
 			int top = getTop(ex);
 			int y = 0;
 			Line pline = null;
+			boolean start = false;	// have we yet encountered a non-empty line?
 			for (Line line: lines) {
-				y += line.getLineSpacing(pline);
-				y += line.getHeight();
-				line.render(top + y);
-				pline = line;
+				if (!(line.isEmpty()))
+					start = true;
+				if (((justp != JustificationPage.MIDDLE) || start)) {
+					y += line.getLineSpacing(pline);
+					y += line.getHeight();
+					line.render(top + y);
+					pline = line;
+				}
 			}
 		}
 		int getExtraHeight() {
@@ -365,9 +403,12 @@ public class MultiRenderer extends MultiAdapter {
 		int getHeight() {
 			int h = 0;
 			Line pline = null;
+			boolean start = false;	// have we yet encountered a non-empty line?
 			for (Line line: lines) {
+				if (!(line.isEmpty()))
+					start = true;
 				int lh = line.getHeight();
-				if (lh > 0) {
+				if ((lh > 0) && ((justp != JustificationPage.MIDDLE) || start)) {
 					h += line.getLineSpacing(pline) + lh;
 					pline = line;
 				}
@@ -426,6 +467,12 @@ public class MultiRenderer extends MultiAdapter {
 			if (fragments.isEmpty())
 				fragments.addLast(new Fragment());
 			return fragments.peekLast();
+		}
+		boolean isEmpty() {
+			for (Fragment f: fragments)
+				if (!(f.isEmpty()))
+					return false;
+			return true;
 		}
 		void render(int base) throws InvalidMessageException {
 			for (Fragment f: fragments)
@@ -497,6 +544,12 @@ public class MultiRenderer extends MultiAdapter {
 			}
 			return w;
 		}
+		boolean isEmpty() {
+			for (Span s: spans)
+				if (!(s.isEmpty()))
+					return false;
+			return true;
+		}
 	}
 
 	/** A span of text to be rendered */
@@ -549,6 +602,9 @@ public class MultiRenderer extends MultiAdapter {
 		int getLineSpacing() {
 			assert font != null;
 			return (font != null) ? font.getLineSpacing() : 0;
+		}
+		boolean isEmpty() {
+			return ("".equals(span));
 		}
 		void render(int x, int base) throws InvalidMessageException {
 			int y = base - getHeight();
