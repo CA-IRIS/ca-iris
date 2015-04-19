@@ -358,11 +358,16 @@ public class MultiRenderer extends MultiAdapter {
 			int top = getTop(ex);
 			int y = 0;
 			Line pline = null;
+			boolean start = false;	// have we yet encountered a non-empty line?
 			for (Line line: lines) {
-				y += line.getSpacing(pline);
-				y += line.getHeight();
-				line.render(top + y);
-				pline = line;
+				if (!(line.isEmpty()))
+					start = true;
+				if (((justp != JustificationPage.MIDDLE) || start)) {
+					y += line.getSpacing(pline);
+					y += line.getHeight();
+					line.render(top + y);
+					pline = line;
+				}
 			}
 		}
 		int getExtraHeight() {
@@ -388,9 +393,12 @@ public class MultiRenderer extends MultiAdapter {
 		int getHeight() {
 			int h = 0;
 			Line pline = null;
+			boolean start = false;	// have we yet encountered a non-empty line?
 			for (Line line: lines) {
+				if (!(line.isEmpty()))
+					start = true;
 				int lh = line.getHeight();
-				if (lh > 0) {
+				if ((lh > 0) && ((justp != JustificationPage.MIDDLE) || start)) {
 					h += line.getSpacing(pline) + lh;
 					pline = line;
 				}
@@ -447,6 +455,12 @@ public class MultiRenderer extends MultiAdapter {
 			if (fragments.isEmpty())
 				fragments.addLast(new Fragment());
 			return fragments.peekLast();
+		}
+		boolean isEmpty() {
+			for (Fragment f: fragments)
+				if (!(f.isEmpty()))
+					return false;
+			return true;
 		}
 		void render(int base) throws InvalidMessageException {
 			for (Fragment f: fragments)
@@ -518,6 +532,12 @@ public class MultiRenderer extends MultiAdapter {
 			}
 			return w;
 		}
+		boolean isEmpty() {
+			for (Span s: spans)
+				if (!(s.isEmpty()))
+					return false;
+			return true;
+		}
 	}
 
 	/** A span of text to be rendered */
@@ -566,6 +586,9 @@ public class MultiRenderer extends MultiAdapter {
 		}
 		int getLineSpacing() {
 			return (font != null) ? font.getLineSpacing() : 0;
+		}
+		boolean isEmpty() {
+			return ("".equals(span));
 		}
 		void render(int x, int base) throws InvalidMessageException {
 			int y = base - getHeight();
