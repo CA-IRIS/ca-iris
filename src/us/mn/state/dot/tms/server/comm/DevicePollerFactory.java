@@ -41,6 +41,7 @@ import us.mn.state.dot.tms.server.comm.ntcip.NtcipPoller;
 import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
 import us.mn.state.dot.tms.server.comm.pelcod.PelcoDPoller;
+import us.mn.state.dot.tms.server.comm.pems.PemsPoller;
 import us.mn.state.dot.tms.server.comm.rtms.RtmsPoller;
 import us.mn.state.dot.tms.server.comm.sensys.SensysPoller;
 import us.mn.state.dot.tms.server.comm.ss105.SS105Poller;
@@ -145,6 +146,8 @@ public class DevicePollerFactory {
 			return createUrmsPoller();
 		case SENSYS:
 			return createSensysPoller();
+		case PEMS:
+			return createPemsPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -414,5 +417,10 @@ public class DevicePollerFactory {
 	/** Create a Sensys poller */
 	protected DevicePoller createSensysPoller() throws IOException {
 		return new SensysPoller(name, createSocketMessenger(TCP));
+	}
+
+	/** Create a PeMS poller */
+	protected DevicePoller createPemsPoller() throws IOException {
+		return new PemsPoller(name, createSocketMessenger(UDP));
 	}
 }
