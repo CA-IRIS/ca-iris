@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
  * Copyright (C) 2011  Berkeley Transportation Systems Inc.
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +18,7 @@ package us.mn.state.dot.tms.server;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.Math;
 import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -51,6 +53,8 @@ import us.mn.state.dot.tms.server.event.DetFailEvent;
  * Detector for traffic data sampling
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DetectorImpl extends DeviceImpl implements Detector {
 
@@ -525,13 +529,22 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 	 * vol_cache to get "last_volume" value. */
 	protected transient int last_volume = MISSING_DATA;
 
+	/** Timestamp of most recent 30-second sample period volume store. */
+	protected transient long last_volume_stamp = MISSING_DATA;
+
 	/** Scans from the last 30-second sample period.  FIXME: use
 	 * scn_cache to get "last_scans" value. */
 	protected transient int last_scans = MISSING_DATA;
 
+	/** Timestamp of most recent 30-second sample period scans store. */
+	protected transient long last_scans_stamp = MISSING_DATA;
+
 	/** Speed from the last 30-second sample period.  FIXME: use
 	 * spd_cache to get "last_speed" value. */
 	protected transient int last_speed = MISSING_DATA;
+
+	/** Timestamp of most recent 30-second sample period speed store. */
+	protected transient long last_speed_stamp = MISSING_DATA;
 
 	/** Get the current volume */
 	public int getVolume() {
@@ -559,7 +572,7 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 	}
 
 	/** Get the current raw flow rate (vehicles per hour) */
-	protected int getFlowRaw() {
+	public int getFlowRaw() {
 		int volume = getVolume();
 		if(volume >= 0) {
 			return Math.round(volume *
@@ -620,7 +633,7 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 	}
 
 	/** Get the current raw speed (miles per hour) */
-	protected float getSpeedRaw() {
+	public float getSpeedRaw() {
 		if(isSampling())
 			return last_speed;
 		else
@@ -645,6 +658,36 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 			return f.getSpeed();
 		else
 			return MISSING_DATA;
+	}
+
+	/**
+	 * Get timestamp of most recent volume store.
+	 * @return Timestamp as epoch value, or MISSING_DATA if not sampling
+	 */
+	public long getVolumeStamp() {
+		if (!isSampling())
+			return Constants.MISSING_DATA;
+		return last_volume_stamp;
+	}
+
+	/**
+	 * Get timestamp of most recent scans store.
+	 * @return Timestamp as epoch value, or MISSING_DATA if not sampling
+	 */
+	public long getScansStamp() {
+		if (!isSampling())
+			return Constants.MISSING_DATA;
+		return last_scans_stamp;
+	}
+
+	/**
+	 * Get timestamp of most recent speed store.
+	 * @return Timestamp as epoch value, or MISSING_DATA if not sampling
+	 */
+	public long getSpeedStamp() {
+		if (!isSampling())
+			return Constants.MISSING_DATA;
+		return last_speed_stamp;
 	}
 
 	/** Handle a detector malfunction */
@@ -711,6 +754,7 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 		vol_cache.add(vol);
 		if(vol.period == SAMPLE_PERIOD_SEC) {
 			last_volume = vol.value;
+			last_volume_stamp = vol.stamp;
 			/* FIXME: this shouldn't be needed */
 			last_speed = MISSING_DATA;
 		}
@@ -760,6 +804,7 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 		if(occ.period == SAMPLE_PERIOD_SEC) {
 			testScans(occ);
 			last_scans = n_scans;
+			last_scans_stamp = occ.stamp;
 		}
 		scn_cache.add(new PeriodicSample(occ.stamp,occ.period,n_scans));
 	}
@@ -783,8 +828,10 @@ public class DetectorImpl extends DeviceImpl implements Detector {
 	 * @param speed PeriodicSample containing speed data. */
 	public void storeSpeed(PeriodicSample speed) {
 		spd_cache.add(speed);
-		if(speed.period == SAMPLE_PERIOD_SEC)
+		if(speed.period == SAMPLE_PERIOD_SEC) {
 			last_speed = speed.value;
+			last_speed_stamp = speed.stamp;
+		}
 	}
 
 	/** Flush buffered data to disk */
