@@ -16,6 +16,8 @@
 package us.mn.state.dot.tms;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import us.mn.state.dot.tms.utils.SString;
 
 /**
@@ -316,4 +318,40 @@ public class DMSHelper extends BaseHelper {
 		}
 		return true;
 	}
+
+	/** Test if a DMS can be controlled by AWS. */
+	static public boolean isAwsControlled(DMS proxy) {
+		if (proxy == null)
+			return false;
+		return (proxy.getAwsAllowed() && proxy.getAwsControlled());
+	}
+
+	/** Test if a DMS has an AWS message deployed.
+	 * @param proxy DMS, may be null.
+	 * @return True if the deployed message is an AWS message,
+	 *         else false if not or it is a blank. */
+	static public boolean isAwsDeployed(DMS proxy) {
+		if(proxy == null)
+			return false;
+		SignMessage m = proxy.getMessageCurrent();
+		if(m != null) {
+			return m.getRunTimePriority() == DMSMessagePriority.AWS.
+				ordinal() && !SignMessageHelper.isBlank(m);
+		} else {
+			// messageCurrent should never be null, so this means
+			// the proxy has just been removed
+			return false;
+		}
+	}
+
+	/** Get an unsorted list of all dms */
+	static public List<DMS> getAll() {
+		final List<DMS> list = new LinkedList<DMS>();
+		Iterator<DMS> it = iterator();
+		while(it.hasNext()) {
+			list.add(it.next());
+		}
+		return list;
+	}
+
 }

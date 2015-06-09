@@ -33,6 +33,7 @@ import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SignText;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.client.widget.IAction;
@@ -185,7 +186,7 @@ public class PropMessages extends JPanel {
 		g2.addGap(UI.hgap);
 		g2.addComponent(font_height_lbl);
 		hg.addGroup(g2);
-		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean()) {
+		if (SystemAttributeHelper.awsEnabled()) {
 			hg.addComponent(aws_allowed_chk);
 			hg.addComponent(aws_control_chk);
 		}
@@ -213,7 +214,7 @@ public class PropMessages extends JPanel {
 		g2.addComponent(font_height_ilbl);
 		g2.addComponent(font_height_lbl);
 		vg.addGroup(g2);
-		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean()) {
+		if (SystemAttributeHelper.awsEnabled()) {
 			vg.addGap(UI.vgap);
 			vg.addComponent(aws_allowed_chk);
 			vg.addGap(UI.vgap);

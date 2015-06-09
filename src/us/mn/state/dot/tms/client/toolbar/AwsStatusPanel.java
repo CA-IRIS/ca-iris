@@ -15,8 +15,10 @@
  */
 package us.mn.state.dot.tms.client.toolbar;
 
+import java.awt.event.ActionEvent;
 import java.util.Iterator;
 import java.util.TreeMap;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
@@ -26,20 +28,23 @@ import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.dms.DmsCache;
+import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 import us.mn.state.dot.tms.utils.I18N;
 
 /**
- * A tool panel that displays the AWS status.
+ * A tool panel that displays which DMS are AWS deactivated and
+ * buttons to view current AWS messages.
  *
  * @author Michael Darter
  */
 public class AwsStatusPanel extends ToolPanel implements
 	ProxyListener<DMS>
 {
+
 	/** AWS abbreviation */
-	private static final String m_awsName = 
-		I18N.get("dms.aws.abbreviation");
+	private static final String AWS_NAME = I18N.get(
+		"dms.aws.abbreviation");
 
 	/** DMS abbreviation */
 	private static final String m_dmsAbbr = I18N.get("dms");
@@ -49,6 +54,15 @@ public class AwsStatusPanel extends ToolPanel implements
 
 	/** SystemAttribute type cache */
 	protected final TypeCache<SystemAttribute> m_sysattribs;
+
+	/** Button to view all AWS messages */
+	protected final JButton m_btnView = new JButton(
+		new IAction("dms.aws.status") {
+			@Override
+			protected void doActionPerformed(ActionEvent ev) {
+				m_desktop.show(new ViewAwsMsgsForm2());
+			}
+		});
 
 	/** The label used for AWS messages */
 	protected final JLabel m_awstext = new JLabel();
@@ -78,12 +92,15 @@ public class AwsStatusPanel extends ToolPanel implements
 
 	/** is this panel IRIS enabled? */
 	public static boolean getIEnabled() {
-		return SystemAttrEnum.DMS_AWS_ENABLE.getBoolean();
+		return SystemAttributeHelper.awsEnabled();
 	}
 
 	/** add components to panel */
 	protected void addComponents() {
 		add(m_awstext);
+		if(SystemAttributeHelper.awsEnabled())
+			add(m_btnView);
+
 	}
 
 	/** Update the AWS text on the toolbar and tooltip text */
@@ -99,19 +116,19 @@ public class AwsStatusPanel extends ToolPanel implements
 				tt = "";
 			// short list
 			} else if(deact_dms.size() < SHORT_LIST_LEN) {
-				mt = createRedHtml(m_awsName + 
+				mt = createRedHtml(AWS_NAME +
 					" deactivated: " + list);
 				tt = "";
 			// long list
 			} else {
-				mt = createRedHtml("Multiple " + m_dmsAbbr + 
-					" deactivated (" + 
+				mt = createRedHtml("Multiple " + m_dmsAbbr +
+					" deactivated (" +
 					deact_dms.size() + ")");
-				tt = createRedHtml(m_awsName + 
+				tt = createRedHtml(AWS_NAME +
 					" deactivated: " + list);
 			}
 		} else {
-			mt = createRedHtml(m_awsName + " is deactivated");
+			mt = createRedHtml(AWS_NAME + " is deactivated");
 			tt = "";
 		}
 		m_awstext.setText(mt);
@@ -124,11 +141,11 @@ public class AwsStatusPanel extends ToolPanel implements
 		final String htmlStop = "</html>";
 		final String redFontStart = "<font color=#FF0000>";
 		final String redFontStop = "</font>";
-		return htmlStart + "<b>" + redFontStart + argtext + 
+		return htmlStart + "<b>" + redFontStart + argtext +
 			redFontStop + "<b>" + htmlStop;
 	}
 
-	/** Generate a comma separated list based on the current list field. 
+	/** Generate a comma separated list based on the current list field.
 	 * @return A comma separated string of DMS ids or the empty string. */
 	protected String genDeactivatedDmsList() {
 		if(deact_dms.size() <= 0)
@@ -178,7 +195,7 @@ public class AwsStatusPanel extends ToolPanel implements
 		}
 	}
 
-	/** Internal class to listen for changes to system attributes. On 
+	/** Internal class to listen for changes to system attributes. On
 	 * client start-up, the dms_aws_enabled attribute is added, which
 	 * triggers the initial (and only) call to updateAWSText(). */
 	private class saListener implements ProxyListener<SystemAttribute> {
@@ -206,7 +223,7 @@ public class AwsStatusPanel extends ToolPanel implements
 
 	/** Is the specified system attribute the AWS enable attribute? */
 	private boolean isAwsEnableAttribute(SystemAttribute p) {
-		return SystemAttributeHelper.same(p, 
+		return SystemAttributeHelper.same(p,
 			SystemAttrEnum.DMS_AWS_ENABLE);
 	}
 

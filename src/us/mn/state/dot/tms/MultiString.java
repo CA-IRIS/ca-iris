@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2015  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,85 @@ public class MultiString implements Multi {
 			String oms = MultiParser.normalize(o.toString());
 			return ms.equals(oms);
 		}
-                return false;
-        }
+		return false;
+	}
+
+	/** Test if the MULTI string is equivalent to another MULTI string.
+	 *  This is a functional comparison based on attributes. */
+	public boolean isEquivalent(Object o) {
+		if(o instanceof MultiString)
+			return isEquivalent(this, (MultiString)o);
+		else if(o instanceof String)
+			return isEquivalent(toString(), (String)o);
+		else
+			return false;
+	}
+
+	/** Test if the MULTI string is equivalent to another MULTI string.
+	 *  This is a functional comparison based on attributes.
+	 * @param a MULTI string, may not be null.
+	 * @param b MULTI string, may not be null.
+	 * @return True if ms1 equals ms2 else false. */
+	public static boolean isEquivalent(String a, String b) {
+		return isEquivalent(new MultiString(a), new MultiString(b));
+	}
+
+	/** Test if the MULTI string is equivalent to another MULTI string.
+	 *  This is a functional comparison based on attributes.
+	 * @param a MultiString, may be null.
+	 * @param b MultiString, may be null.
+	 * @return True if ms1 equals ms2 else false. */
+	public static boolean isEquivalent(MultiString a, MultiString b) {
+		if(a == null && b == null)
+			return true;
+		if(a == null || b == null)
+			return false;
+		if(!Arrays.equals(a.getFonts(FontHelper.DEFAULT_FONT_NUM),
+			b.getFonts(FontHelper.DEFAULT_FONT_NUM)))
+		{
+			return false;
+		}
+		if(a.getNumPages() != b.getNumPages())
+			return false;
+		if(!Arrays.equals(a.getText(), b.getText()))
+			return false;
+		// page on-times
+		//FIXME UCD#520 test and validate, MnDOT changed to pull from system attributes
+		//Interval apond = PageTimeHelper.defaultPageOnInterval(a.singlePage());
+		//Interval bpond = PageTimeHelper.defaultPageOnInterval(b.singlePage());
+		Interval apond = PageTimeHelper.defaultPageOnInterval();
+		Interval bpond = PageTimeHelper.defaultPageOnInterval();
+		Interval[] apon = a.pageOnIntervals(apond);
+		Interval[] bpon = b.pageOnIntervals(bpond);
+		if (!Arrays.equals(apon, bpon))
+			return false;
+		return true;
+	}
+
+	/** Get message lines text as an array of strings. See the test
+	 *  cases for further information.
+	 * @return A string array containing text spans for each line. */
+	public String[] getText() {
+		final LinkedList<String> ls = new LinkedList<String>();
+		MultiParser.parse(toString(), new MultiAdapter() {
+			private int n_lines = 0;
+			public void addSpan(String span) {
+				// note: fields in span use ms prefix
+				n_lines = Math.max(n_lines, ms_line + 1);
+				while(ls.size() < (ms_page + 1) * n_lines)
+					ls.add("");
+				int i = ms_page * n_lines + ms_line;
+				String v = ls.get(i);
+				ls.set(i, trimJoin(v, span));
+			}
+		});
+		return ls.toArray(new String[0]);
+	}
+
+	static private String trimJoin(String a, String b) {
+		String j = a + " " + b;
+		return j.trim();
+	}
 
 	/** Calculate a hash code for the MULTI string */
 	@Override

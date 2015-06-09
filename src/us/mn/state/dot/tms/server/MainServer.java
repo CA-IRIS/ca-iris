@@ -33,6 +33,7 @@ import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.server.aws.AwsJob;
 import us.mn.state.dot.tms.server.event.BaseEvent;
 import us.mn.state.dot.tms.utils.HTTPProxySelector;
 import us.mn.state.dot.tms.utils.I18N;
@@ -65,6 +66,10 @@ public class MainServer {
 
 	/** Flush thread for disk writing jobs */
 	static public final Scheduler FLUSH = new Scheduler("flush");
+
+	/** AWS thread for AWS jobs */
+	static private final Scheduler aws_scheduler =
+		new Scheduler("aws");
 
 	/** Sample archive factory */
 	static public final SampleArchiveFactoryImpl a_factory =
@@ -105,6 +110,7 @@ public class MainServer {
 			BaseObjectImpl.loadAll(store, ns);
 			scheduleTimerJobs();
 			scheduleFlushJobs();
+			aws_scheduler.addJob(new AwsJob());
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);

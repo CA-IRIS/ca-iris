@@ -41,6 +41,7 @@ import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.camera.CameraPresetAction;
 import us.mn.state.dot.tms.client.widget.IAction;
@@ -186,7 +187,7 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 			add("device.op.status");
 			add(op_status_lbl, Stretch.LAST);
 		}
-		if(SystemAttrEnum.DMS_AWS_ENABLE.getBoolean()) {
+		if(SystemAttributeHelper.awsEnabled()) {
 			aws_control_chk.setHorizontalTextPosition(
 				SwingConstants.LEFT);
 			add(aws_control_chk, Stretch.LEFT);
