@@ -363,6 +363,8 @@ public class CameraDispatcher extends JPanel {
 	 *   <li> the sysattr "camera_ptz_return_home" is true
 	 *   <li> the camera is capable of indirect streaming
 	 *   <li> a HOME preset alias mapping exists for the camera
+	 *   <li> no other streams from this camera are active, including
+	 *        decoder connections
 	 * </ul>
 	 */
 	private void maybeReturnHome(Camera c) {
@@ -377,7 +379,12 @@ public class CameraDispatcher extends JPanel {
 			PresetAliasName.HOME);
 		if (p == null)
 			return;
-		c.setRecallPreset(p.intValue());
+
+		TimeSteward.sleep_well(250);	// kludge to avoid race
+		int numConns = vw_manager.getNumConns(c.getName());
+		// were we the last connection to this camera?
+		if (numConns == 0)
+			c.setRecallPreset(p.intValue());
 	}
 
 	/**
@@ -565,8 +572,12 @@ public class CameraDispatcher extends JPanel {
 		if (dec == null)
 			return;
 
-		// disconnect selected camera from all decoders
-		vw_manager.disconnectCam(cam);
+		// disconnect selected camera's current decoder, if any
+		String curDec = vw_manager.getDecoderByCamera(cam);
+		if (curDec != null) {
+			vw_manager.disconnectDec(curDec);
+			maybeReturnHome(selected);
+		}
 
 		if (!(NO_DECODER.equals(dec))) {
 			// connect selected camera to selected decoder

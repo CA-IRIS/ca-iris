@@ -57,12 +57,16 @@ public class VideoWallManager {
 	private final Session session;
 	private final String base_url;
 
-	// current status maps.  do not manipulate contents -- only change reference.
-	private volatile HashMap<String, String> decstat_map = new HashMap<String, String>();
-	private volatile HashMap<String, String> grouputil_map = new HashMap<String, String>();
+	// current status maps.
+	// do not manipulate contents; only change references.
+	private volatile Map<String, String> decstat_map
+		= new HashMap<String, String>();
+	private volatile Map<String, String> grouputil_map
+		= new HashMap<String, String>();
 
 	/** Scheduler that runs refresh job */
-	static private final Scheduler REFRESH = new Scheduler("VideoWallManager");
+	static private final Scheduler REFRESH
+		= new Scheduler("VideoWallManager");
 
 	static private final int REFRESH_PERIOD_SEC = 4;
 
@@ -86,7 +90,8 @@ public class VideoWallManager {
 		this.props = props;
 		base_url = getBaseUrl();
 		initialize();
-		updateStatus();		// initial update to prevent race with CameraDispatcher
+		// initial update to prevent race with CameraDispatcher
+		updateStatus();
 	}
 
 
@@ -109,7 +114,8 @@ public class VideoWallManager {
 				ip = InetAddress.getByName(ip).getHostAddress();
 				String port = props.getProperty(VIDEO_PORT);
 				if (port != null)
-					return "http://" + ip + ":" + port + "/video/switch";
+					return "http://" + ip + ":" + port
+						+ "/video/switch";
 				else
 					return "http://" + ip + "/video/switch";
 			}
@@ -129,24 +135,26 @@ public class VideoWallManager {
 		String url = null;
 		String resp = null;
 
+		Map<String, String> dmap = null;
+		Map<String, String> gumap = null;
+
 		// get decoder map
 		url = base_url + "?cmd=decstat";
 		resp = querySwitchServer(url);
-		if (resp == null)
-			return;
-		HashMap<String, String> dmap = decodeDecstatResponse(resp.trim());
+		if (resp != null)
+			dmap = decodeDecstatResponse(resp.trim());
 
 		// get grouputil map
 		url = base_url + "?cmd=grouputil";
 		resp = querySwitchServer(url);
-		if (resp == null)
-			return;
-		HashMap<String, String> gumap = decodeGrouputilResponse(resp.trim());
+		if (resp != null)
+			gumap = decodeGrouputilResponse(resp.trim());
 
-		if ((dmap != null) && (gumap != null)) {
+		// update at once
+		if (dmap != null)
 			decstat_map = dmap;
+		if (gumap != null)
 			grouputil_map = gumap;
-		}
 	}
 
 
@@ -157,6 +165,25 @@ public class VideoWallManager {
 
 	public Map<String, String> getGroupUtilMap() {
 		return (Map<String, String>)grouputil_map;
+	}
+
+	// synchronous get.  -1 on error.
+	public int getNumConns(String cid) {
+		if (cid == null)
+			return -1;
+		String url = base_url + "?cmd=camconns";
+		String resp = querySwitchServer(url);
+		if (resp == null)
+			return -2;
+		Map<String, Integer> ccmap = decodeCamconnsResponse(
+			resp.trim());
+		if (ccmap == null)
+			return -3;
+		Integer num = ccmap.get(cid);
+		if (num != null)
+			return num.intValue();
+		else
+			return 0;
 	}
 
 
@@ -170,6 +197,23 @@ public class VideoWallManager {
 		return cams;
 	}
 
+	// which camera is did connected to?
+	public String getCameraByDecoder(String did) {
+		if (did == null)
+			return null;
+		return decstat_map.get(did);
+	}
+
+	// which decoder is connected to cid?
+	public String getDecoderByCamera(String cid) {
+		if (cid == null)
+			return null;
+		for (String did : decstat_map.keySet()) {
+			if (cid.equals(decstat_map.get(did)))
+				return did;
+		}
+		return null;
+	}
 
 	// returns false on any detected error, else true.
 	public boolean connect(String did, String cid) {
@@ -187,7 +231,8 @@ public class VideoWallManager {
 	}
 
 
-	// returns false on any detected error or if camera is not known to be connectd to any decoders, else true.
+	// returns false on any detected error or if camera is not known to be
+	// connectd to any decoders, else true.
 	public boolean disconnectCam(String cid) {
 		if (cid == null)
 			return false;
@@ -222,7 +267,7 @@ public class VideoWallManager {
 	// returns null on error
 	private HashMap<String, String> decodeDecstatResponse(String r) {
 		HashMap<String, String> map = new HashMap<String, String>();
-		// e.g. DECSTAT\tdec1:,dec8:C002,dec6:,dec7:C07,dec4:,dec5:,dec2:,dec3:
+		// e.g. DECSTAT\tdec1:,dec3:C002,dec2:,dec4:C007
 		String[] fields1 = r.split("\t",-1);
 		if (fields1.length < 2)
 			return null;
@@ -234,6 +279,8 @@ public class VideoWallManager {
 					continue;
 				String did = kv[0];
 				String cid = kv[1];
+				if (cid.trim().equals(""))
+					cid = null;
 				map.put(did, cid);
 			}
 		}
@@ -246,8 +293,10 @@ public class VideoWallManager {
 		HashMap<String, String> map = new HashMap<String, String>();
 		// e.g. UTIL\tISDN:4/12,POTS:3/7
 		String[] fields1 = r.split("\t",-1);
-		if (fields1.length < 2)
+		if (fields1.length < 1)
 			return null;
+		if (fields1.length == 1)	// valid, empty response
+			return map;
 		String[] fields2 = fields1[1].split(",",-1);
 		if (fields2.length > 0) {
 			for (int i=0; i<fields2.length; ++i) {
@@ -263,7 +312,39 @@ public class VideoWallManager {
 	}
 
 
-	// perform SwitchServer query and return response as string, or null if error or non-200 respcode.
+	// returns null on error
+	private HashMap<String, Integer> decodeCamconnsResponse(String r) {
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		// e.g. CAMCONNS\tC002:3,C003:1
+		String[] fields1 = r.split("\t",-1);
+		if (fields1.length < 1)
+			return null;
+		if (fields1.length == 1)	// valid, empty response
+			return map;
+		String[] fields2 = fields1[1].split(",",-1);
+		if (fields2.length > 0) {
+			for (int i=0; i<fields2.length; ++i) {
+				String[] kv = fields2[i].split(":",2);
+				if (kv.length < 2)
+					continue;
+				String cid = kv[0];
+				Integer conns = null;
+				try {
+					conns = Integer.valueOf(kv[1]);
+				}
+				catch(NumberFormatException e) {
+					conns = null;
+				}
+				if (conns != null)
+					map.put(cid, conns);
+			}
+		}
+		return map;
+	}
+
+
+	// perform SwitchServer query and return response as string, or null
+	// if error or non-200 respcode.
 	private static String querySwitchServer(String u) {
 		URL url = null;
 		try {
@@ -276,7 +357,8 @@ public class VideoWallManager {
 		byte[] buf = new byte[0];
 		int respCode = -1;
 		try {
-			HttpURLConnection c = (HttpURLConnection)url.openConnection();
+			HttpURLConnection c = (HttpURLConnection)url
+				.openConnection();
 			respCode = c.getResponseCode();
 			in = c.getInputStream();
 			buf = readStream(in);
