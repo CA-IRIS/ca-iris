@@ -2299,8 +2299,12 @@ COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
 
 COPY iris.system_attribute (name, value) FROM stdin;
 camera_autoplay	true
+camera_cohu_conn_mode	0
+camera_cohu_max_idle	30
 camera_id_blank	
 camera_num_preset_btns	3
+camera_pelcod_conn_mode	0
+camera_pelcod_max_idle	30
 camera_preset_panel_columns	6
 camera_preset_panel_enable	false
 camera_preset_store_enable	false
