@@ -2401,6 +2401,7 @@ policy_admin	t
 device_admin	t
 system_admin	t
 user_admin	t
+weather_tab	t
 \.
 
 COPY iris.privilege (name, capability, pattern, priv_r, priv_w, priv_c, priv_d) FROM stdin;
@@ -2549,6 +2550,7 @@ PRV_0130	user_admin	connection/.*	f	f	f	t
 PRV_0131	gate_arm_control	gate_arm_array/.*/armStateNext	f	t	f	f
 PRV_0132	gate_arm_control	gate_arm_array/.*/ownerNext	f	t	f	f
 PRV_0136	gate_arm_control	gate_arm_array/.*/deviceRequest	f	t	f	f
+PRV_0140	weather_tab	weather_sensor(/.*)?	t	f	f	f
 \.
 
 COPY iris.role (name, enabled) FROM stdin;
@@ -2579,6 +2581,7 @@ administrator	plan_control
 administrator	plan_tab
 administrator	system_admin
 administrator	user_admin
+administrator	weather_tab
 operator	login
 operator	incident_tab
 operator	incident_control
@@ -2593,6 +2596,7 @@ operator	meter_control
 operator	plan_control
 operator	plan_tab
 operator	detection
+operator	weather_tab
 \.
 
 COPY iris.i_user (name, full_name, password, dn, role, enabled) FROM stdin;

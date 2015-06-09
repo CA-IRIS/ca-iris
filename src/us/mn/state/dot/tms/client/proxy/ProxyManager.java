@@ -372,7 +372,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Create a popup menu for the selected proxy object(s) */
-	private JPopupMenu createPopup() {
+	protected JPopupMenu createPopup() {
 		T proxy = s_model.getSingleSelection();
 		if (proxy != null)
 			return createPopupSingle(proxy);
