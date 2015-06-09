@@ -2190,6 +2190,7 @@ COPY iris.comm_protocol (id, description) FROM stdin;
 30	DR-500
 31	ADDCO
 32	TransCore E6
+33	CA RWIS
 \.
 
 COPY iris.cabinet_style (name, dip) FROM stdin;

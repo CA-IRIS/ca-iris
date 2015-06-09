@@ -30,6 +30,7 @@ import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoMessenger;
 import us.mn.state.dot.tms.server.comm.canoga.CanogaPoller;
+import us.mn.state.dot.tms.server.comm.carwis.CaRwisPoller;
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZPoller;
 import us.mn.state.dot.tms.server.comm.dinrelay.DinRelayPoller;
 import us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller;
@@ -155,6 +156,8 @@ public class DevicePollerFactory {
 			return createSensysPoller();
 		case PEMS:
 			return createPemsPoller();
+		case CA_RWIS:
+			return createCaRwisPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -447,5 +450,10 @@ public class DevicePollerFactory {
 	/** Create a PeMS poller */
 	protected DevicePoller createPemsPoller() throws IOException {
 		return new PemsPoller(name, createSocketMessenger(UDP));
+	}
+
+	/** Create a CA RWIS poller */
+	private DevicePoller createCaRwisPoller() throws IOException {
+		return new CaRwisPoller(name, createHttpFileMessenger());
 	}
 }

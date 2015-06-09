@@ -123,7 +123,10 @@ public enum CommProtocol {
 	ADDCO("ADDCO"),
 
 	/** TransCore E6 tag reader (32) */
-	TRANSCORE_E6("TransCore E6");
+	TRANSCORE_E6("TransCore E6"),
+
+	/** CA RWIS (33) */
+	CA_RWIS("CA RWIS");
 
 	/** Create a new comm protocol value */
 	private CommProtocol(String d) {
