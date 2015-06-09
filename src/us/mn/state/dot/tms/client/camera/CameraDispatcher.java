@@ -165,6 +165,8 @@ public class CameraDispatcher extends JPanel {
 		video_req = new VideoRequest(client_props, SIZE);
 		video_req.setSonarSessionId(session.getSessionId());
 		video_req.setRate(30);
+		video_req.setDuration(SystemAttrEnum.
+			CAMERA_STREAM_DURATION_SECS.getInt());
 		setLayout(new BorderLayout());
 		sel_model = manager.getSelectionModel();
 		model = session.getSonarState().getCamCache().getCameraModel();
