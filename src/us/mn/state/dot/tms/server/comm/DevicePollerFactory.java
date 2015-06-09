@@ -25,6 +25,7 @@ import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ModemImpl;
 import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
+import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
 import us.mn.state.dot.tms.server.comm.canoga.CanogaPoller;
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZPoller;
 import us.mn.state.dot.tms.server.comm.dinrelay.DinRelayPoller;
@@ -129,6 +130,8 @@ public class DevicePollerFactory {
 			return createSTCPoller();
 		case COHU_PTZ:
 			return createCohuPTZPoller();
+		case AXIS_PTZ:
+			return createAxisPTZPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -337,5 +340,10 @@ public class DevicePollerFactory {
 			return new CohuPTZPoller(name, sm, idle);
 		else
 			return new CohuPTZPoller(name, sm);
+	}
+
+	/** Create an Axis PTZ poller */
+	private DevicePoller createAxisPTZPoller() throws IOException {
+		return new AxisPTZPoller(name, createSocketMessenger(TCP));
 	}
 }
