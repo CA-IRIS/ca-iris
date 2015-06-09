@@ -178,12 +178,13 @@ public class CameraDispatcher extends JPanel {
 
 	static private final int DECMAP_UPDATE_PERIOD_MS = 2000;
 
-	/** Timer listener for decoder map update timer. */
+	/** Timer listener for video wall status update timer. */
 	private class DecMapUpdater implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// performed on event dispatch thread
 			updateDecMap();
 			updateOutputComboCA();	// needed, since mapping can change from elsewhere
+			updateCamControls();
 		}
 	};
 
@@ -349,7 +350,8 @@ public class CameraDispatcher extends JPanel {
 			cam_ptz.canRecallPreset() ||
 			cam_ptz.canStorePreset()
 		);
-		boolean streaming = stream_pnl.isStreaming();
+		int numConns = vw_manager.getNumConns(selected.getName());
+		boolean streaming = (numConns > 0);
 		boolean extOnly = !video_req.hasMJPEG(selected);
 		boolean blindOk = SystemAttrEnum.CAMERA_PTZ_BLIND.getBoolean();
 		boolean enable = (hasCtrl && hasPerms &&
