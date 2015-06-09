@@ -55,7 +55,7 @@ public class CameraManager extends ProxyManager<Camera> {
 
 	/** Create a new camera manager */
 	public CameraManager(Session s, GeoLocManager lm) {
-		super(s, lm, ItemStyle.ACTIVE);
+		super(s, lm, ItemStyle.ALL);
 	}
 
 	/** Get the sonar type name */
