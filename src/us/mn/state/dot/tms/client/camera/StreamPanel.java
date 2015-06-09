@@ -34,6 +34,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.Timer;
 import javax.swing.border.BevelBorder;
 import us.mn.state.dot.sched.Job;
@@ -86,6 +87,9 @@ public class StreamPanel extends JPanel {
 	private JButton play_button;
 	private JButton playext_button;
 
+	/** Progress bar for duration */
+	private final JProgressBar progress = new JProgressBar();
+
 	/** JLabel for displaying the stream details (codec, size, framerate) */
 	private final JLabel status_lbl = new JLabel();
 
@@ -123,6 +127,9 @@ public class StreamPanel extends JPanel {
 
 	/** Most recent streaming state.  State variable for event FSM. */
 	private boolean stream_state = false;
+
+	/** Current stream start time (epoch) */
+	private long start_time = 0;
 
 	/** Create a mouse PTZ */
 	static private MousePTZ createMousePTZ(CameraPTZ cam_ptz, Dimension sz,
@@ -162,6 +169,9 @@ public class StreamPanel extends JPanel {
 		mouse_ptz = createMousePTZ(cam_ptz, sz, screen_pnl);
 		status_pnl = createStatusPanel(vsz);
 		control_pnl = createControlPanel(vsz);
+		progress.setMinimum(0);
+		if (req.getDuration() == 0)
+			progress.setVisible(false);
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
@@ -200,6 +210,7 @@ public class StreamPanel extends JPanel {
 	private JPanel createStatusPanel(VideoRequest.Size vsz) {
 		JPanel p = new JPanel(new BorderLayout());
 		p.add(status_lbl, BorderLayout.WEST);
+		p.add(progress, BorderLayout.EAST);
 		p.setPreferredSize(UI.dimension(vsz.width, HEIGHT_STATUS_PNL));
 		p.setMinimumSize(UI.dimension(vsz.width, HEIGHT_STATUS_PNL));
 		return p;
@@ -304,9 +315,16 @@ public class StreamPanel extends JPanel {
 	private void updateStatus() {
 		STREAMER.addJob(new Job() {
 			public void perform() {
+				long now = System.currentTimeMillis();
+				int len = (int)((now - start_time) / 1000L);
+				int dur = video_req.getDuration();
 				VideoStream vs = stream;
-				if(vs != null && vs.isPlaying())
+				if ((vs != null) && vs.isPlaying()
+					&& ((dur == 0) || (len < dur)))
+				{
+					progress.setValue(len);
 					setStatusText(vs.getStatus());
+				}
 				else
 					clearStream();
 			}
@@ -342,6 +360,14 @@ public class StreamPanel extends JPanel {
 			JComponent screen = stream.getComponent();
 			screen.setPreferredSize(screen_pnl.getPreferredSize());
 			screen_pnl.add(screen);
+			start_time = System.currentTimeMillis();
+			int dur = video_req.getDuration();
+			if (dur > 0) {
+				progress.setMaximum(dur);
+				progress.setVisible(true);
+			}
+			else
+				progress.setVisible(false);
 			timer.start();
 			handleStateChange();
 		}
@@ -370,6 +396,7 @@ public class StreamPanel extends JPanel {
 			vs.dispose();
 			stream = null;
 		}
+		progress.setValue(0);
 		setStatusText(null);
 		handleStateChange();
 	}

@@ -133,6 +133,19 @@ public class VideoRequest {
 		return size;
 	}
 
+	/** Duration of stream (seconds); 0 implies infinite */
+	private int duration = 0;
+
+	/** Get the requested stream duration in seconds */
+	public int getDuration() {
+		return duration;
+	}
+
+	/** Set the stream duration in seconds */
+	public void setDuration(int d) {
+		duration = d;
+	}
+
 	/** The base URL of the video server */
 	private final String base_url;
 
