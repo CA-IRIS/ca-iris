@@ -34,9 +34,14 @@ import javax.swing.Timer;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.TableColumn;
+import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.CameraHelper;
+import us.mn.state.dot.tms.PresetAliasHelper;
+import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SiteDataHelper;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.widget.AbstractForm;
-
 
 /**
  * Form that allows management of a video wall.
@@ -217,29 +222,51 @@ public class VideoWallForm extends AbstractForm {
 		cameraBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JComboBox cb = (JComboBox)e.getSource();
-				String cDesc = (String)cb.getSelectedItem();
+				String camDesc = (String)cb.getSelectedItem();
 				int row = mapping_table.getSelectedRow();
 				if (row < 0)
 					return;
 				String did = (String)(mapping_table.getValueAt(
 					row, MAP_TABLE_DEC_COL_IDX));
-				if ((cDesc != null)
-					&& (!("".equals(cDesc.trim()))))
+				// disconnect decoder if connected
+				String curCid = vw_manager.getCameraByDecoder(did);
+				if (curCid != null) {
+					vw_manager.disconnectDec(did);
+					TimeSteward.sleep_well(250);	// kludge to avoid race
+					int numConns = vw_manager.getNumConns(curCid);
+					if (numConns == 0)
+						maybeReturnHome(curCid);
+				}
+				// connect decoder to new camera, if one selected
+				if ((camDesc != null)
+					&& (!("".equals(camDesc.trim()))))
 				{
 					String cid = SiteDataHelper
-						.getGeoLocNameBySiteName(cDesc);
+						.getGeoLocNameBySiteName(camDesc);
 					if (cid == null)
-						cid = cDesc;
+						cid = camDesc;
 					vw_manager.connect(did, cid);
-				}
-				else {
-					vw_manager.disconnectDec(did);
 				}
 			}
 		});
 		return table;
 	}
 
+	// refactor, merge with similar routine in CameraDispatcher; move elsewhere.
+	private void maybeReturnHome(String cid) {
+		if (cid == null)
+			return;
+		Camera c = CameraHelper.lookup(cid);
+		if (c == null)
+			return;
+		if (!SystemAttrEnum.CAMERA_PTZ_RETURN_HOME.getBoolean())
+			return;
+		Integer p = PresetAliasHelper.getPreset(c,
+			PresetAliasName.HOME);
+		if (p == null)
+			return;
+		c.setRecallPreset(p.intValue());
+	}
 
 	// kludge
 	private void updatePanel() {
