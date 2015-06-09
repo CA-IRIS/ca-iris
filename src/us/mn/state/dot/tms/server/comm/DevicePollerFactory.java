@@ -2,7 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2011-2014  Minnesota Department of Transportation
  * Copyright (C) 2012  Iteris Inc.
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import us.mn.state.dot.tms.CommProtocol;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ModemImpl;
+import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.canoga.CanogaPoller;
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZPoller;
 import us.mn.state.dot.tms.server.comm.dinrelay.DinRelayPoller;
@@ -257,7 +259,15 @@ public class DevicePollerFactory {
 
 	/** Create a PelcoD poller */
 	private DevicePoller createPelcoDPoller() throws IOException {
-		return new PelcoDPoller(name, createSocketMessenger(UDP));
+		Messenger sm = createSocketMessenger(UDP);
+		int mode = SystemAttrEnum.CAMERA_PELCOD_CONN_MODE.getInt();
+		int idle = SystemAttrEnum.CAMERA_PELCOD_MAX_IDLE.getInt();
+		if (mode == ConnMode.PERSIST.ordinal())
+			return new PelcoDPoller(name, sm);
+		else if (mode == ConnMode.AUTO.ordinal())
+			return new PelcoDPoller(name, sm, idle);
+		else
+			return new PelcoDPoller(name, sm);
 	}
 
 	/** Create a Manchester poller */
@@ -318,6 +328,14 @@ public class DevicePollerFactory {
 
 	/** Create a Cohu PTZ poller */
 	private DevicePoller createCohuPTZPoller() throws IOException {
-		return new CohuPTZPoller(name, createSocketMessenger(TCP));
+		Messenger sm = createSocketMessenger(TCP);
+		int mode = SystemAttrEnum.CAMERA_COHU_CONN_MODE.getInt();
+		int idle = SystemAttrEnum.CAMERA_COHU_MAX_IDLE.getInt();
+		if (mode == ConnMode.PERSIST.ordinal())
+			return new CohuPTZPoller(name, sm);
+		else if (mode == ConnMode.AUTO.ordinal())
+			return new CohuPTZPoller(name, sm, idle);
+		else
+			return new CohuPTZPoller(name, sm);
 	}
 }

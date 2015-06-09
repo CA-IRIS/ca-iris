@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
+import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.Messenger;
 
 /**
@@ -43,9 +44,23 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	/** Current zoom value */
 	protected float curZoom = 0.0F;
 
-	/** Create a new Cohu PTZ poller */
+	/**
+	 * Create a new Cohu PTZ poller.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 */
 	public CohuPTZPoller(String n, Messenger m) {
 		super(n, m);
+	}
+
+	/**
+	 * Create a new Cohu PTZ poller with auto connection mode.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 * @param idle max idle time (sec)
+	 */
+	public CohuPTZPoller(String n, Messenger m, int idle) {
+		super(n, m, ConnMode.AUTO, idle);
 	}
 
 	/** Check drop address validity */
