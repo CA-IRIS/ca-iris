@@ -77,7 +77,7 @@ public class DMSManager extends ProxyManager<DMS> {
 
 	/** Create a new DMS manager */
 	public DMSManager(Session s, GeoLocManager lm) {
-		super(s, lm, ItemStyle.DEPLOYED);
+		super(s, lm, ItemStyle.ALL);
 		s_model.setAllowMultiple(true);
 	}
 
