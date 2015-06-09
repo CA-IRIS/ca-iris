@@ -181,7 +181,7 @@ public class DatagramMessenger extends Messenger {
 	}
 
 	/** Input stream for receiving datagrams */
-	private class DatagramInputStream extends InputStream {
+	public class DatagramInputStream extends InputStream {
 
 		/** Buffer for storing received datagram */
 		private final ByteBuffer buffer = ByteBuffer.allocate(1024);
