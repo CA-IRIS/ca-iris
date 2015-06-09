@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2012-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +23,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * Item style enumeration.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public enum ItemStyle {
 	/* Generic item styles */
@@ -66,7 +68,12 @@ public enum ItemStyle {
 	BEACON,
 	LANE,
 	METER,
-	TIME;
+	TIME,
+	/* Weather Sensor Styles */
+	NORMAL,
+	EXPIRED,
+	CRAZY,
+	AWS;
 
 	/** Get a string representation of the item style */
 	public String toString() {
