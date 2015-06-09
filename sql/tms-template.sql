@@ -2278,6 +2278,8 @@ database_version	4.22.0
 detector_auto_fail_enable	true
 dialup_poll_period_mins	120
 dms_aws_enable	false
+dms_aws_msg_file_url	http://iris/irisaws.txt
+dms_aws_user_name	IRISAWS
 dms_brightness_enable	true
 dms_comm_loss_minutes	5
 dms_composer_edit_mode	1

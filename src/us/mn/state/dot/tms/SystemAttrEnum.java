@@ -51,7 +51,9 @@ public enum SystemAttrEnum {
 	DATABASE_VERSION(String.class, Change.RESTART_SERVER),
 	DETECTOR_AUTO_FAIL_ENABLE(true),
 	DIALUP_POLL_PERIOD_MINS(60, 2, 1440),
-	DMS_AWS_ENABLE(false),
+	DMS_AWS_ENABLE(false),					// TODO: unknown Change.XXX
+	DMS_AWS_MSG_FILE_URL("http://iris/iris_aws.txt"),	// TODO: "
+	DMS_AWS_USER_NAME("IRISAWS"),				// TODO: "
 	DMS_BRIGHTNESS_ENABLE(true, Change.RESTART_CLIENT),
 	DMS_COMM_LOSS_MINUTES(5, 1, 60),
 	DMS_COMPOSER_EDIT_MODE(1, 0, 2, Change.RESTART_CLIENT), 

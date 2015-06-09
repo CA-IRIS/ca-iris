@@ -35,6 +35,7 @@ import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.CellRendererSize;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
@@ -115,16 +116,15 @@ public class DMSManager extends ProxyManager<DMS> {
 		theme.addStyle(ItemStyle.AVAILABLE, ProxyTheme.COLOR_AVAILABLE);
 		theme.addStyle(ItemStyle.DEPLOYED, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.SCHEDULED, ProxyTheme.COLOR_SCHEDULED);
-		if(SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
+		if(SystemAttributeHelper.awsEnabled())
 			theme.addStyle(ItemStyle.AWS_DEPLOYED,
 			ProxyTheme.COLOR_AWS_DEPLOYED);
 		theme.addStyle(ItemStyle.MAINTENANCE,
 			ProxyTheme.COLOR_UNAVAILABLE);
 		theme.addStyle(ItemStyle.FAILED, ProxyTheme.COLOR_FAILED);
-		if(SystemAttrEnum.DMS_AWS_ENABLE.getBoolean()) {
+		if(SystemAttributeHelper.awsEnabled())
 			theme.addStyle(ItemStyle.AWS_CONTROLLED,
 				COLOR_HELIOTROPE);
-		}
 		// NOTE: If a sign doesn't fit in one of the other themes,
 		//       it will be rendered using the ALL theme.
 		theme.addStyle(ItemStyle.ALL, ProxyTheme.COLOR_INACTIVE,

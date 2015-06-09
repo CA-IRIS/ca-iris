@@ -44,4 +44,20 @@ public class StationHelper extends BaseHelper {
 	static public String getLabel(Station s) {
 		return GeoLocHelper.getRootLabel(s.getR_Node().getGeoLoc());
 	}
+
+	/** Lookup a station using the station id.
+	 * @param sid Station id, which may not be null.
+	 * @return The corresponding station or null if not found. */
+	static public Station lookupWithStationId(final String sid) {
+		Iterator<Station> it = iterator();
+		while(it.hasNext()) {
+			Station s = it.next();
+			R_Node rn = s.getR_Node();
+			final String rsid = rn.getStationID();
+			if(rsid != null && rsid.equals(sid))
+				return s;
+		}
+		return null;
+	}
+
 }

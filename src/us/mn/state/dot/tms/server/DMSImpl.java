@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California
+ * Copyright (C) 2010-2015 AHMCT, University of California
  * Copyright (C) 2012  Iteris Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -62,6 +62,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.MainServer.FLUSH;
 import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
+import us.mn.state.dot.tms.server.aws.AwsActionHistory;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.DMSPoller;
 import us.mn.state.dot.tms.server.event.BrightnessSample;
@@ -94,6 +95,9 @@ public class DMSImpl extends DeviceImpl implements DMS, KmlPlacemark {
 
 	/** DMS name, e.g. CMS or DMS */
 	static private final String DMSABBR = I18N.get("dms");
+
+	/** Track AWS Action history */
+	public AwsActionHistory aws_action_history = new AwsActionHistory();
 
 	/** Load all the DMS */
 	static protected void loadAll() throws TMSException {
