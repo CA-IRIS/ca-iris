@@ -21,13 +21,19 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
@@ -44,6 +50,7 @@ import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
+import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IComboBoxModel;
 import us.mn.state.dot.tms.client.widget.ILabel;
 import us.mn.state.dot.tms.client.widget.IPanel;
@@ -69,6 +76,9 @@ public class CameraDispatcher extends JPanel {
 
 	/** Video size */
 	static private final VideoRequest.Size SIZE = VideoRequest.Size.MEDIUM;
+
+	/** "No decoder" string */
+	static private final String NO_DECODER = "(none)";
 
 	/** User session */
 	private final Session session;
@@ -157,6 +167,30 @@ public class CameraDispatcher extends JPanel {
 	/** Joystick PTZ handler */
 	private final JoystickPTZ joy_ptz;
 
+	/** The VideoWallManager */
+	private final VideoWallManager vw_manager;
+
+	/** Current decoder map */
+	Map<String, String> decmap = new HashMap<String, String>();
+
+	/** Inhibit decoder actions */
+	private boolean inhibit_decoder_actions = false;
+
+	static private final int DECMAP_UPDATE_PERIOD_MS = 2000;
+
+	/** Timer listener for decoder map update timer. */
+	private class DecMapUpdater implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			// performed on event dispatch thread
+			updateDecMap();
+			updateOutputComboCA();	// needed, since mapping can change from elsewhere
+		}
+	};
+
+	/** Decoder map update timer */
+	private final Timer decmap_timer = new Timer(DECMAP_UPDATE_PERIOD_MS,
+		new DecMapUpdater());
+
 	/** Create a new camera dispatcher */
 	public CameraDispatcher(Session s, CameraManager man) {
 		session = s;
@@ -172,13 +206,16 @@ public class CameraDispatcher extends JPanel {
 		model = session.getSonarState().getCamCache().getCameraModel();
 		cam_ptz = new CameraPTZ(s);
 		joy_ptz = new JoystickPTZ(cam_ptz);
-		output_cbx = createOutputCombo();
+		vw_manager = new VideoWallManager(session, client_props);
+		updateDecMap();		// initial map, needed to create output_cbx
+		output_cbx = createOutputComboCA();
 		info_pnl = createInfoPanel();
 		stream_pnl = createStreamPanel();
 		control_pnl = new CamControlPanel(cam_ptz);
 		cache = session.getSonarState().getCamCache().getCameras();
 		cache.addProxyListener(proxy_listener);
 		ss_listener = createStreamStatusListener();
+		decmap_timer.start();
 	}
 
 	/** Create camera information panel */
@@ -209,14 +246,31 @@ public class CameraDispatcher extends JPanel {
 		gbc.gridx = 3;
 		gbc.weightx = 0.0;
 		p.add(new ILabel("camera.output"), gbc);
+
 		gbc.gridx = 4;
 		p.add(output_cbx, gbc);
 
 		gbc.gridx = 0;
 		gbc.gridy = 1;
 		p.add(new ILabel("location"), gbc);
+
 		gbc.gridx = 1;
+		gbc.gridwidth = 2;
 		p.add(location_lbl, gbc);
+		gbc.gridwidth = 1;
+
+		gbc.gridx = 3;
+		gbc.weightx = 0.1;
+		p.add(Box.createHorizontalGlue(), gbc);
+		gbc.weightx = 0.0;
+
+		gbc.gridx = 4;
+		JButton vwBtn = new JButton(new IAction("camera.videowall.ui") {
+			protected void doActionPerformed(ActionEvent e) {
+				launchVideoWallManager();
+			}
+		});
+		p.add(vwBtn, gbc);
 
 		gbc.gridx = 0;
 		gbc.gridy = 2;
@@ -348,12 +402,57 @@ public class CameraDispatcher extends JPanel {
 		return box;
 	}
 
+	/** Create the video output selection combobox (California version) */
+	private JComboBox createOutputComboCA() {
+		JComboBox box = new JComboBox();
+
+		ArrayList<String> keys = new ArrayList<String>();
+		for (String k : decmap.keySet())
+			keys.add(k);
+		Collections.sort(keys);
+		//box.addItem("");
+		box.addItem(NO_DECODER);
+		for (String kk : keys) {
+			box.addItem(kk);
+		}
+		box.setSelectedItem(null);
+		return box;
+	}
+
+	/**
+	 * Update the output combobox selection to correspond to the current
+	 * mapping for the selected camera.
+	 */
+	private void updateOutputComboCA() {
+		if (selected == null) {
+			inhibit_decoder_actions = true;
+			output_cbx.setSelectedItem(NO_DECODER);
+			output_cbx.setEnabled(false);
+			inhibit_decoder_actions = false;
+			return;
+		}
+		output_cbx.setEnabled(true);
+		String dec = null;
+		String cam = selected.getName();
+		for (String d : decmap.keySet()) {
+			if (cam.equals(decmap.get(d))) {
+				dec = d;
+				break;
+			}
+		}
+		if (dec == null)
+			dec = NO_DECODER;
+		inhibit_decoder_actions = true;
+		output_cbx.setSelectedItem(dec);
+		inhibit_decoder_actions = false;
+	}
+
 	/** Initialize the widgets on the panel */
 	public void initialize() {
 		stream_pnl.bindStreamStatusListener(ss_listener);
 		output_cbx.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				monitorSelected();
+				monitorSelectedCA();
 			}
 		});
 		joy_ptz.addJoystickListener(new JoystickListener() {
@@ -407,6 +506,7 @@ public class CameraDispatcher extends JPanel {
 
 	/** Dispose of the camera viewer */
 	public void dispose() {
+		decmap_timer.stop();
 		stream_pnl.unbindStreamStatusListener(ss_listener);
 		sel_model.removeProxySelectionListener(sel_listener);
 		cache.removeProxyListener(proxy_listener);
@@ -436,6 +536,7 @@ public class CameraDispatcher extends JPanel {
 			updateCamControls();
 		} else
 			clear();
+		updateOutputComboCA();
 	}
 
 	/** Called when a video monitor is selected */
@@ -448,11 +549,45 @@ public class CameraDispatcher extends JPanel {
 			video_monitor = null;
 	}
 
+	/** Called when a video monitor is selected (California version) */
+	private void monitorSelectedCA() {
+		if (selected == null)
+			return;
+		if (inhibit_decoder_actions)
+			return;
+		String cam = selected.getName();
+		String dec = null;
+		Object o = output_cbx.getSelectedItem();
+		if (o instanceof String) {
+			dec = (String)o;
+		} else
+			dec = null;
+		if (dec == null)
+			return;
+
+		// disconnect selected camera from all decoders
+		vw_manager.disconnectCam(cam);
+
+		if (!(NO_DECODER.equals(dec))) {
+			// connect selected camera to selected decoder
+			vw_manager.connect(dec, cam);
+		}
+	}
+
+	private void updateDecMap() {
+		decmap = vw_manager.getDecoderMap();
+	}
+
 	/** Select a camera on a video monitor */
 	private void selectMonitorCamera() {
-		VideoMonitor vm = video_monitor;
-		if (vm != null)
-			vm.setCamera(selected);
+// California: do not uncomment
+//		VideoMonitor vm = video_monitor;
+//		if (vm != null)
+//			vm.setCamera(selected);
+	}
+
+	private void launchVideoWallManager() {
+		session.getDesktop().show(new VideoWallForm(vw_manager));
 	}
 
 	/** Clear all of the fields */
