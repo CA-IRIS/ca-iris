@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
- * Copyright (C) 2010  AHMCT, University of California
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
+import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
@@ -45,6 +46,8 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runQueued;
  * proxy into an appropriate style list model.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 abstract public class ProxyManager<T extends SonarObject> {
 
@@ -441,8 +444,10 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Get the description of a proxy */
 	public String getDescription(T proxy) {
-		return proxy.getName() + " - " +
-			GeoLocHelper.getDescription(getGeoLoc(proxy));
+		String pn = proxy.getName();
+		String sn = SiteDataHelper.getSiteName(pn);
+		String desc = GeoLocHelper.getDescription(getGeoLoc(proxy));
+		return ( (sn != null) ? sn : pn) + " - " + desc;
 	}
 
 	/** Check if the corresponding layer is visible.

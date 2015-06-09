@@ -18,6 +18,7 @@ import java.awt.Color;
 import java.awt.Shape;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.tms.Angle;
+import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.Length;
 import us.mn.state.dot.tms.SystemAttributeHelper;
@@ -59,6 +60,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		ToolTipBuilder t = new ToolTipBuilder();
 
 		t.addLine(manager.getDescription(p));
+		t.addLine(GeoLocHelper.getDescription(p.getGeoLoc()));
 
 		t.addLine("Visibility",
 			new Length(p.getVisibility()).toString2());

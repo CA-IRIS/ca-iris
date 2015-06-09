@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +50,7 @@ import us.mn.state.dot.tms.MeterAction;
 import us.mn.state.dot.tms.PlanPhase;
 import us.mn.state.dot.tms.RampMeter;
 import us.mn.state.dot.tms.Road;
+import us.mn.state.dot.tms.SiteData;
 import us.mn.state.dot.tms.SystemAttribute;
 import us.mn.state.dot.tms.TagReader;
 import us.mn.state.dot.tms.TimeAction;
@@ -65,6 +67,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyListModel;
  * Holds the state of the SONAR client
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class SonarState extends Client {
 
@@ -421,6 +424,15 @@ public class SonarState extends Client {
 		return meter_actions;
 	}
 
+	/** Cache of site data proxies */
+	private final TypeCache<SiteData> site_data =
+		new TypeCache<SiteData>(SiteData.class, this);
+
+	/** Get the site data type cache */
+	public TypeCache<SiteData> getSiteData() {
+		return site_data;
+	}
+
 	/** Create a new Sonar state */
 	public SonarState(Properties props, ExceptionHandler h)
 		throws IOException, ConfigurationError, NoSuchFieldException,
@@ -500,6 +512,8 @@ public class SonarState extends Client {
 		populate(inc_details);
 		populate(roads);
 		populate(geo_locs);
+		// Populate site_data early
+		populateReadable(site_data);
 		con_cache.populate(this);
 		det_cache.populate(this);
 		cam_cache.populate(this);

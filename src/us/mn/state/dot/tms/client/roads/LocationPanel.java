@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2005-2015  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -188,6 +188,9 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	/** Milepoint field */
 	private final JTextField milepoint_txt = new JTextField();
 
+	/** CA-only site data panel */
+	private final SiteDataPanel sd_panel;
+
 	/** Point selector */
 	private final PointSelector point_sel = new PointSelector() {
 		public boolean selectPoint(Point2D p) {
@@ -211,6 +214,8 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		session = s;
 		client = s.getDesktop().client;
 		state = s.getSonarState();
+		sd_panel = new SiteDataPanel(session);
+		sd_panel.initialize();
 		TypeCache<GeoLoc> cache = state.getGeoLocs();
 		watcher = new ProxyWatcher<GeoLoc>(cache, this, false);
 		roadway_mdl = new IComboBoxModel<Road>(state.getRoadModel());
@@ -243,6 +248,17 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		add("location.milepoint");
 		add(milepoint_txt, Stretch.WIDE);
 		add(new JLabel(), Stretch.LEFT);
+		// site data panel (CA only):
+		if ((this instanceof
+			us.mn.state.dot.tms.client.camera.PropLocation) ||
+			(this instanceof
+			us.mn.state.dot.tms.client.dms.PropLocation) ||
+			(this instanceof
+			us.mn.state.dot.tms.client.weather.PropLocation))
+		{
+			// bad layout here, but it does the trick for now
+			add(sd_panel, Stretch.FULL);
+		}
 		createJobs();
 		watcher.initialize();
 	}
@@ -251,6 +267,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	@Override
 	public void dispose() {
 		watcher.dispose();
+		sd_panel.dispose();
 		super.dispose();
 	}
 
@@ -318,6 +335,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		select_pt.setEnabled(canUpdate(l, "lat")
 		                  && canUpdate(l, "lon"));
 		milepoint_txt.setEnabled(canUpdate(l, "milepoint"));
+		sd_panel.updateEditMode();
 	}
 
 	/** Update one attribute (from ProxyView). */
@@ -326,6 +344,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		if (a == null) {
 			loc = l;
 			updateEditMode();
+			sd_panel.setGeoLoc(l);
 		}
 		if (a == null || a.equals("roadway"))
 			roadway_act.updateSelected();
@@ -359,6 +378,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	@Override
 	public void clear() {
 		loc = null;
+		sd_panel.setGeoLoc(null);
 		roadway_cbx.setEnabled(false);
 		roadway_cbx.setSelectedIndex(0);
 		road_dir_cbx.setEnabled(false);

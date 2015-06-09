@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +27,13 @@ import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.widget.ITableModel;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Table model for IRIS proxies.  This model allows a RowSorter to be used
  * with the table for sorting and filtering.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 abstract public class ProxyTableModel<T extends SonarObject>
 	extends AbstractTableModel implements ITableModel
@@ -68,7 +69,7 @@ abstract public class ProxyTableModel<T extends SonarObject>
 
 	/** Get a proxy comparator */
 	protected Comparator<T> comparator() {
-		return new NumericAlphaComparator<T>();
+		return new ProxyComparator<T>();
 	}
 
 	/** Proxy listener for SONAR updates */

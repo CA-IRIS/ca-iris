@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +22,16 @@ import java.util.List;
 import java.util.HashSet;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
+import javax.swing.ListCellRenderer;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.ControllerHelper;
 import us.mn.state.dot.tms.GeoLoc;
+import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
+import us.mn.state.dot.tms.SiteDataHelper;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
@@ -41,6 +46,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * A camera manager is a container for SONAR camera objects.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class CameraManager extends ProxyManager<Camera> {
 
@@ -202,4 +208,17 @@ public class CameraManager extends ProxyManager<Camera> {
 	protected int getZoomThreshold() {
 		return 13;
 	}
+
+	/** Get the description of a proxy */
+	@Override
+	public String getDescription(Camera c) {
+		String pn = c.getName();
+		String sn = SiteDataHelper.getSiteName(pn);
+		String geoDesc = GeoLocHelper.getDescription(getGeoLoc(c));
+		String ret = ( (sn != null) ? sn : pn);
+		if (SystemAttrEnum.CAMERA_MANAGER_SHOW_LOCATION.getBoolean())
+			ret += " - " + geoDesc;
+		return ret;
+	}
+
 }

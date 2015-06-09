@@ -25,6 +25,7 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
+import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
@@ -221,6 +222,14 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Get the layer zoom visibility threshold */
 	protected int getZoomThreshold() {
 		return 4;
+	}
+
+	/** Get the description of a proxy */
+	@Override
+	public String getDescription(WeatherSensor proxy) {
+		String pn = proxy.getName();
+		String sn = SiteDataHelper.getSiteName(pn);
+		return ( (sn != null) ? sn : pn );
 	}
 
 }
