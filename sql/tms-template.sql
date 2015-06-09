@@ -2308,6 +2308,9 @@ camera_pelcod_max_idle	30
 camera_preset_panel_columns	6
 camera_preset_panel_enable	false
 camera_preset_store_enable	false
+camera_ptz_axis_comport	1
+camera_ptz_axis_reset	
+camera_ptz_axis_wipe	
 camera_ptz_blind	true
 camera_ptz_panel_enable	false
 camera_ptz_return_home	false
