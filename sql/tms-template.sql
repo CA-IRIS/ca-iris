@@ -2332,6 +2332,7 @@ meter_min_red_secs	0.1
 meter_yellow_secs	0.7
 msg_feed_verify	true
 operation_retry_threshold	3
+rtms_read_margin_sec	5
 rwis_high_wind_speed_kph	40
 rwis_low_visibility_distance_m	152
 rwis_obs_age_limit_secs	240

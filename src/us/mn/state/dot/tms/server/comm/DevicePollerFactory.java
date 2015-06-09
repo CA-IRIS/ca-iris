@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ModemImpl;
 import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
@@ -40,6 +41,7 @@ import us.mn.state.dot.tms.server.comm.ntcip.NtcipPoller;
 import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
 import us.mn.state.dot.tms.server.comm.pelcod.PelcoDPoller;
+import us.mn.state.dot.tms.server.comm.rtms.RtmsPoller;
 import us.mn.state.dot.tms.server.comm.ss105.SS105Poller;
 import us.mn.state.dot.tms.server.comm.ss125.SS125Poller;
 import us.mn.state.dot.tms.server.comm.ssi.SsiPoller;
@@ -120,6 +122,8 @@ public class DevicePollerFactory {
 			return createOrg815Poller();
 		case INFINOVA_D_PTZ:
 			return createInfinovaDPoller();
+		case RTMS:
+			return createRtmsPoller();
 		case RTMS_G4:
 			return createRtmsG4Poller();
 		case SSI:
@@ -348,6 +352,11 @@ public class DevicePollerFactory {
 	/** Create an SSI poller */
 	private DevicePoller createSsiPoller() throws IOException {
 		return new SsiPoller(name, createHttpFileMessenger());
+	}
+
+	/** Create an RTMS poller */
+	protected DevicePoller createRtmsPoller() throws IOException {
+		return new RtmsPoller(name, createSocketMessenger(UDP, true));
 	}
 
 	/** Create an RTMS G4 poller */
