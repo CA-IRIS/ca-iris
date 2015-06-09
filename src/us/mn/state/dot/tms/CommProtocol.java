@@ -114,7 +114,10 @@ public enum CommProtocol {
 	HYSECURITY_STC("HySecurity STC"),
 
 	/** Cohu PTZ (29) */
-	COHU_PTZ("Cohu PTZ");
+	COHU_PTZ("Cohu PTZ"),
+
+	/** CA RWIS (30) */
+	CA_RWIS("CA RWIS");
 
 	/** Create a new comm protocol value */
 	private CommProtocol(String d) {
