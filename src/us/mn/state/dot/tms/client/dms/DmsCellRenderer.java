@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
- * Copyright (C) 2009-2010  AHMCT, University of California
+ * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@ import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.IrisUserHelper;
 import us.mn.state.dot.tms.RasterGraphic;
+import us.mn.state.dot.tms.SiteDataHelper;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.proxy.CellRendererSize;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
@@ -41,6 +43,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 
@@ -210,14 +213,29 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 	public void updateAttr(String a) {
 		if (a.equals("messageCurrent")) {
 			String name = dms.getName();
+			String sn = SiteDataHelper.getSiteName(name);
+			if (sn != null)
+				name = sn;
 			name_lbl.setText(name);
 			String loc = GeoLocHelper.getDescription(
 				dms.getGeoLoc());
-			loc_lbl.setText(loc);
+			if (SystemAttrEnum.DMS_MANAGER_SHOW_LOCATION
+				.getBoolean())
+			{
+				loc_lbl.setText(loc);
+			}
+			else
+				loc_lbl.setText(" ");	// retain geom
 			updatePixelPanel();
 			updateToolTip(name, loc);
 		} else if (a.equals("ownerCurrent"))
-			user_lbl.setText(formatOwner());
+			if (SystemAttrEnum.DMS_MANAGER_SHOW_OWNER
+				.getBoolean())
+			{
+				user_lbl.setText(formatOwner());
+			}
+			else
+				user_lbl.setText("");
 	}
 
 	/** Format the owner name */

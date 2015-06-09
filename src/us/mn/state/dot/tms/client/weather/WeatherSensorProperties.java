@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2013-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +41,7 @@ import us.mn.state.dot.tms.utils.I18N;
 public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 
 	/** Location panel */
-	private final LocationPanel loc_pnl;
+	private final PropLocation loc_pnl;
 
 	/** Notes text area */
 	private final JTextArea notes_txt = new JTextArea(3, 24);
@@ -55,7 +56,7 @@ public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 	/** Create a new weather sensor properties form */
 	public WeatherSensorProperties(Session s, WeatherSensor ws) {
 		super(I18N.get("weather_sensor") + ": ", s, ws);
-		loc_pnl = new LocationPanel(s);
+		loc_pnl = new PropLocation(s, ws);
 	}
 
 	/** Get the SONAR type cache */

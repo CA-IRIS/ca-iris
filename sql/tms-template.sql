@@ -2077,6 +2077,21 @@ CREATE TABLE video.decoder_map (
 	cid VARCHAR(64) NOT NULL
 	);
 
+--- CA-ONLY: table containing extended site data for geo_loc entities:
+-- ideally, geo_loc would also have "REFERENCES iris.geo_loc(name)", but we're
+-- not doing this right now to avoid needing a cascade delete rule or similar.
+-- This means that entries in this table will persist even when geolocs are
+-- deleted, but that's fine for now.  This whole feature will need to be
+-- redesigned somewhat to merge with MnDOT anyway.
+CREATE TABLE iris.site_data (
+	name VARCHAR(8) PRIMARY KEY,
+--	geo_loc VARCHAR(20) UNIQUE NOT NULL REFERENCES iris.geo_loc(name),	-- not doing this to avoid adding a cascade delete rule
+	geo_loc VARCHAR(20) UNIQUE NOT NULL,
+	county VARCHAR(24),
+	site_name VARCHAR(32) UNIQUE,
+	format VARCHAR(128)
+);
+
 --- Data
 
 COPY iris.direction (id, direction, dir) FROM stdin;
@@ -2258,6 +2273,7 @@ camera_autoplay	true
 camera_cohu_conn_mode	0
 camera_cohu_max_idle	30
 camera_id_blank	
+camera_manager_show_location	true
 camera_num_preset_btns	3
 camera_pelcod_conn_mode	0
 camera_pelcod_max_idle	30
@@ -2270,6 +2286,7 @@ camera_ptz_axis_wipe
 camera_ptz_blind	true
 camera_ptz_panel_enable	false
 camera_ptz_return_home	false
+camera_sort	0
 camera_stream_controls_enable	false
 camera_stream_duration_secs	0
 camera_util_panel_enable	false
@@ -2293,6 +2310,8 @@ dms_font_selection_enable	false
 dms_form	1
 dms_high_temp_cutoff	60
 dms_lamp_test_timeout_secs	30
+dms_manager_show_location	true
+dms_manager_show_owner	true
 dms_manufacturer_enable	true
 dms_max_lines	3
 dms_message_min_pages	1
@@ -2314,6 +2333,7 @@ dms_quickmsg_uppercase_names	false
 dms_reinit_detect	false
 dms_reset_enable	false
 dms_send_confirmation_enable	false
+dms_sort	0
 dmsxml_modem_op_timeout_secs	305
 dmsxml_op_timeout_secs	65
 email_sender_server	
@@ -2327,6 +2347,7 @@ help_trouble_ticket_url
 incident_clear_secs	600
 kml_file_enable	false
 lcs_poll_period_secs	30
+location_format	
 map_icon_size_scale_max	30
 map_segment_max_meters	2000
 meter_event_purge_days	14
@@ -2341,6 +2362,7 @@ rwis_high_wind_speed_kph	40
 rwis_low_visibility_distance_m	152
 rwis_obs_age_limit_secs	240
 rwis_max_valid_wind_speed_kph	282
+rwis_sort	0
 sample_archive_enable	true
 tesla_host	
 travel_time_max_legs	8
@@ -2419,6 +2441,7 @@ PRV_0007	login	map_extent(/.*)?	t	f	f	f
 PRV_0008	login	road(/.*)?	t	f	f	f
 PRV_0009	login	geo_loc(/.*)?	t	f	f	f
 PRV_0010	login	incident_detail(/.*)?	t	f	f	f
+PRV_001H	login	site_data(/.*)?	t	f	f	f
 PRV_0011	camera_tab	camera(/.*)?	t	f	f	f
 PRV_001A	camera_tab	camera_preset(/.*)?	t	f	f	f
 PRV_001B	camera_tab	camera_preset_alias(/.*)?	t	f	f	f
@@ -2540,6 +2563,7 @@ PRV_011A	device_admin	tag_reader(/.*)?	t	f	f	f
 PRV_011B	device_admin	tag_reader/.*	f	t	t	t
 PRV_0133	device_admin	gate_arm/.*	f	t	t	t
 PRV_0135	device_admin	gate_arm_array/.*	f	t	t	t
+PRV_013A	device_admin	site_data/.*	f	t	t	t
 PRV_0120	system_admin	cabinet_style/.*	f	t	t	t
 PRV_0121	system_admin	font/.*	f	t	t	t
 PRV_0122	system_admin	glyph/.*	f	t	t	t

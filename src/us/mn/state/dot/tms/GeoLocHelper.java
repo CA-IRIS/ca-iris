@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2013  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +26,7 @@ import us.mn.state.dot.tms.units.Distance;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class GeoLocHelper extends BaseHelper {
 
@@ -59,25 +61,7 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get a description of the location */
 	static private String getDescription(GeoLoc l, String connect) {
-		StringBuilder b = new StringBuilder();
-		if(l != null) {
-			Road r = l.getRoadway();
-			if(r != null) {
-				short rd = l.getRoadDir();
-				String road = r.getName() + " " +
-					Direction.fromOrdinal(rd).abbrev;
-				b.append(road.trim());
-			}
-		}
-		String c = getCrossDescription(l, connect);
-		if(c != null) {
-			b.append(' ');
-			b.append(c);
-		}
-		if(b.length() > 0)
-			return b.toString();
-		else
-			return "Unknown location";
+		return SiteDataHelper.getLocDescription(l, connect);
 	}
 
 	/** Get a description of the cross-street location */

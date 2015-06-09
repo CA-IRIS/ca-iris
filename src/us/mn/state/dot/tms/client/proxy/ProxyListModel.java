@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +21,12 @@ import java.util.Comparator;
 import javax.swing.AbstractListModel;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * A swing ListModel kept in sync with a SONAR TypeCache.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class ProxyListModel<T extends SonarObject>
 	extends AbstractListModel
@@ -41,7 +42,7 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Get a proxy comparator */
 	protected Comparator<T> comparator() {
-		return new NumericAlphaComparator<T>();
+		return new ProxyComparator<T>();
 	}
 
 	/** Proxy listener for SONAR updates */
