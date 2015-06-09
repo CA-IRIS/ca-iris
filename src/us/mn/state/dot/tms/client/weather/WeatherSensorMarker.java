@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +19,30 @@ import us.mn.state.dot.map.AbstractMarker;
 
 /**
  * Marker used to paint weather sensors.
+ * The style is that of a windsock, and points in the direction of the wind.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class WeatherSensorMarker extends AbstractMarker {
 
-	/** Size in pixels to render marker */
+	/** Size, in pixels, to render marker */
 	static protected final int MARKER_SIZE_PIX = 20;
 
-	/** Create a new weather sensor marker */
+	/** Create a new weather sensor marker, pointing north by default. */
 	public WeatherSensorMarker() {
-		super(3);
-		float size = MARKER_SIZE_PIX;
-		path.moveTo(0, 0);
-		path.lineTo(size, size);
+		super(8);
+		final float size = MARKER_SIZE_PIX;
+		final float size12 = size / 2F;
+		final float size16 = size / 6F;
+		path.moveTo(-size12 + size16, -size12);	// 1
+		path.lineTo(size12 - size16, -size12);	// 2
+		path.lineTo(size16, size12);		// 3
+		path.lineTo(0, size12 - size16);	// 4
+		path.lineTo(-size16, size12);		// 5
 		path.closePath();
 	}
+
 }
+
