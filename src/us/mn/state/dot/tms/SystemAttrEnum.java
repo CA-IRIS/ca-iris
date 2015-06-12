@@ -128,7 +128,8 @@ public enum SystemAttrEnum {
 	VSA_START_INTERVALS(3, 0, 10),
 	VSA_START_THRESHOLD(-1500, -5000, -200),
 	VSA_STOP_THRESHOLD(-750, -5000, -200),
-	WINDOW_TITLE("IRIS: ", Change.RESTART_CLIENT);
+	WINDOW_TITLE("IRIS: ", Change.RESTART_CLIENT),
+	WIZARD_READ_MARGIN_SEC(5,0,15);
 
 	/** Change action, which indicates what action the admin must
 	 *  take after changing a system attribute. */
