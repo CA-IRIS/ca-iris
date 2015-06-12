@@ -2404,6 +2404,7 @@ vsa_start_intervals	3
 vsa_start_threshold	-1500
 vsa_stop_threshold	-750
 window_title	IRIS: 
+wizard_read_margin_sec	5
 \.
 
 COPY iris.r_node_type (n_type, name) FROM stdin;

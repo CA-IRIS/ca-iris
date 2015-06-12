@@ -50,6 +50,7 @@ import us.mn.state.dot.tms.server.comm.ss125.SS125Poller;
 import us.mn.state.dot.tms.server.comm.ssi.SsiPoller;
 import us.mn.state.dot.tms.server.comm.stc.STCPoller;
 import us.mn.state.dot.tms.server.comm.viconptz.ViconPTZPoller;
+import us.mn.state.dot.tms.server.comm.wizard.WizardPoller;
 
 /**
  * A factory for creating device poller objects.
@@ -143,6 +144,8 @@ public class DevicePollerFactory {
 			return createAddcoPoller();
 		case TRANSCORE_E6:
 			return createE6Poller();
+		case INFOTEK_WIZARD:
+			return createWizardPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -415,5 +418,10 @@ public class DevicePollerFactory {
 		catch (URISyntaxException e) {
 			throw new IOException("INVALID URI");
 		}
+	}
+
+	/** Create a Wizard poller */
+	protected DevicePoller createWizardPoller() throws IOException {
+		return new WizardPoller(name, createSocketMessenger(UDP, true));
 	}
 }
