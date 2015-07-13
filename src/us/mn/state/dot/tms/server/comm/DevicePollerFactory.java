@@ -138,15 +138,30 @@ public class DevicePollerFactory {
 	}
 
 	/** Create a socket messenger */
-	private Messenger createSocketMessenger(String d_uri)
+	/**
+	 * Create a socket messenger.
+	 * For UDP connections, a normal single-host socket will be used.
+	 * @param d_uri The URI
+	 * @param udpMulti For UDP connections, use an "unconnected" socket
+	 *                 that can be used to communicate with more than one
+	 *                 peer.
+	 * @return The Messenger
+	 */
+	private Messenger createSocketMessenger(String d_uri, boolean udpMulti)
 		throws IOException
 	{
 		try {
 			URI u = createURI(d_uri);
 			if ("tcp".equals(u.getScheme()))
 				return createStreamMessenger(u);
-			else if ("udp".equals(u.getScheme()))
-				return createDatagramMessenger(u);
+			else if ("udp".equals(u.getScheme())) {
+				if (udpMulti)
+					return createDatagramMessenger(u,
+						DatagramMessenger.ConnType
+						.RECV_MULT_LOCAL);
+				else
+					return createDatagramMessenger(u);
+			}
 			else if ("modem".equals(u.getScheme()))
 				return createModemMessenger(u);
 			else
@@ -155,6 +170,18 @@ public class DevicePollerFactory {
 		catch (URISyntaxException e) {
 			throw new IOException("INVALID URI");
 		}
+	}
+
+	/**
+	 * Create a socket messenger.
+	 * For UDP connections, a normal "connected" socket will be used.
+	 * @param d_uri The URI
+	 * @return The Messenger
+	 */
+	private Messenger createSocketMessenger(String d_uri)
+		throws IOException
+	{
+		return createSocketMessenger(d_uri, false);
 	}
 
 	/** Create the URI with a default URI scheme */
@@ -179,9 +206,18 @@ public class DevicePollerFactory {
 		return new StreamMessenger(createSocketAddress(u));
 	}
 
-	/** Create a UDP datagram messenger */
+	/** Create a UDP datagram messenger (DEFAULT TYPE) */
 	private Messenger createDatagramMessenger(URI u) throws IOException {
-		return new DatagramMessenger(createSocketAddress(u));
+		return new DatagramMessenger(
+			DatagramMessenger.ConnType.DEFAULT,
+			createSocketAddress(u));
+	}
+
+	/** Create a UDP datagram messenger with the specified connection type */
+	private Messenger createDatagramMessenger(URI u,
+		DatagramMessenger.ConnType ct) throws IOException
+	{
+		return new DatagramMessenger(ct, createSocketAddress(u));
 	}
 
 	/** Create an inet socket address */

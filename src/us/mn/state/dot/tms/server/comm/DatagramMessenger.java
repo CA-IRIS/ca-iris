@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009  Minnesota Department of Transportation
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +20,36 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
- * A DatagramMessenger is a class which can poll a field controller and get the
- * response using a UDP socket connection.
+ * A DatagramMessenger is a class which can poll a field controller and get
+ * the response using a UDP socket connection.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DatagramMessenger extends Messenger {
+
+	/** Connection type */
+	public enum ConnType {
+		// bidirectional single host, local or remote
+		DEFAULT,
+
+		// receive from multiple hosts on local address
+		RECV_MULT_LOCAL
+	}
+
+	/** Connection type */
+	private final ConnType connect_type;
 
 	/** Address to connect */
 	protected final SocketAddress address;
@@ -50,15 +69,25 @@ public class DatagramMessenger extends Messenger {
 	}
 
 	/** Create a new datagram messenger */
-	public DatagramMessenger(SocketAddress a) {
+	public DatagramMessenger(ConnType ct, SocketAddress a) {
+		connect_type = ct;
 		address = a;
 	}
 
 	/** Open the datagram messenger */
 	public void open() throws IOException {
-		socket = new DatagramSocket();
-		socket.setSoTimeout(timeout);
-		socket.connect(address);
+		if (connect_type == ConnType.DEFAULT) {
+			socket = new DatagramSocket();
+			socket.setSoTimeout(timeout);
+			socket.connect(address);
+		} else if (connect_type == ConnType.RECV_MULT_LOCAL) {
+			socket = new DatagramSocket(null);
+			socket.setSoTimeout(timeout);
+			socket.bind(address);
+		} else {
+			System.err.println("bogus datagram connection type");
+			return;
+		}
 		input = new DatagramInputStream();
 		output = new DatagramOutputStream();
 	}
@@ -92,6 +121,7 @@ public class DatagramMessenger extends Messenger {
 
 		/** Flush packet to datagram */
 		public void flush() throws IOException {
+			packet.setSocketAddress(address);
 			packet.setLength(buffer.position());
 			buffer.clear();
 			DatagramSocket s = socket;
@@ -101,10 +131,13 @@ public class DatagramMessenger extends Messenger {
 	}
 
 	/** Input stream for receiving datagrams */
-	protected class DatagramInputStream extends InputStream {
+	public class DatagramInputStream extends InputStream {
 
 		/** Buffer for storing received datagram */
 		protected final ByteBuffer buffer = ByteBuffer.allocate(1024);
+
+		/* Datagram origin address */
+		private InetAddress origin_addr;
 
 		/** Packet to receive */
 		protected final DatagramPacket packet =
@@ -114,6 +147,11 @@ public class DatagramMessenger extends Messenger {
 		protected DatagramInputStream() {
 			// no data in buffer before a packet is received
 			buffer.limit(0);
+		}
+
+		/** Get datagram origin address */
+		public InetAddress getOriginAddr() {
+			return origin_addr;
 		}
 
 		/** Read a byte from a received datagram */
@@ -132,12 +170,17 @@ public class DatagramMessenger extends Messenger {
 			}
 		}
 
-		/** Recvie and buffer a datagram */
+		/**
+		 * Receive and buffer a datagram. This method blocks until the
+		 * buffer is full or the read times out.
+		 * @throws SocketTimeoutException
+		 */
 		protected void receivePacket() throws IOException {
 			DatagramSocket s = socket;
 			if(s != null) {
 				packet.setLength(1024);
 				s.receive(packet);
+				origin_addr = packet.getAddress();
 				buffer.position(0);
 				buffer.limit(packet.getLength());
 			}
@@ -155,6 +198,17 @@ public class DatagramMessenger extends Messenger {
 				buffer.limit(0);
 			} else
 				buffer.position(buffer.position() + b);
+		}
+
+		/** Read all bytes in a datagram */
+		public byte[] readDatagram() throws IOException {
+			read();
+			buffer.position(0);
+			int size = buffer.limit();
+			byte[] ret = new byte[size];
+			if (size > 0)
+				buffer.get(ret);
+			return ret;
 		}
 	}
 }
