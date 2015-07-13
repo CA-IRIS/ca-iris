@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +17,10 @@ package us.mn.state.dot.tms.server.comm;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.Calendar;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.sched.Job;
+import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
@@ -27,6 +31,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * with priority-queued polling.  Subclasses are MndotPoller, NtcipPoller, etc.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 abstract public class MessagePoller<T extends ControllerProperty>
 	implements DevicePoller
@@ -39,6 +44,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		else
 			return e.getClass().getSimpleName();
 	}
+
+	/** Connection mode enum */
+	public enum ConnMode {PERSIST, AUTO, PER_OP};
+
+	/** The connection mode */
+	private final ConnMode conn_mode;
+
+	/** Auto-closer job service period (sec) */
+	static private final int CLOSER_PERIOD = 3;
 
 	/** Message polling log */
 	static private final DebugLog POLL_LOG = new DebugLog("polling");
@@ -129,9 +143,38 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		return hung_up;
 	}
 
-	/** Create a new message poller */
-	protected MessagePoller(String name, Messenger m) {
- 		thread = new Thread(GROUP, "Poller: " + name) {
+	/** Max idle time (sec) for connection mode AUTO */
+	private long max_idle = 0;
+
+	/** Scheduler job to automatically close idle connections */
+	private class CloserJob extends Job {
+		public CloserJob() {
+			super(Calendar.SECOND, CLOSER_PERIOD,
+				Calendar.SECOND, 0);
+		}
+		public void perform() {
+			closeIfIdle();
+		}
+	}
+
+	/** The CloserJob instance */
+	private final CloserJob closer_job;
+
+	/** Timer thread to auto-close messenger */
+	static private final Scheduler CLOSER = new Scheduler("mpcloser");
+
+	/**
+	 * Create a new message poller.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 * @param cm the connection mode
+	 * @param idle max idle time (sec) to use for conn mode AUTO
+	 */
+	protected MessagePoller(String n, Messenger m, ConnMode cm, int idle) {
+		conn_mode = cm;
+		max_idle = idle;
+		closer_job = new CloserJob();
+ 		thread = new Thread(GROUP, "Poller: " + n) {
 			@Override
 			public void run() {
 				operationLoop();
@@ -140,6 +183,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		thread.setDaemon(true);
 		setThreadState(ThreadState.NOT_STARTED);
 		messenger = m;
+	}
+
+	/**
+	 * Create a new message poller with persistent connection mode.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 */
+	protected MessagePoller(String n, Messenger m) {
+		this(n, m, ConnMode.PERSIST, 0);
 	}
 
 	/** Set the receive timeout */
@@ -181,7 +233,10 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Open messenger and perform operations */
 	private void operationLoop() {
 		try {
-			messenger.open();
+			if (conn_mode == ConnMode.PERSIST)
+				ensureOpen();
+			else if (conn_mode == ConnMode.AUTO)
+				CLOSER.addJob(closer_job);
 			setThreadState(ThreadState.RUNNING);
 			performOperations();
 			setThreadState(ThreadState.CLOSING);
@@ -197,10 +252,47 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			e.printStackTrace();
 		}
 		finally {
-			messenger.close();
+			ensureClosed();
 			drainQueue();
+			if (conn_mode == ConnMode.AUTO)
+				CLOSER.removeJob(closer_job);
 			setThreadState(ThreadState.STOPPED);
 		}
+	}
+
+	/** Messenger connection state */
+	private boolean messenger_open = false;
+
+	/** Timestamp of last activity */
+	private long last_activity = 0;
+
+	private synchronized void ensureOpen() throws IOException {
+		if (messenger_open)
+			return;
+		messenger.open();
+		plog("messenger opened.");
+		messenger_open = true;
+	}
+
+	private synchronized void ensureClosed() {
+		if (!messenger_open)
+			return;
+		messenger.close();
+		plog("messenger closed.");
+		messenger_open = false;
+	}
+	private synchronized void closeIfIdle() {
+		long now = TimeSteward.currentTimeMillis();
+		long idle = now - last_activity;
+		if ((messenger_open) && (idle >= (max_idle * 1000))) {
+			plog("idle time " + idle + " ms.  closing messenger.");
+			ensureClosed();
+		}
+	}
+
+	/** Update last activity time to current time */
+	private synchronized void bump() {
+		last_activity = TimeSteward.currentTimeMillis();
 	}
 
 	/** Drain the poll queue */
@@ -219,10 +311,20 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	private void performOperations() throws IOException {
 		while(true) {
 			Operation<T> o = queue.next();
+			boolean acquire = (o.getPhase() instanceof
+				OpDevice.AcquireDevice);
+			// bump before poll to prevent closure during poll
+			bump();
+			ensureOpen();
 			if(o instanceof KillThread)
 				break;
 			if(o instanceof OpController)
 				doPoll((OpController<T>)o);
+			// final bump when poll complete
+			bump();
+			// don't disconnect after AcquireDevice phases
+			if ((conn_mode == ConnMode.PER_OP) && (!acquire))
+				ensureClosed();
 		}
 	}
 
