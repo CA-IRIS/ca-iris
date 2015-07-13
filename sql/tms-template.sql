@@ -2288,6 +2288,7 @@ dms_pixel_status_enable	true
 dms_pixel_test_timeout_secs	30
 dms_querymsg_enable	false
 dms_quickmsg_store_enable	false
+dms_reinit_detect	false
 dms_reset_enable	false
 dms_send_confirmation_enable	false
 dmsxml_modem_op_timeout_secs	305
@@ -2296,6 +2297,7 @@ email_sender_server
 email_smtp_host	
 email_recipient_aws	
 email_recipient_gate_arm	
+email_recipient_reinit	
 gate_arm_alert_timeout_secs	90
 help_trouble_ticket_enable	false
 help_trouble_ticket_url	
