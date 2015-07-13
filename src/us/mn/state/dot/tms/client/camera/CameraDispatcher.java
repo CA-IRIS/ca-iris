@@ -29,7 +29,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
+import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.GeoLocHelper;
+import us.mn.state.dot.tms.PresetAliasHelper;
+import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.VideoMonitor;
 import us.mn.state.dot.tms.client.Session;
@@ -201,6 +204,7 @@ public class CameraDispatcher extends JPanel {
 			}
 			@Override
 			public void onStreamFinished(Camera c) {
+				maybeReturnHome(c);
 				updateCamControls();
 			}
 		};
@@ -241,6 +245,29 @@ public class CameraDispatcher extends JPanel {
 		boolean enable = (hasCtrl && hasPerms &&
 			(streaming || extOnly || blindOk));
 		enablePTZ(enable);
+	}
+
+	/**
+	 * Return a camera to its "Home" preset if all the following are true:
+	 * <ul>
+	 *   <li> the sysattr "camera_ptz_return_home" is true
+	 *   <li> the camera is capable of indirect streaming
+	 *   <li> a HOME preset alias mapping exists for the camera
+	 * </ul>
+	 */
+	private void maybeReturnHome(Camera c) {
+		if (c == null)
+			return;
+		if (!SystemAttrEnum.CAMERA_PTZ_RETURN_HOME.getBoolean())
+			return;
+		EncoderType et = EncoderType.fromOrdinal(c.getEncoderType());
+		if (!et.supportsIndirect())
+			return;
+		Integer p = PresetAliasHelper.getPreset(c,
+			PresetAliasName.HOME);
+		if (p == null)
+			return;
+		c.setRecallPreset(p.intValue());
 	}
 
 	/**
