@@ -2290,6 +2290,7 @@ dms_pixel_test_timeout_secs	30
 dms_preview_instant	false
 dms_querymsg_enable	false
 dms_quickmsg_store_enable	false
+dms_quickmsg_uppercase_names	false
 dms_reinit_detect	false
 dms_reset_enable	false
 dms_send_confirmation_enable	false
