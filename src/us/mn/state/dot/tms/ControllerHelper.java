@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
  * Copyright (C) 2011  Berkeley Transportation Systems Inc.
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +17,7 @@
 package us.mn.state.dot.tms;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import us.mn.state.dot.geokit.Position;
 
 /**
@@ -23,6 +25,7 @@ import us.mn.state.dot.geokit.Position;
  *
  * @author Michael Darter
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class ControllerHelper extends BaseHelper {
 
@@ -103,4 +106,24 @@ public class ControllerHelper extends BaseHelper {
 		else
 			return ItemStyle.NO_CONTROLLER.toString();
 	}
+
+	/**
+	 * Get a list of all the station ids in each r_node associated with
+	 * the detectors in the specified controller.
+	 * @param c Controller (may be null)
+	 * @return Linked list of station IDs for each r_node associated
+	 *         with the specified controller's detectors, or an empty
+	 *         list if none found.
+	 */
+	static public LinkedList<String> getStationIds(Controller c) {
+		LinkedList<String> sids = new LinkedList<String>();
+		Detector[] dets = DetectorHelper.getDetectors(c);
+		for(Detector d : dets) {
+			String sid = DetectorHelper.getStationId(d);
+			if(sid != null)
+				sids.add(sid);
+		}
+		return sids;
+	}
+
 }

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ import java.io.Writer;
 import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import us.mn.state.dot.sched.Job;
@@ -26,6 +28,8 @@ import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.CommProtocol;
+import us.mn.state.dot.tms.Controller;
+import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
@@ -38,6 +42,8 @@ import us.mn.state.dot.tms.units.Interval;
  *
  * @see us.mn.state.dot.tms.CommProtocol
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 
@@ -427,6 +433,20 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 	public boolean isConnected() {
 		DevicePoller dp = poller;
 		return (dp != null) && dp.isConnected();
+	}
+
+	/** Get the active controllers defined for this communication link */
+	public LinkedList<Controller> getActiveControllers() {
+		LinkedList<Controller> l = new LinkedList<Controller>();
+		synchronized(controllers) {
+			for (Controller c : controllers.values())
+				if (CtrlCondition.fromOrdinal(c.getCondition())
+					== CtrlCondition.ACTIVE)
+				{
+					l.add(c);
+				}
+		}
+		return l;
 	}
 
 	/** Write the comm link as an XML element */
