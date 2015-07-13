@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2015  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California, Davis
+ * Copyright (C) 2010-2015 AHMCT, University of California, Davis
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Erik Engstrom
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DMSDispatcher extends JPanel {
 
@@ -426,6 +427,15 @@ public class DMSDispatcher extends JPanel {
 	/** Select the preview mode */
 	public void selectPreview(boolean p) {
 		singleTab.selectPreview(p);
+	}
+
+	/**
+	 * Set the single sign tab's panel pager to the given page.
+	 * @param p The desired page number
+	 * @return true if successful, else false
+	 */
+	public boolean setSingleSignPage(int p) {
+		return singleTab.setPagerPage(p);
 	}
 
 	/** Get raster graphic array for the selected message */

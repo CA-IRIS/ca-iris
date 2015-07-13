@@ -2265,6 +2265,7 @@ dms_aws_enable	false
 dms_brightness_enable	true
 dms_comm_loss_minutes	5
 dms_composer_edit_mode	1
+dms_composer_trim	true
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
@@ -2286,6 +2287,7 @@ dms_pixel_on_limit	1
 dms_pixel_maint_threshold	35
 dms_pixel_status_enable	true
 dms_pixel_test_timeout_secs	30
+dms_preview_instant	false
 dms_querymsg_enable	false
 dms_quickmsg_store_enable	false
 dms_reinit_detect	false
