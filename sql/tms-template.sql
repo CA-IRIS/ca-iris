@@ -2266,6 +2266,7 @@ dms_brightness_enable	true
 dms_comm_loss_minutes	5
 dms_composer_edit_mode	1
 dms_composer_trim	true
+dms_composer_uppercase	false
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
