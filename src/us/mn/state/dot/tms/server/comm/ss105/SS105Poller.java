@@ -15,7 +15,10 @@
  */
 package us.mn.state.dot.tms.server.comm.ss105;
 
+import java.io.IOException;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.CommLinkHelper;
+import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
 import us.mn.state.dot.tms.server.comm.Messenger;
@@ -39,6 +42,19 @@ public class SS105Poller extends MessagePoller<SS105Property>
 	/** Create a new SS105 poller */
 	public SS105Poller(String n, Messenger m) {
 		super(n, m);
+		CommLinkImpl cli = (CommLinkImpl)CommLinkHelper.lookup(n);
+		if (cli == null) {
+			SS105_LOG.log("Failed to find CommLink.");
+			return;
+		}
+		int to = cli.getTimeout();
+		try {
+			m.setTimeout(to);
+			SS105_LOG.log("Set Messenger timeout to " + to + ".");
+		}
+		catch (IOException e) {
+			SS105_LOG.log("Failed to set Messenger timeout.");
+		}
 	}
 
 	/** Check if a drop address is valid */
