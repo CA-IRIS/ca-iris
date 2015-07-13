@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +42,8 @@ import us.mn.state.dot.tms.utils.PropertyLoader;
  * This is the main class to start the IRIS server.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class MainServer {
 
@@ -195,6 +198,7 @@ public class MainServer {
 		TIMER.addJob(new SendSettingsJob());
 		TIMER.addJob(new SendSettingsJob(500));
 		TIMER.addJob(new ReaperJob());
+		TIMER.addJob(new CommLinkQuery30SecJob());
 		TIMER.addJob(new MsgFeedQueryJob());
 	}
 
