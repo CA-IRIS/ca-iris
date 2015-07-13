@@ -143,6 +143,7 @@ public class SensorReader {
 		URLConnection conn = url.openConnection();
 		conn.setConnectTimeout(URL_TIMEOUT_MS);
 		conn.setReadTimeout(URL_TIMEOUT_MS);
+		conn.setUseCaches(false);
 		InputStream in = new GZIPInputStream(conn.getInputStream());
 		parser.parse(in, handler);
 	}
