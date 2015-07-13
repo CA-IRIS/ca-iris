@@ -1,6 +1,5 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,34 +17,26 @@ package us.mn.state.dot.tms;
 import us.mn.state.dot.sonar.SonarObject;
 
 /**
- * Camera Preset
+ * Camera preset alias.
+ * Represents a single CCTV alias:preset# mapping.
  *
- * @author Douglas Lau
  * @author Travis Swanston
  */
-public interface CameraPreset extends SonarObject {
+public interface PresetAlias extends SonarObject {
 
 	/** SONAR type name */
-	String SONAR_TYPE = "camera_preset";
-
-	/** Minimum allowed preset number */
-	static final int MIN_PRESET = 1;
-
-	/** Maximum allowed preset number */
-	static final int MAX_PRESET = 12;
+	String SONAR_TYPE = "camera_preset_alias";
 
 	/** Get camera */
 	Camera getCamera();
 
-	/** Get preset number */
+	/** Get preset alias enumeration */
+	int getPresetAliasName();
+
+	/** Set preset number mapping for this alias */
+	void setPresetNum(int p);
+
+	/** Get preset number mapping for this alias */
 	int getPresetNum();
 
-	/** Set direction */
-	void setDirection(short d);
-
-	/** Get direction */
-	short getDirection();
-
-	/** Get assigned flag */
-	boolean getAssigned();
 }

@@ -1,6 +1,5 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -15,37 +14,36 @@
  */
 package us.mn.state.dot.tms;
 
-import us.mn.state.dot.sonar.SonarObject;
-
 /**
- * Camera Preset
+ * Preset alias name enumeration.
+ * The ordinal values correspond to the records in the
+ * iris.preset_alias_name look-up table.
+ * NOTE: more alias names are planned for future functionality.
  *
- * @author Douglas Lau
  * @author Travis Swanston
  */
-public interface CameraPreset extends SonarObject {
+public enum PresetAliasName {
 
-	/** SONAR type name */
-	String SONAR_TYPE = "camera_preset";
+	/** Home Preset (0) */
+	HOME("Home");
 
-	/** Minimum allowed preset number */
-	static final int MIN_PRESET = 1;
+	/** Create a new preset alias value */
+	private PresetAliasName(String a) {
+		alias = a;
+	}
 
-	/** Maximum allowed preset number */
-	static final int MAX_PRESET = 12;
+	/** Preset alias name */
+	public final String alias;
 
-	/** Get camera */
-	Camera getCamera();
+	/** Get a preset alias from an ordinal value */
+	static public PresetAliasName fromOrdinal(int o) {
+		for (PresetAliasName an: PresetAliasName.values()) {
+			if (an.ordinal() == o)
+				return an;
+		}
+		return null;
+	}
 
-	/** Get preset number */
-	int getPresetNum();
+	static public final int size = PresetAliasName.values().length;
 
-	/** Set direction */
-	void setDirection(short d);
-
-	/** Get direction */
-	short getDirection();
-
-	/** Get assigned flag */
-	boolean getAssigned();
 }
