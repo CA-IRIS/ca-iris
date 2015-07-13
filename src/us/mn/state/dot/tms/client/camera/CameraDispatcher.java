@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2005-2015  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -196,11 +196,11 @@ public class CameraDispatcher extends JPanel {
 	private StreamStatusListener createStreamStatusListener() {
 		StreamStatusListener ssl = new StreamStatusListener() {
 			@Override
-			public void onStreamStarted() {
+			public void onStreamStarted(Camera c) {
 				updateCamControls();
 			}
 			@Override
-			public void onStreamFinished() {
+			public void onStreamFinished(Camera c) {
 				updateCamControls();
 			}
 		};
