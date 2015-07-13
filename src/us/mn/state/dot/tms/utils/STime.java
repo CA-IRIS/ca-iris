@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2012  Minnesota Department of Transportation
- * Copyright (C) 2008-2010  AHMCT, University of California
+ * Copyright (C) 2008-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.server.comm.dmsxml;
+package us.mn.state.dot.tms.utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,16 +27,21 @@ import us.mn.state.dot.sched.TimeSteward;
  *
  * @author Michael Darter
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public final class STime {
 
-	/** constructor */
-	private STime() {}
+	/** Constructor (no instantiation). */
+	private STime() {
+	}
 
-	/** Calc time difference between now (UTC since 1970)
-	 * and given start time in MS. */
-	static public long calcTimeDeltaMS(long startInUTC) {
-		return TimeSteward.currentTimeMillis() - startInUTC;
+	/**
+	 * Calculate time difference in ms between now and given start time.
+	 * @param start The start time as an epoch value.
+	 * @return The time difference in ms.
+	 */
+	static public long calcTimeDeltaMS(long start) {
+		return TimeSteward.currentTimeMillis() - start;
 	}
 
 	/** Get current time as short string in local time. */
@@ -60,11 +65,13 @@ public final class STime {
 		return formatDate("yyyy-MM-dd HH:mm:ss", local);
 	}
 
-	/** Format a date to a string.
+	/**
+	 * Format a date to a string.
 	 * @param format Format specifier.
 	 * @param local Use local time or UTC.
 	 * @param date Date to format.
-	 * @return Formatted string. */
+	 * @return Formatted string.
+	 */
 	static private String formatDate(String format, boolean local,
 		Date date)
 	{
@@ -81,10 +88,12 @@ public final class STime {
 			return TimeZone.getTimeZone("UTC");
 	}
 
-	/** Format the current date/time.
+	/**
+	 * Format the current date/time.
 	 * @param format Format specifier.
 	 * @param local Use local time or UTC.
-	 * @return Formatted string. */
+	 * @return Formatted string.
+	 */
 	static private String formatDate(String format, boolean local) {
 		return formatDate(format, local, new Date());
 	}
@@ -103,7 +112,7 @@ public final class STime {
 	}
 
 	/**
-	 * given a date in XML time format (UTC), return a Date.
+	 * Given a date in XML time format (UTC), return a Date.
 	 * this method only handles times in the format below. Note
 	 * the terminating Z indicates UTC.
 	 *
@@ -129,11 +138,29 @@ public final class STime {
 		    "Bogus XML date string received: " + xml);
 	}
 
-	/** Parse a date from a string.
+	/**
+	 * Parse a date as a string.
+	 * @param The date (format "yyyy-MM-dd HH:mm:ss")
+	 * @return The date's corresponding epoch value, or -1 on error.
+	 */
+	static public long parseDate(String d) {
+		if (d == null)
+			return -1;
+		try {
+			Date pd = parseDate("yyyy-MM-dd HH:mm:ss", true, d);
+			return pd.getTime();
+		}
+		catch(ParseException e) {}
+		return -1;
+	}
+
+	/**
+	 * Parse a date from a string.
 	 * @param format Format specifier.
 	 * @param local Use local time or UTC.
 	 * @param date Date to format.
-	 * @return Parsed date. */
+	 * @return Parsed date.
+	 */
 	static private Date parseDate(String format, boolean local,
 		String date) throws ParseException
 	{
@@ -142,4 +169,18 @@ public final class STime {
 		sdf.setTimeZone(getTimeZone(local));
 		return sdf.parse(date);
 	}
+
+	/**
+	 * Return the specified date as a string in local time.
+	 * @param stamp An epoch value, or a value less than 0 for missing.
+	 * @return A string in local time as HH:mm:ss MM-dd-yyyy or an
+	 *         empty string if stamp is less than 0.
+	 */
+	static public String getDateString(long stamp) {
+		if(stamp < 0)
+			return "";
+		Date d = new Date(stamp);
+		return new SimpleDateFormat("HH:mm:ss MM-dd-yyyy").format(d);
+	}
+
 }
