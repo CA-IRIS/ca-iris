@@ -44,6 +44,9 @@ import us.mn.state.dot.tms.utils.NumericAlphaComparator;
  */
 public class QuickMessageCBox extends JComboBox {
 
+	/** Prototype sign text */
+	static private final String PROTOTYPE_TEXT = "123456789012";
+
 	/** Given a QuickMessage or String, return the cooresponding quick 
 	 * message name or an empty string if none exists. */
 	static protected String getQuickLibMsgName(Object obj) {
@@ -76,6 +79,9 @@ public class QuickMessageCBox extends JComboBox {
 	public QuickMessageCBox(DMSDispatcher d) {
 		setModel(model);
 		dispatcher = d;
+		// Use a prototype display value so that the UI doesn't become
+		// unusable when quick messages with long names are used.
+		setPrototypeDisplayValue(PROTOTYPE_TEXT);
 		setEditable(true);
 		focus_listener = new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
