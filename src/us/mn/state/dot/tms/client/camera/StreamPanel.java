@@ -405,9 +405,9 @@ public class StreamPanel extends JPanel {
 		updateButtonState();
 		for (StreamStatusListener ssl : ssl_set) {
 			if (stream_state)
-				ssl.onStreamStarted();
+				ssl.onStreamStarted(camera);
 			else
-				ssl.onStreamFinished();
+				ssl.onStreamFinished(camera);
 		}
 	}
 
