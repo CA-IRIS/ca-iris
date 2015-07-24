@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2014  Minnesota Department of Transportation
- * Copyright (C) 2009-2010  AHMCT, University of California
+ * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,14 @@ import javax.swing.ComboBoxModel;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.MultiParser;
 import us.mn.state.dot.tms.SignText;
+import us.mn.state.dot.tms.SystemAttrEnum;
 
 /**
  * Model for a sign text line combo box.
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class SignTextComboBoxModel extends AbstractListModel
 	implements ComboBoxModel
@@ -87,9 +89,12 @@ public class SignTextComboBoxModel extends AbstractListModel
 
 	/**
 	 * Set the selected item. This method is called by the combobox when:
-	 * 	-the focus leaves the combobox with a String arg when editable.
-	 *      -a combobox item is clicked on via the mouse.
-	 *      -a combobox item is moved to via the cursor keys.
+	 * <ul>
+	 *   <li> focus leaves the combobox with a String arg when editable.
+	 *   <li> a combobox item is clicked on via the mouse.
+	 *   <li> a combobox item is moved to via the cursor keys.
+	 *   <li> entry/edit keystrokes (if dms_preview_instant sysattr true)
+	 * </ul>
 	 */
 	@Override
 	public void setSelectedItem(Object s) {
@@ -105,7 +110,7 @@ public class SignTextComboBoxModel extends AbstractListModel
 
 	/** Get or create a sign text for the given string */
 	private SignText getSignText(String s) {
-		String m = MultiParser.normalize(s.trim());
+		String m = MultiParser.normalize(s);
 		if (m.length() == 0)
 			return BLANK_SIGN_TEXT;
 		SignText st = lookupMessage(m);

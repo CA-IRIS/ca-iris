@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California, Davis
+ * Copyright (C) 2010-2014 AHMCT, University of California, Davis
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 
@@ -438,4 +439,17 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 			pager.dispose();
 		pnlPager = p;
 	}
+
+	/**
+	 * Set the DMS panel pager to the given page.
+	 * @param p The desired page number
+	 * @return true if successful, else false
+	 */
+	protected boolean setPagerPage(int p) {
+		if (pnlPager != null)
+			return pnlPager.showPage(p);
+		else
+			return false;
+	}
+
 }

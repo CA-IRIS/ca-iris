@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2011-2012  Minnesota Department of Transportation
- * Copyright (C) 2009-2010  AHMCT, University of California
+ * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.ComboBoxEditor;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import us.mn.state.dot.tms.MultiParser;
 import us.mn.state.dot.tms.SignText;
 import us.mn.state.dot.tms.SystemAttrEnum;
@@ -34,6 +35,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class MsgComboBox extends JComboBox {
 
@@ -81,7 +83,7 @@ public class MsgComboBox extends JComboBox {
 	/** Combo box editor */
 	private final Editor editor;
 
-	/** Key listener for key events */
+	/** Key listener for combo box key events */
 	private final KeyAdapter keyListener;
 
 	/** Focus listener for editor focus events */
@@ -89,6 +91,9 @@ public class MsgComboBox extends JComboBox {
 
 	/** Action listener for editor events */
 	private final ActionListener editorListener;
+
+	/** Key listener for editor key events */
+	protected final KeyAdapter editorKeyListener;
 
 	/** Listener for combo box events */
 	private final ActionListener comboListener = new ActionListener() {
@@ -128,6 +133,14 @@ public class MsgComboBox extends JComboBox {
 					setEditable(false);
 			}
 		};
+		editorKeyListener = new KeyAdapter() {
+			public void keyTyped(KeyEvent ke) {
+				if (SystemAttrEnum.DMS_PREVIEW_INSTANT
+					.getBoolean()) {
+					refreshComposer();
+				}
+			}
+		};
 	}
 
 	/** Initialize the message combo box */
@@ -138,14 +151,17 @@ public class MsgComboBox extends JComboBox {
 		addKeyListener(keyListener);
 		editor.addFocusListener(focusListener);
 		editor.addActionListener(editorListener);
+		editor.addKeyListener(editorKeyListener);
 	}
 
 	/** Dispose of the message combo box */
 	public void dispose() {
+		editor.removeKeyListener(editorKeyListener);
 		editor.removeActionListener(editorListener);
 		editor.removeFocusListener(focusListener);
 		removeKeyListener(keyListener);
 		removeActionListener(comboListener);
+
 	}
 
 	/** Set the edit mode.
@@ -193,6 +209,26 @@ public class MsgComboBox extends JComboBox {
 	private void doFocusLost() {
 		if(edit_mode == EditMode.AFTERKEY)
 			setEditable(false);
+		Object o = editor.getItem();
+		if (o instanceof SignText) {
+			String multi = ((SignText)o).getMulti();
+			// trim if DMS_COMPOSER_TRIM enabled, or if the
+			// line is all whitespace (to prevent phantom lines).
+			if (SystemAttrEnum.DMS_COMPOSER_TRIM.getBoolean() ||
+				"".equals(multi.trim())) {
+				short line = ((SignText)o).getLine();
+				short rank = ((SignText)o).getRank();
+				// "multi" normally doesn't contain MULTI
+				// tags such as nl, np, fo.  However, it will
+				// contain other tags (is this intentional?),
+				// in which case trim won't work properly.
+				// This needs to be discussed further with
+				// MnDOT prior to submitting upstream.
+				ClientSignText trimmed = new ClientSignText(
+					multi.trim(), line, rank);
+				editor.setItem(trimmed);
+			}
+		}
 		composer.updateMessage();
 	}
 
@@ -201,11 +237,28 @@ public class MsgComboBox extends JComboBox {
 		Object o = getSelectedItem();
 		if(o instanceof SignText) {
 			if(edit_mode == EditMode.ALWAYS)
-				return formatItem(editor.getItem());
+				return formatItem(editor.getItem());	// normalizes
 			else
 				return ((SignText)o).getMulti();
 		} else
 			return "";
+	}
+
+	private void refreshComposer() {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				JTextField jtf = (JTextField) editor.getEditorComponent();
+				// preserve caret pos. to prevent hop to EOL
+				int cp = jtf.getCaretPosition();
+				composer.updateMessage();
+				try {
+					jtf.setCaretPosition(cp);
+				}
+				catch (IllegalArgumentException e) {
+					// shouldn't happen, but NOP is safe.
+				}
+			}
+		});
 	}
 
 	/** Editor for message combo box */
@@ -215,11 +268,13 @@ public class MsgComboBox extends JComboBox {
 		protected Object value;
 
 		/** Get the component for the combo box editor */
+		@Override
 		public Component getEditorComponent() {
 			return this;
 		}
 
 		/** Return the edited item */
+		@Override
 		public Object getItem() {
 			String nv = formatItem(getText());
 			if(value instanceof SignText) {
@@ -231,6 +286,7 @@ public class MsgComboBox extends JComboBox {
 
 		/** Set the item that should be edited.
 		 * @param item New value of item */
+		@Override
 		public void setItem(Object item) {
 			setText(formatItem(item));
 			value = item;
