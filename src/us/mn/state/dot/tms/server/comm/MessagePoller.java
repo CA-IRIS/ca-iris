@@ -333,8 +333,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			ensureOpen();
 			if(o instanceof KillThread)
 				break;
-			if(o instanceof OpController)
-				doPoll((OpController<T>)o);
+			doPoll(o);
 			// final bump when poll complete
 			bump();
 			// don't disconnect after AcquireDevice phases
@@ -344,17 +343,19 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	}
 
 	/** Perform one poll for an operation */
-	private void doPoll(final OpController<T> o) throws IOException {
+	private void doPoll(final Operation<T> o) throws IOException {
 		final String oname = o.toString();
 		long start = TimeSteward.currentTimeMillis();
 		try {
-			o.poll(createCommMessage(o));
+			o.poll(createMessage(o));
 		}
 		catch(DeviceContentionException e) {
 			handleContention(o, e);
 		}
 		catch(DownloadRequestException e) {
-			download(o.getController(), o.getPriority());
+			if (o instanceof OpController)
+				download(((OpController<T>)o).getController(),
+				((OpController<T>)o).getPriority());
 		}
 		catch(ChecksumException e) {
 			o.handleCommError(EventType.CHECKSUM_ERROR,
@@ -367,10 +368,14 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			messenger.drain();
 		}
 		catch(ControllerException e) {
-			o.handleCommError(EventType.CONTROLLER_ERROR,
-				exceptionMessage(e));
-			o.setFailed();
-			o.setMaintStatus(exceptionMessage(e));
+			if (o instanceof OpController) {
+				((OpController<T>)o).handleCommError(
+					EventType.CONTROLLER_ERROR,
+					exceptionMessage(e));
+				((OpController<T>)o).setFailed();
+				((OpController<T>)o).setMaintStatus(
+					exceptionMessage(e));
+			}
 		}
 		catch(SocketTimeoutException e) {
 			o.handleCommError(EventType.POLL_TIMEOUT_ERROR,
@@ -426,13 +431,35 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Check if a drop address is valid */
 	abstract public boolean isAddressValid(int drop);
 
-	/** Create a message for the specified operation.
-	 * @param o The operation.
+	/** Create a CommMessage, based on Operation type. */
+	private final CommMessage<T> createMessage(Operation<T> o)
+		throws IOException
+	{
+		if (o instanceof OpController)
+			return createCommMessage((OpController<T>)o);
+		else if (o instanceof Operation)
+			return createCommMessageOp(o);
+		else
+			return null;
+	}
+
+	/** Create a message for the specified OpController.
+	 * @param o The OpController.
 	 * @return New comm message. */
 	protected CommMessage<T> createCommMessage(OpController<T> o)
 		throws IOException
 	{
 		return new CommMessageImpl<T>(messenger, o, protocolLog());
+	}
+
+	/** Create a message for the specified Operation.
+	 * @param o The Operation.
+	 * @return New comm message. */
+	protected CommMessage<T> createCommMessageOp(Operation<T> o)
+		throws IOException
+	{
+		// to be overriden by subclass if needed
+		return null;
 	}
 
 	/** Get the protocol debug log */
