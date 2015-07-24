@@ -45,6 +45,7 @@ import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
 import us.mn.state.dot.tms.server.comm.pelcod.PelcoDPoller;
 import us.mn.state.dot.tms.server.comm.rtms.RtmsPoller;
+import us.mn.state.dot.tms.server.comm.sensys.SensysPoller;
 import us.mn.state.dot.tms.server.comm.ss105.SS105Poller;
 import us.mn.state.dot.tms.server.comm.ss125.SS125Poller;
 import us.mn.state.dot.tms.server.comm.ssi.SsiPoller;
@@ -149,6 +150,8 @@ public class DevicePollerFactory {
 			return createWizardPoller();
 		case URMS:
 			return createUrmsPoller();
+		case SENSYS:
+			return createSensysPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -431,5 +434,10 @@ public class DevicePollerFactory {
 	/** Create a URMS poller */
 	protected DevicePoller createUrmsPoller() throws IOException {
 		return new UrmsPoller(name, createSocketMessenger(UDP, true));
+	}
+
+	/** Create a Sensys poller */
+	protected DevicePoller createSensysPoller() throws IOException {
+		return new SensysPoller(name, createSocketMessenger(TCP));
 	}
 }
