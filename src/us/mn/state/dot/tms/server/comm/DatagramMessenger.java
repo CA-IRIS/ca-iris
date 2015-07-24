@@ -19,18 +19,38 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * A DatagramMessenger is a class which can poll a field controller and get the
  * response using a UDP socket connection.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DatagramMessenger extends Messenger {
+
+	//FIXME ConnType and the new binding port may conflict. UCD#290
+	
+	/** Connection type */
+	public enum ConnType {
+		// bidirectional single host, local or remote
+		DEFAULT,
+
+		// receive from multiple hosts on local address
+		RECV_MULT_LOCAL
+	}
+
+	/** Connection type */
+	private final ConnType connect_type;
 
 	/** Local port to bind */
 	private final Integer port;
@@ -61,25 +81,54 @@ public class DatagramMessenger extends Messenger {
 
 	/** Create a new datagram messenger.
 	 * @param p Local port (null for any).
-	 * @param ra Remote socket address. */
+	 * @param ra Remote socket address. 
+	 */
 	public DatagramMessenger(Integer p, SocketAddress ra) {
-		port = p;
-		remote = ra;
+		this(ConnType.DEFAULT, ra, p);
 	}
 
 	/** Create a new datagram messenger.
-	 * @param ra Remote socket address. */
+	 * @param ra Remote socket address. 
+	 */
 	public DatagramMessenger(SocketAddress ra) {
-		this(null, ra);
+		this(ConnType.DEFAULT, ra, null);
 	}
+
+	/** Create a new datagram messenger 
+	 * @param ct ConnType
+	 * @param ra Remote socket address. 
+	 */
+	public DatagramMessenger(ConnType ct, SocketAddress ra) {
+		this(ct, ra, null);
+	}
+	
+	/** Create a new datagram messenger 
+	 * @param ct ConnType
+	 * @param ra  Remote socket address.
+	 * @param p Local port (null for any).
+	 */
+	public DatagramMessenger(ConnType ct, SocketAddress ra, Integer p) {
+		connect_type = ct;
+		remote = ra;
+		port = p;
+	}
+
 
 	/** Open the datagram messenger */
 	@Override
 	public void open() throws IOException {
-		socket = createSocket();
-		socket.setSoTimeout(timeout);
-		socket.connect(remote);
-		input = new DatagramInputStream();
+	if (connect_type == ConnType.DEFAULT) {
+			socket = new DatagramSocket();
+			socket.setSoTimeout(timeout);
+			socket.connect(remote);
+		} else if (connect_type == ConnType.RECV_MULT_LOCAL) {
+			socket = new DatagramSocket(null);
+			socket.setSoTimeout(timeout);
+			socket.bind(remote);
+		} else {
+			System.err.println("bogus datagram connection type");
+			return;
+		}		input = new DatagramInputStream();
 		output = new DatagramOutputStream();
 	}
 
@@ -122,6 +171,7 @@ public class DatagramMessenger extends Messenger {
 		/** Flush packet to datagram */
 		@Override
 		public void flush() throws IOException {
+			packet.setSocketAddress(remote);
 			packet.setLength(buffer.position());
 			buffer.clear();
 			DatagramSocket s = socket;
@@ -136,6 +186,9 @@ public class DatagramMessenger extends Messenger {
 		/** Buffer for storing received datagram */
 		private final ByteBuffer buffer = ByteBuffer.allocate(1024);
 
+		/* Datagram origin address */
+		private InetAddress origin_addr;
+
 		/** Packet to receive */
 		private final DatagramPacket packet =
 			new DatagramPacket(buffer.array(), 1024);
@@ -144,6 +197,11 @@ public class DatagramMessenger extends Messenger {
 		private DatagramInputStream() {
 			// no data in buffer before a packet is received
 			buffer.limit(0);
+		}
+
+		/** Get datagram origin address */
+		public InetAddress getOriginAddr() {
+			return origin_addr;
 		}
 
 		/** Read a byte from a received datagram */
@@ -163,12 +221,17 @@ public class DatagramMessenger extends Messenger {
 			}
 		}
 
-		/** Recvie and buffer a datagram */
-		private void receivePacket() throws IOException {
+		/**
+		 * Receive and buffer a datagram. This method blocks until the
+		 * buffer is full or the read times out.
+		 * @throws SocketTimeoutException
+		 */
+		protected void receivePacket() throws IOException {
 			DatagramSocket s = socket;
 			if (s != null) {
 				packet.setLength(1024);
 				s.receive(packet);
+				origin_addr = packet.getAddress();
 				buffer.position(0);
 				buffer.limit(packet.getLength());
 			}
@@ -187,6 +250,17 @@ public class DatagramMessenger extends Messenger {
 				buffer.limit(0);
 			} else
 				buffer.position(buffer.position() + b);
+		}
+
+		/** Read all bytes in a datagram */
+		public byte[] readDatagram() throws IOException {
+			read();
+			buffer.position(0);
+			int size = buffer.limit();
+			byte[] ret = new byte[size];
+			if (size > 0)
+				buffer.get(ret);
+			return ret;
 		}
 	}
 }
