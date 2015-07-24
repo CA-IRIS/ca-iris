@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
- * Copyright (C) 2010  AHMCT, University of California
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DMSManager extends ProxyManager<DMS> {
 
@@ -115,7 +116,8 @@ public class DMSManager extends ProxyManager<DMS> {
 		theme.addStyle(ItemStyle.DEPLOYED, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.SCHEDULED, ProxyTheme.COLOR_SCHEDULED);
 		if(SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
-			theme.addStyle(ItemStyle.AWS_DEPLOYED, Color.RED);
+			theme.addStyle(ItemStyle.AWS_DEPLOYED,
+			ProxyTheme.COLOR_AWS_DEPLOYED);
 		theme.addStyle(ItemStyle.MAINTENANCE,
 			ProxyTheme.COLOR_UNAVAILABLE);
 		theme.addStyle(ItemStyle.FAILED, ProxyTheme.COLOR_FAILED);

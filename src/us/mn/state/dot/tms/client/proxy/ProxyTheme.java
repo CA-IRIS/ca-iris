@@ -74,6 +74,9 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 	/** Color to display scheduled devices */
 	static public final Color COLOR_SCHEDULED = new Color(240, 128, 0);
 
+	/** Color definition for AWS controlled style */
+	static public final Color COLOR_AWS_DEPLOYED = Color.RED;
+
 	/** Size of legend icons */
 	static private final int lsize = UI.scaled(22);
 
