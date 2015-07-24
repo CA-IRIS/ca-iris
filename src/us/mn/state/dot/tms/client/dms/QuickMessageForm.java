@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +16,10 @@
 package us.mn.state.dot.tms.client.dms;
 
 import us.mn.state.dot.tms.QuickMessage;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyTableForm;
+import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.utils.I18N;
 
 /**
@@ -25,6 +28,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Michael Darter
  * @author Doug Lau
+ * @author Travis Swanston
  */
 public class QuickMessageForm extends ProxyTableForm<QuickMessage> {
 
@@ -37,6 +41,8 @@ public class QuickMessageForm extends ProxyTableForm<QuickMessage> {
 	 * @param s Session. */
 	public QuickMessageForm(Session s) {
 		super(I18N.get("quick.messages"),new QuickMessageTableModel(s));
+		if (SystemAttrEnum.DMS_QUICKMSG_UPPERCASE_NAMES.getBoolean())
+			getPanel().setAddUppercase(true);
 	}
 }
 

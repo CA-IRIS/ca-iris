@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +23,7 @@ import us.mn.state.dot.tms.client.widget.AbstractForm;
  * objects.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class ProxyTableForm<T extends SonarObject> extends AbstractForm {
 
@@ -53,5 +55,10 @@ public class ProxyTableForm<T extends SonarObject> extends AbstractForm {
 	public void dispose() {
 		panel.dispose();
 		super.dispose();
+	}
+
+	/** Get the panel */
+	public ProxyTablePanel<T> getPanel() {
+		return panel;
 	}
 }

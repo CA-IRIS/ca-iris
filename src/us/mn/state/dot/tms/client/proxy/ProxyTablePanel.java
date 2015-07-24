@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,17 +26,20 @@ import javax.swing.JTextField;
 import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
+import javax.swing.text.AbstractDocument;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.tms.client.EditModeListener;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IListSelectionAdapter;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.client.widget.ITable;
+import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
  * A proxy table panel is a UI for displaying a table of proxy objects.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 
@@ -294,4 +298,14 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	public boolean canRemove(T proxy) {
 		return model.canRemove(proxy);
 	}
+
+	/** Enable/disable conversion of names to uppercase */
+	public void setAddUppercase(boolean en) {
+		AbstractDocument doc = (AbstractDocument)add_txt.getDocument();
+		if (en)
+			doc.setDocumentFilter(new UppercaseDocumentFilter());
+		else
+			doc.setDocumentFilter(null);
+	}
+
 }
