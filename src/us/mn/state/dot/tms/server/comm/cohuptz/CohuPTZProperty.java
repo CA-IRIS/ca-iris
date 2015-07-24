@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,10 @@
 
 package us.mn.state.dot.tms.server.comm.cohuptz;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
 
 /**
@@ -128,6 +132,20 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		byte byteval = (byte) (0x30 + mapInt);
 		return byteval;
+	}
+
+	/** Encode a STORE request */
+	@Override
+	public void encodeStore(ControllerImpl c, OutputStream os)
+		throws IOException
+	{
+	}
+
+	/** Decode a STORE response */
+	@Override
+	public void decodeStore(ControllerImpl c, InputStream is)
+		throws IOException
+	{
 	}
 
 }
