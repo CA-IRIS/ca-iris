@@ -660,6 +660,21 @@ CREATE TABLE iris._device_preset (
 	preset VARCHAR(10) UNIQUE REFERENCES iris.camera_preset(name)
 );
 
+-- table containing allowed preset alias names
+CREATE TABLE iris.camera_preset_alias_name (
+	id integer PRIMARY KEY,
+	alias VARCHAR(20) NOT NULL
+);
+
+-- table containing current alias:preset# mappings for each camera
+CREATE TABLE iris.camera_preset_alias (
+	name VARCHAR(10) PRIMARY KEY,
+	camera VARCHAR(10) NOT NULL REFERENCES iris._camera,
+	alias INTEGER NOT NULL REFERENCES iris.camera_preset_alias_name,
+	preset_num INTEGER NOT NULL CHECK (preset_num > 0 AND preset_num <= 12),
+	UNIQUE(camera, alias)
+);
+
 CREATE TABLE iris._beacon (
 	name VARCHAR(10) PRIMARY KEY,
 	geo_loc VARCHAR(20) REFERENCES iris.geo_loc(name),
@@ -2270,6 +2285,10 @@ COPY iris.encoder_type (id, description) FROM stdin;
 7	Axis JPEG
 \.
 
+COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
+0	Home
+\.
+
 COPY iris.system_attribute (name, value) FROM stdin;
 camera_autoplay	true
 camera_id_blank	
@@ -2423,6 +2442,7 @@ PRV_0009	login	geo_loc(/.*)?	t	f	f	f
 PRV_0010	login	incident_detail(/.*)?	t	f	f	f
 PRV_0011	camera_tab	camera(/.*)?	t	f	f	f
 PRV_001A	camera_tab	camera_preset(/.*)?	t	f	f	f
+PRV_001B	camera_tab	camera_preset_alias(/.*)?	t	f	f	f
 PRV_0012	camera_tab	controller(/.*)?	t	f	f	f
 PRV_0013	camera_tab	video_monitor(/.*)?	t	f	f	f
 PRV_0014	incident_tab	incident(/.*)?	t	f	f	f
@@ -2519,6 +2539,7 @@ PRV_0099	device_admin	alarm/.*	f	t	t	t
 PRV_0100	device_admin	cabinet/.*	f	t	t	t
 PRV_0101	device_admin	camera/.*	f	t	t	t
 PRV_010A	device_admin	camera_preset/.*	f	t	t	t
+PRV_010B	device_admin	camera_preset_alias/.*	f	t	t	t
 PRV_0102	device_admin	comm_link/.*	f	t	t	t
 PRV_0103	device_admin	controller/.*	f	t	t	t
 PRV_0104	device_admin	detector/.*	f	t	t	t
