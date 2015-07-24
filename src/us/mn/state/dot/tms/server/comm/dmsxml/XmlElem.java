@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
 import us.mn.state.dot.tms.utils.SString;
+import us.mn.state.dot.tms.utils.STime;
 
 /**
  * This class represents an XML element that contains child elements one

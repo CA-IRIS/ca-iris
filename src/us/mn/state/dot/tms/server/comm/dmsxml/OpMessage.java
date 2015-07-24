@@ -32,6 +32,7 @@ import us.mn.state.dot.tms.units.Interval;
 import static us.mn.state.dot.tms.units.Interval.Units.MILLISECONDS;
 import us.mn.state.dot.tms.utils.HexString;
 import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
+import us.mn.state.dot.tms.utils.STime;
 
 /**
  * Operation to send a new message to a DMS.
