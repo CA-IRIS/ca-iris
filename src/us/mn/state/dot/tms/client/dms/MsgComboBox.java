@@ -135,8 +135,21 @@ public class MsgComboBox extends JComboBox {
 		};
 		editorKeyListener = new KeyAdapter() {
 			public void keyTyped(KeyEvent ke) {
+				if (SystemAttrEnum.DMS_COMPOSER_UPPERCASE
+					.getBoolean())
+				{
+					// we convert on keyTyped, rather than
+					// using a DocumentFilter so that
+					// quick-messages/etc. can still be
+					// loaded into the composer w/out
+					// case translation.
+					char c = ke.getKeyChar();
+					c = Character.toUpperCase(c);
+					ke.setKeyChar(c);
+				}
 				if (SystemAttrEnum.DMS_PREVIEW_INSTANT
-					.getBoolean()) {
+					.getBoolean())
+				{
 					refreshComposer();
 				}
 			}
