@@ -14,8 +14,12 @@
  */
 package us.mn.state.dot.tms.server.comm.cohuptz;
 
-import us.mn.state.dot.tms.server.CameraImpl;
+import java.io.IOException;
+import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.CommLink;
+import us.mn.state.dot.tms.CommLinkHelper;
 import us.mn.state.dot.tms.DeviceRequest;
+import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
 import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
@@ -27,6 +31,14 @@ import us.mn.state.dot.tms.server.comm.Messenger;
  * @author Travis Swanston
  */
 public class CohuPTZPoller extends MessagePoller implements CameraPoller {
+
+	/** Debug log */
+	static private final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
+
+	/** Log a message to the debug log */
+	static public void log(String msg) {
+		DEBUG_LOG.log(msg);
+	}
 
 	/** Cohu camera address range constants */
 	static public final int ADDR_MIN = 1;
@@ -61,6 +73,20 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	 */
 	public CohuPTZPoller(String n, Messenger m, int idle) {
 		super(n, m, ConnMode.AUTO, idle);
+		log("CohuPTZPoller instantiated.");
+		CommLink cl = CommLinkHelper.lookup(n);
+		if (cl == null) {
+			log("Failed to find CommLink.");
+			return;
+		}
+		int to = cl.getTimeout();
+		try {
+			m.setTimeout(to);
+			log("Set Messenger timeout to " + to + ".");
+		}
+		catch (IOException e) {
+			log("Failed to set Messenger timeout.");
+		}
 	}
 
 	/** Check drop address validity */
