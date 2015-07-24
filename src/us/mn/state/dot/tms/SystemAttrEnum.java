@@ -1,8 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  * Copyright (C) 2012  Iteris Inc.
- * Copyright (C) 2014  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ public enum SystemAttrEnum {
 	CAMERA_PRESET_STORE_ENABLE(false, Change.RESTART_CLIENT),
 	CAMERA_PTZ_BLIND(true),
 	CAMERA_PTZ_PANEL_ENABLE(false, Change.RESTART_CLIENT),
+	CAMERA_PTZ_RETURN_HOME(false),
 	CAMERA_STREAM_CONTROLS_ENABLE(false, Change.RESTART_CLIENT),
 	CAMERA_UTIL_PANEL_ENABLE(false, Change.RESTART_CLIENT),
 	CAMERA_WIPER_PRECIP_MM_HR(8, 1, 100),

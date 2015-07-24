@@ -91,4 +91,14 @@ public enum EncoderType {
 			d.add(et.description);
 		return d.toArray(new String[0]);
 	}
+
+	/** Does this EncoderType support indirect streaming? */
+	public boolean supportsIndirect() {
+		return (indirect_stream != StreamType.NONE);
+	}
+
+	/** Does this EncoderType support direct streaming? */
+	public boolean supportsDirect() {
+		return (direct_stream != StreamType.NONE);
+	}
 }
