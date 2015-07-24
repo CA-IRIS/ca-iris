@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2002-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +23,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
  * An operation is a sequence of phases to be performed on a field controller.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 abstract public class Operation<T extends ControllerProperty> {
 
@@ -170,9 +172,15 @@ abstract public class Operation<T extends ControllerProperty> {
 		return stripToLastDot(phaseClass().getName());
 	}
 
-	/** Get the phase class */
+	/** Get the class of the current phase */
 	private Class phaseClass() {
 		Phase<T> p = phase;
 		return (p != null) ? p.getClass() : getClass();
 	}
+
+	/** Get the current phase */
+	public Phase<T> getPhase() {
+		return phase;
+	}
+
 }
