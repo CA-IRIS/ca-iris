@@ -2111,6 +2111,14 @@ CREATE VIEW incident_view AS
     LEFT JOIN iris.lane_type ln ON i.lane_type = ln.id;
 GRANT SELECT ON incident_view TO PUBLIC;
 
+--- CA-ONLY: SwitchServer state map:
+CREATE SCHEMA video;
+ALTER SCHEMA video OWNER TO tms;
+CREATE TABLE video.decoder_map (
+	did VARCHAR(64) NOT NULL,
+	cid VARCHAR(64) NOT NULL
+	);
+
 --- Data
 
 COPY iris.direction (id, direction, dir) FROM stdin;
