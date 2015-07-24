@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2012  Iteris Inc.
  * Copyright (C) 2012-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +28,7 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  *
  * @author Michael Darter
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class G4Poller extends MessagePoller<G4Property> implements SamplePoller{
 
@@ -63,6 +65,11 @@ public class G4Poller extends MessagePoller<G4Property> implements SamplePoller{
 	public void querySamples(ControllerImpl c, int p) {
 		if (p == 30)
 			addOperation(new OpQueryStats(c, p));
+	}
+
+	/** Query the sample poller. */
+	@Override
+	public void queryPoller() {
 	}
 
 	/** Get the protocol debug log */

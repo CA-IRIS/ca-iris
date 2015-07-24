@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2004-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +27,8 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  * serial data communication protocol.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class SS105Poller extends MessagePoller<SS105Property>
 	implements SamplePoller
@@ -81,4 +84,10 @@ public class SS105Poller extends MessagePoller<SS105Property>
 	protected DebugLog protocolLog() {
 		return SS105_LOG;
 	}
+
+	/** Query the sample poller. */
+	@Override
+	public void queryPoller() {
+	}
+
 }

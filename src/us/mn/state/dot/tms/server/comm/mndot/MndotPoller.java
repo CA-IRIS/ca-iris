@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +42,8 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  * revision 4 or 5.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class MndotPoller extends MessagePoller implements LCSPoller,AlarmPoller,
 	MeterPoller, SamplePoller, BeaconPoller, LaneMarkingPoller
@@ -223,4 +226,10 @@ public class MndotPoller extends MessagePoller implements LCSPoller,AlarmPoller,
 	protected DebugLog protocolLog() {
 		return MNDOT_LOG;
 	}
+
+	/** Query the sample poller. */
+	@Override
+	public void queryPoller() {
+	}
+
 }
