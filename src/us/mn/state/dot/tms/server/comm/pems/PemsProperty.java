@@ -171,10 +171,10 @@ public class PemsProperty extends ControllerProperty {
 	 */
 	private String getStationName() {
 		String id = traf_stat.getName();
-		if(id.length() != 7) {
+		if(id.length() != 7 && id.length() != 8) {
 			PemsPoller.log("PeMS station='" + id +
 				"' has incorrect length (" + id.length() +
-				"), should be 7. It was ignored.");
+				"), should be 7 or 8. It was ignored.");
 			return null;
 		}
 		if(!SString.isNumeric(id)) {
