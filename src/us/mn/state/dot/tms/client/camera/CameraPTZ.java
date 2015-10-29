@@ -19,6 +19,8 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.client.Session;
 
+import javax.swing.event.EventListenerList;
+
 /**
  * Camera PTZ control.  This is required to ensure that all continous camera
  * operations (e.g. PTZ move, focus move, iris move) are stopped before
@@ -26,6 +28,7 @@ import us.mn.state.dot.tms.client.Session;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class CameraPTZ {
 
@@ -47,9 +50,39 @@ public class CameraPTZ {
 	/** Is camera control currently enabled? */
 	private boolean controlEnabled = true;
 
+	/** List of listeners for control interaction. */
+	private final EventListenerList actionListenerList;
+
 	/** Create a new camera PTZ control */
 	public CameraPTZ(Session s) {
 		session = s;
+		actionListenerList = new EventListenerList();
+	}
+
+	/** Add listener to be notified when action is performed on camera */
+	public void addActionListener(CameraActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.add(CameraActionListener.class, listener);
+		}
+	}
+
+	/** Remove listener to be notified when action is performed on camera */
+	public void removeActionListener(CameraActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.remove(CameraActionListener.class, listener);
+		}
+	}
+
+	/** Notify listeners that action was performed on camera */
+	protected void fireActionPerformed() {
+		Object[] listeners;
+		synchronized (actionListenerList) {
+			listeners = actionListenerList.getListeners(CameraActionListener.class);
+		}
+
+		for (Object listener : listeners) {
+			((CameraActionListener)listener).actionPerformed();
+		}
 	}
 
 	/** Can a ptz control be made */
@@ -126,6 +159,7 @@ public class CameraPTZ {
 				ptz[1] = t;
 				ptz[2] = z;
 				camera.setPtz(ptz);
+				fireActionPerformed();
 			}
 		}
 	}
@@ -152,6 +186,7 @@ public class CameraPTZ {
 		if (canRequestDevice()) {
 			updateFocusAndIris(dr);
 			camera.setDeviceRequest(dr.ordinal());
+			fireActionPerformed();
 		}
 	}
 
@@ -188,6 +223,7 @@ public class CameraPTZ {
 		if (irisMoving)
 			doSendRequest(DeviceRequest.CAMERA_IRIS_STOP);
 		clearState();
+		fireActionPerformed();
 	}
 
 	/** Ensure states are cleared */
