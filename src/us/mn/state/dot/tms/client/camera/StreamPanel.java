@@ -161,10 +161,10 @@ public class StreamPanel extends JPanel {
 	{
 		super(new GridBagLayout());
 		if (cam_ptz != null) {
-			cam_ptz.addActionListener(new CameraActionListener() {
+			cam_ptz.addActionListener(new ActionListener() {
 				@Override
-				public void actionPerformed() {
-					resetStartTime();
+				public void actionPerformed(ActionEvent e) {
+					resetStreamTimeout();
 				}
 			});
 		}
@@ -370,7 +370,7 @@ public class StreamPanel extends JPanel {
 			JComponent screen = stream.getComponent();
 			screen.setPreferredSize(screen_pnl.getPreferredSize());
 			screen_pnl.add(screen);
-			resetStartTime();
+			resetStreamTimeout();
 			int dur = video_req.getDuration();
 			if (dur > 0) {
 				progress.setMaximum(dur);
@@ -387,7 +387,7 @@ public class StreamPanel extends JPanel {
 	}
 
 	/** Reset the stream start time to now */
-	protected void resetStartTime() {
+	protected void resetStreamTimeout() {
 		if (stream != null)
 			start_time = System.currentTimeMillis();
 	}

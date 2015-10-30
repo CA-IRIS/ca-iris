@@ -20,6 +20,7 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.client.Session;
 
 import javax.swing.event.EventListenerList;
+import java.awt.event.ActionListener;
 
 /**
  * Camera PTZ control.  This is required to ensure that all continous camera
@@ -60,16 +61,16 @@ public class CameraPTZ {
 	}
 
 	/** Add listener to be notified when action is performed on camera */
-	public void addActionListener(CameraActionListener listener) {
+	public void addActionListener(ActionListener listener) {
 		synchronized (actionListenerList) {
-			actionListenerList.add(CameraActionListener.class, listener);
+			actionListenerList.add(ActionListener.class, listener);
 		}
 	}
 
 	/** Remove listener to be notified when action is performed on camera */
-	public void removeActionListener(CameraActionListener listener) {
+	public void removeActionListener(ActionListener listener) {
 		synchronized (actionListenerList) {
-			actionListenerList.remove(CameraActionListener.class, listener);
+			actionListenerList.remove(ActionListener.class, listener);
 		}
 	}
 
@@ -77,11 +78,11 @@ public class CameraPTZ {
 	protected void fireActionPerformed() {
 		Object[] listeners;
 		synchronized (actionListenerList) {
-			listeners = actionListenerList.getListeners(CameraActionListener.class);
+			listeners = actionListenerList.getListeners(ActionListener.class);
 		}
 
 		for (Object listener : listeners) {
-			((CameraActionListener)listener).actionPerformed();
+			((ActionListener)listener).actionPerformed(null);
 		}
 	}
 
@@ -223,7 +224,6 @@ public class CameraPTZ {
 		if (irisMoving)
 			doSendRequest(DeviceRequest.CAMERA_IRIS_STOP);
 		clearState();
-		fireActionPerformed();
 	}
 
 	/** Ensure states are cleared */
@@ -243,6 +243,7 @@ public class CameraPTZ {
 		if (controlEnabled && canRecallPreset()) {
 			camera.setRecallPreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 
@@ -254,6 +255,7 @@ public class CameraPTZ {
 		if (controlEnabled && canStorePreset()) {
 			camera.setStorePreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 }
