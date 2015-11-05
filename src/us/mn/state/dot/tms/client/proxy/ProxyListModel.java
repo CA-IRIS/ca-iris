@@ -45,13 +45,13 @@ public class ProxyListModel<T extends SonarObject>
 	private final TypeCache<T> cache;
 
 	/** Proxy list */
-	private final ArrayList<T> list = new ArrayList<>();
+	private final ArrayList<T> list = new ArrayList<T>();
 
 	/** Proxy comparator */
 	private final Comparator<T> comp = comparator();
 
 	/** List of displayed indices if filtered */
-	private final ArrayList<Integer> indices = new ArrayList<>();
+	private final ArrayList<Integer> indices = new ArrayList<Integer>();
 
 	/** The filter to determine which elements should be shown */
 	private Filter<T> filter;
