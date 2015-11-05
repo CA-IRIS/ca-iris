@@ -15,7 +15,6 @@
  */
 package us.mn.state.dot.tms.client.proxy;
 
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -23,18 +22,19 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListCellRenderer;
 import javax.swing.border.TitledBorder;
@@ -105,6 +105,32 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		public void proxyChanged(T proxy, String attrib) {
 			if(manager.isStyleAttrib(attrib))
 				updateCounts();
+		}
+	};
+
+	/** Field for user to type filter text */
+	private final JTextField filter_text_field = new JTextField();
+
+	/** Key listener for filter text field */
+	private final KeyListener filter_key_listener = new KeyListener() {
+		@Override
+		public void keyTyped(KeyEvent e) { }
+
+		@Override
+		public void keyPressed(KeyEvent e) { }
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			model.setFilter(new ProxyListModel.Filter<T>() {
+				@Override
+				public boolean accept(T element) {
+					String name = element.getName();
+					String txt = filter_text_field.getText();
+					if (txt == null)
+						txt = "";
+					return name != null && name.contains(txt);
+				}
+			});
 		}
 	};
 
@@ -190,11 +216,22 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 			add(createCellSizePanel(), bag);
 		}
 
-		// add listbox
+		// add filter text field
+		filter_text_field.addKeyListener(filter_key_listener);
 		bag.gridx = (enableCellSizeBtns ? 1 : 0);
 		bag.gridwidth = GridBagConstraints.REMAINDER;
 		bag.insets = new Insets(8, 0, 0, 0);
 		bag.gridy = n_rows + 1;
+		bag.weightx = 1;
+		bag.weighty = 1;
+		bag.fill = GridBagConstraints.HORIZONTAL;
+		add(filter_text_field, bag);
+
+		// add listbox
+		bag.gridx = (enableCellSizeBtns ? 1 : 0);
+		bag.gridwidth = GridBagConstraints.REMAINDER;
+		bag.insets = new Insets(0, 0, 0, 0);
+		bag.gridy = 0;
 		bag.weightx = 1;
 		bag.weighty = 1;
 		bag.fill = GridBagConstraints.BOTH;
@@ -320,13 +357,16 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		p_list.setSelectionModel(dummy_model);
 		p_list.setModel(model);
 		p_list.setSelectionModel(model.getSelectionModel());
-		if(mdl != null)
+		if(mdl != null) {
+			model.setFilter(mdl.getFilter());
 			mdl.dispose();
+		}
 	}
 
 	/** Dispose of the widget */
 	public void dispose() {
 		manager.getCache().removeProxyListener(counter);
+		filter_text_field.removeKeyListener(filter_key_listener);
 		removeAll();
 	}
 }

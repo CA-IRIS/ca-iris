@@ -179,6 +179,11 @@ public class ProxyListModel<T extends SonarObject>
 		applyFilter();
 	}
 
+	/** Gets the filter to be applied against members */
+	public Filter<T> getFilter() {
+		return filter;
+	}
+
 	/** Applies the filter against current members */
 	private void applyFilter() {
 		int old_size = getSize();
