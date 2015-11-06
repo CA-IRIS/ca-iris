@@ -19,10 +19,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
+
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.ControllerHelper;
-import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.Constants;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.utils.ByteBlob;
@@ -50,7 +50,7 @@ public class UrmsRec {
 		}
 
 		static DetStatus fromCode(int c) {
-			for (DetStatus s: DetStatus.values())
+			for (DetStatus s : DetStatus.values())
 				if (s.code == c)
 					return s;
 			return null;
@@ -69,15 +69,19 @@ public class UrmsRec {
 		}
 
 		static LaneStatus fromCode(int c) {
-			for (LaneStatus s: LaneStatus.values())
+			for (LaneStatus s : LaneStatus.values())
 				if (s.code == c)
 					return s;
 			return null;
 		}
 	}
 
-	/** Maximum number of lanes in sample */
-	static private final int MAX_NUM_LANES = 8;
+	/**
+	 * Maximum number of lanes in sample. 8 mainline, 8 opposite mainlines, 16 additional detectors, 4 demand
+	 * detectors, 4 passage detectors and 16 queue detectors
+	 */
+	static private final int MAX_NUM_LANES = 56;
+
 
 	/** URMS record length in bytes */
 	static private final int URMS_REC_LEN = 417;
@@ -87,6 +91,9 @@ public class UrmsRec {
 
 	/** Starting pin for controller I/O */
 	static private final int STARTPIN = 1;
+
+	/** Starting point for lane information with in the record, 25th byte */
+	static private final int LANE_INFO_START = 25;
 
 	/** Raw record */
 	private final ByteBlob urms_blob;
@@ -114,6 +121,7 @@ public class UrmsRec {
 
 	/**
 	 * Constructor.
+	 *
 	 * @param bb A ByteBlob containing 1 record, never null.
 	 * @param oa Datagram origin address, may be null.
 	 */
@@ -125,8 +133,11 @@ public class UrmsRec {
 		UrmsPoller.log("created rec=" + this);
 	}
 
-	/** Parse the raw record into fields.
-	 * @return True if the record is valid, else false.  */
+	/**
+	 * Parse the raw record into fields.
+	 *
+	 * @return True if the record is valid, else false.
+	 */
 	private boolean parse() {
 		UrmsPoller.log("parsing");
 		if (urms_blob.isEmpty() || origin_addr == null)
@@ -153,11 +164,8 @@ public class UrmsRec {
 
 	/** Valid header? */
 	private boolean validHeader() {
-		boolean v = urms_blob.getByte(0) == 0x55 &&
-			urms_blob.getByte(1) == 0x52 &&
-			urms_blob.getByte(2) == 0x40 &&
-			urms_blob.getByte(3) == 0x53 &&
-			urms_blob.getByte(4) == 0x32;
+		boolean v = urms_blob.getByte(0) == 0x55 && urms_blob.getByte(1) == 0x52 && urms_blob.getByte(2) == 0x40
+			&& urms_blob.getByte(3) == 0x53 && urms_blob.getByte(4) == 0x32;
 		UrmsPoller.log("valid header=" + v);
 		return v;
 	}
@@ -166,8 +174,7 @@ public class UrmsRec {
 	private boolean validCrc() {
 		int ncsb = urms_blob.getTwoByteValue(5);
 		boolean v = ncsb == 410;
-		UrmsPoller.log("valid number of expected " +
-			"bytes to CRC=" + v + ", ncsb=" + ncsb);
+		UrmsPoller.log("valid number of expected bytes to CRC=" + v + ", ncsb=" + ncsb);
 		if (!v)
 			return false;
 		int ecrc = urms_blob.getTwoByteValue(415);
@@ -175,8 +182,7 @@ public class UrmsRec {
 		v = ecrc == ccrc;
 		UrmsPoller.log("valid CRC16=" + v);
 		if (!v) {
-			UrmsPoller.log("expected crc16=" + ecrc +
-				", calc crc16=" + ccrc);
+			UrmsPoller.log("expected crc16=" + ecrc + ", calc crc16=" + ccrc);
 			UrmsPoller.log("ignoring CRC mismatch");
 			return true;
 		}
@@ -192,63 +198,80 @@ public class UrmsRec {
 		UrmsPoller.log("hour=" + urms_blob.getByte(18));
 		UrmsPoller.log("min=" + urms_blob.getByte(19));
 		UrmsPoller.log("sec=" + urms_blob.getByte(20));
-		UrmsPoller.log("num metered lanes=" +
-			urms_blob.getByte(21));
-		UrmsPoller.log("num mainline lanes=" +
-			urms_blob.getByte(22));
-		for (int li = 0; li < 8; ++li)
-			logMainlineLane(li, "mainline L" +
-				new Integer(li + 1));
+		UrmsPoller.log("total lanes=" + num_lanes);
+		UrmsPoller.log("num metered lanes=" + urms_blob.getByte(21));
+		UrmsPoller.log("num mainline lanes=" + urms_blob.getByte(22));
+		for (int li = 0; li < 8 && li < num_lanes; ++li)
+			logLane(li, "mainlines L" + new Integer(li + 1));
+		// TODO validate order of lanes
+		for (int li = 8; li < 16 && li < num_lanes; ++li)
+			logLane(li, "opp mainlines L" + new Integer(li + 1));
+		for (int li = 16; li < 32 && li < num_lanes; ++li)
+			logLane(li, "add'l detectors L" + new Integer(li + 1));
+		for (int li = 32; li < 36 && li < num_lanes; ++li)
+			logLane(li, "demand detectors L" + new Integer(li + 1));
+		for (int li = 36; li < 40 && li < num_lanes; ++li)
+			logLane(li, "pass detectors L" + new Integer(li + 1));
+		for (int li = 40; li < 56 && li < num_lanes; ++li)
+			logLane(li, "queue detectors L" + new Integer(li + 1));
+
 	}
 
-	/** Log various values in lane.
-	 * @param li Lane index, zero based. */
-	private void logMainlineLane(int li, String label) {
+	/**
+	 * Log various values in lane.
+	 *
+	 * @param li Lane index, zero based.
+	 */
+	private void logLane(int li, String label) {
 		UrmsPoller.log(label);
-		UrmsPoller.log("speed=" +
-			urms_blob.getByte(25 + li * 10 + 0));
-		UrmsPoller.log("leading vol=" +
-			urms_blob.getByte(25 + li * 10 + 1));
-		UrmsPoller.log("leading occ=" +
-			urms_blob.getTwoByteValue(25 + li * 10 + 2));
+		UrmsPoller.log("speed=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 0));
+		UrmsPoller.log("leading vol=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 1));
+		UrmsPoller.log("leading occ=" + urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 2));
 
 		DetStatus ls = getLeadingStatus(li);
-		UrmsPoller.log("leading status=" + ls +
-			"(" + ls.code + ")");
+		UrmsPoller.log("leading status=" + ls + "(" + ls.code + ")");
 
-		UrmsPoller.log("trailing vol=" +
-			urms_blob.getByte(25 + li * 10 + 5));
-		UrmsPoller.log("trailing occ=" +
-			urms_blob.getTwoByteValue(25 + li * 10 + 6));
+		UrmsPoller.log("trailing vol=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 5));
+		UrmsPoller.log("trailing occ=" + urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 6));
 
-		DetStatus ts = getLeadingStatus(li);
-		UrmsPoller.log("trailing status=" + ts +
-			"(" + ts.code + ")");
+		DetStatus ts = getTrailingStatus(li);
+		UrmsPoller.log("trailing status=" + ts + "(" + ts.code + ")");
 
 		LaneStatus lns = getLaneStatus(li);
-		UrmsPoller.log("lane status=" + lns +
-			"(" + lns.code + ")");
+		UrmsPoller.log("lane status=" + lns + "(" + lns.code + ")");
 	}
 
-	/** Get the mainline leading detector status.
+	/**
+	 * Get the mainline leading detector status.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return the leading status or null on error. */
+	 *
+	 * @return the leading status or null on error.
+	 */
 	private DetStatus getLeadingStatus(int li) {
-		return DetStatus.fromCode(urms_blob.getByte(29 + li * 10));
+		return DetStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 4));
 	}
 
-	/** Get the mainline trailing detector status.
+	/**
+	 * Get the mainline trailing detector status.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return the trailing status or null on error. */
+	 *
+	 * @return the trailing status or null on error.
+	 */
 	private DetStatus getTrailingStatus(int li) {
-		return DetStatus.fromCode(urms_blob.getByte(33 + li * 10));
+		return DetStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 8));
 	}
 
-	/** Get the mainline lane status.
+	/**
+	 * Get the mainline lane status.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return the lane status or null on error. */
+	 *
+	 * @return the lane status or null on error.
+	 */
 	private LaneStatus getLaneStatus(int li) {
-		return LaneStatus.fromCode(urms_blob.getByte(34 + li * 10));
+		return LaneStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 9));
 	}
 
 	/** Get station id as a 32 bit unsigned value */
@@ -256,8 +279,11 @@ public class UrmsRec {
 		return urms_blob.getFourByteValue(7);
 	}
 
-	/** Parse number of lanes.
-	 * @return Number of lanes which is > 1, otherwise -1 on error. */
+	/**
+	 * Parse number of lanes.
+	 *
+	 * @return Number of lanes which is > 1, otherwise -1 on error.
+	 */
 	private int getNumLanes() {
 		int nl = urms_blob.getInt(22);
 		UrmsPoller.log("# lanes=" + nl);
@@ -280,30 +306,45 @@ public class UrmsRec {
 		return ld;
 	}
 
-	/** Get mainline speed for the specified lane.
+	/**
+	 * Get mainline speed for the specified lane.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return Speed in MPH. */
+	 *
+	 * @return Speed in MPH.
+	 */
 	private int getSpeed(int li) {
-		return urms_blob.getInt(25 + li * 10);
+		return urms_blob.getInt(LANE_INFO_START + li * 10);
 	}
 
-	/** Get mainline volume for the specified lane.
+	/**
+	 * Get mainline volume for the specified lane.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return Volume from the leading sensor. */
+	 *
+	 * @return Volume from the leading sensor.
+	 */
 	private int getVolume(int li) {
-		return urms_blob.getInt(26 + li * 10);
+		return urms_blob.getInt(LANE_INFO_START + li * 10 + 1);
 	}
 
-	/** Get mainline occupancy for the specified lane.
+	/**
+	 * Get mainline occupancy for the specified lane.
+	 *
 	 * @param li Lane index, zero based.
-	 * @return Occupancy from the leading sensor, 0 - 100 */
+	 *
+	 * @return Occupancy from the leading sensor, 0 - 100
+	 */
 	private float getOccupancy(int li) {
-		int tenths = urms_blob.getTwoByteValue(27 + li * 10);
-		return tenths / (float)10;
+		int tenths = urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 2);
+		return tenths / (float) 10;
 	}
 
-	/** Parse the date field into a long.
-	 * @return The date as a long. */
+	/**
+	 * Parse the date field into a long.
+	 *
+	 * @return The date as a long.
+	 */
 	private long getTime() {
 		int da = urms_blob.getInt(14);
 		int mo = urms_blob.getInt(15);
@@ -367,7 +408,7 @@ public class UrmsRec {
 	/** Get the volume array */
 	private int[] getVolumes() {
 		int[] vol = new int[num_lanes];
-		for (LaneSample ls: lane_samples)
+		for (LaneSample ls : lane_samples)
 			vol[ls.lanenum - 1] = ls.volume;
 		return vol;
 	}
@@ -375,7 +416,7 @@ public class UrmsRec {
 	/** Get the scan count as an array */
 	private int[] getScans() {
 		int[] scans = new int[num_lanes];
-		for (LaneSample ls: lane_samples)
+		for (LaneSample ls : lane_samples)
 			scans[ls.lanenum - 1] = ls.getScans();
 		return scans;
 	}
@@ -383,7 +424,7 @@ public class UrmsRec {
 	/** Get the speeds as an array */
 	private int[] getSpeeds() {
 		int[] speed = new int[num_lanes];
-		for (LaneSample ls: lane_samples)
+		for (LaneSample ls : lane_samples)
 			speed[ls.lanenum - 1] = ls.speed;
 		return speed;
 	}
@@ -393,18 +434,17 @@ public class UrmsRec {
 		return valid_rec;
 	}
 
-	/** Store the record to the associated controller. If an rnode is
-	 * not defined for the controller, the number of lanes will be
-	 * zero, and a data sample will be stored with zero lanes.
-	 * @param acs List of active controllers. */
+	/**
+	 * Store the record to the associated controller. If an rnode is not defined for the controller, the number of
+	 * lanes will be zero, and a data sample will be stored with zero lanes.
+	 *
+	 * @param acs List of active controllers.
+	 */
 	public void store(LinkedList<Controller> acs) {
-		if (getValid()) {
-			UrmsPoller.log("storing valid rec=" +
-				getName());
-		}
+		if (getValid())
+			UrmsPoller.log("storing valid rec=" + getName());
 		else {
-			UrmsPoller.log("ignoring invalid rec=" +
-				getName());
+			UrmsPoller.log("ignoring invalid rec=" + getName());
 			return;
 		}
 		ControllerImpl ci = findActiveController(acs);
@@ -412,17 +452,12 @@ public class UrmsRec {
 			return;
 		LinkedList<String> sids = ControllerHelper.getStationIds(ci);
 		if (sids.size() <= 0) {
-			String m = "No rnode for rec=" +
-				getName() + ", c=" + ci;
+			String m = "No rnode for rec=" + getName() + ", c=" + ci;
 			UrmsPoller.log(m);
 		}
-		UrmsPoller.log("storing rec=" + getName() +
-			", stationids=" + sids +
-			", create_time=" + new Date(create_time) +
-			", vol=" + SString.toString(getVolumes()) +
-			", speed=" + SString.toString(getSpeeds()) +
-			", scans=" + SString.toString(getScans()) +
-			", to c=" + ci);
+		UrmsPoller.log("storing rec=" + getName() + ", stationids=" + sids + ", create_time="
+			+ new Date(create_time) + ", vol=" + SString.toString(getVolumes()) + ", speed="
+			+ SString.toString(getSpeeds()) + ", scans=" + SString.toString(getScans()) + ", to c=" + ci);
 		checkStorageFreq(ci);
 		ci.storeVolume(create_time, SAMPLE_PERIOD_SEC, STARTPIN, getVolumes());
 		ci.storeOccupancy(create_time, SAMPLE_PERIOD_SEC, STARTPIN, getScans(), LaneSample.MAX_SCANS);
@@ -431,56 +466,50 @@ public class UrmsRec {
 		ci.setErrorStatus("");
 	}
 
-	/** Detect if a store operation is happening too frequently, which
-	 * may indicate multiple datagrams are being stored to the same
-	 * controller. */
+	/**
+	 * Detect if a store operation is happening too frequently, which may indicate multiple datagrams are being
+	 * stored to the same controller.
+	 */
 	private void checkStorageFreq(ControllerImpl ci) {
 		long lt = ci.getLastStoreTime();
 		long delta = TimeSteward.currentTimeMillis() - lt;
 		final long nostoretime = UrmsProperty.SAMPLE_PERIOD_MS -
 			UrmsProperty.getReadMarginMs();
 		if (delta < nostoretime) {
-			UrmsPoller.log("For rec=" + getName() +
-				", delta=" + delta + " since last store on " +
-				"c=" + ci + " may indicate duplicate " +
-				"datagrams being stored on same controller.");
+			UrmsPoller.log("For rec=" + getName() + ", delta=" + delta + " since last store on " + "c=" + ci
+				+ " may indicate duplicate " + "datagrams being stored on same controller.");
 		}
 	}
 
-	/** Find the associated controller. The sensor id in the
-	 * URMS record is used to find the matching controller
-	 * with the same drop id.
-	 * @return Matching controller, else null if not found. */
+	/**
+	 * Find the associated controller. The sensor id in the URMS record is used to find the matching controller with
+	 * the same drop id.
+	 *
+	 * @return Matching controller, else null if not found.
+	 */
 	private ControllerImpl findActiveController(
-		LinkedList<Controller> acs)
-	{
+		LinkedList<Controller> acs) {
 		UrmsPoller.log("finding ctrl");
 		for (Controller c : acs)
 			if (station_id == c.getDrop()) {
-				UrmsPoller.log("found c=" + c +
-					" w/ matching station id=" +
-					station_id);
-				return (ControllerImpl)c;
+				UrmsPoller.log("found c=" + c + " w/ matching station id=" + station_id);
+				return (ControllerImpl) c;
 			}
-		UrmsPoller.log("no ctrl defined for ss=" + this +
-			", station id=" + station_id);
+		UrmsPoller.log("no ctrl defined for ss=" + this + ", station id=" + station_id);
 		return null;
 	}
 
 	/**
-	 * Does the specified string contain the specified IP address?
-	 * A string "12" does not match "123".
-	 * A string comparison is made, so "012" will not match "12".
+	 * Does the specified string contain the specified IP address? A string "12" does not match "123". A string
+	 * comparison is made, so "012" will not match "12".
 	 */
 	private boolean containsIp(String str, String ip) {
 		int n = SString.count(str, ip);
 		if (n <= 0)
 			return false;
 		else if (n > 1) {
-			UrmsPoller.log("The string ip=" + ip +
-				" occurs=" + n + " times in notes field. " +
-				"This is probably a config error in rec=" +
-				this);
+			UrmsPoller.log("The string ip=" + ip + " occurs=" + n + " times in notes field. "
+				+ "This is probably a config error in rec=" + this);
 		}
 		for (int j = 0; j < str.length(); ++j) {
 			int i = str.indexOf(ip, j);
@@ -502,9 +531,8 @@ public class UrmsRec {
 		for (int i = 0; i < MAX_NUM_LANES; ++i)
 			x[i] = Constants.MISSING_DATA;
 		String xs = SString.toString(x);
-		UrmsPoller.log("storing missing sample: time=" +
-			new Date(time) + ", nlanes=" + MAX_NUM_LANES +
-			", vo=" + xs + ", sp=" + xs + ", sc=" + xs);
+		UrmsPoller.log("storing missing sample: time=" + new Date(time) + ", nlanes=" + MAX_NUM_LANES + ", vo="
+			+ xs + ", sp=" + xs + ", sc=" + xs);
 		ci.storeVolume(time, SAMPLE_PERIOD_SEC, STARTPIN, x);
 		ci.storeOccupancy(time, SAMPLE_PERIOD_SEC, STARTPIN, x, LaneSample.MAX_SCANS);
 		ci.storeSpeed(time, SAMPLE_PERIOD_SEC, STARTPIN, x);
