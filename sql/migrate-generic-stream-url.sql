@@ -2,4 +2,4 @@
 
 SET SESSION AUTHORIZATION 'tms';
 
-INSERT INTO iris.encoder_type (id, description) VALUES (8, 'Generic URL');
+UPDATE iris.encoder_type SET description = 'Generic URL' WHERE id = 6

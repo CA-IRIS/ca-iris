@@ -205,10 +205,6 @@ public class VideoRequest {
 		case AXIS_MP4_AXRTSPHTTP:
 			return "axrtsphttp://" + enc + "/mpeg4/" + chan +
 				"/media.amp";
-		case GENERIC_MMS:
-			if (!URIUtils.checkScheme(enc, "mms"))
-				throw new IOException("Invalid encoder field");
-			return enc;
 		case GENERIC_URL:
 			if (!URIUtils.isValidUri(enc))
 				throw new IOException("Invalid encoder field");

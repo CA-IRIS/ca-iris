@@ -46,14 +46,11 @@ public enum EncoderType {
 	AXIS_MP4_AXRTSPHTTP("Axis MP4 axrtsphttp", StreamType.MPEG4,
 	                    StreamType.NONE),
 
-	/** Generic MMS (6) */
-	GENERIC_MMS("Generic MMS", StreamType.MMS, StreamType.NONE),
+	/** Generic URL (6) */
+	GENERIC_URL("Generic URL", StreamType.GENERIC, StreamType.NONE),
 
 	/** Axis JPEG (7) */
-	AXIS_JPEG("Axis JPEG", StreamType.NONE, StreamType.MJPEG),
-
-	/** Generic URL (8) */
-	GENERIC_URL("Generic URL", StreamType.GENERIC, StreamType.NONE);
+	AXIS_JPEG("Axis JPEG", StreamType.NONE, StreamType.MJPEG);
 
 	/** Create a new encoder type.
 	 * @param d Description.

@@ -23,5 +23,5 @@ package us.mn.state.dot.tms;
  * @author Dan Rossiter
  */
 public enum StreamType {
-	NONE, MJPEG, MPEG4, MMS, GENERIC;
+	NONE, MJPEG, MPEG4, GENERIC;
 }
