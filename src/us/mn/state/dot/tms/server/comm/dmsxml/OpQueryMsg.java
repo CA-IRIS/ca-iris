@@ -27,8 +27,7 @@ import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.IrisUserHelper;
 import us.mn.state.dot.tms.MultiString;
-import us.mn.state.dot.tms.PageTimeHelper;
-import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
@@ -499,7 +498,8 @@ class OpQueryMsg extends OpDms {
 			throws IOException
 		{
 			// ignore startup operations for DMS on dial-up lines
-			if(m_startup && !m_dms.isPeriodicallyQueriable())
+			if(m_startup && !m_dms.isPeriodicallyQueriable() &&
+					!SystemAttrEnum.DMSXML_QUERY_ALL_ON_STARTUP.getBoolean())
 				return null;
 
 			updateInterStatus("Starting operation", false);

@@ -2381,6 +2381,7 @@ dms_send_confirmation_enable	false
 dms_sort	0
 dmsxml_modem_op_timeout_secs	305
 dmsxml_op_timeout_secs	65
+dmsxml_query_all_on_startup false
 dmsxml_reinit_detect	false
 email_sender_server	
 email_smtp_host	
