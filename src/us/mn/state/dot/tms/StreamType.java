@@ -20,7 +20,8 @@ package us.mn.state.dot.tms;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public enum StreamType {
-	NONE, MJPEG, MPEG4, MMS;
+	NONE, MJPEG, MPEG4, MMS, GENERIC;
 }

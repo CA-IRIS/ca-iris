@@ -23,6 +23,7 @@ import java.util.LinkedList;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public enum EncoderType {
 
@@ -49,7 +50,10 @@ public enum EncoderType {
 	GENERIC_MMS("Generic MMS", StreamType.MMS, StreamType.NONE),
 
 	/** Axis JPEG (7) */
-	AXIS_JPEG("Axis JPEG", StreamType.NONE, StreamType.MJPEG);
+	AXIS_JPEG("Axis JPEG", StreamType.NONE, StreamType.MJPEG),
+
+	/** Generic URL (8) */
+	GENERIC_URL("Generic URL", StreamType.GENERIC, StreamType.NONE);
 
 	/** Create a new encoder type.
 	 * @param d Description.
@@ -89,7 +93,7 @@ public enum EncoderType {
 		LinkedList<String> d = new LinkedList<String>();
 		for (EncoderType et: values())
 			d.add(et.description);
-		return d.toArray(new String[0]);
+		return d.toArray(new String[d.size()]);
 	}
 
 	/** Does this EncoderType support indirect streaming? */
