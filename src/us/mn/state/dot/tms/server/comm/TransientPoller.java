@@ -15,8 +15,6 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
-
 /**
  * TransientPoller is a MessagePoller which causes equal operations to be
  * replaced instead of rejected.  It is useful for PTZ pollers (which consist
@@ -24,31 +22,18 @@ import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class TransientPoller<T extends ControllerProperty>
-	extends MessagePoller<T>
-{
+	extends MessagePoller<T> {
 
 	/**
-	 * Create a new transient poller with persistent connection mode.
-	 * @param n CommLink name
+	 * Create a new transient poller with specified connection mode.
+	 * @param name CommLink name
 	 * @param m the Messenger
 	 */
 	protected TransientPoller(String name, Messenger m) {
 		super(name, m);
-	}
-
-	/**
-	 * Create a new transient poller with specified connection mode.
-	 * @param n CommLink name
-	 * @param m the Messenger
-	 * @param cm the connection mode
-	 * @param idle max idle time (sec) to use for conn mode AUTO
-	 */
-	protected TransientPoller(String name, Messenger m, ConnMode cm,
-		int idle)
-	{
-		super(name, m, cm, idle);
 	}
 
 	/** Add an operation to the transient poller */

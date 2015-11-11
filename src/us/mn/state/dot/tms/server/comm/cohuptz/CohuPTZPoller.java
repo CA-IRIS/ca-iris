@@ -31,6 +31,7 @@ import us.mn.state.dot.tms.utils.NumericAlphaComparator;
  *
  * @author Travis Swanston
  * @author Jacob Barde
+ * @author Dan Rossiter
  */
 public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 
@@ -59,22 +60,12 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	protected float curZoom = 0F;
 
 	/**
-	 * Create a new Cohu PTZ poller.
+	 * Create a new Cohu PTZ poller with auto connection mode.
 	 * @param n CommLink name
 	 * @param m the Messenger
 	 */
 	public CohuPTZPoller(String n, Messenger m) {
 		super(n, m);
-	}
-
-	/**
-	 * Create a new Cohu PTZ poller with auto connection mode.
-	 * @param n CommLink name
-	 * @param m the Messenger
-	 * @param idle max idle time (sec)
-	 */
-	public CohuPTZPoller(String n, Messenger m, int idle) {
-		super(n, m, ConnMode.AUTO, idle);
 		log("CohuPTZPoller instantiated.");
 		CommLink cl = CommLinkHelper.lookup(n);
 		if (cl == null) {
@@ -242,11 +233,4 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 			break;
 		}
 	}
-
-//	@Override
-//	protected void addOperation(Operation op) {
-//		// force the queuing of an operation
-//		queue.enqueue(op, true);
-//
-//	}
 }

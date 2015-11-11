@@ -19,7 +19,6 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 
@@ -29,6 +28,7 @@ import us.mn.state.dot.tms.server.comm.TransientPoller;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class PelcoDPoller extends TransientPoller<PelcoDProperty>
 	implements CameraPoller
@@ -55,7 +55,7 @@ public class PelcoDPoller extends TransientPoller<PelcoDProperty>
 	 * @param idle max idle time (sec)
 	 */
 	public PelcoDPoller(String n, Messenger m, int idle) {
-		super(n, m, ConnMode.AUTO, idle);
+		super(n, m);
 	}
 
 	/** Check if a drop address is valid */

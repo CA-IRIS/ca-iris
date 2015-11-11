@@ -17,7 +17,6 @@ package us.mn.state.dot.tms.server.comm.axisptz;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.CommLinkHelper;
@@ -25,7 +24,6 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.utils.HexString;
@@ -34,6 +32,7 @@ import us.mn.state.dot.tms.utils.HexString;
  * Axis VAPIX PTZ poller.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 	implements CameraPoller
@@ -65,7 +64,7 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 	 * @param m the Messenger
 	 */
 	public AxisPTZPoller(String n, Messenger m) {
-		super(n, m, ConnMode.PER_OP, 0);
+		super(n, m);
 		log("AxisPTZPoller instantiated.");
 		comm_link = CommLinkHelper.lookup(n);
 		if (comm_link == null) {

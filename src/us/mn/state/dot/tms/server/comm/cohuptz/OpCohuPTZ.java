@@ -26,13 +26,15 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  * Cohu PTZ operation.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class OpCohuPTZ extends OpDevice<CohuPTZProperty> {
 
 	/** Minimum time interval (ms) to enforce between Cohu commands */
 	static protected final int MIN_CMD_INTERVAL_MS = 25;
 
-	CohuPTZPoller poller;
+	/** The PTZ poller instance */
+	private final CohuPTZPoller poller;
 
 	/** Operation description */
 	private final String op_desc;
