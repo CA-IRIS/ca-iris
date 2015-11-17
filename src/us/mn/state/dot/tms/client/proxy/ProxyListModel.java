@@ -25,6 +25,7 @@ import javax.swing.event.ListDataListener;
 
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
+import us.mn.state.dot.tms.utils.IterableUtil;
 
 /**
  * A filterable swing ListModel kept in sync with a SONAR TypeCache.
@@ -55,6 +56,9 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** The filter to determine which elements should be shown */
 	private Filter<T> filter;
+
+	/** Flag used by applyFilter to prevent unintended recursion. */
+	private boolean applyingFilter = false;
 
 	/** Get a proxy comparator */
 	protected Comparator<T> comparator() {
@@ -186,7 +190,12 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Applies the filter against current members */
 	private void applyFilter() {
-		int old_size = getSize();
+		// prevent recursing through fireContentsChanged
+		if (applyingFilter)
+			return;
+
+		applyingFilter = true;
+		ArrayList<Integer> oldIndices = new ArrayList<Integer>(indices);
 		indices.clear();
 
 		Filter<T> f = filter;
@@ -197,9 +206,12 @@ public class ProxyListModel<T extends SonarObject>
 			}
 		}
 
-		if (f != null || old_size != getSize()) {
+
+		if (oldIndices.size() != indices.size() || !IterableUtil.sequenceEqual(oldIndices, indices)) {
 			fireContentsChanged(this, 0, getSize() - 1);
 		}
+
+		applyingFilter = false;
 	}
 
 	/** Gets the size */
