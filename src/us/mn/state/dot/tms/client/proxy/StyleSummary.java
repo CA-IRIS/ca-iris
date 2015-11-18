@@ -124,11 +124,11 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 			model.setFilter(new ProxyListModel.Filter<T>() {
 				@Override
 				public boolean accept(T element) {
-					String name = element.getName();
+					String description = manager.getDescription(element);
 					String txt = filter_text_field.getText();
 					if (txt == null)
 						txt = "";
-					return name != null && name.contains(txt);
+					return description != null && description.toLowerCase().contains(txt.toLowerCase());
 				}
 			});
 		}
