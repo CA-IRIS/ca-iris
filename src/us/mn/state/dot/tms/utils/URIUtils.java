@@ -16,8 +16,7 @@ package us.mn.state.dot.tms.utils;
 
 import java.lang.IllegalArgumentException;
 import java.net.URI;
-import java.util.regex.Pattern;
-
+import java.net.URISyntaxException;
 
 /**
  * Misc. URI/URL utilities
@@ -26,96 +25,6 @@ import java.util.regex.Pattern;
  * @author Dan Rossiter
  */
 public class URIUtils {
-
-	/** Source: http://jmrware.com/articles/2009/uri_regexp/URI_regex.html */
-	private static final Pattern valid_uri_regex = Pattern.compile(
-		"^" +
-		"# RFC-3986 URI component: URI-reference" +
-		"(?:                                                               # (" +
-		"  [A-Z][A-Z0-9+\\-.]* :                                      # URI" +
-		"  (?: //" +
-		"    (?: (?:[A-Z0-9\\-._~!$&'()*+,;=:]|%[0-9A-F]{2})* @)?" +
-		"    (?:" +
-		"      \\[" +
-		"      (?:" +
-		"        (?:" +
-		"          (?:                                                    (?:[0-9A-F]{1,4}:){6}" +
-		"          |                                                   :: (?:[0-9A-F]{1,4}:){5}" +
-		"          | (?:                            [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){4}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,1} [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){3}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,2} [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){2}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,3} [0-9A-F]{1,4})? ::    [0-9A-F]{1,4}:" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,4} [0-9A-F]{1,4})? ::" +
-		"          ) (?:" +
-		"              [0-9A-F]{1,4} : [0-9A-F]{1,4}" +
-		"            | (?: (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?) \\.){3}" +
-		"                  (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-		"            )" +
-		"        |   (?: (?:[0-9A-F]{1,4}:){0,5} [0-9A-F]{1,4})? ::    [0-9A-F]{1,4}" +
-		"        |   (?: (?:[0-9A-F]{1,4}:){0,6} [0-9A-F]{1,4})? ::" +
-		"        )" +
-		"      | V[0-9A-F]+\\.[A-Z0-9\\-._~!$&'()*+,;=:]+" +
-		"      )" +
-		"      \\]" +
-		"    | (?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
-		"         (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-		"    | (?:[A-Z0-9\\-._~!$&'()*+,;=]|%[0-9A-F]{2})*" +
-		"    )" +
-		"    (?: : [0-9]* )?" +
-		"    (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"  | /" +
-		"    (?:    (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})+" +
-		"      (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"    )?" +
-		"  |        (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})+" +
-		"      (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"  |" +
-		"  )" +
-		"  (?:\\? (?:[A-Z0-9\\-._~!$&'()*+,;=:@/?]|%[0-9A-F]{2})* )?" +
-		"  (?:\\# (?:[A-Z0-9\\-._~!$&'()*+,;=:@/?]|%[0-9A-F]{2})* )?" +
-		"| (?: //                                                          # / relative-ref" +
-		"    (?: (?:[A-Z0-9\\-._~!$&'()*+,;=:]|%[0-9A-F]{2})* @)?" +
-		"    (?:" +
-		"      \\[" +
-		"      (?:" +
-		"        (?:" +
-		"          (?:                                                    (?:[0-9A-F]{1,4}:){6}" +
-		"          |                                                   :: (?:[0-9A-F]{1,4}:){5}" +
-		"          | (?:                            [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){4}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,1} [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){3}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,2} [0-9A-F]{1,4})? :: (?:[0-9A-F]{1,4}:){2}" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,3} [0-9A-F]{1,4})? ::    [0-9A-F]{1,4}:" +
-		"          | (?: (?:[0-9A-F]{1,4}:){0,4} [0-9A-F]{1,4})? ::" +
-		"          ) (?:" +
-		"              [0-9A-F]{1,4} : [0-9A-F]{1,4}" +
-		"            | (?: (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?) \\.){3}" +
-		"                  (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-		"            )" +
-		"        |   (?: (?:[0-9A-F]{1,4}:){0,5} [0-9A-F]{1,4})? ::    [0-9A-F]{1,4}" +
-		"        |   (?: (?:[0-9A-F]{1,4}:){0,6} [0-9A-F]{1,4})? ::" +
-		"        )" +
-		"      | V[0-9A-F]+\\.[A-Z0-9\\-._~!$&'()*+,;=:]+" +
-		"      )" +
-		"      \\]" +
-		"    | (?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
-		"         (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-		"    | (?:[A-Z0-9\\-._~!$&'()*+,;=]|%[0-9A-F]{2})*" +
-		"    )" +
-		"    (?: : [0-9]* )?" +
-		"    (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"  | /" +
-		"    (?:    (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})+" +
-		"      (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"    )?" +
-		"  |        (?:[A-Z0-9\\-._~!$&'()*+,;=@] |%[0-9A-F]{2})+" +
-		"      (?:/ (?:[A-Z0-9\\-._~!$&'()*+,;=:@]|%[0-9A-F]{2})* )*" +
-		"  |" +
-		"  )" +
-		"  (?:\\? (?:[A-Z0-9\\-._~!$&'()*+,;=:@/?]|%[0-9A-F]{2})* )?" +
-		"  (?:\\# (?:[A-Z0-9\\-._~!$&'()*+,;=:@/?]|%[0-9A-F]{2})* )?" +
-		")                                                                       # )" +
-		"$",
-		Pattern.COMMENTS | Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * Check that the scheme of a given URI matches the given String.
@@ -144,12 +53,39 @@ public class URIUtils {
 	}
 
 	/**
+	 * Tests whether the given URI matches RFC-2396 specs.
+	 * @param uri The string to be tested.
+	 * @param errMsg On false, will be populated with brief failure description.
+	 * @return Whether the given string is a valid URI.
+	 */
+	static public boolean isValidUri(String uri, StringBuilder errMsg) {
+		boolean ret = true;
+		if (uri == null) {
+			if (errMsg != null) {
+				errMsg.append("URI is null");
+			}
+			ret = false;
+		} else {
+			try {
+				new URI(uri);
+			} catch (URISyntaxException se) {
+				ret = false;
+				if (errMsg != null) {
+					errMsg.append(se.getMessage());
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	/**
 	 * Tests whether the given URI matches RFC-3986 specs.
 	 * @param uri The string to be tested.
 	 * @return Whether the given string is a valid URI.
 	 */
 	static public boolean isValidUri(String uri) {
-		return uri != null && valid_uri_regex.matcher(uri).matches();
+		return isValidUri(uri, null);
 	}
 
 }

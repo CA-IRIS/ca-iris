@@ -206,8 +206,9 @@ public class VideoRequest {
 			return "axrtsphttp://" + enc + "/mpeg4/" + chan +
 				"/media.amp";
 		case GENERIC_URL:
-			if (!URIUtils.isValidUri(enc))
-				throw new IOException("Invalid encoder field");
+			StringBuilder sb = new StringBuilder();
+			if (!URIUtils.isValidUri(enc, sb))
+				throw new IOException("Invalid encoder field. " + sb.toString() + '.');
 			return enc;
 		case AXIS_JPEG:
 		default:
