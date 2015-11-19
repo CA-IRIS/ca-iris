@@ -223,15 +223,15 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		bag.insets = new Insets(8, 0, 0, 0);
 		bag.gridy = n_rows + 1;
 		bag.weightx = 1;
-		bag.weighty = 1;
-		bag.fill = GridBagConstraints.HORIZONTAL;
+		bag.weighty = 0;
+		bag.fill = GridBagConstraints.BOTH;
 		add(filter_text_field, bag);
 
 		// add listbox
 		bag.gridx = (enableCellSizeBtns ? 1 : 0);
 		bag.gridwidth = GridBagConstraints.REMAINDER;
 		bag.insets = new Insets(0, 0, 0, 0);
-		bag.gridy = 0;
+		bag.gridy = n_rows + 2;
 		bag.weightx = 1;
 		bag.weighty = 1;
 		bag.fill = GridBagConstraints.BOTH;
