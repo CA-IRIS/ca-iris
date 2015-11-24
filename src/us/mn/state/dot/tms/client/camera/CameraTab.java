@@ -62,4 +62,8 @@ public class CameraTab extends MapTab<Camera> {
 	public String getTabId() {
 		return "camera";
 	}
+
+	/** get the camera dispatcher, ultimately used to query VideoWallManager */
+	protected CameraDispatcher getDispatcher() { return dispatcher; }
+
 }

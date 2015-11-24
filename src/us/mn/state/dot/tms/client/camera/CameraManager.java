@@ -32,6 +32,7 @@ import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
@@ -204,10 +205,10 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Check the style of the specified proxy */
 	@Override
 	public boolean checkStyle(ItemStyle is, Camera proxy) {
-		switch(is) {
+		switch (is) {
 		case DEPLOYED:
 			return ControllerHelper.isActive(proxy.getController())
-				/* find something to query if camera is in use */;
+				&& isCameraInUse(proxy.getName());
 		case ACTIVE:
 			return ControllerHelper.isActive(proxy.getController());
 		case INACTIVE:
@@ -244,12 +245,12 @@ public class CameraManager extends ProxyManager<Camera> {
 		p.add(new PublishAction(s_model));
 		p.add(new UnpublishAction(s_model));
 		p.addSeparator();
-		if(inPlaylist(c))
+		if (inPlaylist(c))
 			p.add(new RemovePlaylistAction(this, s_model));
 		else
 			p.add(new AddPlaylistAction(this, s_model));
 		p.addSeparator();
-		if(TeslaAction.isConfigured())
+		if (TeslaAction.isConfigured())
 			p.add(new TeslaAction<Camera>(c));
 		p.add(new PropertiesAction<Camera>(this, c));
 		return p;
@@ -270,16 +271,25 @@ public class CameraManager extends ProxyManager<Camera> {
 		return p;
 	}
 
+	protected boolean isCameraInUse(String cid) {
+		MapTab mt = this.session.lookupTab("camera");
+		int count = 0;
+		if (mt instanceof CameraTab)
+			count = ((CameraTab) mt).getDispatcher()
+				.getVideoWallManager().getNumConns(cid);
+		return count > 0;
+	}
+
 	/** Test if a camera is in the playlist */
 	public boolean inPlaylist(Camera c) {
-		synchronized(playlist) {
+		synchronized (playlist) {
 			return playlist.contains(c);
 		}
 	}
 
 	/** Add a camera to the playlist */
 	public void addPlaylist(Camera c) {
-		synchronized(playlist) {
+		synchronized (playlist) {
 			playlist.add(c);
 		}
 		// FIXME: add server-side playlists
@@ -287,7 +297,7 @@ public class CameraManager extends ProxyManager<Camera> {
 
 	/** Remove a camera from the playlist */
 	public void removePlaylist(Camera c) {
-		synchronized(playlist) {
+		synchronized (playlist) {
 			playlist.remove(c);
 		}
 		// FIXME: add server-side playlists
@@ -311,7 +321,7 @@ public class CameraManager extends ProxyManager<Camera> {
 		String pn = c.getName();
 		String sn = SiteDataHelper.getSiteName(pn);
 		String geoDesc = GeoLocHelper.getDescription(getGeoLoc(c));
-		String ret = ( (sn != null) ? sn : pn);
+		String ret = ((sn != null) ? sn : pn);
 		if (SystemAttrEnum.CAMERA_MANAGER_SHOW_LOCATION.getBoolean())
 			ret += " - " + geoDesc;
 		return ret;
