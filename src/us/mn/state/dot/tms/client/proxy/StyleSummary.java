@@ -212,7 +212,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 			bag.gridwidth = 1;
 			bag.gridheight = 1;
 			bag.insets = new Insets(8, 2, 8, 2);
-			bag.gridy = n_rows + 1;
+			bag.gridy = n_rows + 2;
 			add(createCellSizePanel(), bag);
 		}
 
