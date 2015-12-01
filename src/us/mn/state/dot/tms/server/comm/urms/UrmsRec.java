@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2015  AHMCT, University of California
+ * Copyright (C) 2015       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@ import us.mn.state.dot.tms.utils.STime;
  *
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class UrmsRec {
 
@@ -76,12 +78,41 @@ public class UrmsRec {
 		}
 	}
 
-	/**
-	 * Maximum number of lanes in sample. 8 mainline, 8 opposite mainlines, 16 additional detectors, 4 demand
-	 * detectors, 4 passage detectors and 16 queue detectors
-	 */
-	static private final int MAX_NUM_LANES = 56;
+	/** field group in the packet */
+	private enum FieldMarker {
 
+		MAINLINE(25), // header info is 25 bytes
+		//MAINLINE_DIR(105), // above + 8 ML lanes * 10 bytes
+		OPP_MAINLINE(106), // above + 1 (ML direction)
+		//OPP_MAINLINE_DIR(186), // above + 8 OML lanes * 10 bytes
+		//ADD_DETECTORS(187), // above + 1 (OML direction)
+		//METERED_INFO(251), // above + 16 detectors * 4 bytes
+		//IS_METERING(283), // above + 4 groups * 8 bytes
+		//TR_INFO(284), // above + 1 bytes (is metering)
+		//METERED_LANES(291), // above + 7 bytes (TR info)
+		//QUEUE(335), // above + 4 MET lanes * 11 bytes
+		CRC(415);
+
+		int offset;
+
+		FieldMarker(int o) {
+			offset = o;
+		}
+
+		static FieldMarker fromCode(int o) {
+			for (FieldMarker p : FieldMarker.values())
+				if (p.offset == o)
+					return p;
+			return null;
+		}
+	}
+
+	/**
+	 * Maximum number of lanes in sample. 8 mainline, 8 opposite mainlines.
+	 * the 16 additional detectors, 4 demand detectors, 4 passage detectors
+	 * and 16 queue detectors are to be dealt with at a later time
+	 */
+	static private final int MAX_NUM_LANES = 16;
 
 	/** URMS record length in bytes */
 	static private final int URMS_REC_LEN = 417;
@@ -91,9 +122,6 @@ public class UrmsRec {
 
 	/** Starting pin for controller I/O */
 	static private final int STARTPIN = 1;
-
-	/** Starting point for lane information with in the record, 25th byte */
-	static private final int LANE_INFO_START = 25;
 
 	/** Raw record */
 	private final ByteBlob urms_blob;
@@ -109,6 +137,12 @@ public class UrmsRec {
 
 	/** Number of lanes */
 	private int num_lanes = -1;
+
+	/** Number of mainlines */
+	private int num_mainline = 0;
+
+	/** Number of opposite mainlines */
+	private int num_opp_mainline = 0;
 
 	/** Sample data for all lanes */
 	private LaneSample[] lane_samples = new LaneSample[0];
@@ -164,8 +198,11 @@ public class UrmsRec {
 
 	/** Valid header? */
 	private boolean validHeader() {
-		boolean v = urms_blob.getByte(0) == 0x55 && urms_blob.getByte(1) == 0x52 && urms_blob.getByte(2) == 0x40
-			&& urms_blob.getByte(3) == 0x53 && urms_blob.getByte(4) == 0x32;
+		boolean v = urms_blob.getByte(0) == 0x55
+			&& urms_blob.getByte(1) == 0x52
+			&& urms_blob.getByte(2) == 0x40
+			&& urms_blob.getByte(3) == 0x53
+			&& urms_blob.getByte(4) == 0x32;
 		UrmsPoller.log("valid header=" + v);
 		return v;
 	}
@@ -174,15 +211,17 @@ public class UrmsRec {
 	private boolean validCrc() {
 		int ncsb = urms_blob.getTwoByteValue(5);
 		boolean v = ncsb == 410;
-		UrmsPoller.log("valid number of expected bytes to CRC=" + v + ", ncsb=" + ncsb);
+		UrmsPoller.log("valid number of expected bytes to CRC=" + v
+			+ ", ncsb=" + ncsb);
 		if (!v)
 			return false;
-		int ecrc = urms_blob.getTwoByteValue(415);
-		int ccrc = urms_blob.crc16(0, 415);
+		int ecrc = urms_blob.getTwoByteValue(FieldMarker.CRC.offset);
+		int ccrc = urms_blob.crc16(0, FieldMarker.CRC.offset);
 		v = ecrc == ccrc;
 		UrmsPoller.log("valid CRC16=" + v);
 		if (!v) {
-			UrmsPoller.log("expected crc16=" + ecrc + ", calc crc16=" + ccrc);
+			UrmsPoller.log("expected crc16=" + ecrc
+				+ ", calc crc16=" + ccrc);
 			UrmsPoller.log("ignoring CRC mismatch");
 			return true;
 		}
@@ -200,20 +239,15 @@ public class UrmsRec {
 		UrmsPoller.log("sec=" + urms_blob.getByte(20));
 		UrmsPoller.log("total lanes=" + num_lanes);
 		UrmsPoller.log("num metered lanes=" + urms_blob.getByte(21));
-		UrmsPoller.log("num mainline lanes=" + urms_blob.getByte(22));
-		for (int li = 0; li < 8 && li < num_lanes; ++li)
-			logLane(li, "mainlines L" + new Integer(li + 1));
-		// TODO validate order of lanes
-		for (int li = 8; li < 16 && li < num_lanes; ++li)
-			logLane(li, "opp mainlines L" + new Integer(li + 1));
-		for (int li = 16; li < 32 && li < num_lanes; ++li)
-			logLane(li, "add'l detectors L" + new Integer(li + 1));
-		for (int li = 32; li < 36 && li < num_lanes; ++li)
-			logLane(li, "demand detectors L" + new Integer(li + 1));
-		for (int li = 36; li < 40 && li < num_lanes; ++li)
-			logLane(li, "pass detectors L" + new Integer(li + 1));
-		for (int li = 40; li < 56 && li < num_lanes; ++li)
-			logLane(li, "queue detectors L" + new Integer(li + 1));
+		UrmsPoller.log("num mainline lanes=" + num_mainline);
+		UrmsPoller.log("num opp main lanes=" + num_opp_mainline);
+		for (int li = 0; li < num_mainline; ++li)
+			logLane(li, "mainlines L" + new Integer(li + 1),
+				FieldMarker.MAINLINE);
+		for (int li = 0; li < num_opp_mainline; ++li)
+			logLane(li, "opp mainlines L" + new Integer(li + 1),
+				FieldMarker.OPP_MAINLINE);
+
 
 	}
 
@@ -221,23 +255,29 @@ public class UrmsRec {
 	 * Log various values in lane.
 	 *
 	 * @param li Lane index, zero based.
+	 * @param f Field marker
 	 */
-	private void logLane(int li, String label) {
+	private void logLane(int li, String label, FieldMarker f) {
 		UrmsPoller.log(label);
-		UrmsPoller.log("speed=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 0));
-		UrmsPoller.log("leading vol=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 1));
-		UrmsPoller.log("leading occ=" + urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 2));
+		UrmsPoller.log("speed=" + urms_blob
+			.getByte(f.offset + li * 10 + 0));
+		UrmsPoller.log("leading vol=" + urms_blob
+			.getByte(f.offset + li * 10 + 1));
+		UrmsPoller.log("leading occ=" + urms_blob
+			.getTwoByteValue(f.offset + li * 10 + 2));
 
-		DetStatus ls = getLeadingStatus(li);
+		DetStatus ls = getLeadingStatus(li, f);
 		UrmsPoller.log("leading status=" + ls + "(" + ls.code + ")");
 
-		UrmsPoller.log("trailing vol=" + urms_blob.getByte(LANE_INFO_START + li * 10 + 5));
-		UrmsPoller.log("trailing occ=" + urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 6));
+		UrmsPoller.log("trailing vol=" + urms_blob
+			.getByte(f.offset + li * 10 + 5));
+		UrmsPoller.log("trailing occ=" + urms_blob
+			.getTwoByteValue(f.offset + li * 10 + 6));
 
-		DetStatus ts = getTrailingStatus(li);
+		DetStatus ts = getTrailingStatus(li, f);
 		UrmsPoller.log("trailing status=" + ts + "(" + ts.code + ")");
 
-		LaneStatus lns = getLaneStatus(li);
+		LaneStatus lns = getLaneStatus(li, f);
 		UrmsPoller.log("lane status=" + lns + "(" + lns.code + ")");
 	}
 
@@ -245,33 +285,36 @@ public class UrmsRec {
 	 * Get the mainline leading detector status.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return the leading status or null on error.
 	 */
-	private DetStatus getLeadingStatus(int li) {
-		return DetStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 4));
+	private DetStatus getLeadingStatus(int li, FieldMarker f) {
+		return DetStatus.fromCode(urms_blob
+			.getByte(f.offset + li * 10 + 4));
 	}
 
 	/**
 	 * Get the mainline trailing detector status.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return the trailing status or null on error.
 	 */
-	private DetStatus getTrailingStatus(int li) {
-		return DetStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 8));
+	private DetStatus getTrailingStatus(int li, FieldMarker f) {
+		return DetStatus.fromCode(urms_blob
+			.getByte(f.offset + li * 10 + 8));
 	}
 
 	/**
 	 * Get the mainline lane status.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return the lane status or null on error.
 	 */
-	private LaneStatus getLaneStatus(int li) {
-		return LaneStatus.fromCode(urms_blob.getByte(LANE_INFO_START + li * 10 + 9));
+	private LaneStatus getLaneStatus(int li, FieldMarker f) {
+		return LaneStatus.fromCode(urms_blob
+			.getByte(f.offset + li * 10 + 9));
 	}
 
 	/** Get station id as a 32 bit unsigned value */
@@ -285,7 +328,10 @@ public class UrmsRec {
 	 * @return Number of lanes which is > 1, otherwise -1 on error.
 	 */
 	private int getNumLanes() {
-		int nl = urms_blob.getInt(22);
+		num_mainline = urms_blob.getInt(22);
+		num_opp_mainline = urms_blob.getInt(23);
+
+		int nl = num_mainline + num_opp_mainline;
 		UrmsPoller.log("# lanes=" + nl);
 		if (nl < 0 || nl > MAX_NUM_LANES) {
 			UrmsPoller.log("bogus # lanes=" + nl);
@@ -297,11 +343,18 @@ public class UrmsRec {
 	/** Parse lane data */
 	private LaneSample[] parseLanes() {
 		LaneSample[] ld = new LaneSample[num_lanes];
-		for (int li = 0; li < ld.length; ++li) {
+		for (int li = 0; li < num_mainline; ++li) {
 			ld[li] = new LaneSample(li + 1);
-			ld[li].volume = getVolume(li);
-			ld[li].speed = getSpeed(li);
-			ld[li].occ = getOccupancy(li);
+			ld[li].volume = getVolume(li, FieldMarker.MAINLINE);
+			ld[li].speed = getSpeed(li, FieldMarker.MAINLINE);
+			ld[li].occ = getOccupancy(li, FieldMarker.MAINLINE);
+		}
+		for (int li = 0; li < num_opp_mainline; li++) {
+			int i = li + num_mainline;
+			ld[i] = new LaneSample(i + 1);
+			ld[i].volume = getVolume(i, FieldMarker.OPP_MAINLINE);
+			ld[i].speed = getSpeed(i, FieldMarker.OPP_MAINLINE);
+			ld[i].occ = getOccupancy(i, FieldMarker.OPP_MAINLINE);
 		}
 		return ld;
 	}
@@ -310,33 +363,33 @@ public class UrmsRec {
 	 * Get mainline speed for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return Speed in MPH.
 	 */
-	private int getSpeed(int li) {
-		return urms_blob.getInt(LANE_INFO_START + li * 10);
+	private int getSpeed(int li, FieldMarker f) {
+		return urms_blob.getInt(f.offset + li * 10);
 	}
 
 	/**
 	 * Get mainline volume for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return Volume from the leading sensor.
 	 */
-	private int getVolume(int li) {
-		return urms_blob.getInt(LANE_INFO_START + li * 10 + 1);
+	private int getVolume(int li, FieldMarker f) {
+		return urms_blob.getInt(f.offset + li * 10 + 1);
 	}
 
 	/**
 	 * Get mainline occupancy for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 *
+	 * @param f Field marker
 	 * @return Occupancy from the leading sensor, 0 - 100
 	 */
-	private float getOccupancy(int li) {
-		int tenths = urms_blob.getTwoByteValue(LANE_INFO_START + li * 10 + 2);
+	private float getOccupancy(int li, FieldMarker f) {
+		int tenths = urms_blob.getTwoByteValue(f.offset + li * 10 + 2);
 		return tenths / (float) 10;
 	}
 
@@ -435,8 +488,9 @@ public class UrmsRec {
 	}
 
 	/**
-	 * Store the record to the associated controller. If an rnode is not defined for the controller, the number of
-	 * lanes will be zero, and a data sample will be stored with zero lanes.
+	 * Store the record to the associated controller. If an rnode is not
+	 * defined for the controller, the number of lanes will be zero, and a
+	 * data sample will be stored with zero lanes.
 	 *
 	 * @param acs List of active controllers.
 	 */
@@ -452,23 +506,31 @@ public class UrmsRec {
 			return;
 		LinkedList<String> sids = ControllerHelper.getStationIds(ci);
 		if (sids.size() <= 0) {
-			String m = "No rnode for rec=" + getName() + ", c=" + ci;
+			String m = "No rnode for rec=" + getName()
+				+ ", c=" + ci;
 			UrmsPoller.log(m);
 		}
-		UrmsPoller.log("storing rec=" + getName() + ", stationids=" + sids + ", create_time="
-			+ new Date(create_time) + ", vol=" + SString.toString(getVolumes()) + ", speed="
-			+ SString.toString(getSpeeds()) + ", scans=" + SString.toString(getScans()) + ", to c=" + ci);
+		UrmsPoller.log("storing rec=" + getName()
+			+ ", stationids=" + sids
+			+ ", create_time=" + new Date(create_time)
+			+ ", vol=" + SString.toString(getVolumes())
+			+ ", speed=" + SString.toString(getSpeeds())
+			+ ", scans=" + SString.toString(getScans())
+			+ ", to c=" + ci);
 		checkStorageFreq(ci);
-		ci.storeVolume(create_time, SAMPLE_PERIOD_SEC, STARTPIN, getVolumes());
-		ci.storeOccupancy(create_time, SAMPLE_PERIOD_SEC, STARTPIN, getScans(), LaneSample.MAX_SCANS);
-		ci.storeSpeed(create_time, SAMPLE_PERIOD_SEC, STARTPIN, getSpeeds());
+		ci.storeVolume(create_time, SAMPLE_PERIOD_SEC, STARTPIN,
+			getVolumes());
+		ci.storeOccupancy(create_time, SAMPLE_PERIOD_SEC, STARTPIN,
+			getScans(), LaneSample.MAX_SCANS);
+		ci.storeSpeed(create_time, SAMPLE_PERIOD_SEC, STARTPIN,
+			getSpeeds());
 		ci.completeOperation(ci.toString(), true);
 		ci.setErrorStatus("");
 	}
 
 	/**
-	 * Detect if a store operation is happening too frequently, which may indicate multiple datagrams are being
-	 * stored to the same controller.
+	 * Detect if a store operation is happening too frequently, which may
+	 * indicate multiple datagrams are being stored to the same controller.
 	 */
 	private void checkStorageFreq(ControllerImpl ci) {
 		long lt = ci.getLastStoreTime();
@@ -476,14 +538,18 @@ public class UrmsRec {
 		final long nostoretime = UrmsProperty.SAMPLE_PERIOD_MS -
 			UrmsProperty.getReadMarginMs();
 		if (delta < nostoretime) {
-			UrmsPoller.log("For rec=" + getName() + ", delta=" + delta + " since last store on " + "c=" + ci
-				+ " may indicate duplicate " + "datagrams being stored on same controller.");
+			UrmsPoller.log("For rec=" + getName()
+				+ ", delta=" + delta
+				+ " since last store on "
+				+ "c=" + ci
+				+ " may indicate duplicate "
+				+ "datagrams being stored on same controller.");
 		}
 	}
 
 	/**
-	 * Find the associated controller. The sensor id in the URMS record is used to find the matching controller with
-	 * the same drop id.
+	 * Find the associated controller. The sensor id in the URMS record is
+	 * used to find the matching controller with the same drop id.
 	 *
 	 * @return Matching controller, else null if not found.
 	 */
@@ -492,24 +558,30 @@ public class UrmsRec {
 		UrmsPoller.log("finding ctrl");
 		for (Controller c : acs)
 			if (station_id == c.getDrop()) {
-				UrmsPoller.log("found c=" + c + " w/ matching station id=" + station_id);
+				UrmsPoller.log("found c=" + c
+					+ " w/ matching station id="
+					+ station_id);
 				return (ControllerImpl) c;
 			}
-		UrmsPoller.log("no ctrl defined for ss=" + this + ", station id=" + station_id);
+		UrmsPoller.log("no ctrl defined for ss=" + this
+			+ ", station id=" + station_id);
 		return null;
 	}
 
 	/**
-	 * Does the specified string contain the specified IP address? A string "12" does not match "123". A string
-	 * comparison is made, so "012" will not match "12".
+	 * Does the specified string contain the specified IP address? A string
+	 * "12" does not match "123". A string comparison is made, so "012" will
+	 * not match "12".
 	 */
 	private boolean containsIp(String str, String ip) {
 		int n = SString.count(str, ip);
 		if (n <= 0)
 			return false;
 		else if (n > 1) {
-			UrmsPoller.log("The string ip=" + ip + " occurs=" + n + " times in notes field. "
-				+ "This is probably a config error in rec=" + this);
+			UrmsPoller.log("The string ip=" + ip + " occurs=" + n
+				+ " times in notes field. "
+				+ "This is probably a config error in rec="
+				+ this);
 		}
 		for (int j = 0; j < str.length(); ++j) {
 			int i = str.indexOf(ip, j);
@@ -531,10 +603,14 @@ public class UrmsRec {
 		for (int i = 0; i < MAX_NUM_LANES; ++i)
 			x[i] = Constants.MISSING_DATA;
 		String xs = SString.toString(x);
-		UrmsPoller.log("storing missing sample: time=" + new Date(time) + ", nlanes=" + MAX_NUM_LANES + ", vo="
-			+ xs + ", sp=" + xs + ", sc=" + xs);
+		UrmsPoller.log("storing missing sample: time=" + new Date(time)
+			+ ", nlanes=" + MAX_NUM_LANES
+			+ ", vo=" + xs
+			+ ", sp=" + xs
+			+ ", sc=" + xs);
 		ci.storeVolume(time, SAMPLE_PERIOD_SEC, STARTPIN, x);
-		ci.storeOccupancy(time, SAMPLE_PERIOD_SEC, STARTPIN, x, LaneSample.MAX_SCANS);
+		ci.storeOccupancy(time, SAMPLE_PERIOD_SEC, STARTPIN, x,
+			LaneSample.MAX_SCANS);
 		ci.storeSpeed(time, SAMPLE_PERIOD_SEC, STARTPIN, x);
 	}
 
