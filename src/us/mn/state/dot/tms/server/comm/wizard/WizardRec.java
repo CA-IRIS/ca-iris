@@ -57,7 +57,7 @@ public class WizardRec {
 	static private final int STARTPIN = 1;
 
 	/** Maximum number of lanes in sample, arbitrarily set to */
-	static private final int MAX_NUM_LANES = 64;
+	static private final int MAX_NUM_LANES = 32;
 
 	/** Record field type */
 	private enum Field {
