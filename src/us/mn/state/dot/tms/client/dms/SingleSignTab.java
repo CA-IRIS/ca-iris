@@ -413,24 +413,14 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 
 	/** Update the preview panel */
 	private void updatePreviewPanel(DMS dms) {
-		DMSPanelPager p = createPreviewPager();
-		if(p != null && dms != null) {
-			preview_pnl.setDimensions(dms);
-			setPager(p);
+		RasterGraphic[] rg;
+		if(dms != null && (rg = dispatcher.getPixmaps()) != null) {
+			String ms = dispatcher.getMessage();
+			setPager(new DMSPanelPager(preview_pnl, rg, ms));
 		} else {
 			setPager(null);
 			preview_pnl.clear();
 		}
-	}
-
-	/** Create a preview panel pager */
-	private DMSPanelPager createPreviewPager() {
-		RasterGraphic[] rg = dispatcher.getPixmaps();
-		if(rg != null) {
-			String ms = dispatcher.getMessage();
-			return new DMSPanelPager(preview_pnl, rg, ms);
-		} else
-			return null;
 	}
 
 	/** Set the DMS panel pager */
