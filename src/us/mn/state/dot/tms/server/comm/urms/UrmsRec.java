@@ -178,10 +178,10 @@ public class UrmsRec {
 			return false;
 		if (!validLength() || !validHeader() || !validCrc())
 			return false;
-		logPacket();
 		station_id = getStationId();
 		UrmsPoller.log("station id=" + station_id);
 		num_lanes = getNumLanes();
+		logPacket();
 		if (num_lanes < 1)
 			return false;
 		lane_samples = parseLanes();
