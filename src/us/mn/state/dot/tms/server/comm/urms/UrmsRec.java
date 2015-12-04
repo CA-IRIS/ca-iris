@@ -247,15 +247,13 @@ public class UrmsRec {
 		for (int li = 0; li < num_opp_mainline; ++li)
 			logLane(li, "opp mainlines L" + new Integer(li + 1),
 				FieldMarker.OPP_MAINLINE);
-
-
 	}
 
 	/**
 	 * Log various values in lane.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 */
 	private void logLane(int li, String label, FieldMarker f) {
 		UrmsPoller.log(label);
@@ -285,7 +283,7 @@ public class UrmsRec {
 	 * Get the mainline leading detector status.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return the leading status or null on error.
 	 */
 	private DetStatus getLeadingStatus(int li, FieldMarker f) {
@@ -297,7 +295,7 @@ public class UrmsRec {
 	 * Get the mainline trailing detector status.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return the trailing status or null on error.
 	 */
 	private DetStatus getTrailingStatus(int li, FieldMarker f) {
@@ -309,7 +307,7 @@ public class UrmsRec {
 	 * Get the mainline lane status.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return the lane status or null on error.
 	 */
 	private LaneStatus getLaneStatus(int li, FieldMarker f) {
@@ -333,8 +331,14 @@ public class UrmsRec {
 
 		int nl = num_mainline + num_opp_mainline;
 		UrmsPoller.log("# lanes=" + nl);
-		if (nl < 0 || nl > MAX_NUM_LANES) {
-			UrmsPoller.log("bogus # lanes=" + nl);
+		if (nl < 0 || nl > MAX_NUM_LANES || num_mainline < 0
+			|| num_opp_mainline < 0) {
+			StringBuilder sb = new StringBuilder("bogus ");
+			sb.append("# lanes=").append(nl);
+			sb.append("# mainline lanes=").append(num_mainline);
+			sb.append("# opp mainline lanes=")
+				.append(num_opp_mainline);
+			UrmsPoller.log(sb.toString());
 			return -1;
 		}
 		return nl;
@@ -352,9 +356,9 @@ public class UrmsRec {
 		for (int li = 0; li < num_opp_mainline; li++) {
 			int i = li + num_mainline;
 			ld[i] = new LaneSample(i + 1);
-			ld[i].volume = getVolume(i, FieldMarker.OPP_MAINLINE);
-			ld[i].speed = getSpeed(i, FieldMarker.OPP_MAINLINE);
-			ld[i].occ = getOccupancy(i, FieldMarker.OPP_MAINLINE);
+			ld[i].volume = getVolume(li, FieldMarker.OPP_MAINLINE);
+			ld[i].speed = getSpeed(li, FieldMarker.OPP_MAINLINE);
+			ld[i].occ = getOccupancy(li, FieldMarker.OPP_MAINLINE);
 		}
 		return ld;
 	}
@@ -363,7 +367,7 @@ public class UrmsRec {
 	 * Get mainline speed for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return Speed in MPH.
 	 */
 	private int getSpeed(int li, FieldMarker f) {
@@ -374,7 +378,7 @@ public class UrmsRec {
 	 * Get mainline volume for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return Volume from the leading sensor.
 	 */
 	private int getVolume(int li, FieldMarker f) {
@@ -385,7 +389,7 @@ public class UrmsRec {
 	 * Get mainline occupancy for the specified lane.
 	 *
 	 * @param li Lane index, zero based.
-	 * @param f Field marker
+	 * @param f  Field marker
 	 * @return Occupancy from the leading sensor, 0 - 100
 	 */
 	private float getOccupancy(int li, FieldMarker f) {
