@@ -14,30 +14,25 @@
  */
 package us.mn.state.dot.tms.server.comm.pems;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.Math;
-import java.net.SocketTimeoutException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.server.Constants;
 import us.mn.state.dot.tms.server.DetectorImpl;
 import us.mn.state.dot.tms.server.DetectorSet;
 import us.mn.state.dot.tms.server.R_NodeImpl;
 import us.mn.state.dot.tms.server.StationImpl;
-import us.mn.state.dot.tms.server.comm.ChecksumException;
-import us.mn.state.dot.tms.server.comm.ControllerException;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
-import us.mn.state.dot.tms.server.comm.ParsingException;
 import us.mn.state.dot.tms.utils.ByteBlob;
 import us.mn.state.dot.tms.utils.SString;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * A PeMS property represents the data associated with a single
  * traffic station.
+ *
  * @author Michael Darter
  * @author Travis Swanston
  */
@@ -71,27 +66,29 @@ public class PemsProperty extends ControllerProperty {
 
 	/** Perform a GET request.  Called by PemsMessage. */
 	public void doGetRequest(OutputStream os, InputStream is, String h)
-		throws IOException {}
+		throws IOException {
+	}
 
 	/**
 	 * Perform a SET request. Called by PemsMessage.
+	 *
 	 * @return Number of bytes written.
 	 */
 	public int doSetRequest(OutputStream os, InputStream is)
-		throws IOException
-	{
+		throws IOException {
 		return writeStationData(os);
 	}
 
 	/**
 	 * Write data associated with a single station to PeMS.
+	 *
 	 * @param os Output stream to write.
 	 * @return Number of bytes written.
 	 * @throws IOException
 	 */
 	private int writeStationData(OutputStream os) throws IOException {
 		ByteBlob b = getPemsSample();
-		if(b == null || b.size() <= 0)
+		if (b == null || b.size() <= 0)
 			return 0;
 		os.write(b.toArray());
 		PemsPoller.log("wrote to PeMS=" + b.toStringChars());
@@ -100,11 +97,12 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Get sample data for a single station in PeMS format.
+	 *
 	 * @return Sample data in PeMS format, which has zero
-	 *         length on error.k
+	 * length on error.k
 	 */
 	private ByteBlob getPemsSample() {
-		R_NodeImpl rn = (R_NodeImpl)traf_stat.getR_Node();
+		R_NodeImpl rn = (R_NodeImpl) traf_stat.getR_Node();
 		DetectorSet ds = rn.getDetectorSet();
 		DetectorImpl[] dets = ds.toArray();
 
@@ -120,8 +118,7 @@ public class PemsProperty extends ControllerProperty {
 			PemsPoller.log("station " + this +
 				" ignored for invalid/expired time.");
 			return new ByteBlob();
-		}
-		else
+		} else
 			PemsPoller.log("time is valid.");
 		sb.append(getTime(tsLatestSamp));
 		return new ByteBlob(sb.toString().getBytes());
@@ -142,15 +139,16 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Compute the age of a timestamp.
+	 *
 	 * @param stamp The timestamp.
 	 */
 	private static long getAge(long stamp) {
-		long delta = new Date().getTime() - stamp;
-		return delta;
+		return new Date().getTime() - stamp;
 	}
 
 	/**
 	 * Construct the PeMS time field using the specified stamp.
+	 *
 	 * @param stamp A time stamp or MISSING_DATA.
 	 * @return A string in local time as yyyy-MM-dd HH:mm:ss.
 	 */
@@ -158,7 +156,7 @@ public class PemsProperty extends ControllerProperty {
 		SimpleDateFormat sdf =
 			new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date d;
-		if(stamp == Constants.MISSING_DATA)
+		if (stamp == Constants.MISSING_DATA)
 			d = new Date();
 		else
 			d = new Date(stamp);
@@ -167,17 +165,18 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Get PeMS station name.
+	 *
 	 * @return The 7 character PeMS station id or null on errror.
 	 */
 	private String getStationName() {
 		String id = traf_stat.getName();
-		if(id.length() != 7 && id.length() != 8) {
+		if (id.length() != 7 && id.length() != 8) {
 			PemsPoller.log("PeMS station='" + id +
 				"' has incorrect length (" + id.length() +
 				"), should be 7 or 8. It was ignored.");
 			return null;
 		}
-		if(!SString.isNumeric(id)) {
+		if (!SString.isNumeric(id)) {
 			PemsPoller.log("PeMS station='" + id +
 				"' is not numeric. It was ignored.");
 			return null;
@@ -187,14 +186,14 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Add flow, speed, and occupancy for all detectors to the string.
-	 * @param sid PeMS station id.
+	 *
+	 * @param sid  PeMS station id.
 	 * @param dets Detectors in the station.
-	 * @param s String that is appended with lane data.
+	 * @param sb   String that is appended with lane data.
 	 * @return Detector data timestamp, which may be MISSING_DATA.
 	 */
 	private long addDetectorData(String sid, DetectorImpl[] dets,
-		StringBuilder sb)
-	{
+		StringBuilder sb) {
 		long tsLatestSamp = Constants.MISSING_DATA;
 		sb.append(dets.length).append(',');
 		for (int i = 0; i < dets.length; ++i) {
@@ -218,21 +217,24 @@ public class PemsProperty extends ControllerProperty {
 			// only include sample components that belong to the
 			// latest sample grouping
 			if ((tsLatestComp - tsVol) <= TOLERANCE_MS)
-				sb.append(fl);	// vehs per 30 secs
+				sb.append(fl);        // vehs per 30 secs
 			sb.append(',');
 			if ((tsLatestComp - tsSpeed) <= TOLERANCE_MS)
-				sb.append(sp);	// MPH
+				sb.append(sp);        // MPH
 			sb.append(',');
 			if ((tsLatestComp - tsScans) <= TOLERANCE_MS)
-				sb.append(oc);	// 0-1000
+				sb.append(oc);        // 0-1000
 			sb.append(',');
 		}
+		PemsPoller.log("read " + dets.length
+			+ " detectors for PeMS data");
 		return tsLatestSamp;
 	}
 
 	/**
 	 * Get the PeMS flow.
-	 * @param f IRIS flow as vehicles per hour, or MISSING_DATA.
+	 *
+	 * @param fl IRIS flow as vehicles per hour, or MISSING_DATA.
 	 * @return PeMS flow, &gt;= 0, as vehicles per 30 secs or empty.
 	 */
 	static private String getPemsFlow(float fl) {
@@ -243,7 +245,8 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Get the PeMS occupancy.
-	 * @param o IRIS occupancy, as a percentage 0-100, or MISSING_DATA.
+	 *
+	 * @param oc IRIS occupancy, as a percentage 0-100, or MISSING_DATA.
 	 * @return PeMS occupancy, 0 - 1000, or blank.
 	 */
 	static private String getPemsOccupancy(float oc) {
@@ -255,7 +258,8 @@ public class PemsProperty extends ControllerProperty {
 
 	/**
 	 * Get the PeMS speed.
-	 * @param o IRIS speed, mph or MISSING_DATA.
+	 *
+	 * @param sp IRIS speed, mph or MISSING_DATA.
 	 * @return PeMS speed, mph, &gt;= 0 or empty.
 	 */
 	static private String getPemsSpeed(float sp) {
