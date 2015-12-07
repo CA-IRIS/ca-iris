@@ -3,7 +3,7 @@
 SET SESSION AUTHORIZATION 'tms';
 
 -- add new idle_secs column and set default to 2^31 (max signed 32-bit int)
-ALTER TABLE iris.comm_link ADD COLUMN idle_secs INTEGER NOT NULL;
+ALTER TABLE iris.comm_link ADD COLUMN idle_secs INTEGER NOT NULL DEFAULT 2147483647;
 UPDATE iris.comm_link SET idle_secs = 2147483647;
 
 -- NOTE: Most if not all of the following will be irrelevant to non-CA IRIS. Remove before pushing to MN.
