@@ -68,7 +68,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 				throws IOException
 			{
 			if (pan != null) {
-				mess.add(new PanProperty(pan.floatValue()));
+				mess.add(new PanProperty(pan));
 				doStoreProps(mess);
 				updateOpStatus("pan sent");
 			}
@@ -83,7 +83,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 			throws IOException
 		{
 			if (tilt != null) {
-				mess.add(new TiltProperty(tilt.floatValue()));
+				mess.add(new TiltProperty(tilt));
 				doStoreProps(mess);
 				updateOpStatus("tilt sent");
 			}
@@ -98,7 +98,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 			throws IOException
 		{
 			if (zoom != null) {
-				mess.add(new ZoomProperty(zoom.floatValue()));
+				mess.add(new ZoomProperty(zoom));
 				doStoreProps(mess);
 				updateOpStatus("zoom sent");
 			}

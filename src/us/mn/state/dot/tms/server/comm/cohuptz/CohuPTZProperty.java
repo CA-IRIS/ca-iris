@@ -80,7 +80,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		else {
 			presetByte = (byte) (0x60 + (presetNum-1));
 		}
-		return Byte.valueOf(presetByte);
+		return presetByte;
 	}
 
 	/**

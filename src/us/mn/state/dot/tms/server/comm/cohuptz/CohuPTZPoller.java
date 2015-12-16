@@ -103,15 +103,15 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		Float zoom = null;
 
 		if (p != curPan) {
-			pan = Float.valueOf(p);
+			pan = p;
 			curPan = p;
 		}
 		if (t != curTilt) {
-			tilt = Float.valueOf(t);
+			tilt = t;
 			curTilt = t;
 		}
 		if (z != curZoom) {
-			zoom = Float.valueOf(z);
+			zoom = z;
 			curZoom = z;
 		}
 
