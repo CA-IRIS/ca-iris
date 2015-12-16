@@ -84,21 +84,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	protected final Messenger messenger;
 
 	/** Thread state */
-	private ThreadState state = ThreadState.NOT_STARTED;
-
-	/** Operations on state should synchronize on this object */
-	private final Object state_lock = new Object();
+	private volatile ThreadState state = ThreadState.NOT_STARTED;
 
 	/** Whether we are performing a device acquisition */
 	private boolean is_acquiring = true;
 
 	/** Set the thread state */
 	private void setThreadState(ThreadState st) {
-		ThreadState ts;
-		synchronized (state_lock) {
-			state = ts = st;
-		}
-		plog("state: " + ts);
+		state = st;
+		plog("state: " + st);
 	}
 
 	/** Poller status */
@@ -122,29 +116,27 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Check if ready for operation */
 	@Override
 	public boolean isReady() {
-		synchronized (state_lock) {
-			switch(state) {
-			case NOT_STARTED:
-			case STARTING:
-			case RUNNING:
-				return true;
-			default:
-				return false;
-			}
+		ThreadState ts = state;
+		switch(ts) {
+		case NOT_STARTED:
+		case STARTING:
+		case RUNNING:
+			return true;
+		default:
+			return false;
 		}
 	}
 
 	/** Check if poller is connected */
 	@Override
 	public boolean isConnected() {
-		synchronized (state_lock) {
-			switch(state) {
-			case STARTING:
-			case RUNNING:
-				return true;
-			default:
-				return false;
-			}
+		ThreadState ts = state;
+		switch(ts) {
+		case STARTING:
+		case RUNNING:
+			return true;
+		default:
+			return false;
 		}
 	}
 
@@ -216,26 +208,28 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Ensure the thread is started */
 	private void ensureStarted() {
-		synchronized (state_lock) {
-			if (shouldStart())
-				startPolling();
-		}
+		if (shouldStart())
+			startPolling();
 	}
 
 	/** Should the thread be started? */
 	private boolean shouldStart() {
-		synchronized (state_lock) {
-			if (state == ThreadState.NOT_STARTED) {
-				setThreadState(ThreadState.STARTING);
-				return true;
-			} else
-				return false;
-		}
+		ThreadState ts = state;
+		if (ts == ThreadState.NOT_STARTED) {
+			setThreadState(ThreadState.STARTING);
+			return true;
+		} else
+			return false;
 	}
 
 	/** Start polling */
 	protected void startPolling() {
-		thread.start();
+		try {
+			thread.start();
+		} catch (IllegalThreadStateException e) {
+			// thread was started on another thread between shouldStart returning true and us getting here
+			plog("Attempted to start polling when we were already polling.");
+		}
 	}
 
 	/** Stop polling */
