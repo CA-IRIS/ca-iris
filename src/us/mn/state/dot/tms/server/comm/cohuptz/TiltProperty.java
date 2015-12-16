@@ -41,15 +41,15 @@ public class TiltProperty extends CohuPTZProperty {
 		byte[] cmd = new byte[2];
 
 		if (Math.abs(value) < PTZ_THRESH) {
-			cmd[0] = (byte)0x54;
-			cmd[1] = (byte)0x53;
+			cmd[0] = (byte)'T';
+			cmd[1] = (byte)'S';
 		}
 		else if (value < 0) {
-			cmd[0] = (byte)0x64;
+			cmd[0] = (byte)'d';
 			cmd[1] = getPanTiltSpeedByte(value);
 		}
 		else if (value > 0) {
-			cmd[0] = (byte)0x75;
+			cmd[0] = (byte)'u';
 			cmd[1] = getPanTiltSpeedByte(value);
 		}
 

@@ -41,15 +41,15 @@ public class PanProperty extends CohuPTZProperty {
 		byte[] cmd = new byte[2];
 
 		if (Math.abs(value) < PTZ_THRESH) {
-			cmd[0] = (byte)0x50;
-			cmd[1] = (byte)0x53;
+			cmd[0] = (byte)'P';
+			cmd[1] = (byte)'S';
 		}
 		else if (value < 0) {
-			cmd[0] = (byte)0x6c;
+			cmd[0] = (byte)'l';
 			cmd[1] = getPanTiltSpeedByte(value);
 		}
 		else if (value > 0) {
-			cmd[0] = (byte)0x72;
+			cmd[0] = (byte)'r';
 			cmd[1] = getPanTiltSpeedByte(value);
 		}
 
