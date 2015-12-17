@@ -22,15 +22,13 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * A property to zoom a camera
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class ZoomProperty extends CohuPTZProperty {
 
-	/** Requested vector [-1..1] */
-	protected final float value;
-
 	/** Create the property */
 	public ZoomProperty(float v) {
-		value = v;
+		super(v);
 	}
 
 	/** Encode a STORE request */
@@ -38,33 +36,39 @@ public class ZoomProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		byte[] cmd = new byte[0];
+		byte[] cmd;
+		if (Math.abs(value) < PTZ_THRESH)
+			cmd = new byte[]{ 'Z', 'S' };
 
-		if (Math.abs(value) < PTZ_THRESH) {
-			cmd = new byte[2];
-			cmd[0] = (byte)'Z';
-			cmd[1] = (byte)'S';
-		}
-		else if (value < 0) {
-			cmd = new byte[3];
-			cmd[0] = (byte)'c';
-			cmd[1] = (byte)'z';
-			cmd[2] = getZoomSpeedByte(value);
-		}
-		else if (value > 0) {
-			cmd = new byte[3];
-			cmd[0] = (byte)'c';
-			cmd[1] = (byte)'Z';
-			cmd[2] = getZoomSpeedByte(value);
-		}
+		else if (value < 0)
+			cmd = new byte[]{ 'c', 'z', getZoomSpeedByte(value) };
 
-		byte[] msg = new byte[3 + cmd.length];
-		msg[0] = (byte)0xf8;
-		msg[1] = (byte)c.getDrop();
-		int i = 2;
-		for (byte b : cmd)
-			msg[i++] = b;
-		msg[i] = calculateChecksum(msg, 1, cmd.length + 1);
-		os.write(msg);
+		else /* if (value > 0) */
+			cmd = new byte[]{ 'c', 'z', getZoomSpeedByte(value) };
+
+		writePayload(os, c.getDrop(), cmd);
+	}
+
+	/**
+	 * Calculate the zoom "speed byte" that corresponds to the given
+	 * speed value [-1..1].
+	 *
+	 * @param speed The speed value [-1..1].  Values outside this range
+	 *              will be remapped.
+	 * @return The zoom speed byte [0x30..0x32] corresponding to the
+	 *         given speed value.
+	 */
+	private byte getZoomSpeedByte(float speed) {
+		int range = (0x32 - 0x30) + 1;
+		int scale = range - 1;
+
+		speed = Math.abs(speed);
+		float mapped = (speed * scale);
+		int mapInt = Math.round(mapped);
+
+		// sanity check for floating point gotchas
+		if (mapInt > scale) mapInt = scale;
+
+		return (byte) (0x30 + mapInt);
 	}
 }

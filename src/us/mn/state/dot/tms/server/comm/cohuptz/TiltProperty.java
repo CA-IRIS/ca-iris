@@ -22,15 +22,13 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * A property to tilt a camera
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class TiltProperty extends CohuPTZProperty {
 
-	/** Requested vector [-1..1] */
-	protected final float value;
-
 	/** Create the property */
 	public TiltProperty(float v) {
-		value = v;
+		super(v);
 	}
 
 	/** Encode a STORE request */
@@ -38,27 +36,16 @@ public class TiltProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		byte[] cmd = new byte[2];
+		byte[] cmd;
+		if (Math.abs(value) < PTZ_THRESH)
+			cmd = new byte[]{ 'T', 'S' };
 
-		if (Math.abs(value) < PTZ_THRESH) {
-			cmd[0] = (byte)'T';
-			cmd[1] = (byte)'S';
-		}
-		else if (value < 0) {
-			cmd[0] = (byte)'d';
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
-		else if (value > 0) {
-			cmd[0] = (byte)'u';
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
+		else if (value < 0)
+			cmd = new byte[]{ 'd', getPanTiltSpeedByte(value) };
 
-		byte[] msg = new byte[5];
-		msg[0] = (byte)0xf8;
-		msg[1] = (byte)c.getDrop();
-		msg[2] = cmd[0];
-		msg[3] = cmd[1];
-		msg[4] = calculateChecksum(msg, 1, 3);
-		os.write(msg);
+		else /* if (value > 0) */
+			cmd = new byte[]{ 'u', getPanTiltSpeedByte(value) };
+
+		writePayload(os, c.getDrop(), cmd);
 	}
 }

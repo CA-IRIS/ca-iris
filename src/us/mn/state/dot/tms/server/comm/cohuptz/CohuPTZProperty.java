@@ -25,6 +25,7 @@ import us.mn.state.dot.tms.server.comm.ControllerProperty;
  * Cohu PTZ Property
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class CohuPTZProperty extends ControllerProperty {
 
@@ -33,6 +34,16 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * PTZ vectors below this value will be considered as stop commands.
 	 */
 	static protected final float PTZ_THRESH = 0.001F;
+
+	/** Requested vector [-1..1] */
+	protected final float value;
+
+	/**
+	 * @param value The PTZ value.
+     */
+	protected CohuPTZProperty(float value) {
+		this.value = value;
+	}
 
 	/**
 	 * Calculate the XOR-based checksum of the given Cohu message.
@@ -52,9 +63,9 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		if (last >= message.length) return null;
 
 		byte runningXor = 0;
-		for(int i = first; i <= last; ++i) {
+		for(int i = first; i <= last; ++i)
 			runningXor ^= message[i];
-			}
+
 		return (byte) (0x80 + ((runningXor & (byte)0x0f)));
 	}
 
@@ -72,7 +83,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		if (presetNum < 1) return null;
 		if (presetNum > 64) return null;
 
-		byte presetByte = 0x00;
+		byte presetByte;
 
 		if (presetNum <= 47) {
 			presetByte = (byte) (0x10 + (presetNum-1));
@@ -106,32 +117,19 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		// sanity check for floating point gotchas
 		if (mapInt > scale) mapInt = scale;
 
-		byte byteval = (byte) (0x31 + mapInt);
-		return byteval;
+		return (byte) (0x31 + mapInt);
 	}
 
-	/**
-	 * Calculate the zoom "speed byte" that corresponds to the given
-	 * speed value [-1..1].
-	 *
-	 * @param speed The speed value [-1..1].  Values outside this range
-	 *              will be remapped.
-	 * @return The zoom speed byte [0x30..0x32] corresponding to the
-	 *         given speed value.
-	 */
-	protected byte getZoomSpeedByte(float speed) {
-		int range = (0x32 - 0x30) + 1;
-		int scale = range - 1;
-
-		speed = Math.abs(speed);
-		float mapped = (speed * scale);
-		int mapInt = Math.round(mapped);
-
-		// sanity check for floating point gotchas
-		if (mapInt > scale) mapInt = scale;
-
-		byte byteval = (byte) (0x30 + mapInt);
-		return byteval;
+	/** Writes given payload surrounded by proper header and checksum. */
+	protected void writePayload(OutputStream os, short drop, byte[] payload)
+		throws IOException
+	{
+		byte[] msg = new byte[3 + payload.length];
+		msg[0] = (byte)0xf8;
+		msg[1] = (byte)drop;
+		System.arraycopy(payload, 0, msg, 2, payload.length);
+		msg[4] = calculateChecksum(msg, 1, payload.length + 1);
+		os.write(msg);
 	}
 
 	/** Encode a STORE request */

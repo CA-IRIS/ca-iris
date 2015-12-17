@@ -22,15 +22,13 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * A property to pan a camera
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class PanProperty extends CohuPTZProperty {
 
-	/** Requested vector [-1..1] */
-	protected final float value;
-
 	/** Create the property */
 	public PanProperty(float v) {
-		value = v;
+		super(v);
 	}
 
 	/** Encode a STORE request */
@@ -38,27 +36,16 @@ public class PanProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		byte[] cmd = new byte[2];
+		byte[] cmd;
+		if (Math.abs(value) < PTZ_THRESH)
+			cmd = new byte[]{ 'P', 'S' };
 
-		if (Math.abs(value) < PTZ_THRESH) {
-			cmd[0] = (byte)'P';
-			cmd[1] = (byte)'S';
-		}
-		else if (value < 0) {
-			cmd[0] = (byte)'l';
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
-		else if (value > 0) {
-			cmd[0] = (byte)'r';
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
+		else if (value < 0)
+			cmd = new byte[]{ 'l', getPanTiltSpeedByte(value) };
 
-		byte[] msg = new byte[5];
-		msg[0] = (byte)0xf8;
-		msg[1] = (byte)c.getDrop();
-		msg[2] = cmd[0];
-		msg[3] = cmd[1];
-		msg[4] = calculateChecksum(msg, 1, 3);
-		os.write(msg);
+		else /* if (value > 0) */
+			cmd = new byte[]{ 'r', getPanTiltSpeedByte(value) };
+
+		writePayload(os, c.getDrop(), cmd);
 	}
 }
