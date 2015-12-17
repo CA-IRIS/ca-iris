@@ -35,16 +35,6 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 */
 	static protected final float PTZ_THRESH = 0.001F;
 
-	/** Requested vector [-1..1] */
-	protected final float value;
-
-	/**
-	 * @param value The PTZ value.
-     */
-	protected CohuPTZProperty(float value) {
-		this.value = value;
-	}
-
 	/**
 	 * Calculate the XOR-based checksum of the given Cohu message.
 	 *
@@ -53,9 +43,8 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * @param last The index of the last byte in the checksum range.
 	 * @return A Byte representing the checksum for the message,
 	 *         or null on error.
-	 *
 	 */
-	protected Byte calculateChecksum(byte[] message, int first, int last) {
+	private Byte calculateChecksum(byte[] message, int first, int last) {
 		if (message.length < 1) return null;
 		if (first < 0) return null;
 		if (last < 0) return null;
@@ -128,7 +117,12 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		msg[0] = (byte)0xf8;
 		msg[1] = (byte)drop;
 		System.arraycopy(payload, 0, msg, 2, payload.length);
-		msg[4] = calculateChecksum(msg, 1, payload.length + 1);
+
+		Byte checksum = calculateChecksum(msg, 1, payload.length + 1);
+		if (checksum == null)
+			return;
+
+		msg[msg.length - 1] = checksum;
 		os.write(msg);
 	}
 
@@ -144,6 +138,24 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	public void decodeStore(ControllerImpl c, InputStream is)
 		throws IOException
 	{
+		try {
+			// NOTE: force reading of the ACK/NAK before continuing. This ensures that commands are not lost
+			// due to overloading the camera with commands on top of each other.
+			// noinspection ResultOfMethodCallIgnored
+			is.read();
+			c.setErrorStatus(null);
+		} catch ( IOException s ) {
+			if ( s.getMessage() == null )
+				c.setErrorStatus("Unknown IOException Error");
+			else if ( s.getMessage().equals( "Connection attempt timed out" ) )
+				c.setErrorStatus("Exceeded Read Timeout");
+			else if ( s.getMessage().equals( "Connection refused: connect" ) )
+				c.setErrorStatus("Field Site Blocked Connection Attempt");
+			else if ( s.getMessage().equals( "No route to host: connect" ) )
+				c.setErrorStatus("Network Problem With This Computer");
+			else
+				c.setErrorStatus(s.getMessage());
+		}
 	}
 
 }

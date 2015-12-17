@@ -23,6 +23,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * to recall a preset state.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class RecallPresetProperty extends CohuPTZProperty {
 
@@ -42,15 +43,9 @@ public class RecallPresetProperty extends CohuPTZProperty {
 		Byte presetByte = getPresetByte(preset);
 		if (presetByte == null)
 			return;
-		byte pb = presetByte.byteValue();
 
-		byte[] message = new byte[5];
-		message[0] = (byte)0xf8;
-		message[1] = (byte)c.getDrop();
-		message[2] = (byte)0x48;
-		message[3] = pb;
-		message[4] = calculateChecksum(message, 1, 3);
-		os.write(message);
+		byte[] payload = new byte[]{ 'H', presetByte };
+		writePayload(os, c.getDrop(), payload);
 	}
 
 }

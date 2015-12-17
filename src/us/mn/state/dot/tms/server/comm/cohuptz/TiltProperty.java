@@ -26,9 +26,12 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  */
 public class TiltProperty extends CohuPTZProperty {
 
+	/** Requested vector [-1..1] */
+	private final float value;
+
 	/** Create the property */
 	public TiltProperty(float v) {
-		super(v);
+		value = v;
 	}
 
 	/** Encode a STORE request */
