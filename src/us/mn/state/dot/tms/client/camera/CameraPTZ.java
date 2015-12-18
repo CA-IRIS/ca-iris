@@ -144,7 +144,7 @@ public class CameraPTZ {
 	 * of doSendPtz().
 	 * Observes controlEnabled.
 	 */
-	public void sendPtz(float p, float t, float z) {
+	public synchronized void sendPtz(float p, float t, float z) {
 		if (controlEnabled)
 			doSendPtz(p,t,z);
 	}
@@ -166,7 +166,7 @@ public class CameraPTZ {
 	}
 
 	/** Was the most recent PTZ update a move? */
-	private boolean ptzMoving() {
+	private synchronized boolean ptzMoving() {
 		return ptz[0] != 0 || ptz[1] != 0 || ptz[2] != 0;
 	}
 
@@ -174,7 +174,7 @@ public class CameraPTZ {
 	 * Send a device request to the current camera.
 	 * Observes controlEnabled.
 	 */
-	public void sendRequest(DeviceRequest dr) {
+	public synchronized void sendRequest(DeviceRequest dr) {
 		if (controlEnabled)
 			doSendRequest(dr);
 	}
@@ -227,7 +227,7 @@ public class CameraPTZ {
 	}
 
 	/** Ensure states are cleared */
-	private void clearState() {
+	private synchronized void clearState() {
 		ptz[0] = 0f;
 		ptz[1] = 0f;
 		ptz[2] = 0f;
