@@ -33,7 +33,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * Absolute value of PTZ movement threshold.
 	 * PTZ vectors below this value will be considered as stop commands.
 	 */
-	static protected final float PTZ_THRESH = 0.001F;
+	static public final float PTZ_THRESH = 0.001F;
 
 	/**
 	 * Calculate the XOR-based checksum of the given Cohu message.

@@ -63,46 +63,82 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 	/** pan phase, 1/3 */
 	protected class PanPhase extends Phase<CohuPTZProperty> {
+		/**
+		 * Whether this is first time sending this instance.
+		 */
+		private boolean first = true;
+
 		protected Phase<CohuPTZProperty> poll(
 				CommMessage<CohuPTZProperty> mess)
 				throws IOException
 			{
-			if (pan != null) {
-				mess.add(new PanProperty(pan));
-				doStoreProps(mess);
-				updateOpStatus("pan sent");
-			}
-			return new TiltPhase();
+				Phase<CohuPTZProperty> ret = null;
+				if (pan != null) {
+					mess.add(new PanProperty(pan));
+					doStoreProps(mess);
+					updateOpStatus("pan sent");
+
+					// double-send stops
+					if (first && Math.abs(pan) < CohuPTZProperty.PTZ_THRESH)
+						ret = this;
+				}
+
+				first = false;
+				return ret != null ? ret : new TiltPhase();
 		}
 	}
 
 	/** tilt phase, 2/3 */
 	protected class TiltPhase extends Phase<CohuPTZProperty> {
+		/**
+		 * Whether this is first time sending this instance.
+		 */
+		private boolean first = true;
+
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException
 		{
+			Phase<CohuPTZProperty> ret = null;
 			if (tilt != null) {
 				mess.add(new TiltProperty(tilt));
 				doStoreProps(mess);
 				updateOpStatus("tilt sent");
+
+				// double-send stops
+				if (first && Math.abs(tilt) < CohuPTZProperty.PTZ_THRESH)
+					ret = this;
 			}
-			return new ZoomPhase();
+
+			first = false;
+			return ret != null ? ret : new ZoomPhase();
 		}
 	}
 
 	/** zoom phase, 3/3 */
 	protected class ZoomPhase extends Phase<CohuPTZProperty> {
+		/**
+		 * Whether this is first time sending this instance.
+		 */
+		private boolean first = true;
+
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException
 		{
+			Phase<CohuPTZProperty> ret = null;
 			if (zoom != null) {
 				mess.add(new ZoomProperty(zoom));
 				doStoreProps(mess);
 				updateOpStatus("zoom sent");
+
+				// double-send stops
+				if (first && Math.abs(zoom) < CohuPTZProperty.PTZ_THRESH)
+					ret = this;
 			}
-			return null;
+
+			first = false;
+			return ret;
 		}
 	}
 
