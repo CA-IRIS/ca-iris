@@ -143,7 +143,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 			// due to overloading the camera with commands on top of each other.
 			// noinspection ResultOfMethodCallIgnored
 			is.read();
-			c.setErrorStatus(null);
+			c.setErrorStatus("");
 		} catch ( IOException s ) {
 			if ( s.getMessage() == null )
 				c.setErrorStatus("Unknown IOException Error");
