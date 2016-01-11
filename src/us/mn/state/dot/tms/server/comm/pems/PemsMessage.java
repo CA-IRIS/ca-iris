@@ -14,17 +14,17 @@
  */
 package us.mn.state.dot.tms.server.comm.pems;
 
+import us.mn.state.dot.tms.server.comm.CommMessage;
+import us.mn.state.dot.tms.server.comm.ControllerProperty;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.LinkedList;
-import us.mn.state.dot.tms.server.ControllerImpl;
-import us.mn.state.dot.tms.server.comm.CommMessage;
-import us.mn.state.dot.tms.server.comm.ControllerProperty;
-import us.mn.state.dot.tms.server.comm.ProtocolException;
 
 /**
  * A PeMS message.
+ *
  * @author Michael Darter
  * @author Travis Swanston
  */
@@ -50,12 +50,13 @@ public class PemsMessage implements CommMessage {
 	/** Add a controller property. */
 	@Override
 	public void add(ControllerProperty cp) {
-		if(cp instanceof PemsProperty)
-			pems_props.add((PemsProperty)cp);
+		if (cp instanceof PemsProperty)
+			pems_props.add((PemsProperty) cp);
 	}
 
 	/**
 	 * Query the controller properties.
+	 *
 	 * @throws IOException If errors sending or receiving.
 	 */
 	@Override
@@ -65,6 +66,7 @@ public class PemsMessage implements CommMessage {
 	/**
 	 * Store the controller properties, which writes all station
 	 * samples to PeMS.
+	 *
 	 * @throws IOException If errors sending or receiving.
 	 */
 	@Override
@@ -72,11 +74,11 @@ public class PemsMessage implements CommMessage {
 		PemsPoller.log("total number of props=" +
 			pems_props.size());
 		int nsent = 0;
-		for(PemsProperty p : pems_props) {
-			if(p == null)
+		for (PemsProperty p : pems_props) {
+			if (p == null)
 				continue;
 			int nb = p.doSetRequest(out_stream, inp_stream);
-			if(nb > 0) {
+			if (nb > 0) {
 				++nsent;
 				PemsPoller.log("Prop=" + p +
 					", wrote " + nb + " bytes to pems");
