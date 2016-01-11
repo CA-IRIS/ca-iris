@@ -14,18 +14,6 @@
  */
 package us.mn.state.dot.tms.client.detector;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JSpinner;
-import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.Detector;
@@ -38,33 +26,49 @@ import us.mn.state.dot.tms.client.proxy.ProxyView;
 import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
-import us.mn.state.dot.tms.utils.I18N;
+
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 /**
  * A panel for editing the properties of a detector.
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 
 	/** Detector action */
 	abstract private class DAction extends IAction {
+
 		protected DAction(String text_id) {
 			super(text_id);
 		}
+
 		protected final void doActionPerformed(ActionEvent e) {
 			Detector d = detector;
 			if (d != null)
 				do_perform(d);
 		}
+
 		abstract protected void do_perform(Detector d);
 	}
 
 	/** Lane type action */
 	private final DAction type_act = new DAction("detector.lane.type") {
 		protected void do_perform(Detector d) {
-			d.setLaneType((short)type_cbx.getSelectedIndex());
+			d.setLaneType((short) type_cbx.getSelectedIndex());
 		}
+
 		@Override
 		protected void doUpdateSelected() {
 			Detector d = detector;
@@ -77,9 +81,13 @@ public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 	private final JComboBox type_cbx =
 		new JComboBox(LaneType.getDescriptions());
 
-	/** Spinner for lane number */
+	/**
+	 * Spinner for lane number
+	 * Updated from a max of 12 to 16 to accommodate the upgraded URMS
+	 * driver's max of 16 lanes. See CA-issue 562.
+	 */
 	private final JSpinner lane_spn = new JSpinner(
-		new SpinnerNumberModel(0, 0, 12, 1));
+		new SpinnerNumberModel(0, 0, 16, 1));
 
 	/** Abandoned check box */
 	private final JCheckBox aband_chk = new JCheckBox(new DAction(null) {
@@ -107,21 +115,19 @@ public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 
 	/** Button to display the controller */
 	private final JButton controller_btn = new JButton(
-		new DAction("controller")
-	{
-		protected void do_perform(Detector d) {
-			showControllerForm(d);
-		}
-	});
+		new DAction("controller") {
+			protected void do_perform(Detector d) {
+				showControllerForm(d);
+			}
+		});
 
 	/** Action to display the r_node */
 	private final JButton r_node_btn = new JButton(
-		new DAction("r_node")
-	{
-		protected void do_perform(Detector d) {
-			showRNode(d);
-		}
-	});
+		new DAction("r_node") {
+			protected void do_perform(Detector d) {
+				showRNode(d);
+			}
+		});
 
 	/** User session */
 	private final Session session;
@@ -188,13 +194,13 @@ public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 	private void createJobs() {
 		lane_spn.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				Number n = (Number)lane_spn.getValue();
+				Number n = (Number) lane_spn.getValue();
 				setLaneNumber(n.shortValue());
 			}
 		});
 		field_spn.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				Number n = (Number)field_spn.getValue();
+				Number n = (Number) field_spn.getValue();
 				setFieldLength(n.floatValue());
 			}
 		});
@@ -285,7 +291,7 @@ public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 		fake_txt.setEnabled(session.canUpdate(d, "fake"));
 		note_txt.setEnabled(session.canUpdate(d, "notes"));
 		controller_btn.setEnabled(d != null &&
-		                          d.getController() != null);
+			d.getController() != null);
 		r_node_btn.setEnabled(d != null && d.getR_Node() != null);
 	}
 
