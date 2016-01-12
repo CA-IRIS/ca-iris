@@ -31,7 +31,7 @@ public class MapExtentImpl extends BaseObjectImpl implements MapExtent {
 	/** Load all the map extents */
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, MapExtentImpl.class);
-		store.query("SELECT name, lon, lat, zoom FROM iris." +
+		store.query("SELECT name, lon, lat, zoom, position FROM iris." +
 			SONAR_TYPE + ";", new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
@@ -39,7 +39,8 @@ public class MapExtentImpl extends BaseObjectImpl implements MapExtent {
 					row.getString(1),	// name
 					row.getFloat(2),	// lon
 					row.getFloat(3),	// lat
-					row.getInt(4)		// zoom
+					row.getInt(4),		// zoom
+					row.getInt(5)		// position
 				));
 			}
 		});
@@ -52,6 +53,7 @@ public class MapExtentImpl extends BaseObjectImpl implements MapExtent {
 		map.put("lon", lon);
 		map.put("lat", lat);
 		map.put("zoom", zoom);
+		map.put("position", position);
 		return map;
 	}
 
@@ -71,11 +73,12 @@ public class MapExtentImpl extends BaseObjectImpl implements MapExtent {
 	}
 
 	/** Create a map extent */
-	protected MapExtentImpl(String n, float ln, float lt, int z) {
+	protected MapExtentImpl(String n, float ln, float lt, int z, int p) {
 		super(n);
 		lon = ln;
 		lat = lt;
 		zoom = z;
+		position = p;
 	}
 
 	/** Longitude */
@@ -141,5 +144,28 @@ public class MapExtentImpl extends BaseObjectImpl implements MapExtent {
 	/** Get the zoom level */
 	public int getZoom() {
 		return zoom;
+	}
+
+	/** Display position */
+	protected int position;
+
+	/** Set display position */
+	public void setPosition(int p) {
+		position = p;
+	}
+
+	/** Set display position */
+	public void doSetPosition(int p) throws TMSException {
+		if (p == position)
+			return;
+		if(p < 0)
+			throw new ChangeVetoException("Invalid display position");
+		store.update(this, "position", p);
+		setPosition(p);
+	}
+
+	/** Get display position */
+	public int getPosition() {
+		return position;
 	}
 }
