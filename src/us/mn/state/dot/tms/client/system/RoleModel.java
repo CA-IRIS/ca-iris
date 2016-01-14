@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms.client.system;
 
 import us.mn.state.dot.sonar.Role;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
@@ -70,9 +71,17 @@ public class RoleModel extends ProxyTableModel<Role> {
 
 			@Override
 			public boolean isRequireConfirmation(Role r) {
-				return "administrator"
+				String protectedRole = SystemAttrEnum.SYSTEM_PROTECTED_USER_ROLE
+					.getString();
+
+				if (protectedRole == null)
+					return false;
+
+				boolean rv = protectedRole
 					.equalsIgnoreCase(r.getName())
-					&& canRemove(r);
+					&& r.getEnabled()
+					&& canUpdate(r);
+				return rv;
 			}
 		});
 		return cols;

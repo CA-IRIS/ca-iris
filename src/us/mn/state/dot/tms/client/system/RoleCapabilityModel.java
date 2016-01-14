@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.client.system;
 
 import us.mn.state.dot.sonar.Capability;
 import us.mn.state.dot.sonar.Role;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
@@ -55,9 +56,10 @@ public class RoleCapabilityModel extends ProxyTableModel<Capability> {
 
 			@Override
 			public boolean isRequireConfirmation(Capability c) {
-				return "administrator"
+				return SystemAttrEnum.SYSTEM_PROTECTED_USER_ROLE.getString()
 					.equalsIgnoreCase(role.getName())
-					&& isAssigned(c);
+					&& isAssigned(c)
+					&& canUpdate(c);
 			}
 
 			public void setValueAt(Capability c, Object value) {
