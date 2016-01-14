@@ -14,25 +14,25 @@
  */
 package us.mn.state.dot.tms.client.help;
 
+import us.mn.state.dot.sonar.SonarException;
+import us.mn.state.dot.sonar.client.PermissionException;
+import us.mn.state.dot.sonar.client.SonarShowException;
+import us.mn.state.dot.tms.ChangeVetoException;
+import us.mn.state.dot.tms.InvalidMessageException;
+import us.mn.state.dot.tms.client.IrisClient;
+import us.mn.state.dot.tms.client.widget.Screen;
+import us.mn.state.dot.tms.client.widget.TextPanel;
+import us.mn.state.dot.tms.utils.I18N;
+
+import javax.naming.AuthenticationException;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.EOFException;
 import java.net.ConnectException;
 import java.text.ParseException;
-import javax.naming.AuthenticationException;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import us.mn.state.dot.sonar.SonarException;
-import us.mn.state.dot.sonar.client.SonarShowException;
-import us.mn.state.dot.sonar.client.PermissionException;
-import us.mn.state.dot.tms.ChangeVetoException;
-import us.mn.state.dot.tms.InvalidMessageException;
-import us.mn.state.dot.tms.utils.I18N;
-import us.mn.state.dot.tms.client.IrisClient;
-import us.mn.state.dot.tms.client.widget.Screen;
-import us.mn.state.dot.tms.client.widget.TextPanel;
 
 /**
  * A swing dialog for displaying exception stack traces.
@@ -107,52 +107,43 @@ public class ExceptionDialog extends JDialog {
 		else if (e instanceof EOFException) {
 			fatal = true;
 			p.addText(I18N.get("help.exception.disconnect"));
-		}
-		else if (e instanceof AuthenticationException) {
+		} else if (e instanceof AuthenticationException) {
 			p.addText(I18N.get("help.exception.auth.failed"));
 			p.addText(e.getMessage());
 			p.addSpacing();
 			p.addText(I18N.get("help.exception.auth.advice"));
-		}
-		else if (e instanceof ChangeVetoException) {
+		} else if (e instanceof ChangeVetoException) {
 			p.addText(I18N.get("help.exception.change.veto"));
 			p.addSpacing();
 			p.addText(e.getMessage());
-		}
-		else if (e instanceof PermissionException) {
+		} else if (e instanceof PermissionException) {
 			p.addText(I18N.get("help.exception.permission.denied"));
 			p.addSpacing();
 			p.addText(e.getMessage());
-		}
-		else if (e instanceof SonarShowException) {
+		} else if (e instanceof SonarShowException) {
 			p.addText(I18N.get("help.exception.show"));
 			p.addSpacing();
 			p.addText(e.getMessage());
-		}
-		else if (e instanceof NumberFormatException) {
+		} else if (e instanceof NumberFormatException) {
 			p.addText(I18N.get("help.exception.number.format"));
 			p.addSpacing();
 			p.addText(I18N.get("help.exception.number.advice"));
-		}
-		else if (e instanceof InvalidMessageException) {
+		} else if (e instanceof InvalidMessageException) {
 			p.addText(I18N.get("help.exception.invalid.msg"));
 			p.addSpacing();
 			p.addText(e.getMessage());
-		}
-		else if (e instanceof ParseException) {
+		} else if (e instanceof ParseException) {
 			p.addText(I18N.get("help.exception.parsing"));
 			p.addSpacing();
 			p.addText(e.getMessage());
-		}
-		else if (e instanceof SonarException) {
+		} else if (e instanceof SonarException) {
 			fatal = true;
 			detail = true;
 			p.addText(I18N.get("help.exception.sonar"));
 			p.addSpacing();
 			p.addText(e.getMessage());
 			p.addText(I18N.get("help.exception.assist"));
-		}
-		else if (e instanceof Exception) {
+		} else if (e instanceof Exception) {
 			fatal = true;
 			detail = true;
 			p.addText(I18N.get("help.exception.unknown"));
@@ -168,8 +159,7 @@ public class ExceptionDialog extends JDialog {
 
 	/** Create a button box */
 	private Box createButtonBox(final Exception e, boolean fatal,
-		boolean detail)
-	{
+		boolean detail) {
 		Box hbox = Box.createHorizontalBox();
 		hbox.add(Box.createHorizontalGlue());
 		JButton btn = new JButton(I18N.get("help.exception.dismiss"));

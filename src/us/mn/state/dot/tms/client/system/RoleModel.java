@@ -14,11 +14,14 @@
  */
 package us.mn.state.dot.tms.client.system;
 
-import java.util.ArrayList;
 import us.mn.state.dot.sonar.Role;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
+import us.mn.state.dot.tms.utils.I18N;
+
+import javax.swing.JOptionPane;
+import java.util.ArrayList;
 
 /**
  * Table model for IRIS roles.
@@ -38,17 +41,38 @@ public class RoleModel extends ProxyTableModel<Role> {
 			}
 		});
 		cols.add(new ProxyColumn<Role>("role.enabled", 60,
-			Boolean.class)
-		{
+			Boolean.class) {
+
 			public Object getValueAt(Role r) {
 				return r.getEnabled();
 			}
+
 			public boolean isEditable(Role r) {
 				return canUpdate(r);
 			}
+
 			public void setValueAt(Role r, Object value) {
+				if (isRequireConfirmation(r)) {
+					int cv = JOptionPane
+						.showConfirmDialog(null,
+							I18N.get(
+								"role.admin.warning"),
+							I18N.get(
+								"help.exception.warning"),
+							JOptionPane.YES_NO_OPTION,
+							JOptionPane.WARNING_MESSAGE);
+					if (cv != 0)
+						return;
+				}
 				if (value instanceof Boolean)
-					r.setEnabled((Boolean)value);
+					r.setEnabled((Boolean) value);
+			}
+
+			@Override
+			public boolean isRequireConfirmation(Role r) {
+				return "administrator"
+					.equalsIgnoreCase(r.getName())
+					&& canRemove(r);
 			}
 		});
 		return cols;
@@ -57,9 +81,9 @@ public class RoleModel extends ProxyTableModel<Role> {
 	/** Create a new role table model */
 	public RoleModel(Session s) {
 		super(s, s.getSonarState().getRoles(),
-		      false,	/* has_properties */
-		      true,	/* has_create_delete */
-		      true);	/* has_name */
+			false,	/* has_properties */
+			true,	/* has_create_delete */
+			true);	/* has_name */
 	}
 
 	/** Get the SONAR type name */
