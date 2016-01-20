@@ -43,9 +43,9 @@ public class ZoomProperty extends CohuPTZProperty {
 		if (Math.abs(value) < PTZ_THRESH)
 			cmd = new byte[]{ 'Z', 'S' };
 		else if (value < 0)
-			cmd = new byte[]{ 'c', 'z', getZoomSpeedByte(value) };
+			cmd = new byte[]{ 'Z', 'O' };
 		else /* if (value > 0) */
-			cmd = new byte[]{ 'c', 'Z', getZoomSpeedByte(value) };
+			cmd = new byte[]{ 'Z', 'I' };
 
 		writePayload(os, c.getDrop(), cmd);
 	}

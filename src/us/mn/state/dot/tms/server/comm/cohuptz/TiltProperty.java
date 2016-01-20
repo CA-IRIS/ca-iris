@@ -44,10 +44,10 @@ public class TiltProperty extends CohuPTZProperty {
 			cmd = new byte[]{ 'T', 'S' };
 
 		else if (value < 0)
-			cmd = new byte[]{ 'd', getPanTiltSpeedByte(value) };
+			cmd = new byte[]{ 'T', 'D' };
 
 		else /* if (value > 0) */
-			cmd = new byte[]{ 'u', getPanTiltSpeedByte(value) };
+			cmd = new byte[]{ 'T', 'U' };
 
 		writePayload(os, c.getDrop(), cmd);
 	}

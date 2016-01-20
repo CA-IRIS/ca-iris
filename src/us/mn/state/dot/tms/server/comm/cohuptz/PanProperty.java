@@ -44,10 +44,10 @@ public class PanProperty extends CohuPTZProperty {
 			cmd = new byte[]{ 'P', 'S' };
 
 		else if (value < 0)
-			cmd = new byte[]{ 'l', getPanTiltSpeedByte(value) };
+			cmd = new byte[]{ 'P', 'L' };
 
 		else /* if (value > 0) */
-			cmd = new byte[]{ 'r', getPanTiltSpeedByte(value) };
+			cmd = new byte[]{ 'P', 'R' };
 
 		writePayload(os, c.getDrop(), cmd);
 	}
