@@ -16,6 +16,8 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import java.io.IOException;
 import java.io.OutputStream;
+
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
 /**
@@ -42,10 +44,14 @@ public class ZoomProperty extends CohuPTZProperty {
 		byte[] cmd;
 		if (Math.abs(value) < PTZ_THRESH)
 			cmd = new byte[]{ 'Z', 'S' };
-		else if (value < 0)
+		else if (value < 0 && SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())
 			cmd = new byte[]{ 'Z', 'O' };
-		else /* if (value > 0) */
+		else if (value < 0)
+			cmd = new byte[]{ 'c', 'z', getZoomSpeedByte(value) };
+		else if (SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())
 			cmd = new byte[]{ 'Z', 'I' };
+		else /* if (value > 0) */
+			cmd = new byte[]{ 'c', 'Z', getZoomSpeedByte(value) };
 
 		writePayload(os, c.getDrop(), cmd);
 	}
