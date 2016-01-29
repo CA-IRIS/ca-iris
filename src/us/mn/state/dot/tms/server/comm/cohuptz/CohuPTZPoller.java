@@ -22,7 +22,6 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.Messenger;
 
 /**
@@ -33,7 +32,7 @@ import us.mn.state.dot.tms.server.comm.Messenger;
 public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 
 	/** Debug log */
-	static private final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
+	static protected final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
 
 	/** Log a message to the debug log */
 	static public void log(String msg) {
@@ -48,13 +47,13 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	protected long lastCmdTime = 0;
 
 	/** Current pan value */
-	protected float curPan  = 0.0F;
+	protected float curPan  = Float.MAX_VALUE;
 
 	/** Current tilt value */
-	protected float curTilt = 0.0F;
+	protected float curTilt = Float.MAX_VALUE;
 
 	/** Current zoom value */
-	protected float curZoom = 0.0F;
+	protected float curZoom = Float.MAX_VALUE;
 
 	/**
 	 * Create a new Cohu PTZ poller.
@@ -175,6 +174,8 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		case CAMERA_IRIS_AUTO:
 			addOperation(new OpSetAIMode(c, this, r));
 			break;
+		case CAMERA_PAN_TILT_STOP:
+			addOperation(new OpPTZCamera(c, this, 0.0F, 0.0F, null));
 		case CAMERA_WIPER_ONESHOT:
 			// FIXME: not yet implemented
 			break;
