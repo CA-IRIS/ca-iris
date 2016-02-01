@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +28,7 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.ControllerHelper;
+import us.mn.state.dot.tms.Direction;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
@@ -35,6 +37,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
+import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
@@ -47,6 +50,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class CameraManager extends ProxyManager<Camera> {
 
@@ -62,6 +66,40 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Create a new camera manager */
 	public CameraManager(Session s, GeoLocManager lm) {
 		super(s, lm, ItemStyle.ALL);
+	}
+
+	/**
+	 * override the camera direction if settings are so.
+	 *
+	 * CAMERA_DIRECTION_OVERRIDE values of NORTH, EAST, SOUTH or WEST
+	 * will result in all icons facing desired direction. Any other values
+	 * will result in default behavior.
+	 */
+	@Override
+	public Double getTangentAngle(MapGeoLoc loc) {
+		Double dirRad = super.getTangentAngle(loc);
+		Direction so = Direction
+			.parseString(SystemAttrEnum.CAMERA_DIRECTION_OVERRIDE
+				.getString(), Direction.UNKNOWN);
+
+		// due to use in tangent, each direction needs to use a 90-degree
+		// off-set value
+		switch (so) {
+		case NORTH:
+			dirRad = MapGeoLoc.RAD_EAST;
+			break;
+		case EAST:
+			dirRad = MapGeoLoc.RAD_SOUTH;
+			break;
+		case SOUTH:
+			dirRad = MapGeoLoc.RAD_WEST;
+			break;
+		case WEST:
+			dirRad = MapGeoLoc.RAD_NORTH;
+			break;
+		}
+
+		return dirRad;
 	}
 
 	/** Get the sonar type name */

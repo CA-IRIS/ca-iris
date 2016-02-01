@@ -33,16 +33,16 @@ import us.mn.state.dot.tms.GeoLocHelper;
 public class MapGeoLoc implements MapObject {
 
 	/** Radians to rotate marker for a Northbound device */
-	static private final double RAD_NORTH = Math.toRadians(0);
+	static public final double RAD_NORTH = Math.toRadians(0);
 
 	/** Radians to rotate marker for a Southbound device */
-	static private final double RAD_SOUTH = Math.toRadians(180);
+	static public final double RAD_SOUTH = Math.toRadians(180);
 
 	/** Radians to rotate marker for an Eastbound device */
-	static private final double RAD_EAST = Math.toRadians(270);
+	static public final double RAD_EAST = Math.toRadians(270);
 
 	/** Radians to rotate marker for a Westbound device */
-	static private final double RAD_WEST = Math.toRadians(90);
+	static public final double RAD_WEST = Math.toRadians(90);
 
 	/** Get tangent value for "north" direction */
 	static public double northTangent() {
