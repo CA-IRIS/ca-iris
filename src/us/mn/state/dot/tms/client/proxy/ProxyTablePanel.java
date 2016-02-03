@@ -18,6 +18,7 @@ package us.mn.state.dot.tms.client.proxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.DropMode;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -120,6 +121,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		createJobs();
 		updateSortFilter();
 		model.getSession().addEditModeListener(edit_lsnr);
+		initRowDragDrop();
 		initButtonPanel();
 		layoutPanel();
 	}
@@ -233,6 +235,16 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		gl.setHorizontalGroup(hg);
 		gl.setVerticalGroup(vg);
 		button_pnl.setLayout(gl);
+	}
+
+	/** Initialize the drag/drop behavior for rows if needed */
+	private void initRowDragDrop() {
+		if (!model.hasManualSort())
+			return;
+
+		table.setDragEnabled(true);
+		table.setDropMode(DropMode.INSERT_ROWS);
+		table.setTransferHandler(new ProxyTableRowTransferHandler(table));
 	}
 
 	/** Add create/delete widgets to the button panel */
