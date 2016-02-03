@@ -42,6 +42,7 @@ public class PanProperty extends CohuPTZProperty {
 		throws IOException
 	{
 		byte[] cmd;
+
 		if (Math.abs(value) < PTZ_THRESH)
 			cmd = new byte[]{ 'P', 'S' };
 		else if (value < 0 && SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())

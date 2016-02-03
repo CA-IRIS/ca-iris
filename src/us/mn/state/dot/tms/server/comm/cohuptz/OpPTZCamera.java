@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +24,20 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Cohu PTZ operation to pan/tilt/zoom a camera.
  *
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class OpPTZCamera extends OpCohuPTZ {
+
+	/** Log a message to the debug log */
+	static public void log(String msg) {
+		CohuPTZPoller.DEBUG_LOG.log(msg);
+	}
 
 	/** Op description */
 	static private final String OP_DESC = "PTZ";
@@ -56,37 +64,51 @@ public class OpPTZCamera extends OpCohuPTZ {
 		pan  = p;
 		tilt = t;
 		zoom = z;
+		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
+			p==null?"?":p.toString(), t==null?"?":t.toString(),
+			z==null?"?":z.toString()));
 	}
 
 	/** Begin the operation. */
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
-		return new PanTiltStopPhase();
+		return new PTZFullStopPhase();
 	}
 
-	/** pan-tilt stop phase... special case, 0/3 */
-	protected class PanTiltStopPhase extends Phase<CohuPTZProperty> {
+	/**
+	 * ptz full stop phase... special case, 0/3
+	 * anytime all three values are null or all effectively zero send a full
+	 * stop command
+	 */
+	protected class PTZFullStopPhase extends Phase<CohuPTZProperty> {
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException {
 
-			if ((pan == null && tilt == null && zoom == null)
-				|| (pan != null && tilt != null
-				&& Math.abs(pan) < CohuPTZProperty.PTZ_THRESH
-				&& Math.abs(tilt) < CohuPTZProperty.PTZ_THRESH)
-				) {
+			if (!(NumericAlphaComparator.compareFloats(pan, tilt,
+				CohuPTZProperty.PTZ_THRESH) == 0
+				&& NumericAlphaComparator.compareFloats(pan,
+				zoom, CohuPTZProperty.PTZ_THRESH) == 0)) {
 
-				if(pan == null && tilt == null && zoom == null) {
-					CohuPTZPoller.DEBUG_LOG.log("PTZ values all null.");
-				}
-
-				mess.add(new PanTiltStopProperty());
-				doStoreProps(mess);
-				updateOpStatus("pan-tilt stop sent");
-
-				return new ZoomPhase();
+				return new PanPhase();
 			}
-			return new PanPhase();
+
+			// at this point all values are effectively the same
+
+			if(pan == null) {
+				log("PTZ values null.");
+			}
+
+			if (pan == null
+				|| Math.abs(pan) < CohuPTZProperty.PTZ_THRESH) {
+
+				log("sending ptz full stop");
+				mess.add(new PTZFullStopProperty());
+				doStoreProps(mess);
+				updateOpStatus("ptz full stop sent");
+				log("ptz full stop sent");
+			}
+			return null;
 		}
 	}
 
@@ -95,25 +117,20 @@ public class OpPTZCamera extends OpCohuPTZ {
 		/**
 		 * Whether this is first time sending this instance.
 		 */
-		//private boolean first = true;
 
 		protected Phase<CohuPTZProperty> poll(
 				CommMessage<CohuPTZProperty> mess)
-				throws IOException
-			{
-				Phase<CohuPTZProperty> ret = null;
+				throws IOException {
+
 				if (pan != null) {
+					log("sending pan=" + pan);
 					mess.add(new PanProperty(pan));
 					doStoreProps(mess);
 					updateOpStatus("pan sent");
-
-					// double-send stops
-					//if (first && Math.abs(pan) < CohuPTZProperty.PTZ_THRESH)
-					//	ret = this;
+					log("pan sent");
 				}
 
-				//first = false;
-				return ret != null ? ret : new TiltPhase();
+				return new TiltPhase();
 		}
 	}
 
@@ -122,25 +139,20 @@ public class OpPTZCamera extends OpCohuPTZ {
 		/**
 		 * Whether this is first time sending this instance.
 		 */
-		//private boolean first = true;
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
-			throws IOException
-		{
-			Phase<CohuPTZProperty> ret = null;
+			throws IOException {
+
 			if (tilt != null) {
+				log("sending tilt=" + tilt);
 				mess.add(new TiltProperty(tilt));
 				doStoreProps(mess);
 				updateOpStatus("tilt sent");
-
-				// double-send stops
-				//if (first && Math.abs(tilt) < CohuPTZProperty.PTZ_THRESH)
-				//	ret = this;
+				log("tilt sent");
 			}
 
-			//first = false;
-			return ret != null ? ret : new ZoomPhase();
+			return new ZoomPhase();
 		}
 	}
 
@@ -149,36 +161,30 @@ public class OpPTZCamera extends OpCohuPTZ {
 		/**
 		 * Whether this is first time sending this instance.
 		 */
-		//private boolean first = true;
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
-			throws IOException
-		{
-			Phase<CohuPTZProperty> ret = null;
+			throws IOException {
+
 			if (zoom != null) {
+				log("sending zoom=" + zoom);
 				mess.add(new ZoomProperty(zoom));
 				doStoreProps(mess);
 				updateOpStatus("zoom sent");
-
-				// double-send stops
-				//if (first && Math.abs(zoom) < CohuPTZProperty.PTZ_THRESH)
-				//	ret = this;
 			}
 
-			//first = false;
-			return ret;
+			return null;
 		}
 	}
 
 	/** pan-tilt stop property, used for special case to send this exact command */
-	protected class PanTiltStopProperty extends CohuPTZProperty {
+	protected class PTZFullStopProperty extends CohuPTZProperty {
 		/** Encode a STORE request */
 		@Override
 		public void encodeStore(ControllerImpl c, OutputStream os)
 			throws IOException
 		{
-			byte[] cmd = new byte[]{ 'P', 'S', 'T', 'S' };
+			byte[] cmd = new byte[]{ 'P', 'S', 'T', 'S', 'Z', 'S' };
 			writePayload(os, c.getDrop(), cmd);
 		}
 	}

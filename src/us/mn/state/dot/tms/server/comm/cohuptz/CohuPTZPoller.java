@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +24,13 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
 import us.mn.state.dot.tms.server.comm.Messenger;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Poller for the Cohu PTZ protocol
  *
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 
@@ -101,15 +104,22 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		Float tilt = null;
 		Float zoom = null;
 
-		if (p != curPan) {
+		log("curPan=" + curPan + " arg pan=" + p);
+		log("curTilt=" + curTilt + " arg tilt=" + t);
+		log("curZoom=" + curZoom + " arg zoom=" + z);
+
+		if (NumericAlphaComparator.compareFloats(p, curPan,
+			CohuPTZProperty.PTZ_THRESH) != 0) {
 			pan = p;
 			curPan = p;
 		}
-		if (t != curTilt) {
+		if (NumericAlphaComparator.compareFloats(t, curTilt,
+			CohuPTZProperty.PTZ_THRESH) != 0) {
 			tilt = t;
 			curTilt = t;
 		}
-		if (z != curZoom) {
+		if (NumericAlphaComparator.compareFloats(z, curZoom,
+			CohuPTZProperty.PTZ_THRESH) != 0) {
 			zoom = z;
 			curZoom = z;
 		}
@@ -174,8 +184,9 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		case CAMERA_IRIS_AUTO:
 			addOperation(new OpSetAIMode(c, this, r));
 			break;
-		case CAMERA_PAN_TILT_STOP:
-			addOperation(new OpPTZCamera(c, this, 0.0F, 0.0F, null));
+		case CAMERA_PTZ_FULL_STOP:
+			addOperation(new OpPTZCamera(c, this, 0F, 0F, 0F));
+			break;
 		case CAMERA_WIPER_ONESHOT:
 			// FIXME: not yet implemented
 			break;

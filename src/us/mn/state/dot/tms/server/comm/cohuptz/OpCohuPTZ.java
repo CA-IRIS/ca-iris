@@ -40,8 +40,8 @@ abstract public class OpCohuPTZ extends OpDevice<CohuPTZProperty> {
 	/**
 	 * Create the operation.
 	 * @param pl the operation's PriorityLevel
-	 * @param c the CameraImpl instance
-	 * @param c the CohuPTZPoller instance
+	 * @param ci the CameraImpl instance
+	 * @param cp the CohuPTZPoller instance
 	 * @param d the op description
 	 */
 	public OpCohuPTZ(PriorityLevel pl, CameraImpl ci, CohuPTZPoller cp,

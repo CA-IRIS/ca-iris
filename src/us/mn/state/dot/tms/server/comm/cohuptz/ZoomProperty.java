@@ -42,6 +42,7 @@ public class ZoomProperty extends CohuPTZProperty {
 		throws IOException
 	{
 		byte[] cmd;
+
 		if (Math.abs(value) < PTZ_THRESH)
 			cmd = new byte[]{ 'Z', 'S' };
 		else if (value < 0 && SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())

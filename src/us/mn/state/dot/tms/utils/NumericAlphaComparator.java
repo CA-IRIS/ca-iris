@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009 AHMCT, University of California
+ * Copyright (C) 2016 Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +16,6 @@
 package us.mn.state.dot.tms.utils;
 
 import java.util.Comparator;
-import us.mn.state.dot.tms.utils.SString;
 
 /**
  * Comparator for objects that can be alpha, numeric, or a mixture.
@@ -23,13 +23,21 @@ import us.mn.state.dot.tms.utils.SString;
  * as strings. Numerically equal arguments are compared as strings. For
  * clarity, see the test cases.
  * @author Michael Darter
+ * @author Jacob Barde
+ *
  * @see NumericAlphaComparatorTest
  */
 public class NumericAlphaComparator<T> implements Comparator<T> {
 
+	/**
+	 * Used by default when comparing floats to account for rounding errors
+	 * on various platforms.
+	 */
+	public static final float DEFAULT_DELTA = 0.000001F;
+
 	/** Compare two objects */
 	public int compare(T a, T b) {
-		return compareStrings(a == null ? null : a.toString(), 
+		return compareStrings(a == null ? null : a.toString(),
 			b == null ? null : b.toString());
 	}
 
@@ -53,6 +61,40 @@ public class NumericAlphaComparator<T> implements Comparator<T> {
 			return compareStrings(a, b);	// recursive
 		}
 		return a.compareTo(b);
+	}
+
+	/**
+	 * compare two floats properly
+	 * nulls are considered less than a non-null
+	 * @param a first float
+	 * @param b second float
+	 * @param delta difference value for both to be considered equal
+	 * @return integer. a == b: 0, a < b: -1, a > b: 1
+	 */
+	public static int compareFloats(Float a, Float b, Float delta) {
+
+		// ensure this is not a floating point comparing issue
+		if (a != null && b != null && Math.abs(a - b) < delta)
+			return 0;
+		else if (a == null && b == null)
+			return 0;
+		else if (a == null && b != null) // a < b
+			return -1;
+		else if (a != null && b == null) // a > b
+			return 1;
+
+		return a.compareTo(b);
+	}
+
+	/**
+	 * compare two floats properly using a default delta value.
+	 * nulls are considered less than a non-null
+	 * @param a first float
+	 * @param b second float
+	 * @return integer. a == b: 0, a < b: -1, a > b: 1
+	 */
+	public static int compareFloats(Float a, Float b) {
+		return compareFloats(a, b, DEFAULT_DELTA);
 	}
 
 	/** Check equality */
