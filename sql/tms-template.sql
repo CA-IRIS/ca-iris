@@ -263,7 +263,7 @@ CREATE TABLE iris.map_extent (
 	lat real NOT NULL,
 	lon real NOT NULL,
 	zoom INTEGER NOT NULL,
-	position INTEGER NOT NULL DEFAULT 0
+	position INTEGER NOT NULL UNIQUE
 );
 
 CREATE TABLE iris.lane_type (
