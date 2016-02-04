@@ -10,6 +10,8 @@ INSERT INTO iris.system_attribute(name, value) VALUES('system_protected_user_rol
 
 -- CA trac 446
 ALTER TABLE iris.map_extent ADD COLUMN position INTEGER NOT NULL DEFAULT 0;
+-- TODO: Need to update existing extents to have positions from 0..n-1
+ALTER TABLE iris.map_extent ADD UNIQUE (position);
 
 -- CA trac 504
 INSERT INTO iris.system_attribute(name, value) VALUES('camera_direction_override','');

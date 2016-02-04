@@ -131,6 +131,7 @@ public class MapExtentModel extends ProxyTableModel<MapExtent> {
 		attrs.put("lat", pos.getLatitude());
 		attrs.put("lon", pos.getLongitude());
 		attrs.put("zoom", zoom.ordinal());
+		attrs.put("position", cache.size());
 		return attrs;
 	}
 
