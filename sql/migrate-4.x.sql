@@ -16,3 +16,4 @@ INSERT INTO iris.comm_protocol (id, description) VALUES(34, 'TTIP DMS');
 
 -- CA trac 578 PTZ issue
 INSERT INTO iris.system_attribute(name, value) VALUES('camera_ptz_fixed_speed', false);
+INSERT INTO iris.system_attribute(name, value) VALUES('camera_ptz_force_full', false);

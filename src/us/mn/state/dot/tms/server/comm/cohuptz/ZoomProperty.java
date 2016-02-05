@@ -56,27 +56,4 @@ public class ZoomProperty extends CohuPTZProperty {
 
 		writePayload(os, c.getDrop(), cmd);
 	}
-
-	/**
-	 * Calculate the zoom "speed byte" that corresponds to the given
-	 * speed value [-1..1].
-	 *
-	 * @param speed The speed value [-1..1].  Values outside this range
-	 *              will be remapped.
-	 * @return The zoom speed byte [0x30..0x32] corresponding to the
-	 *         given speed value.
-	 */
-	private byte getZoomSpeedByte(float speed) {
-		int range = (0x32 - 0x30) + 1;
-		int scale = range - 1;
-
-		speed = Math.abs(speed);
-		float mapped = (speed * scale);
-		int mapInt = Math.round(mapped);
-
-		// sanity check for floating point gotchas
-		if (mapInt > scale) mapInt = scale;
-
-		return (byte) (0x30 + mapInt);
-	}
 }

@@ -19,10 +19,14 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.Float;
+import java.util.ArrayList;
+import java.util.List;
 
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
+import us.mn.state.dot.tms.server.comm.DeviceContentionException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
@@ -51,6 +55,46 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** zoom vector */
 	protected final Float zoom;
 
+
+	private List<Byte> cmd;
+
+	private final boolean fixspd;
+
+	private enum Command {
+		PAN,
+		TILT,
+		ZOOM
+	};
+
+	// fixed speed commands
+	private static final byte cpF = (byte)'P';
+	private static final byte ctF = (byte)'T';
+	private static final byte czF = (byte)'Z';
+
+	// fixed speed arguments                   direction
+	private static final byte apP = (byte)'R'; //+
+	private static final byte apN = (byte)'L'; //-
+	private static final byte atP = (byte)'U'; //+
+	private static final byte atN = (byte)'D'; //-
+	private static final byte azP = (byte)'I'; //+
+	private static final byte azN = (byte)'O'; //-
+
+	// variable speed zoom command
+	private static final byte cz = (byte)'c';
+
+	// variable speed commands and arguments    direction
+	private static final byte cpP = (byte)'r';  //+
+	private static final byte cpN = (byte)'l';  //-
+	private static final byte ctP = (byte)'u';  //+
+	private static final byte ctN = (byte)'d';  //-
+	private static final byte azPv = (byte)'Z'; //+
+	private static final byte azNv = (byte)'z'; //-
+
+	// stop argument
+	private static final byte aS = (byte)'S';
+
+
+
 	/**
 	 * Create the operation.
 	 * @param c the CameraImpl instance
@@ -61,53 +105,59 @@ public class OpPTZCamera extends OpCohuPTZ {
 	 */
 	public OpPTZCamera(CameraImpl c, CohuPTZPoller cp, Float p, Float t, Float z) {
 		super(PriorityLevel.COMMAND, c, cp, OP_DESC);
+
 		pan  = p;
 		tilt = t;
 		zoom = z;
+
+		fixspd = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
+
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p==null?"?":p.toString(), t==null?"?":t.toString(),
 			z==null?"?":z.toString()));
+
 	}
 
 	/** Begin the operation. */
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
-		return new PTZFullStopPhase();
+
+		if(SystemAttrEnum.CAMERA_PTZ_FORCE_FULL.getBoolean()) {
+			// TODO add DB entry for this
+
+			cmd = new ArrayList<Byte>();
+
+			processPTZInfo(Command.PAN, pan);
+			processPTZInfo(Command.TILT, tilt);
+			processPTZInfo(Command.ZOOM, zoom);
+
+			return new PTZFullPhase();
+		}
+
+		return new PanPhase();
 	}
 
+
 	/**
-	 * ptz full stop phase... special case, 0/3
-	 * anytime all three values are null or all effectively zero send a full
-	 * stop command
+	 * ptz full phase... CA-only
 	 */
-	protected class PTZFullStopPhase extends Phase<CohuPTZProperty> {
+	protected class PTZFullPhase extends Phase<CohuPTZProperty> {
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
-			throws IOException {
+			throws IOException, DeviceContentionException {
 
-			if (!(NumericAlphaComparator.compareFloats(pan, tilt,
-				CohuPTZProperty.PTZ_THRESH) == 0
-				&& NumericAlphaComparator.compareFloats(pan,
-				zoom, CohuPTZProperty.PTZ_THRESH) == 0)) {
 
-				return new PanPhase();
-			}
+			byte[] carr = new byte[cmd.size()];
+			int i = 0;
+			for(byte a : cmd) { carr[i] = a; i++; }
 
-			// at this point all values are effectively the same
+			String decoded = new String(carr, "UTF-8");
 
-			if(pan == null) {
-				log("PTZ values null.");
-			}
-
-			if (pan == null
-				|| Math.abs(pan) < CohuPTZProperty.PTZ_THRESH) {
-
-				log("sending ptz full stop");
-				mess.add(new PTZFullStopProperty());
-				doStoreProps(mess);
-				updateOpStatus("ptz full stop sent");
-				log("ptz full stop sent");
-			}
+			log("sending ptz full: " + decoded);
+			mess.add(new PTZFullProperty(carr));
+			doStoreProps(mess);
+			updateOpStatus("ptz full sent");
+			log("ptz full sent");
 			return null;
 		}
 	}
@@ -178,15 +228,94 @@ public class OpPTZCamera extends OpCohuPTZ {
 	}
 
 	/** pan-tilt stop property, used for special case to send this exact command */
-	protected class PTZFullStopProperty extends CohuPTZProperty {
+	protected class PTZFullProperty extends CohuPTZProperty {
+		byte[] carr;
+
+		public PTZFullProperty(byte[] c) {
+			carr = c;
+		}
+
 		/** Encode a STORE request */
 		@Override
 		public void encodeStore(ControllerImpl c, OutputStream os)
 			throws IOException
 		{
-			byte[] cmd = new byte[]{ 'P', 'S', 'T', 'S', 'Z', 'S' };
-			writePayload(os, c.getDrop(), cmd);
+			//byte[] carr = new byte[]{ 'P', 'S', 'T', 'S', 'Z', 'S' };
+			writePayload(os, c.getDrop(), carr);
 		}
 	}
 
+	/**
+	 * processes the params and adds them as byte commands on the command list
+	 * @param c Command type [enum]
+	 * @param vF float speed value
+	 */
+	private void processPTZInfo(Command c, Float vF) {
+
+		float v = (vF == null) ? 0f : vF;
+		int a = NumericAlphaComparator.compareFloats(v, 0f,
+			CohuPTZProperty.PTZ_THRESH);
+
+		boolean stopping = (a == 0);
+		boolean posDir = (a > 0);
+
+		byte b;
+
+		// figure out which command to send
+		switch(c) {
+		case PAN:
+			if(fixspd || stopping)
+				b = cpF;
+			else
+				b = posDir ? cpP : cpN;
+			cmd.add(b);
+			break;
+		case TILT:
+			if(fixspd || stopping)
+				b = ctF;
+			else
+				b = posDir ? ctP : ctN;
+			cmd.add(b);
+			break;
+		case ZOOM:
+			b = (fixspd || stopping) ? czF : cz;
+			cmd.add(b);
+			break;
+		}
+
+		// if stopping, just add a stop and exit
+		if(stopping) {
+			cmd.add(aS);
+			return;
+		}
+
+		// first argument (variable zoom takes another)
+		switch(c) {
+		case PAN:
+			if(fixspd)
+				b = posDir ? apP : apN;
+			else
+				b = CohuPTZProperty.getPanTiltSpeedByte(v);
+			cmd.add(b);
+			break;
+		case TILT:
+			if(fixspd)
+				b = posDir ? atP : atN;
+			else
+				b = CohuPTZProperty.getPanTiltSpeedByte(v);
+			cmd.add(b);
+			break;
+		case ZOOM:
+			if(fixspd)
+				b = posDir ? azP : azN;
+			else
+				b = posDir ? azPv : azNv;
+			cmd.add(b);
+			break;
+		}
+
+		// add the variable zoom speed
+		if(!fixspd && c.equals(Command.ZOOM))
+			cmd.add(CohuPTZProperty.getZoomSpeedByte(v));
+	}
 }

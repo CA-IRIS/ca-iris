@@ -95,7 +95,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 *         the Cohu PTZ protocol specs) that appears to correspond to
 	 *         some sort of "default" speed mode.
 	 */
-	protected byte getPanTiltSpeedByte(float speed) {
+	protected static byte getPanTiltSpeedByte(float speed) {
 		int range = (0x3f - 0x31) + 1;		// excludes 0x00
 		int scale = range - 1;
 
@@ -107,6 +107,29 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		if (mapInt > scale) mapInt = scale;
 
 		return (byte) (0x31 + mapInt);
+	}
+
+	/**
+	 * Calculate the zoom "speed byte" that corresponds to the given
+	 * speed value [-1..1].
+	 *
+	 * @param speed The speed value [-1..1].  Values outside this range
+	 *              will be remapped.
+	 * @return The zoom speed byte [0x30..0x32] corresponding to the
+	 *         given speed value.
+	 */
+	protected static byte getZoomSpeedByte(float speed) {
+		int range = (0x32 - 0x30) + 1;
+		int scale = range - 1;
+
+		speed = Math.abs(speed);
+		float mapped = (speed * scale);
+		int mapInt = Math.round(mapped);
+
+		// sanity check for floating point gotchas
+		if (mapInt > scale) mapInt = scale;
+
+		return (byte) (0x30 + mapInt);
 	}
 
 	/** Writes given payload surrounded by proper header and checksum. */
