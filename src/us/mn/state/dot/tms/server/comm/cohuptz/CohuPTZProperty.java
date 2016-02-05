@@ -18,8 +18,14 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Cohu PTZ Property
@@ -34,6 +40,58 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * PTZ vectors below this value will be considered as stop commands.
 	 */
 	static public final float PTZ_THRESH = 0.001F;
+
+	/** Debug log */
+	static protected final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
+
+
+	protected enum Command {
+		PAN,
+		TILT,
+		ZOOM
+	}
+
+	private enum Command2 {
+		UNKNOWN,
+		FIXED_PAN,
+		FIXED_TILT,
+		FIXED_ZOOM,
+		VAR_PAN,
+		VAR_TILT,
+		VAR_ZOOM
+	}
+
+	// fixed speed commands
+	private static final byte fcPan = (byte)'P';
+	private static final byte fcTilt = (byte)'T';
+	private static final byte fcZoom = (byte)'Z';
+
+	// fixed speed arguments                    direction
+	private static final byte faPP = (byte)'R'; // positive
+	private static final byte faPN = (byte)'L'; // negative
+	private static final byte faTP = (byte)'U'; // positive
+	private static final byte faTN = (byte)'D'; // negative
+	private static final byte faZP = (byte)'I'; // positive
+	private static final byte faZN = (byte)'O'; // negative
+
+	// variable speed commands                   direction
+	private static final byte vcPP = (byte)'r';  // positive
+	private static final byte vcPN = (byte)'l';  // negative
+	private static final byte vcTP = (byte)'u';  // positive
+	private static final byte vcTN = (byte)'d';  // negative
+	private static final byte vcZB = (byte)'c';  // both
+
+	// variable speed zoom argument
+	private static final byte vaZP = (byte)'Z'; // positive
+	private static final byte vaZN = (byte)'z'; // negative
+
+	// stop argument
+	private static final byte faStop = (byte)'S';
+
+	/** Log a message to the debug log */
+	static public void log(String msg) {
+		DEBUG_LOG.log(msg);
+	}
 
 	/**
 	 * Calculate the XOR-based checksum of the given Cohu message.
@@ -180,5 +238,125 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 				c.setErrorStatus(s.getMessage());
 		}
 	}
+
+	/**
+	 * convert a byte list to a byte array
+	 * @param list the byte list
+	 * @return the byte array
+	 */
+	protected static byte[] list2bytearray(final List<Byte> list) {
+		byte[] rv = new byte[list.size()];
+		int i = 0;
+		for(byte a : list) { rv[i] = a; i++; }
+
+		return rv;
+	}
+
+	/**
+	 * processes the params and adds them as byte commands on the command list
+	 * @param c Command type [enum]
+	 * @param vF float speed value
+	 */
+	protected static List<Byte> processPTZInfo(Command c, Float vF, List<Byte> arg) {
+
+		boolean fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
+		String error = "ERROR: Unknown PTZ information. ";
+		List<Byte> rv = new ArrayList<Byte>();
+		rv.addAll(arg);
+
+		// assign nulls to 0;
+		float v = (vF == null) ? 0f : vF;
+
+		// determine direction
+		int dir = NumericAlphaComparator.compareFloats(v, 0f, PTZ_THRESH);
+
+		boolean stopping = (dir == 0);
+		boolean posDir = (dir > 0);
+
+		fixed_speed = (fixed_speed || stopping);
+		Command2 c2;
+		switch(c) {
+			case PAN:
+				c2 = (fixed_speed) ? Command2.FIXED_PAN : Command2.VAR_PAN;
+				break;
+			case TILT:
+				c2 = (fixed_speed) ? Command2.FIXED_TILT : Command2.VAR_TILT;
+				break;
+			case ZOOM:
+				c2 = (fixed_speed) ? Command2.FIXED_ZOOM : Command2.VAR_ZOOM;
+				break;
+			default:
+				// something went wrong
+				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
+				return arg;
+		}
+
+		Byte b = null;
+
+		// which command to send
+		switch(c2) {
+			case FIXED_PAN:
+				rv.add(fcPan);
+				break;
+			case VAR_PAN:
+				rv.add((posDir ? vcPP : vcPN));
+				break;
+			case FIXED_TILT:
+				rv.add(fcTilt);
+				break;
+			case VAR_TILT:
+				rv.add((posDir ? vcTP : vcTN));
+				break;
+			case FIXED_ZOOM:
+				rv.add(fcZoom);
+				break;
+			case VAR_ZOOM:
+				rv.add(vcZB);
+				break;
+			default:
+				// something went wrong
+				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
+				return arg;
+		}
+
+		// if stopping, just add a stop and exit
+		if(stopping) {
+			rv.add(faStop);
+			return rv;
+		}
+
+		// first argument (variable zoom takes a second, see below)
+		switch(c2) {
+			case FIXED_PAN:
+				rv.add((posDir ? faPP : faPN));
+				break;
+			case VAR_PAN:
+				rv.add(getPanTiltSpeedByte(v));
+				break;
+			case FIXED_TILT:
+				rv.add((posDir ? faTP : faTN));
+				break;
+			case VAR_TILT:
+				rv.add(getPanTiltSpeedByte(v));
+				break;
+			case FIXED_ZOOM:
+				rv.add((posDir ? faZP : faZN));
+				break;
+			case VAR_ZOOM:
+				rv.add((posDir ? vaZP : vaZN));
+				break;
+			default:
+				// something went wrong
+				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
+				return arg;
+		}
+
+		// variable zoom speed
+		if(Command2.VAR_ZOOM.equals(c2))
+			rv.add(getZoomSpeedByte(v));
+
+		return rv;
+	}
+
 
 }
