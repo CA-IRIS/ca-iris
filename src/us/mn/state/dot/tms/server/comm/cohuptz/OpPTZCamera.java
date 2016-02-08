@@ -60,10 +60,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
 	private final boolean force_full;
 
-
-
-
-
 	/**
 	 * Create the operation.
 	 * @param c the CameraImpl instance
@@ -194,6 +190,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 	/** pan-tilt stop property, used for special case to send this exact command */
 	protected class PTZFullProperty extends CohuPTZProperty {
+
 		byte[] carr;
 
 		public PTZFullProperty(byte[] c) {
@@ -203,9 +200,8 @@ public class OpPTZCamera extends OpCohuPTZ {
 		/** Encode a STORE request */
 		@Override
 		public void encodeStore(ControllerImpl c, OutputStream os)
-			throws IOException
-		{
-			//byte[] carr = new byte[]{ 'P', 'S', 'T', 'S', 'Z', 'S' };
+			throws IOException {
+
 			writePayload(os, c.getDrop(), carr);
 		}
 	}

@@ -44,7 +44,6 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	/** Debug log */
 	static protected final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
 
-
 	protected static boolean fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
 
 	protected enum Command {
@@ -105,6 +104,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 *         or null on error.
 	 */
 	private Byte calculateChecksum(byte[] message, int first, int last) {
+
 		if (message.length < 1) return null;
 		if (first < 0) return null;
 		if (last < 0) return null;
@@ -129,17 +129,17 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 *         or null if the given preset number is invalid.
 	 */
 	protected Byte getPresetByte(int presetNum) {
+
 		if (presetNum < 1) return null;
 		if (presetNum > 64) return null;
 
 		byte presetByte;
 
-		if (presetNum <= 47) {
-			presetByte = (byte) (0x10 + (presetNum-1));
-		}
-		else {
-			presetByte = (byte) (0x60 + (presetNum-1));
-		}
+		if (presetNum <= 47)
+			presetByte = (byte) (0x10 + (presetNum - 1));
+		else
+			presetByte = (byte) (0x60 + (presetNum - 1));
+
 		return presetByte;
 	}
 
@@ -156,7 +156,8 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 *         some sort of "default" speed mode.
 	 */
 	protected static byte getPanTiltSpeedByte(float speed) {
-		int range = (0x3f - 0x31) + 1;		// excludes 0x00
+
+		int range = (0x3f - 0x31) + 1; // excludes 0x00
 		int scale = range - 1;
 
 		speed = Math.abs(speed);
@@ -179,6 +180,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 *         given speed value.
 	 */
 	protected static byte getZoomSpeedByte(float speed) {
+
 		int range = (0x32 - 0x30) + 1;
 		int scale = range - 1;
 
@@ -194,8 +196,8 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 	/** Writes given payload surrounded by proper header and checksum. */
 	protected void writePayload(OutputStream os, short drop, byte[] payload)
-		throws IOException
-	{
+		throws IOException {
+
 		byte[] msg = new byte[3 + payload.length];
 		msg[0] = (byte)0xf8;
 		msg[1] = (byte)drop;
@@ -212,15 +214,14 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
+		throws IOException {
 	}
 
 	/** Decode a STORE response */
 	@Override
 	public void decodeStore(ControllerImpl c, InputStream is)
-		throws IOException
-	{
+		throws IOException {
+
 		try {
 			// NOTE: force reading of the ACK/NAK before continuing. This ensures that commands are not lost
 			// due to overloading the camera with commands on top of each other.
@@ -247,8 +248,10 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * @return the byte array
 	 */
 	protected static byte[] list2bytearray(final List<Byte> list) {
+
 		byte[] rv = new byte[list.size()];
 		int i = 0;
+
 		for(byte a : list) { rv[i] = a; i++; }
 
 		return rv;
@@ -259,7 +262,8 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 * @param c Command type [enum]
 	 * @param vF float speed value
 	 */
-	protected static List<Byte> processPTZInfo(Command c, Float vF, List<Byte> arg) {
+	protected static List<Byte> processPTZInfo(Command c, Float vF,
+						   List<Byte> arg) {
 
 		String error = "ERROR: Unknown PTZ information. ";
 		List<Byte> rv = new ArrayList<Byte>();
@@ -358,6 +362,5 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		return rv;
 	}
-
 
 }

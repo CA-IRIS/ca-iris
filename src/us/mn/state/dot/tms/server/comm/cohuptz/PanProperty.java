@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
@@ -39,20 +40,10 @@ public class PanProperty extends CohuPTZProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
-		byte[] cmd;
+		throws IOException {
 
-		if (Math.abs(value) < PTZ_THRESH)
-			cmd = new byte[]{ 'P', 'S' };
-		else if (value < 0 && SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())
-			cmd = new byte[]{ 'P', 'L' };
-		else if (value < 0)
-			cmd = new byte[]{ 'l', getPanTiltSpeedByte(value) };
-		else if (SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean())
-			cmd = new byte[]{ 'P', 'R' };
-		else /* if (value > 0) */
-			cmd = new byte[]{ 'r', getPanTiltSpeedByte(value) };
+		byte[] cmd = list2bytearray(processPTZInfo(Command.PAN, value,
+			new ArrayList<Byte>()));
 
 		writePayload(os, c.getDrop(), cmd);
 	}
