@@ -54,10 +54,11 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** zoom vector */
 	protected final Float zoom;
 
-
+	/** byte list of command values */
 	private List<Byte> cmd;
 
-	private final boolean fixed_speed;
+	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
+	private final boolean force_full;
 
 
 
@@ -78,7 +79,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 		tilt = t;
 		zoom = z;
 
-		fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
+		force_full = SystemAttrEnum.CAMERA_PTZ_FORCE_FULL.getBoolean();
 
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p==null?"?":p.toString(), t==null?"?":t.toString(),
@@ -90,7 +91,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
-		if(fixed_speed) {
+		if(force_full) {
 			cmd = new ArrayList<Byte>();
 
 			cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, pan, cmd);

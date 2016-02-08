@@ -45,6 +45,8 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	static protected final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
 
 
+	protected static boolean fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
+
 	protected enum Command {
 		PAN,
 		TILT,
@@ -259,7 +261,6 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	 */
 	protected static List<Byte> processPTZInfo(Command c, Float vF, List<Byte> arg) {
 
-		boolean fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
 		String error = "ERROR: Unknown PTZ information. ";
 		List<Byte> rv = new ArrayList<Byte>();
 		rv.addAll(arg);
@@ -273,17 +274,17 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		boolean stopping = (dir == 0);
 		boolean posDir = (dir > 0);
 
-		fixed_speed = (fixed_speed || stopping);
+		boolean fixed = (fixed_speed || stopping);
 		Command2 c2;
 		switch(c) {
 			case PAN:
-				c2 = (fixed_speed) ? Command2.FIXED_PAN : Command2.VAR_PAN;
+				c2 = (fixed) ? Command2.FIXED_PAN : Command2.VAR_PAN;
 				break;
 			case TILT:
-				c2 = (fixed_speed) ? Command2.FIXED_TILT : Command2.VAR_TILT;
+				c2 = (fixed) ? Command2.FIXED_TILT : Command2.VAR_TILT;
 				break;
 			case ZOOM:
-				c2 = (fixed_speed) ? Command2.FIXED_ZOOM : Command2.VAR_ZOOM;
+				c2 = (fixed) ? Command2.FIXED_ZOOM : Command2.VAR_ZOOM;
 				break;
 			default:
 				// something went wrong
