@@ -42,8 +42,7 @@ public class PanProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException {
 
-		byte[] cmd = list2bytearray(processPTZInfo(Command.PAN, value,
-			new ArrayList<Byte>()));
+		byte[] cmd = processPTZInfo(Command.PAN, value, new byte[] {});
 
 		writePayload(os, c.getDrop(), cmd);
 	}

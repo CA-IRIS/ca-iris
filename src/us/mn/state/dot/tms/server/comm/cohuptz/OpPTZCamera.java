@@ -19,8 +19,6 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.Float;
-import java.util.ArrayList;
-import java.util.List;
 
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.CameraImpl;
@@ -54,9 +52,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** zoom vector */
 	protected final Float zoom;
 
-	/** byte list of command values */
-	private List<Byte> cmd;
-
 	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
 	private final boolean force_full;
 
@@ -77,9 +72,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 		force_full = SystemAttrEnum.CAMERA_PTZ_FORCE_FULL.getBoolean();
 
-		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
+		log(String.format("PTZ command: P:%s  T:%s  Z:%s  force_full=%s",
 			p==null?"?":p.toString(), t==null?"?":t.toString(),
-			z==null?"?":z.toString()));
+			z==null?"?":z.toString(), Boolean.toString(force_full)));
 
 	}
 
@@ -87,35 +82,23 @@ public class OpPTZCamera extends OpCohuPTZ {
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
-		if(force_full) {
-			cmd = new ArrayList<Byte>();
-
-			cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, pan, cmd);
-			cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.TILT, tilt, cmd);
-			cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.ZOOM, zoom, cmd);
-
+		if(force_full)
 			return new PTZFullPhase();
-		}
 
 		return new PanPhase();
 	}
 
 
 	/**
-	 * ptz full phase... CA-only
+	 * ptz full command phase
 	 */
 	protected class PTZFullPhase extends Phase<CohuPTZProperty> {
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException, DeviceContentionException {
 
-
-			byte[] carr = CohuPTZProperty.list2bytearray(cmd);
-
-			String decoded = new String(carr, "UTF-8");
-
-			log("sending ptz full: " + decoded);
-			mess.add(new PTZFullProperty(carr));
+			log("sending full ptz");
+			mess.add(new PTZFullProperty());
 			doStoreProps(mess);
 			updateOpStatus("ptz full sent");
 			log("ptz full sent");
@@ -125,9 +108,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 	/** pan phase, 1/3 */
 	protected class PanPhase extends Phase<CohuPTZProperty> {
-		/**
-		 * Whether this is first time sending this instance.
-		 */
 
 		protected Phase<CohuPTZProperty> poll(
 				CommMessage<CohuPTZProperty> mess)
@@ -147,9 +127,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 	/** tilt phase, 2/3 */
 	protected class TiltPhase extends Phase<CohuPTZProperty> {
-		/**
-		 * Whether this is first time sending this instance.
-		 */
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
@@ -169,9 +146,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 	/** zoom phase, 3/3 */
 	protected class ZoomPhase extends Phase<CohuPTZProperty> {
-		/**
-		 * Whether this is first time sending this instance.
-		 */
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
@@ -188,23 +162,23 @@ public class OpPTZCamera extends OpCohuPTZ {
 		}
 	}
 
-	/** pan-tilt stop property, used for special case to send this exact command */
+	/** PTZ full property, send this exact command */
 	protected class PTZFullProperty extends CohuPTZProperty {
 
-		byte[] carr;
-
-		public PTZFullProperty(byte[] c) {
-			carr = c;
-		}
+		public PTZFullProperty() { }
 
 		/** Encode a STORE request */
 		@Override
 		public void encodeStore(ControllerImpl c, OutputStream os)
 			throws IOException {
 
-			writePayload(os, c.getDrop(), carr);
+			byte[] cmd = new byte[] {};
+
+			cmd = processPTZInfo(Command.PAN, pan, cmd);
+			cmd = processPTZInfo(Command.TILT, tilt, cmd);
+			cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
+
+			writePayload(os, c.getDrop(), cmd);
 		}
 	}
-
-
 }

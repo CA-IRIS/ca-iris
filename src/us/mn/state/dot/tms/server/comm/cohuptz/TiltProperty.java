@@ -42,8 +42,7 @@ public class TiltProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException {
 
-		byte[] cmd = list2bytearray(processPTZInfo(Command.TILT, value,
-			new ArrayList<Byte>()));
+		byte[] cmd = processPTZInfo(Command.TILT, value, new byte[] {});
 
 		writePayload(os, c.getDrop(), cmd);
 	}

@@ -243,11 +243,11 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	}
 
 	/**
-	 * convert a byte list to a byte array
-	 * @param list the byte list
+	 * convert a Byte list to a byte array
+	 * @param list the Byte list
 	 * @return the byte array
 	 */
-	protected static byte[] list2bytearray(final List<Byte> list) {
+	private static byte[] l2ba(final List<Byte> list) {
 
 		byte[] rv = new byte[list.size()];
 		int i = 0;
@@ -258,16 +258,31 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	}
 
 	/**
+	 * convert a byte array to Byte list
+	 * @param arr the byte array
+	 * @return the Byte list
+	 */
+	private static List<Byte> ba2l(final byte[] arr) {
+
+		List<Byte> rv = new ArrayList<Byte>(arr.length);
+		for(byte b : arr)
+			rv.add(b);
+
+		return rv;
+	}
+
+	/**
 	 * processes the params and adds them as byte commands on the command list
 	 * @param c Command type [enum]
 	 * @param vF float speed value
+	 * @param carr current byte array to append to in return value
 	 */
-	protected static List<Byte> processPTZInfo(Command c, Float vF,
-						   List<Byte> arg) {
+	protected static byte[] processPTZInfo(final Command c, final Float vF,
+					       final byte[] carr) {
 
 		String error = "ERROR: Unknown PTZ information. ";
 		List<Byte> rv = new ArrayList<Byte>();
-		rv.addAll(arg);
+		rv.addAll(ba2l(carr));
 
 		// assign nulls to 0;
 		float v = (vF == null) ? 0f : vF;
@@ -292,11 +307,10 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 				break;
 			default:
 				// something went wrong
-				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
-				return arg;
+				log(error + c.toString() + " speed="
+					+ ((vF == null) ? "null" : vF));
+				return carr;
 		}
-
-		Byte b = null;
 
 		// which command to send
 		switch(c2) {
@@ -320,14 +334,15 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 				break;
 			default:
 				// something went wrong
-				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
-				return arg;
+				log(error + c.toString() + " speed="
+					+ ((vF == null) ? "null" : vF));
+				return carr;
 		}
 
 		// if stopping, just add a stop and exit
 		if(stopping) {
 			rv.add(faStop);
-			return rv;
+			return l2ba(rv);
 		}
 
 		// first argument (variable zoom takes a second, see below)
@@ -352,15 +367,16 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 				break;
 			default:
 				// something went wrong
-				log(error + c.toString() + " speed=" + ((vF == null) ? "null" : vF));
-				return arg;
+				log(error + c.toString() + " speed="
+					+ ((vF == null) ? "null" : vF));
+				return carr;
 		}
 
 		// variable zoom speed
 		if(Command2.VAR_ZOOM.equals(c2))
 			rv.add(getZoomSpeedByte(v));
 
-		return rv;
+		return l2ba(rv);
 	}
 
 }

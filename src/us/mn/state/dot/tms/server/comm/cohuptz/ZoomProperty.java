@@ -42,8 +42,7 @@ public class ZoomProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException {
 
-		byte[] cmd = list2bytearray(processPTZInfo(Command.ZOOM, value,
-			new ArrayList<Byte>()));
+		byte[] cmd = processPTZInfo(Command.ZOOM, value, new byte[] {});
 
 		writePayload(os, c.getDrop(), cmd);
 	}

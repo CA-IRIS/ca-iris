@@ -11,14 +11,16 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- */package us.mn.state.dot.tms.server.comm.cohuptz;
+ */
+package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import junit.framework.TestCase;
-import us.mn.state.dot.tms.SystemAttrEnum;
+
+import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZProperty.Command;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * CohuPTZProperty test cases
@@ -27,527 +29,206 @@ import java.util.List;
  */
 public class CohuPTZPropertyTest extends TestCase {
 
-	public CohuPTZPropertyTest(String name) { super(name); }
+	private static final String ENC = "UTF-8";
 
+	public CohuPTZPropertyTest(String name) {
+		super(name);
+	}
 
 	public void testFullPTZ() {
-		List<Byte> cmd;
-		List<Byte> exp;
+		byte[] cmd;
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = true;
-		Float v = null;
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, v, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.TILT, v, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.ZOOM, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		cmd = new byte[]{};
+		exp = new byte[]{(byte) 'P', (byte) 'S', (byte) 'T', (byte) 'S',
+			(byte) 'Z', (byte) 'S'};
+		cmd = CohuPTZProperty.processPTZInfo(Command.PAN, null, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.TILT, null, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.ZOOM, null, cmd);
+		log(cmd);
+		assertArrayEquals(exp, cmd);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, 0.5f, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.TILT, 0.5f, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.ZOOM, 0f, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'R');
-		exp.add((byte) 'T');
-		exp.add((byte) 'U');
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		cmd = new byte[]{};
+		exp = new byte[]{(byte) 'P', (byte) 'R', (byte) 'T', (byte) 'U',
+			(byte) 'Z', (byte) 'S'};
+		cmd = CohuPTZProperty.processPTZInfo(Command.PAN, 0.5f, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.TILT, 0.5f, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.ZOOM, 0f, cmd);
+		log(cmd);
+		assertArrayEquals(exp, cmd);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, null, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.TILT, 0f, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.ZOOM, 0.5f, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		exp.add((byte) 'Z');
-		exp.add((byte) 'I');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		cmd = new byte[]{};
+		exp = new byte[]{(byte) 'P', (byte) 'S', (byte) 'T', (byte) 'S',
+			(byte) 'Z', (byte) 'I'};
+		cmd = CohuPTZProperty.processPTZInfo(Command.PAN, null, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.TILT, 0f, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.ZOOM, 0.5f, cmd);
+		log(cmd);
+		assertArrayEquals(exp, cmd);
 
 		CohuPTZProperty.fixed_speed = false;
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.PAN, null, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.TILT, 0f, cmd);
-		cmd = CohuPTZProperty.processPTZInfo(CohuPTZProperty.Command.ZOOM, 0.5f, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		exp.add((byte) 'c');
-		exp.add((byte) 'Z');
-		exp.add((byte) '1');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		cmd = new byte[]{};
+		exp = new byte[]{(byte) 'P', (byte) 'S', (byte) 'T', (byte) 'S',
+			(byte) 'c', (byte) 'Z', (byte) '1'};
+		cmd = CohuPTZProperty.processPTZInfo(Command.PAN, null, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.TILT, 0f, cmd);
+		cmd = CohuPTZProperty.processPTZInfo(Command.ZOOM, 0.5f, cmd);
+		log(cmd);
+		assertArrayEquals(exp, cmd);
 	}
 
 	public void testPanFixed() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = true;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.PAN;
-		Float v = null;
+		Command c = Command.PAN;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'P', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'P', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'P', (byte) 'L'};
+		chkarr(c, -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'L');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'P', (byte) 'R'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'R');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
-
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 100f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'R');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'P', (byte) 'R'};
+		chkarr(c, 100f, exp);
 	}
 
 	public void testTiltFixed() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = true;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.TILT;
-		Float v = null;
+		Command c = Command.TILT;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'T', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'T', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'T', (byte) 'D'};
+		chkarr(c, -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'D');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'T', (byte) 'U'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'U');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'T', (byte) 'U'};
+		chkarr(c, 100f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 100f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'U');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
 	}
 
 	public void testZoomFixed() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = true;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.ZOOM;
-		Float v = null;
+		Command c = Command.ZOOM;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'Z', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'Z', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'Z', (byte) 'O'};
+		chkarr(c, -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'O');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'Z', (byte) 'I'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'I');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
-
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 100f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'I');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'Z', (byte) 'I'};
+		chkarr(c, 100f, exp);
 	}
 
 
 	public void testPanVariable() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = false;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.PAN;
-		Float v = null;
+		Command c = Command.PAN;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'P', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'P', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'P');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'l', (byte) '1'};
+		chkarr(c, -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'l');
-		exp.add((byte) '1');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'r', (byte) '?'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'r');
-		exp.add((byte) '?');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
-
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.5f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'r');
-		exp.add((byte) '8');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'r', (byte) '8'};
+		chkarr(c, 0.5f, exp);
 	}
 
 	public void testTiltVariable() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = false;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.TILT;
-		Float v = null;
+		Command c = Command.TILT;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'T', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'T', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'T');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'd', (byte) '1'};
+		chkarr(c,  -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'd');
-		exp.add((byte) '1');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'u', (byte) '?'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'u');
-		exp.add((byte) '?');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
-
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.5f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'u');
-		exp.add((byte) '8');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'u', (byte) '8'};
+		chkarr(c, 0.5f, exp);
 	}
 
 	public void testZoomVariable() {
-		List<Byte> cmd = new ArrayList<Byte>();
-		List<Byte> exp = new ArrayList<Byte>();
+		byte[] exp;
 
 		CohuPTZProperty.fixed_speed = false;
-		CohuPTZProperty.Command c = CohuPTZProperty.Command.ZOOM;
-		Float v = null;
+		Command c = Command.ZOOM;
 
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'Z', (byte) 'S'};
+		chkarr(c, null, exp);
 
+		exp = new byte[]{(byte) 'Z', (byte) 'S'};
+		chkarr(c, 0.0009f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.0009f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'Z');
-		exp.add((byte) 'S');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'c', (byte) 'z', (byte) '0'};
+		chkarr(c, -(CohuPTZProperty.PTZ_THRESH), exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = -(CohuPTZProperty.PTZ_THRESH);
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'c');
-		exp.add((byte) 'z');
-		exp.add((byte) '0');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'c', (byte) 'Z', (byte) '2'};
+		chkarr(c, 1f, exp);
 
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 1f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'c');
-		exp.add((byte) 'Z');
-		exp.add((byte) '2');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
-
-		cmd = new ArrayList<>();
-		exp = new ArrayList<>();
-		v = 0.5f;
-		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
-		exp.add((byte) 'c');
-		exp.add((byte) 'Z');
-		exp.add((byte) '1');
-		try {
-			System.out.println("commands: " + new String(CohuPTZProperty.list2bytearray(cmd), "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		assertEquals(exp, cmd);
+		exp = new byte[]{(byte) 'c', (byte) 'Z', (byte) '1'};
+		chkarr(c, 0.5f, exp);
 	}
 
 
+	private static void log(byte[] cmd) {
+
+//		try {
+//			System.out.println("commands: " + new String(cmd, ENC));
+//		} catch (UnsupportedEncodingException e) {
+//			e.printStackTrace();
+//		}
+
+	}
+
+	private static void chkarr(Command c, Float v, byte[] exp) {
+		byte[] cmd = new byte[]{};
+		cmd = CohuPTZProperty.processPTZInfo(c, v, cmd);
+		log(cmd);
+		assertArrayEquals(exp, cmd);
+	}
 
 }
