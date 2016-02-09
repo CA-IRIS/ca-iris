@@ -104,6 +104,8 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
         target.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         try {
             Integer rowFrom = (Integer) support.getTransferable().getTransferData(localObjectFlavor);
+            if (rowTo > rowFrom)
+                rowTo--;
 
             if (rowFrom != -1 && rowFrom != rowTo) {
                 @SuppressWarnings("unchecked")
