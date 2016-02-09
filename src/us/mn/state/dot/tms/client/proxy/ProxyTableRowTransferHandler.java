@@ -113,17 +113,22 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
                 // rows < the target row index will have index decremented
                 // rows > the target row index will have index incremented
                 MapExtent[] proxies = model.getRowProxies(new MapExtent[model.getRowCount()]);
+
+                // to avoid temporary violation of unique order property, move target
+                // proxy out of the way while surrounding proxies are first updated
+                model.setManualSort(proxies[rowFrom], proxies.length);
                 for (int i = Math.min(rowFrom, rowTo); i <= Math.max(rowFrom, rowTo); i++) {
+                    if (i == rowFrom)
+                        continue;
+
                     MapExtent toMove = proxies[i];
 
-                    if (i == rowFrom) {
-                        model.setManualSort(toMove, rowTo);
-                    } else if (i < rowTo) {
+                    if (i < rowTo)
                         model.setManualSort(toMove, i - 1);
-                    } else if (i > rowTo) {
+                    else if (i > rowTo)
                         model.setManualSort(toMove, i + 1);
-                    }
                 }
+                model.setManualSort(proxies[rowFrom], rowTo);
 
                 target.getSelectionModel().addSelectionInterval(rowTo, rowTo);
 
