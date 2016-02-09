@@ -117,16 +117,10 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
                 // to avoid temporary violation of unique order property, move target
                 // proxy out of the way while surrounding proxies are first updated
                 model.setManualSort(proxies[rowFrom], proxies.length);
-                for (int i = Math.min(rowFrom, rowTo); i <= Math.max(rowFrom, rowTo); i++) {
-                    if (i == rowFrom)
-                        continue;
-
-                    MapExtent toMove = proxies[i];
-
-                    if (i < rowTo)
-                        model.setManualSort(toMove, i - 1);
-                    else if (i > rowTo)
-                        model.setManualSort(toMove, i + 1);
+                int i = nextI(rowFrom, rowFrom, rowTo);
+                for (; checkLoopCondition(i, rowFrom, rowTo); i = nextI(i, rowFrom, rowTo)) {
+                    int targetI = (i < rowTo ? i - 1 : i + 1);
+                    model.setManualSort(proxies[i], targetI);
                 }
                 model.setManualSort(proxies[rowFrom], rowTo);
 
@@ -138,6 +132,16 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /** Increment or decrement the importData i based on whether we're moving a row up or down. */
+    private static int nextI(int i, int rowFrom, int rowTo) {
+        return rowFrom < rowTo ? i + 1 : i - 1;
+    }
+
+    /** Check the importData loop condition based on whether we're moving a row up or down */
+    private static boolean checkLoopCondition(int i, int rowFrom, int rowTo) {
+        return (rowFrom < rowTo && i <= rowTo) || (rowFrom > rowTo && i >= rowTo);
     }
 
     /**
