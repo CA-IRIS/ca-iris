@@ -278,8 +278,8 @@ abstract public class ProxyTableModel<T extends SonarObject>
 
 	/** Get all row proxies */
 	@SuppressWarnings("unchecked")
-	public T[] getRowProxies() {
-		return (T[])list.toArray();
+	public <TReturn> TReturn[] getRowProxies(TReturn[] array) {
+		return list.toArray(array);
 	}
 
 	/** Get the index of the given proxy */

@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms.client.proxy;
 
 import us.mn.state.dot.sonar.SonarObject;
+import us.mn.state.dot.tms.MapExtent;
 
 import javax.activation.ActivationDataFlavor;
 import javax.activation.DataHandler;
@@ -105,14 +106,15 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
             Integer rowFrom = (Integer) support.getTransferable().getTransferData(localObjectFlavor);
 
             if (rowFrom != -1 && rowFrom != rowTo) {
+                @SuppressWarnings("unchecked")
                 ProxyTableModel<SonarObject> model = (ProxyTableModel<SonarObject>)table.getModel();
 
                 // Only rows between the from & to location will be considered as others will not change
                 // rows < the target row index will have index decremented
                 // rows > the target row index will have index incremented
-                SonarObject[] proxies = model.getRowProxies();
+                MapExtent[] proxies = model.getRowProxies(new MapExtent[model.getRowCount()]);
                 for (int i = Math.min(rowFrom, rowTo); i <= Math.max(rowFrom, rowTo); i++) {
-                    SonarObject toMove = proxies[i];
+                    MapExtent toMove = proxies[i];
 
                     if (i == rowFrom) {
                         model.setManualSort(toMove, rowTo);
