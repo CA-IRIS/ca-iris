@@ -108,6 +108,7 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		log("curTilt=" + curTilt + " arg tilt=" + t);
 		log("curZoom=" + curZoom + " arg zoom=" + z);
 
+		// compareFloats does a "proper" comparing of values
 		if (NumericAlphaComparator.compareFloats(p, curPan,
 			CohuPTZProperty.PTZ_THRESH) != 0) {
 			pan = p;
@@ -160,9 +161,12 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		lastCmdTime = time;
 	}
 
-	/** Send a device request
+	/**
+	 * Send a device request
+	 *
 	 * @param c The CameraImpl object.
-	 * @param r The desired DeviceRequest. */
+	 * @param r The desired DeviceRequest.
+	 */
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
 		switch (r) {
@@ -197,4 +201,11 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 			break;
 		}
 	}
+
+//	@Override
+//	protected void addOperation(Operation op) {
+//		// force the queuing of an operation
+//		queue.enqueue(op, true);
+//
+//	}
 }

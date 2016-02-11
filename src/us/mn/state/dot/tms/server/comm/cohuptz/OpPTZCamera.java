@@ -55,6 +55,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
 	private final boolean force_full;
 
+	/** so queued operations aren't dropped for being supposed duplicates */
+	private final long created;
+
 	/**
 	 * Create the operation.
 	 * @param c the CameraImpl instance
@@ -66,6 +69,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 	public OpPTZCamera(CameraImpl c, CohuPTZPoller cp, Float p, Float t, Float z) {
 		super(PriorityLevel.COMMAND, c, cp, OP_DESC);
 
+		created = System.nanoTime();
 		pan  = p;
 		tilt = t;
 		zoom = z;
@@ -87,7 +91,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 		return new PanPhase();
 	}
-
 
 	/**
 	 * ptz full command phase
@@ -180,5 +183,32 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			writePayload(os, c.getDrop(), cmd);
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+
+		OpPTZCamera that = (OpPTZCamera) o;
+
+		if (created != that.created) return false;
+		if (pan != null ? !pan.equals(that.pan) : that.pan != null)
+			return false;
+		if (tilt != null ? !tilt.equals(that.tilt) : that.tilt != null)
+			return false;
+		return zoom != null ? zoom.equals(that.zoom) :
+			that.zoom == null;
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = pan != null ? pan.hashCode() : 0;
+		result = 31 * result + (tilt != null ? tilt.hashCode() : 0);
+		result = 31 * result + (zoom != null ? zoom.hashCode() : 0);
+		result = 31 * result + (int) (created ^ (created >>> 32));
+		return result;
 	}
 }

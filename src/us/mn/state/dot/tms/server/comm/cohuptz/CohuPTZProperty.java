@@ -63,31 +63,31 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	}
 
 	// fixed speed commands
-	private static final byte fcPan = (byte)'P';
-	private static final byte fcTilt = (byte)'T';
-	private static final byte fcZoom = (byte)'Z';
+	private static final byte fcPan = (byte) 'P';
+	private static final byte fcTilt = (byte) 'T';
+	private static final byte fcZoom = (byte) 'Z';
 
-	// fixed speed arguments                    direction
-	private static final byte faPP = (byte)'R'; // positive
-	private static final byte faPN = (byte)'L'; // negative
-	private static final byte faTP = (byte)'U'; // positive
-	private static final byte faTN = (byte)'D'; // negative
-	private static final byte faZP = (byte)'I'; // positive
-	private static final byte faZN = (byte)'O'; // negative
+	// fixed speed arguments                     direction
+	private static final byte faPP = (byte) 'R'; // positive
+	private static final byte faPN = (byte) 'L'; // negative
+	private static final byte faTP = (byte) 'U'; // positive
+	private static final byte faTN = (byte) 'D'; // negative
+	private static final byte faZP = (byte) 'I'; // positive
+	private static final byte faZN = (byte) 'O'; // negative
 
-	// variable speed commands                   direction
-	private static final byte vcPP = (byte)'r';  // positive
-	private static final byte vcPN = (byte)'l';  // negative
-	private static final byte vcTP = (byte)'u';  // positive
-	private static final byte vcTN = (byte)'d';  // negative
-	private static final byte vcZB = (byte)'c';  // both
+	// variable speed commands                    direction
+	private static final byte vcPP = (byte) 'r';  // positive
+	private static final byte vcPN = (byte) 'l';  // negative
+	private static final byte vcTP = (byte) 'u';  // positive
+	private static final byte vcTN = (byte) 'd';  // negative
+	private static final byte vcZB = (byte) 'c';  // both
 
 	// variable speed zoom argument
-	private static final byte vaZP = (byte)'Z'; // positive
-	private static final byte vaZN = (byte)'z'; // negative
+	private static final byte vaZP = (byte) 'Z'; // positive
+	private static final byte vaZN = (byte) 'z'; // negative
 
 	// stop argument
-	private static final byte faStop = (byte)'S';
+	private static final byte faStop = (byte) 'S';
 
 	/** Log a message to the debug log */
 	static public void log(String msg) {
@@ -296,47 +296,47 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		boolean fixed = (fixed_speed || stopping);
 		Command2 c2;
 		switch(c) {
-			case PAN:
-				c2 = (fixed) ? Command2.FIXED_PAN : Command2.VAR_PAN;
-				break;
-			case TILT:
-				c2 = (fixed) ? Command2.FIXED_TILT : Command2.VAR_TILT;
-				break;
-			case ZOOM:
-				c2 = (fixed) ? Command2.FIXED_ZOOM : Command2.VAR_ZOOM;
-				break;
-			default:
-				// something went wrong
-				log(error + c.toString() + " speed="
-					+ ((vF == null) ? "null" : vF));
-				return carr;
+		case PAN:
+			c2 = (fixed) ? Command2.FIXED_PAN : Command2.VAR_PAN;
+			break;
+		case TILT:
+			c2 = (fixed) ? Command2.FIXED_TILT : Command2.VAR_TILT;
+			break;
+		case ZOOM:
+			c2 = (fixed) ? Command2.FIXED_ZOOM : Command2.VAR_ZOOM;
+			break;
+		default:
+			// something went wrong
+			log(error + c.toString() + " speed="
+				+ ((vF == null) ? "null" : vF));
+			return carr;
 		}
 
 		// which command to send
 		switch(c2) {
-			case FIXED_PAN:
-				rv.add(fcPan);
-				break;
-			case VAR_PAN:
-				rv.add((posDir ? vcPP : vcPN));
-				break;
-			case FIXED_TILT:
-				rv.add(fcTilt);
-				break;
-			case VAR_TILT:
-				rv.add((posDir ? vcTP : vcTN));
-				break;
-			case FIXED_ZOOM:
-				rv.add(fcZoom);
-				break;
-			case VAR_ZOOM:
-				rv.add(vcZB);
-				break;
-			default:
-				// something went wrong
-				log(error + c.toString() + " speed="
-					+ ((vF == null) ? "null" : vF));
-				return carr;
+		case FIXED_PAN:
+			rv.add(fcPan);
+			break;
+		case VAR_PAN:
+			rv.add((posDir ? vcPP : vcPN));
+			break;
+		case FIXED_TILT:
+			rv.add(fcTilt);
+			break;
+		case VAR_TILT:
+			rv.add((posDir ? vcTP : vcTN));
+			break;
+		case FIXED_ZOOM:
+			rv.add(fcZoom);
+			break;
+		case VAR_ZOOM:
+			rv.add(vcZB);
+			break;
+		default:
+			// something went wrong
+			log(error + c.toString() + " speed="
+				+ ((vF == null) ? "null" : vF));
+			return carr;
 		}
 
 		// if stopping, just add a stop and exit
@@ -347,29 +347,29 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		// first argument (variable zoom takes a second, see below)
 		switch(c2) {
-			case FIXED_PAN:
-				rv.add((posDir ? faPP : faPN));
-				break;
-			case VAR_PAN:
-				rv.add(getPanTiltSpeedByte(v));
-				break;
-			case FIXED_TILT:
-				rv.add((posDir ? faTP : faTN));
-				break;
-			case VAR_TILT:
-				rv.add(getPanTiltSpeedByte(v));
-				break;
-			case FIXED_ZOOM:
-				rv.add((posDir ? faZP : faZN));
-				break;
-			case VAR_ZOOM:
-				rv.add((posDir ? vaZP : vaZN));
-				break;
-			default:
-				// something went wrong
-				log(error + c.toString() + " speed="
-					+ ((vF == null) ? "null" : vF));
-				return carr;
+		case FIXED_PAN:
+			rv.add((posDir ? faPP : faPN));
+			break;
+		case VAR_PAN:
+			rv.add(getPanTiltSpeedByte(v));
+			break;
+		case FIXED_TILT:
+			rv.add((posDir ? faTP : faTN));
+			break;
+		case VAR_TILT:
+			rv.add(getPanTiltSpeedByte(v));
+			break;
+		case FIXED_ZOOM:
+			rv.add((posDir ? faZP : faZN));
+			break;
+		case VAR_ZOOM:
+			rv.add((posDir ? vaZP : vaZN));
+			break;
+		default:
+			// something went wrong
+			log(error + c.toString() + " speed="
+				+ ((vF == null) ? "null" : vF));
+			return carr;
 		}
 
 		// variable zoom speed
@@ -378,5 +378,4 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		return l2ba(rv);
 	}
-
 }
