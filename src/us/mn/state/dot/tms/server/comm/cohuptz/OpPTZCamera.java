@@ -55,6 +55,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
 	private final boolean force_full;
 
+	/** convenience value for the CAMERA_PTZ_FIXED_SPEED setting */
+	private final boolean fixed_speed;
+
 	/** so queued operations aren't dropped for being supposed duplicates */
 	private final long created;
 
@@ -75,6 +78,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 		zoom = z;
 
 		force_full = SystemAttrEnum.CAMERA_PTZ_FORCE_FULL.getBoolean();
+		fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
 
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s  force_full=%s",
 			p==null?"?":p.toString(), t==null?"?":t.toString(),
@@ -86,7 +90,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
-		if(force_full)
+		if(force_full || fixed_speed)
 			return new PTZFullPhase();
 
 		return new PanPhase();
@@ -105,6 +109,11 @@ public class OpPTZCamera extends OpCohuPTZ {
 			doStoreProps(mess);
 			updateOpStatus("ptz full sent");
 			log("ptz full sent");
+
+			// zoom has to be handled separate w/ variable speed
+			if(!fixed_speed)
+				return new ZoomPhase();
+
 			return null;
 		}
 	}
@@ -179,7 +188,11 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			cmd = processPTZInfo(Command.PAN, pan, cmd);
 			cmd = processPTZInfo(Command.TILT, tilt, cmd);
-			cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
+
+			// zoom can't be added with variable speeds
+			// see PTZFullPhase
+			if(fixed_speed)
+				cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
 
 			writePayload(os, c.getDrop(), cmd);
 		}
