@@ -35,6 +35,3 @@ ALTER TABLE iris.map_extent ALTER COLUMN position DROP DEFAULT;
 -- CA trac 504
 INSERT INTO iris.system_attribute(name, value) VALUES('camera_direction_override','');
 
--- CA trac 578 PTZ issue
-INSERT INTO iris.system_attribute(name, value) VALUES('camera_ptz_fixed_speed', false);
-INSERT INTO iris.system_attribute(name, value) VALUES('camera_ptz_force_full', false);

@@ -45,3 +45,4 @@ WHERE iris.comm_protocol.description = 'Cohu PTZ';
 -- cleanup unused system attributes
 DELETE FROM iris.system_attribute
 WHERE name IN ('camera_pelcod_conn_mode', 'camera_pelcod_max_idle', 'camera_cohu_conn_mode', 'camera_cohu_max_idle');
+

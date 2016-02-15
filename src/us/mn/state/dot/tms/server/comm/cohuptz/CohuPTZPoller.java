@@ -51,13 +51,13 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	protected long lastCmdTime = 0;
 
 	/** Current pan value */
-	protected float curPan  = 0F;
+	protected float curPan  = 0.0F;
 
 	/** Current tilt value */
-	protected float curTilt = 0F;
+	protected float curTilt = 0.0F;
 
 	/** Current zoom value */
-	protected float curZoom = 0F;
+	protected float curZoom = 0.0F;
 
 	/**
 	 * Create a new Cohu PTZ poller with auto connection mode.

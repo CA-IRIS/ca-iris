@@ -43,8 +43,6 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 	/** Debug log */
 	static protected final DebugLog DEBUG_LOG = new DebugLog("cohuptz");
 
-	protected static boolean fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
-
 	protected enum Command {
 		PAN,
 		TILT,
@@ -317,7 +315,6 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		boolean fixed = OpPTZCamera.use_fixed_speed || (dir == 0);
 		boolean posDir = (dir > 0);
 
-		boolean fixed = (fixed_speed || stopping);
 		Command2 c2;
 		switch(c) {
 		case PAN:
