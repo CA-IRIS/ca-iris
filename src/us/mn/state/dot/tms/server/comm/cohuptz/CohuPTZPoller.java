@@ -50,13 +50,13 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	protected long lastCmdTime = 0;
 
 	/** Current pan value */
-	protected float curPan  = Float.MAX_VALUE;
+	protected float curPan  = 0F;
 
 	/** Current tilt value */
-	protected float curTilt = Float.MAX_VALUE;
+	protected float curTilt = 0F;
 
 	/** Current zoom value */
-	protected float curZoom = Float.MAX_VALUE;
+	protected float curZoom = 0F;
 
 	/**
 	 * Create a new Cohu PTZ poller.
@@ -100,30 +100,71 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	/** Send a "PTZ camera move" command */
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		Float pan  = null;
-		Float tilt = null;
+		// compareFloats does a "proper" comparing of values
+		boolean do_pan = NumericAlphaComparator.compareFloats(p, curPan, CohuPTZProperty.PTZ_THRESH) != 0;
+		boolean do_tilt = NumericAlphaComparator.compareFloats(t, curTilt, CohuPTZProperty.PTZ_THRESH) != 0;
+		boolean do_zoom = NumericAlphaComparator.compareFloats(z, curZoom, CohuPTZProperty.PTZ_THRESH) != 0;
+
+		boolean stop_pan = NumericAlphaComparator.compareFloats(p, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
+		boolean stop_tilt = NumericAlphaComparator.compareFloats(t, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
+		boolean stop_zoom = NumericAlphaComparator.compareFloats(z, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
+
+		boolean full_stop = stop_pan && stop_tilt && stop_zoom;
+
+		// if either panning or tilting, the last value sent
+		// must be initialized for the other operation.
+		Float pan = (do_tilt) ? curPan : null;
+		Float tilt = (do_pan) ? curTilt : null;
 		Float zoom = null;
 
-		log("curPan=" + curPan + " arg pan=" + p);
-		log("curTilt=" + curTilt + " arg tilt=" + t);
-		log("curZoom=" + curZoom + " arg zoom=" + z);
+		log(new StringBuilder().append("curPan=").append(curPan)
+		                       .append(" arg p=").append(p)
+		                       .append(" prep pan=")
+		                       .append(pan).append(" do_pan=")
+		                       .append(do_pan)
+		                       .toString());
+		log(new StringBuilder().append("curTilt=").append(curTilt)
+		                       .append(" arg t=").append(t)
+		                       .append(" prep tilt=")
+		                       .append(tilt).append(" do_tilt=")
+		                       .append(do_tilt)
+		                       .toString());
+		log(new StringBuilder().append("curZoom=").append(curZoom)
+		                       .append(" arg z=").append(z)
+		                       .append(" prep zoom=")
+		                       .append(zoom).append(" do_zoom=")
+		                       .append(do_zoom)
+		                       .toString());
 
-		// compareFloats does a "proper" comparing of values
-		if (NumericAlphaComparator.compareFloats(p, curPan,
-			CohuPTZProperty.PTZ_THRESH) != 0) {
-			pan = p;
+		if (do_pan) {
 			curPan = p;
+			pan = p;
 		}
-		if (NumericAlphaComparator.compareFloats(t, curTilt,
-			CohuPTZProperty.PTZ_THRESH) != 0) {
-			tilt = t;
+		if (do_tilt) {
 			curTilt = t;
+			tilt = t;
 		}
-		if (NumericAlphaComparator.compareFloats(z, curZoom,
-			CohuPTZProperty.PTZ_THRESH) != 0) {
-			zoom = z;
+		if (do_zoom) {
 			curZoom = z;
+			zoom = z;
 		}
+
+		if(full_stop) {
+			log("Full Stop");
+			curPan = 0F;
+			pan = 0F;
+			curTilt = 0F;
+			tilt = 0F;
+			curZoom = 0F;
+			zoom = 0F;
+		}
+
+		log(new StringBuilder().append("sending pan=").append(pan)
+		                       .toString());
+		log(new StringBuilder().append("sending tilt=").append(tilt)
+		                       .toString());
+		log(new StringBuilder().append("sending zoom=").append(zoom)
+		                       .toString());
 
 		addOperation(new OpPTZCamera(c, this, pan, tilt, zoom));
 	}

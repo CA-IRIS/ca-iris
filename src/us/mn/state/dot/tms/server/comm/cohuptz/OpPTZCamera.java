@@ -77,12 +77,12 @@ public class OpPTZCamera extends OpCohuPTZ {
 		tilt = t;
 		zoom = z;
 
-		force_full = SystemAttrEnum.CAMERA_PTZ_FORCE_FULL.getBoolean();
-		fixed_speed = SystemAttrEnum.CAMERA_PTZ_FIXED_SPEED.getBoolean();
+		force_full = true;
+		fixed_speed = false;
 
-		log(String.format("PTZ command: P:%s  T:%s  Z:%s  force_full=%s",
+		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p==null?"?":p.toString(), t==null?"?":t.toString(),
-			z==null?"?":z.toString(), Boolean.toString(force_full)));
+			z==null?"?":z.toString()));
 
 	}
 
@@ -104,17 +104,24 @@ public class OpPTZCamera extends OpCohuPTZ {
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException, DeviceContentionException {
 
-			log("sending full ptz");
-			mess.add(new PTZFullProperty());
-			doStoreProps(mess);
-			updateOpStatus("ptz full sent");
-			log("ptz full sent");
+			if(pan != null || tilt != null) {
+				log("sending full ptz");
+				mess.add(new PTZFullProperty());
+				doStoreProps(mess);
+				updateOpStatus("pan/tilt sent");
+				log("pan/tilt sent");
+			}
 
 			// zoom has to be handled separate w/ variable speed
 			if(!fixed_speed)
 				return new ZoomPhase();
 
 			return null;
+		}
+
+		@Override
+		public String toString() {
+			return "OpPTZCamera$PTZFullPhase: p=" + pan + " t=" + tilt;
 		}
 	}
 
@@ -172,6 +179,11 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			return null;
 		}
+
+		@Override
+		public String toString() {
+			return "OpPTZCamera$ZoomPhase: z=" + zoom;
+		}
 	}
 
 	/** PTZ full property, send this exact command */
@@ -224,4 +236,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 		result = 31 * result + (int) (created ^ (created >>> 32));
 		return result;
 	}
+
+	public String toString2() {
+		return "OpPTZCamera: p=" + pan + " t=" + tilt + " z=" + zoom;
+	}
+
 }

@@ -25,6 +25,7 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
+import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
 
 /**
  * MessagePoller is an abstract class which represents a communication channel 
@@ -347,27 +348,35 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		final String oname = o.toString();
 		long start = TimeSteward.currentTimeMillis();
 		try {
+			if(o instanceof OpPTZCamera) {
+				plog("polling PTZ start: " + ((OpPTZCamera) o).toString2());
+			}
 			o.poll(createMessage(o));
 		}
 		catch(DeviceContentionException e) {
+			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);
 		}
 		catch(DownloadRequestException e) {
+			plog("ERROR: DownloadRequestException.");
 			if (o instanceof OpController)
 				download(((OpController<T>)o).getController(),
 				((OpController<T>)o).getPriority());
 		}
 		catch(ChecksumException e) {
+			plog("ERROR: ChecksumException, draining queue.");
 			o.handleCommError(EventType.CHECKSUM_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
 		}
 		catch(ParsingException e) {
+			plog("ERROR: ParsingException, draining queue.");
 			o.handleCommError(EventType.PARSING_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
 		}
 		catch(ControllerException e) {
+			plog("ERROR: ControllerException.");
 			if (o instanceof OpController) {
 				((OpController<T>)o).handleCommError(
 					EventType.CONTROLLER_ERROR,
@@ -378,16 +387,17 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			}
 		}
 		catch(SocketTimeoutException e) {
+			plog("ERROR: SocketTimeoutException.");
 			o.handleCommError(EventType.POLL_TIMEOUT_ERROR,
 				exceptionMessage(e));
 		}
 		finally {
 			if(o.isDone() || !requeueOperation(o))
 				o.cleanup();
-			if(POLL_LOG.isOpen()) {
-				plog(oname + " elapsed: " +
-					calculate_elapsed(start));
+			if(o instanceof OpPTZCamera) {
+				plog("polled PTZ complete: " + ((OpPTZCamera) o).toString2());
 			}
+			plog(oname + " elapsed: " + calculate_elapsed(start));
 		}
 	}
 

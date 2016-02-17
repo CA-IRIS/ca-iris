@@ -209,6 +209,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		msg[msg.length - 1] = checksum;
 		os.write(msg);
+		log("wrote command bytes (string): " + new String(msg));
 	}
 
 	/** Encode a STORE request */
@@ -226,8 +227,13 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 			// NOTE: force reading of the ACK/NAK before continuing. This ensures that commands are not lost
 			// due to overloading the camera with commands on top of each other.
 			// noinspection ResultOfMethodCallIgnored
-			is.read();
-			c.setErrorStatus("");
+			int a = is.read();
+			if(a == 21) {
+				log("NAK encountered.");
+				c.setErrorStatus("NAK");
+			} else {
+				c.setErrorStatus("");
+			}
 		} catch ( IOException s ) {
 			if ( s.getMessage() == null )
 				c.setErrorStatus("Unknown IOException Error");
