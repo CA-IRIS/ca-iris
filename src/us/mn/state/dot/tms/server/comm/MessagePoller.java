@@ -451,19 +451,18 @@ abstract public class MessagePoller<T extends ControllerProperty>
 				oc.cleanup();
 			}
 		} else if(oc.getPriority().ordinal() == op.getPriority().ordinal()) {
-			if(PRIO_LOG.isOpen()) {
-				PRIO_LOG.log("BUMPING " + op + " from " +
-					op.getPriority() + " to " +
-					PriorityLevel.URGENT);
-			}
-			if(op.getPriority() != PriorityLevel.URGENT)
-				op.setPriority(PriorityLevel.URGENT);
-
 			// If, for some crazy reason, the operation is
 			// not on our queue, it will not be requeued.
 			if(!requeueOperation(oc)) {
 				oc.setFailed();
 				oc.cleanup();
+			} else {
+				if(PRIO_LOG.isOpen()) {
+					PRIO_LOG.log("BUMPING " + op + " from " +
+							op.getPriority() + " to " +
+							PriorityLevel.URGENT);
+				}
+				op.setPriority(PriorityLevel.URGENT);
 			}
 		}
 	}
