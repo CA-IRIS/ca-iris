@@ -209,9 +209,21 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 
 		msg[msg.length - 1] = checksum;
 		os.write(msg);
-		log("wrote command bytes (string): " + new String(msg));
+		log("wrote command bytes (string): " + ba2hex(msg));
 	}
 
+	private static String ba2hex(byte[] msg) {
+		StringBuilder rv = new StringBuilder();
+		for(byte b : msg) {
+			if ((int)b <= 20) {
+				rv.append("x").append(String.format("%02X", b));
+			} else {
+				rv.append((char)b);
+			}
+			rv.append(" ");
+		}
+		return rv.toString();
+	}
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)

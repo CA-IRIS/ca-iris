@@ -371,13 +371,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	private void doPoll(final Operation<T> o) throws IOException {
 		final String oname = o.toString();
 		final long start = TimeSteward.currentTimeMillis();
+		boolean error = true;
 		try {
 			if(o instanceof OpPTZCamera) {
-				plog("polling PTZ start: " + ((OpPTZCamera) o).toString2());
+				plog("attempting polling PTZ start: " + ((OpPTZCamera) o).toString2());
 			}
 			synchronized (messenger) {
 				o.poll(createMessage(o));
 			}
+			error = false;
 		}
 		catch(DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
@@ -420,7 +422,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		finally {
 			if(o.isDone() || !requeueOperation(o))
 				o.cleanup();
-			if(o instanceof OpPTZCamera) {
+			if(!error && o instanceof OpPTZCamera) {
 				plog("polled PTZ complete: " + ((OpPTZCamera) o).toString2());
 			}
 			plog(oname + " elapsed: " + calculate_elapsed(start));
@@ -433,6 +435,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		DeviceContentionException e)
 	{
 		Operation<T> oc = e.operation;
+		PRIO_LOG.log("Contention with " + op + " (" + op.getPriority().ordinal()
+			+ ").  Impeded by " + oc + " (" + oc.getPriority().ordinal() + ").");
 		if(oc.getPriority().ordinal() > op.getPriority().ordinal()) {
 			if(PRIO_LOG.isOpen()) {
 				PRIO_LOG.log("BUMPING " + oc + " from " +
@@ -440,6 +444,21 @@ abstract public class MessagePoller<T extends ControllerProperty>
 					op.getPriority());
 			}
 			oc.setPriority(op.getPriority());
+			// If, for some crazy reason, the operation is
+			// not on our queue, it will not be requeued.
+			if(!requeueOperation(oc)) {
+				oc.setFailed();
+				oc.cleanup();
+			}
+		} else if(oc.getPriority().ordinal() == op.getPriority().ordinal()) {
+			if(PRIO_LOG.isOpen()) {
+				PRIO_LOG.log("BUMPING " + op + " from " +
+					op.getPriority() + " to " +
+					PriorityLevel.URGENT);
+			}
+			if(op.getPriority() != PriorityLevel.URGENT)
+				op.setPriority(PriorityLevel.URGENT);
+
 			// If, for some crazy reason, the operation is
 			// not on our queue, it will not be requeued.
 			if(!requeueOperation(oc)) {
