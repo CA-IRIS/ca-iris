@@ -65,19 +65,23 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	 * @param m the Messenger
 	 */
 	public CohuPTZPoller(String n, Messenger m) {
+
 		super(n, m);
+
 		log("CohuPTZPoller instantiated.");
 		CommLink cl = CommLinkHelper.lookup(n);
+
 		if (cl == null) {
 			log("Failed to find CommLink.");
 			return;
 		}
+
 		int to = cl.getTimeout();
+
 		try {
 			m.setTimeout(to);
 			log("Set Messenger timeout to " + to + ".");
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			log("Failed to set Messenger timeout.");
 		}
 	}
@@ -91,14 +95,21 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 	/** Send a "PTZ camera move" command */
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		// compareFloats does a "proper" comparing of values
-		boolean do_pan = NumericAlphaComparator.compareFloats(p, curPan, CohuPTZProperty.PTZ_THRESH) != 0;
-		boolean do_tilt = NumericAlphaComparator.compareFloats(t, curTilt, CohuPTZProperty.PTZ_THRESH) != 0;
-		boolean do_zoom = NumericAlphaComparator.compareFloats(z, curZoom, CohuPTZProperty.PTZ_THRESH) != 0;
 
-		boolean stop_pan = NumericAlphaComparator.compareFloats(p, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
-		boolean stop_tilt = NumericAlphaComparator.compareFloats(t, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
-		boolean stop_zoom = NumericAlphaComparator.compareFloats(z, 0F, CohuPTZProperty.PTZ_THRESH) == 0;
+		// compareFloats does a "proper" comparing of values
+		boolean do_pan = NumericAlphaComparator.compareFloats(p,
+			curPan, CohuPTZProperty.PTZ_THRESH) != 0;
+		boolean do_tilt = NumericAlphaComparator.compareFloats(t,
+			curTilt, CohuPTZProperty.PTZ_THRESH) != 0;
+		boolean do_zoom = NumericAlphaComparator.compareFloats(z,
+			curZoom, CohuPTZProperty.PTZ_THRESH) != 0;
+
+		boolean stop_pan = NumericAlphaComparator.compareFloats(p, 0F,
+			CohuPTZProperty.PTZ_THRESH) == 0;
+		boolean stop_tilt = NumericAlphaComparator.compareFloats(t, 0F,
+			CohuPTZProperty.PTZ_THRESH) == 0;
+		boolean stop_zoom = NumericAlphaComparator.compareFloats(z, 0F,
+			CohuPTZProperty.PTZ_THRESH) == 0;
 
 		boolean full_stop = stop_pan && stop_tilt && stop_zoom;
 
@@ -109,23 +120,20 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		Float zoom = null;
 
 		log(new StringBuilder().append("curPan=").append(curPan)
-		                       .append(" arg p=").append(p)
-		                       .append(" prep pan=")
-		                       .append(pan).append(" do_pan=")
-		                       .append(do_pan)
-		                       .toString());
+			.append(" arg p=").append(p)
+			.append(" prep pan=").append(pan)
+			.append(" do_pan=").append(do_pan)
+			.toString());
 		log(new StringBuilder().append("curTilt=").append(curTilt)
-		                       .append(" arg t=").append(t)
-		                       .append(" prep tilt=")
-		                       .append(tilt).append(" do_tilt=")
-		                       .append(do_tilt)
-		                       .toString());
+			.append(" arg t=").append(t)
+			.append(" prep tilt=").append(tilt)
+			.append(" do_tilt=").append(do_tilt)
+			.toString());
 		log(new StringBuilder().append("curZoom=").append(curZoom)
-		                       .append(" arg z=").append(z)
-		                       .append(" prep zoom=")
-		                       .append(zoom).append(" do_zoom=")
-		                       .append(do_zoom)
-		                       .toString());
+			.append(" arg z=").append(z)
+			.append(" prep zoom=").append(zoom)
+			.append(" do_zoom=").append(do_zoom)
+			.toString());
 
 		if (do_pan) {
 			curPan = p;
@@ -151,11 +159,11 @@ public class CohuPTZPoller extends MessagePoller implements CameraPoller {
 		}
 
 		log(new StringBuilder().append("sending pan=").append(pan)
-		                       .toString());
+			.toString());
 		log(new StringBuilder().append("sending tilt=").append(tilt)
-		                       .toString());
+			.toString());
 		log(new StringBuilder().append("sending zoom=").append(zoom)
-		                       .toString());
+			.toString());
 
 		addOperation(new OpPTZCamera(c, this, pan, tilt, zoom));
 	}

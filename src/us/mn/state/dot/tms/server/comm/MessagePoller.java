@@ -25,6 +25,7 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
+import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
 import us.mn.state.dot.tms.units.*;
 
 /**
@@ -369,62 +370,62 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Perform one poll for an operation */
 	private void doPoll(final Operation<T> o) throws IOException {
+
 		final String oname = o.toString();
 		final long start = TimeSteward.currentTimeMillis();
 		boolean error = true;
+
 		try {
-			if(o instanceof OpPTZCamera) {
-				plog("attempting polling PTZ start: " + ((OpPTZCamera) o).toString2());
-			}
+			if (o instanceof OpPTZCamera)
+				plog("attempting polling PTZ start: "
+					+ ((OpPTZCamera) o).toString2());
+
+
 			synchronized (messenger) {
 				o.poll(createMessage(o));
 			}
+
 			error = false;
-		}
-		catch(DeviceContentionException e) {
+		} catch (DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);
-		}
-		catch(DownloadRequestException e) {
+		} catch (DownloadRequestException e) {
 			plog("ERROR: DownloadRequestException.");
 			if (o instanceof OpController)
-				download(((OpController<T>)o).getController(),
-				((OpController<T>)o).getPriority());
-		}
-		catch(ChecksumException e) {
+				download(((OpController<T>) o).getController(),
+					((OpController<T>) o).getPriority());
+		} catch (ChecksumException e) {
 			plog("ERROR: ChecksumException, draining queue.");
 			o.handleCommError(EventType.CHECKSUM_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
-		}
-		catch(ParsingException e) {
+		} catch (ParsingException e) {
 			plog("ERROR: ParsingException, draining queue.");
 			o.handleCommError(EventType.PARSING_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
-		}
-		catch(ControllerException e) {
+		} catch (ControllerException e) {
 			plog("ERROR: ControllerException.");
 			if (o instanceof OpController) {
-				((OpController<T>)o).handleCommError(
+				((OpController<T>) o).handleCommError(
 					EventType.CONTROLLER_ERROR,
 					exceptionMessage(e));
-				((OpController<T>)o).setFailed();
-				((OpController<T>)o).setMaintStatus(
+				((OpController<T>) o).setFailed();
+				((OpController<T>) o).setMaintStatus(
 					exceptionMessage(e));
 			}
-		}
-		catch(SocketTimeoutException e) {
+		} catch (SocketTimeoutException e) {
 			plog("ERROR: SocketTimeoutException.");
 			o.handleCommError(EventType.POLL_TIMEOUT_ERROR,
 				exceptionMessage(e));
-		}
-		finally {
-			if(o.isDone() || !requeueOperation(o))
+		} finally {
+			if (o.isDone() || !requeueOperation(o))
 				o.cleanup();
-			if(!error && o instanceof OpPTZCamera) {
-				plog("polled PTZ complete: " + ((OpPTZCamera) o).toString2());
-			}
+
+			if (!error && o instanceof OpPTZCamera)
+				plog("polled PTZ complete: "
+					+ ((OpPTZCamera) o).toString2());
+
 			plog(oname + " elapsed: " + calculate_elapsed(start));
 		}
 	}
@@ -432,34 +433,39 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Handle device contention.  Another operation has the device lock.
 	 * Ensure that we don't have a priority inversion problem. */
 	private void handleContention(Operation<T> op,
-		DeviceContentionException e)
-	{
+		DeviceContentionException e) {
 		Operation<T> oc = e.operation;
-		PRIO_LOG.log("Contention with " + op + " (" + op.getPriority().ordinal()
-			+ ").  Impeded by " + oc + " (" + oc.getPriority().ordinal() + ").");
-		if(oc.getPriority().ordinal() > op.getPriority().ordinal()) {
-			if(PRIO_LOG.isOpen()) {
+		PRIO_LOG.log("Contention with " + op + " (" + op.getPriority()
+			.ordinal()
+			+ ").  Impeded by " + oc + " (" + oc.getPriority()
+			.ordinal() + ").");
+		if (oc.getPriority().ordinal() > op.getPriority().ordinal()) {
+			if (PRIO_LOG.isOpen()) {
 				PRIO_LOG.log("BUMPING " + oc + " from " +
 					oc.getPriority() + " to " +
 					op.getPriority());
 			}
 			oc.setPriority(op.getPriority());
+
 			// If, for some crazy reason, the operation is
 			// not on our queue, it will not be requeued.
-			if(!requeueOperation(oc)) {
+			if (!requeueOperation(oc)) {
 				oc.setFailed();
 				oc.cleanup();
 			}
-		} else if(oc.getPriority().ordinal() == op.getPriority().ordinal()) {
+		} else if (oc.getPriority().ordinal() == op.getPriority()
+			.ordinal()) {
 			// If, for some crazy reason, the operation is
 			// not on our queue, it will not be requeued.
-			if(!requeueOperation(oc)) {
+			if (!requeueOperation(oc)) {
 				oc.setFailed();
 				oc.cleanup();
 			} else {
-				if(PRIO_LOG.isOpen()) {
-					PRIO_LOG.log("BUMPING " + op + " from " +
-							op.getPriority() + " to " +
+				if (PRIO_LOG.isOpen()) {
+					PRIO_LOG.log(
+						"BUMPING " + op + " from " +
+							op.getPriority()
+							+ " to " +
 							PriorityLevel.URGENT);
 				}
 				op.setPriority(PriorityLevel.URGENT);

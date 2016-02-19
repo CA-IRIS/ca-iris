@@ -20,12 +20,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.Float;
 
-import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.DeviceContentionException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Cohu PTZ operation to pan/tilt/zoom a camera.
@@ -52,11 +52,8 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** zoom vector */
 	protected final Float zoom;
 
-	/** convenience value for the CAMERA_PTZ_FORCE_FULL setting */
-	private final boolean force_full;
-
-	/** convenience value for the CAMERA_PTZ_FIXED_SPEED setting */
-	private final boolean fixed_speed;
+	/** to evaluate whether to include zoom in full property/phase */
+	private final boolean stop_zoom;
 
 	/** so queued operations aren't dropped for being supposed duplicates */
 	private final long created;
@@ -77,29 +74,27 @@ public class OpPTZCamera extends OpCohuPTZ {
 		tilt = t;
 		zoom = z;
 
-		force_full = true;
-		fixed_speed = false;
+		stop_zoom = NumericAlphaComparator.compareFloats(z, 0F,
+			CohuPTZProperty.PTZ_THRESH) == 0;
 
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
-			p==null?"?":p.toString(), t==null?"?":t.toString(),
-			z==null?"?":z.toString()));
-
+			p == null ? "null" : p.toString(),
+			t == null ? "null" : t.toString(),
+			z == null ? "null" : z.toString()));
 	}
 
 	/** Begin the operation. */
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
-		if(force_full || fixed_speed)
-			return new PTZFullPhase();
-
-		return new PanPhase();
+		return new PTZFullPhase();
 	}
 
 	/**
 	 * ptz full command phase
 	 */
 	protected class PTZFullPhase extends Phase<CohuPTZProperty> {
+
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
 			throws IOException, DeviceContentionException {
@@ -113,7 +108,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 			}
 
 			// zoom has to be handled separate w/ variable speed
-			if(!fixed_speed)
+			if(!stop_zoom)
 				return new ZoomPhase();
 
 			return null;
@@ -182,7 +177,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 		@Override
 		public String toString() {
-			return "OpPTZCamera$ZoomPhase: z=" + zoom;
+			return getClass().getSimpleName() + ": z=" + zoom;
 		}
 	}
 
@@ -202,8 +197,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 			cmd = processPTZInfo(Command.TILT, tilt, cmd);
 
 			// zoom can't be added with variable speeds
+			// but it can be added so long as it is a stop command
 			// see PTZFullPhase
-			if(fixed_speed)
+			if(stop_zoom)
 				cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
 
 			writePayload(os, c.getDrop(), cmd);
@@ -238,7 +234,8 @@ public class OpPTZCamera extends OpCohuPTZ {
 	}
 
 	public String toString2() {
-		return "OpPTZCamera: p=" + pan + " t=" + tilt + " z=" + zoom;
+		return getClass().getSimpleName() + ": p=" + pan + " t=" + tilt
+			+ " z=" + zoom;
 	}
 
 }
