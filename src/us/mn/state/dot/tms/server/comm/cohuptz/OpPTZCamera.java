@@ -52,6 +52,21 @@ public class OpPTZCamera extends OpCohuPTZ {
 	/** zoom vector */
 	protected final Float zoom;
 
+	/**
+	 * Debugging only.
+	 * Utilize fixed speed commands?  Should be false for production.
+	 */
+	protected static boolean use_fixed_speed = false;
+
+	/**
+	 * Debugging only.
+	 * Use combined commands
+	 * true --  PTZ commands all going in same packet and queue item
+	 * false -- PTZ commands each going in separate packet and queue
+	 *          item. this is the original MN behavior
+	 */
+	protected static final boolean use_combined_commands = true;
+
 	/** to evaluate whether to include zoom in full property/phase */
 	private final boolean stop_zoom;
 
@@ -74,8 +89,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 		tilt = t;
 		zoom = z;
 
-		stop_zoom = NumericAlphaComparator.compareFloats(z, 0F,
-			CohuPTZProperty.PTZ_THRESH) == 0;
+		stop_zoom = use_fixed_speed ||
+			NumericAlphaComparator.compareFloats(z, 0F,
+				CohuPTZProperty.PTZ_THRESH) == 0F;
 
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p == null ? "null" : p.toString(),
@@ -87,7 +103,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 	@Override
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
-		return new PTZFullPhase();
+		if(use_combined_commands)
+			return new PTZFullPhase();
+		return  new PanPhase();
 	}
 
 	/**

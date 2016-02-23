@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
@@ -241,22 +240,29 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 			// noinspection ResultOfMethodCallIgnored
 			int a = is.read();
 			if(a == 21) {
-				log("NAK encountered.");
+				log("ERROR:  NAK encountered.");
 				c.setErrorStatus("NAK");
 			} else {
+				log("ACK received.");
 				c.setErrorStatus("");
 			}
 		} catch ( IOException s ) {
-			if ( s.getMessage() == null )
+			if ( s.getMessage() == null ) {
+				log("Unknown IOException Error");
 				c.setErrorStatus("Unknown IOException Error");
-			else if ( s.getMessage().equals( "Connection attempt timed out" ) )
+			} else if ( s.getMessage().equals( "Connection attempt timed out" ) ) {
+				log("Exceeded Read Timeout");
 				c.setErrorStatus("Exceeded Read Timeout");
-			else if ( s.getMessage().equals( "Connection refused: connect" ) )
+			} else if ( s.getMessage().equals( "Connection refused: connect" ) ) {
+				log("Field Site Blocked Connection Attempt");
 				c.setErrorStatus("Field Site Blocked Connection Attempt");
-			else if ( s.getMessage().equals( "No route to host: connect" ) )
+			} else if ( s.getMessage().equals( "No route to host: connect" ) ) {
+				log("Network Problem With This Computer");
 				c.setErrorStatus("Network Problem With This Computer");
-			else
+			} else {
+				log(s.getMessage());
 				c.setErrorStatus(s.getMessage());
+			}
 		}
 	}
 
@@ -303,12 +309,12 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		rv.addAll(ba2l(carr));
 
 		// assign nulls to 0;
-		float v = (vF == null) ? 0f : vF;
+		float v = (vF == null) ? 0F : vF;
 
 		// determine direction
-		int dir = NumericAlphaComparator.compareFloats(v, 0f, PTZ_THRESH);
+		int dir = NumericAlphaComparator.compareFloats(v, 0F, PTZ_THRESH);
 
-		boolean stopping = (dir == 0);
+		boolean fixed = OpPTZCamera.use_fixed_speed || (dir == 0);
 		boolean posDir = (dir > 0);
 
 		boolean fixed = (fixed_speed || stopping);
@@ -358,7 +364,7 @@ abstract public class CohuPTZProperty extends ControllerProperty {
 		}
 
 		// if stopping, just add a stop and exit
-		if(stopping) {
+		if(fixed) {
 			rv.add(faStop);
 			return l2ba(rv);
 		}

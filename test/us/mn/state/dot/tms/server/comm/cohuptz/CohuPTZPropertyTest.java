@@ -18,8 +18,6 @@ import junit.framework.TestCase;
 
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZProperty.Command;
 
-import java.io.UnsupportedEncodingException;
-
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -39,7 +37,7 @@ public class CohuPTZPropertyTest extends TestCase {
 		byte[] cmd;
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = true;
+		OpPTZCamera.use_fixed_speed = true;
 
 		cmd = new byte[]{};
 		exp = new byte[]{(byte) 'P', (byte) 'S', (byte) 'T', (byte) 'S',
@@ -68,7 +66,7 @@ public class CohuPTZPropertyTest extends TestCase {
 		log(cmd);
 		assertArrayEquals(exp, cmd);
 
-		CohuPTZProperty.fixed_speed = false;
+		OpPTZCamera.use_fixed_speed = false;
 		cmd = new byte[]{};
 		exp = new byte[]{(byte) 'P', (byte) 'S', (byte) 'T', (byte) 'S',
 			(byte) 'c', (byte) 'Z', (byte) '1'};
@@ -82,7 +80,7 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testPanFixed() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = true;
+		OpPTZCamera.use_fixed_speed = true;
 		Command c = Command.PAN;
 
 		exp = new byte[]{(byte) 'P', (byte) 'S'};
@@ -104,7 +102,7 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testTiltFixed() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = true;
+		OpPTZCamera.use_fixed_speed = true;
 		Command c = Command.TILT;
 
 		exp = new byte[]{(byte) 'T', (byte) 'S'};
@@ -127,7 +125,7 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testZoomFixed() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = true;
+		OpPTZCamera.use_fixed_speed = true;
 		Command c = Command.ZOOM;
 
 		exp = new byte[]{(byte) 'Z', (byte) 'S'};
@@ -150,7 +148,6 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testPanVariable() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = false;
 		Command c = Command.PAN;
 
 		exp = new byte[]{(byte) 'P', (byte) 'S'};
@@ -172,7 +169,6 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testTiltVariable() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = false;
 		Command c = Command.TILT;
 
 		exp = new byte[]{(byte) 'T', (byte) 'S'};
@@ -194,7 +190,6 @@ public class CohuPTZPropertyTest extends TestCase {
 	public void testZoomVariable() {
 		byte[] exp;
 
-		CohuPTZProperty.fixed_speed = false;
 		Command c = Command.ZOOM;
 
 		exp = new byte[]{(byte) 'Z', (byte) 'S'};
