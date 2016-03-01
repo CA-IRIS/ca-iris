@@ -62,6 +62,7 @@ import us.mn.state.dot.tms.client.detector.DetCache;
 import us.mn.state.dot.tms.client.dms.DmsCache;
 import us.mn.state.dot.tms.client.lcs.LcsCache;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
+import us.mn.state.dot.tms.client.weather.WeatherSensorCache;
 
 /**
  * Holds the state of the SONAR client
@@ -265,6 +266,16 @@ public class SonarState extends Client {
 		return weather_sensors;
 	}
 
+	/**
+	 * weather sensor cache for tab...
+	 * FIXME: probably not needed or the first is not needed now... figure out later
+	 */
+	private final WeatherSensorCache weatherSensorCache;
+
+	public WeatherSensorCache getWeatherSensorCache() {
+		return weatherSensorCache;
+	}
+
 	/** Cache of tag readers */
 	private final TypeCache<TagReader> tag_readers =
 		new TypeCache<TagReader>(TagReader.class, this);
@@ -447,6 +458,7 @@ public class SonarState extends Client {
 		det_cache = new DetCache(this);
 		dms_cache = new DmsCache(this);
 		lcs_cache = new LcsCache(this);
+		weatherSensorCache = new WeatherSensorCache(this);
 		gate_arm_array_model = new ProxyListModel<GateArmArray>(
 			gate_arm_arrays);
 		gate_arm_array_model.initialize();
@@ -539,6 +551,7 @@ public class SonarState extends Client {
 			weather_sensors.ignoreAttribute("operation");
 			weather_sensors.ignoreAttribute("stamp");
 		}
+		weatherSensorCache.populate(this);
 		populateReadable(tag_readers);
 		if (canRead(TagReader.SONAR_TYPE))
 			tag_readers.ignoreAttribute("operation");

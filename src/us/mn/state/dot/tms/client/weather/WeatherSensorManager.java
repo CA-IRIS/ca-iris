@@ -28,6 +28,7 @@ import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
+import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
@@ -52,7 +53,8 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
-		super(s, lm);
+
+		super(s, lm, ItemStyle.ALL);
 	}
 
 	/** Get the sonar type name */
@@ -71,6 +73,13 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	protected Shape getShape(AffineTransform at) {
 		return MARKER.createTransformedShape(at);
+	}
+
+	/** Create a map tab for the managed proxies */
+	@Override
+	public WeatherSensorTab createTab() {
+
+		return new WeatherSensorTab(session, this);
 	}
 
 	/** Create a theme for weather sensors */
@@ -102,9 +111,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		public void proxyAdded(WeatherSensor proxy) {}
 		public void enumerationComplete() {}
 		public void proxyRemoved(WeatherSensor proxy) {}
-		public void proxyChanged(final WeatherSensor proxy, final
-			String a)
-		{
+		public void proxyChanged(final WeatherSensor proxy, final String a) {
 			runSwing(new Runnable() {
 					public void run() {
 						proxyChangedSwing(proxy, a);
@@ -184,34 +191,34 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return new WeatherSensorProperties(session, proxy);
 	}
 
-	/** Create a popup menu for the selected proxy object(s) */
-	@Override
-	protected JPopupMenu createPopup() {
-		int n_selected = s_model.getSelectedCount();
-		if(n_selected < 1)
-			return null;
-		if(n_selected == 1) {
-			for(WeatherSensor ws: s_model.getSelected())
-				return createSinglePopup(ws);
-		}
-		JPopupMenu p = new JPopupMenu();
-		p.add(new JLabel("" + n_selected + " Weather Sensors"));
-		p.addSeparator();
-		return p;
-	}
+//	/** Create a popup menu for the selected proxy object(s) */
+//	@Override
+//	protected JPopupMenu createPopup() {
+//		int n_selected = s_model.getSelectedCount();
+//		if(n_selected < 1)
+//			return null;
+//		if(n_selected == 1) {
+//			for(WeatherSensor ws: s_model.getSelected())
+//				return createSinglePopup(ws);
+//		}
+//		JPopupMenu p = new JPopupMenu();
+//		p.add(new JLabel("" + n_selected + " Weather Sensors"));
+//		p.addSeparator();
+//		return p;
+//	}
 
-	/** Create a popup menu for a single proxy selection */
-	private JPopupMenu createSinglePopup(WeatherSensor proxy) {
-		JPopupMenu p = new JPopupMenu();
-		p.add(makeMenuLabel(getDescription(proxy)));
-		p.addSeparator();
-		p.add(new PropertiesAction<WeatherSensor>(this, proxy) {
-			protected void do_perform() {
-				showPropertiesForm();
-			}
-		});
-		return p;
-	}
+//	/** Create a popup menu for a single proxy selection */
+//	private JPopupMenu createSinglePopup(WeatherSensor proxy) {
+//		JPopupMenu p = new JPopupMenu();
+//		p.add(makeMenuLabel(getDescription(proxy)));
+//		p.addSeparator();
+//		p.add(new PropertiesAction<WeatherSensor>(this, proxy) {
+//			protected void do_perform() {
+//				showPropertiesForm();
+//			}
+//		});
+//		return p;
+//	}
 
 	/** Find the map geo location for a proxy */
 	@Override

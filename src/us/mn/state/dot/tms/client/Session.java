@@ -139,6 +139,14 @@ public class Session {
 		return lcs_array_manager;
 	}
 
+	/** weather sensor manager */
+	private final WeatherSensorManager ws_manager;
+
+	/** get the weather sensor manager */
+	public WeatherSensorManager getWeatherSensorManager() {
+		return ws_manager;
+	}
+
 	/** Mapping of all tabs */
 	private final HashMap<String, MapTab> all_tabs =
 		new HashMap<String, MapTab>();
@@ -165,6 +173,7 @@ public class Session {
 		cam_manager = new CameraManager(this, loc_manager);
 		dms_manager = new DMSManager(this, loc_manager);
 		lcs_array_manager = new LCSArrayManager(this, loc_manager);
+		ws_manager = new WeatherSensorManager(this, loc_manager);
 		managers = new LinkedList<ProxyManager<?>>();
 		managers.add(r_node_manager);
 		managers.add(new ControllerManager(this, loc_manager));
@@ -176,7 +185,7 @@ public class Session {
 		managers.add(new LCSIManager(this, loc_manager));
 		managers.add(new LaneMarkingManager(this,loc_manager));
 		managers.add(new BeaconManager(this, loc_manager));
-		managers.add(new WeatherSensorManager(this, loc_manager));
+		managers.add(ws_manager);
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
@@ -238,7 +247,8 @@ public class Session {
 		return all_tabs.get(tid);
 	}
 
-	/** Create the layer states.  The map bean and model must be seperate
+	/**
+	 * Create the layer states.  The map bean and model must be separate
 	 * parameters so that the model can be built before calling setModel
 	 * on the map bean.
 	 * @param mb Map bean to render the layer states.
