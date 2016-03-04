@@ -13,12 +13,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.client.weather;
+package us.mn.state.dot.tms.client.weather.heatmap;
 
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.StyleSummary;
+import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 
 import java.awt.*;
 
@@ -27,15 +28,15 @@ import java.awt.*;
  *
  * @author Jacob Barde
  */
-public class WeatherSensorTab extends MapTab<WeatherSensor> {
+public class WeatherHeatmapTab extends MapTab<WeatherSensor> {
 
-	private final WeatherSensorDispatcher dispatcher;
+	private final WeatherHeatmapDispatcher dispatcher;
 
 	private final StyleSummary<WeatherSensor> summary;
 
-	public WeatherSensorTab(Session session, WeatherSensorManager man) {
+	public WeatherHeatmapTab(Session session, WeatherSensorManager man) {
 		super(man);
-		dispatcher = new WeatherSensorDispatcher(session, man);
+		dispatcher = new WeatherHeatmapDispatcher(session, man);
 		summary = man.createStyleSummary();
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
@@ -45,7 +46,7 @@ public class WeatherSensorTab extends MapTab<WeatherSensor> {
 	@Override
 	public String getTabId() {
 
-		return "weather_sensor";
+		return "weather_heatmap";
 	}
 
 	/** Initialize the map tab */

@@ -13,8 +13,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.client.weather;
+package us.mn.state.dot.tms.client.weather.heatmap;
 
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.GeoLocHelper;
@@ -23,6 +24,7 @@ import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
+import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 import us.mn.state.dot.tms.client.widget.IPanel;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -37,7 +39,7 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  *
  * @author Jacob Barde
  */
-public class WeatherSensorDispatcher extends JPanel {
+public class WeatherHeatmapDispatcher extends JPanel {
 
 	/** User session */
 	private final Session session;
@@ -70,21 +72,21 @@ public class WeatherSensorDispatcher extends JPanel {
 			public void enumerationComplete() {}
 			public void proxyRemoved(WeatherSensor proxy) {}
 			public void proxyChanged(WeatherSensor proxy, String a) {
-//				if (proxy != selected)
-//					return;
-//				if ((a == null) || ("opStatus".equals(a))) {
-//					final String stat = proxy.getOpStatus();
-//					runSwing(new Runnable() {
-//						public void run() {
-//							updateOpStatus(stat);
-//						}
-//					});
-//				}
+				if (proxy != selected)
+					return;
+				if ((a == null) || ("opStatus".equals(a))) {
+					final String stat = proxy.getOpStatus();
+					runSwing(new Runnable() {
+						public void run() {
+							updateOpStatus(stat);
+						}
+					});
+				}
 			}
 		};
 
 	/** WeatherSensor list model */
-	private final ProxyListModel<WeatherSensor> model;
+//	private final ProxyListModel<WeatherSensor> model;
 
 	/** WeatherSensor name label */
 	private final JLabel name_lbl = IPanel.createValueLabel();
@@ -102,14 +104,14 @@ public class WeatherSensorDispatcher extends JPanel {
 	private WeatherSensor selected = null;
 
 
-	public WeatherSensorDispatcher(Session s, WeatherSensorManager man) {
+	public WeatherHeatmapDispatcher(Session s, WeatherSensorManager man) {
 
 		session = s;
 		manager = man;
 		client_props = session.getProperties();
 		setLayout(new BorderLayout());
 		sel_model = manager.getSelectionModel();
-		model = session.getSonarState().getWeatherSensorCache().getWeatherSensorModel();
+		//model = session.getSonarState().getWeatherSensorCache().getWeatherSensorModel();
 		cache = session.getSonarState().getWeatherSensors();
 		info_pnl = createInfoPanel();
 	}
@@ -173,4 +175,18 @@ public class WeatherSensorDispatcher extends JPanel {
 
 		return p;
 	}
+
+	/**
+	 * Update the Op Status field.  The resulting field will contain the
+	 * status string and a current timestamp.
+	 * @param stat the status string
+	 */
+	private void updateOpStatus(String stat) {
+		String s = "";
+		if ((stat != null) && (!(stat.equals(""))))
+			s += stat + ", "
+				+ TimeSteward.currentDateTimeString(true);
+		op_status_lbl.setText(s);
+	}
+
 }

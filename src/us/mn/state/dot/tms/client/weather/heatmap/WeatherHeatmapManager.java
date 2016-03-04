@@ -13,13 +13,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.client.weather;
+package us.mn.state.dot.tms.client.weather.heatmap;
 
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.util.Iterator;
-import javax.swing.JLabel;
-import javax.swing.JPopupMenu;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
@@ -35,6 +30,17 @@ import us.mn.state.dot.tms.client.proxy.PropertiesAction;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
+import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
+import us.mn.state.dot.tms.client.weather.WeatherSensorMarker;
+import us.mn.state.dot.tms.client.weather.WeatherSensorProperties;
+import us.mn.state.dot.tms.client.weather.WeatherSensorTheme;
+
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.util.Iterator;
+
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
@@ -44,14 +50,15 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  * @author Michael Darter
  * @author Travis Swanston
  */
-public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
+public class WeatherHeatmapManager extends WeatherSensorManager {
 
 	/** Lane marking map object marker */
 	static protected final WeatherSensorMarker MARKER =
 		new WeatherSensorMarker();
 
 	/** Create a new weather sensor manager */
-	public WeatherSensorManager(Session s, GeoLocManager lm) {
+	public WeatherHeatmapManager(Session s, GeoLocManager lm) {
+
 		super(s, lm);
 	}
 
@@ -71,6 +78,13 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	protected Shape getShape(AffineTransform at) {
 		return MARKER.createTransformedShape(at);
+	}
+
+	/** Create a map tab for the managed proxies */
+	@Override
+	public WeatherHeatmapTab createTab() {
+
+		return new WeatherHeatmapTab(session, this);
 	}
 
 	/** Create a theme for weather sensors */

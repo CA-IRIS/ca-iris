@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.client.weather;
+package us.mn.state.dot.tms.client.weather.heatmap;
 
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.WeatherSensor;
@@ -27,7 +27,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyListModel;
  *
  * FIXME: Is this necessary?  Seems redundant... investigate later
  */
-public class WeatherSensorCache {
+public class WeatherHeatmapCache {
 
 	/** Cache of weatherSensors */
 	protected final TypeCache<WeatherSensor> weatherSensors;
@@ -46,7 +46,7 @@ public class WeatherSensorCache {
 	}
 
 	/** Create a new camera cache */
-	public WeatherSensorCache(SonarState client) throws IllegalAccessException, NoSuchFieldException {
+	public WeatherHeatmapCache(SonarState client) throws IllegalAccessException, NoSuchFieldException {
 		weatherSensors = new TypeCache<WeatherSensor>(WeatherSensor.class, client);
 		ws_model = new ProxyListModel<WeatherSensor>(weatherSensors);
 		ws_model.initialize();
