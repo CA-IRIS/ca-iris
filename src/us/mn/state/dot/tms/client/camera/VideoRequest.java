@@ -23,6 +23,7 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.StreamType;
+import us.mn.state.dot.tms.utils.HttpUtil;
 import us.mn.state.dot.tms.utils.URIUtils;
 
 /**
@@ -238,10 +239,20 @@ public class VideoRequest {
 		      : et.direct_stream;
 	}
 
-	/** Check if stream type is MJPEG.
+	/** Check if stream type is (M)JPEG.
 	 * @param c Camera.
-	 * @return true if stream type is motion JPEG. */
+	 * @return true if stream type is (M)JPEG. */
 	public boolean hasMJPEG(Camera c) {
-		return (c != null) && (getStreamType(c) == StreamType.MJPEG);
+		if (StreamType.MJPEG == getStreamType(c))
+			return true;
+
+		EncoderType et = CameraHelper.getEncoderType(c);
+		if (EncoderType.GENERIC_URL == et) {
+			String contentType = HttpUtil.getContentType(c.getEncoder());
+			return  "image/jpeg".equals(contentType) ||
+					"video/x-motion-jpeg".equals(contentType);
+		}
+
+		return false;
 	}
 }

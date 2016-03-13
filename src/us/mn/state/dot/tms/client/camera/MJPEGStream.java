@@ -28,6 +28,8 @@ import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.StreamType;
+import us.mn.state.dot.tms.utils.HttpUtil;
+
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
@@ -35,11 +37,9 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  *
  * @author Douglas Lau
  * @author Timothy Johnson
+ * @author Dan Rossiter
  */
 public class MJPEGStream implements VideoStream {
-
-	/** Default timeout for direct URL Connections */
-	static protected final int TIMEOUT_DIRECT = 5 * 1000;
 
 	/** Label to display video stream */
 	private final JLabel screen = new JLabel();
@@ -51,7 +51,7 @@ public class MJPEGStream implements VideoStream {
 	private final Dimension size;
 
 	/** Input stream to read */
-	private final InputStream stream;
+	private InputStream stream;
 
 	/** Count of rendered frames */
 	private int n_frames = 0;
@@ -61,6 +61,12 @@ public class MJPEGStream implements VideoStream {
 
 	/** Stream error message */
 	private String error_msg = null;
+
+	/** Stream must be mocked from static snapshots */
+	private final boolean is_snapshot;
+
+	/** Anonymous thread to read video stream */
+	private final Job job;
 
 	/** Set the stream error message */
 	protected void setErrorMsg(String e) {
@@ -73,17 +79,39 @@ public class MJPEGStream implements VideoStream {
 		throws IOException
 	{
 		url = new URL(req.getUrl(c));
+		is_snapshot = "image/jpeg".equals(HttpUtil.getContentType(url));
 		size = UI.dimension(req.getSize().width, req.getSize().height);
-		stream = createInputStream();
+		job = getStreamJob();
 		s.addJob(job);
+	}
+
+	/** Gets background job to retrieving stream frames */
+	private Job getStreamJob() {
+		int iField = Calendar.MILLISECOND;
+		int i = 1;
+		if (is_snapshot) {
+			iField = Calendar.SECOND;
+			i = 30;
+		}
+
+		return new Job(iField, i) {
+			@Override
+			public void perform() {
+				if(running)
+					readStream();
+			}
+			public boolean isRepeating() {
+				return running;
+			}
+		};
 	}
 
 	/** Create an input stream from an HTTP connection */
 	protected InputStream createInputStream() throws IOException {
 		HttpURLConnection c = (HttpURLConnection)url.openConnection();
 		HttpURLConnection.setFollowRedirects(true);
-		c.setConnectTimeout(TIMEOUT_DIRECT);
-		c.setReadTimeout(TIMEOUT_DIRECT);
+		c.setConnectTimeout(HttpUtil.TIMEOUT_DIRECT);
+		c.setReadTimeout(HttpUtil.TIMEOUT_DIRECT);
 		int resp = c.getResponseCode();
 		if (resp != HttpURLConnection.HTTP_OK) {
 			throw new IOException(c.getResponseMessage());
@@ -91,27 +119,24 @@ public class MJPEGStream implements VideoStream {
 		return c.getInputStream();
 	}
 
-	/** Anonymous thread to read video stream */
-	private final Job job = new Job(Calendar.MILLISECOND, 1) {
-		public void perform() {
-			if(running)
-				readStream();
-		}
-		public boolean isRepeating() {
-			return running;
-		}
-	};
-
 	/** Read a video stream */
 	private void readStream() {
 		try {
+			if (null == stream)
+				stream = createInputStream();
 			byte[] idata = getImage();
 			screen.setIcon(createIcon(idata));
-		}
-		catch(IOException e) {
+		} catch(IOException e) {
 			setErrorMsg(e.getMessage());
 			screen.setIcon(null);
 			running = false;
+		} finally {
+			if (is_snapshot && null != stream) {
+				try {
+					stream.close();
+				} catch (IOException e) {}
+				stream = null;
+			}
 		}
 	}
 
@@ -208,11 +233,13 @@ public class MJPEGStream implements VideoStream {
 	/** Dispose of the video stream */
 	public void dispose() {
 		running = false;
-		try {
-			stream.close();
-		}
-		catch(IOException e) {
-			setErrorMsg(e.getMessage());
+		if (stream != null) {
+			try {
+				stream.close();
+			}
+			catch(IOException e) {
+				setErrorMsg(e.getMessage());
+			}
 		}
 		screen.setIcon(null);
 	}

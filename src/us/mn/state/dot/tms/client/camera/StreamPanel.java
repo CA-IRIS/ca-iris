@@ -394,12 +394,10 @@ public class StreamPanel extends JPanel {
 
 	/** Create a new video stream */
 	private VideoStream createStream(Camera c) throws IOException {
-		switch (video_req.getStreamType(c)) {
-		case MJPEG:
+		if (video_req.hasMJPEG(c))
 			return new MJPEGStream(STREAMER, video_req, c);
-		default:
+		else
 			throw new IOException("Unable to stream");
-		}
 	}
 
 	/** Clear the video stream */
