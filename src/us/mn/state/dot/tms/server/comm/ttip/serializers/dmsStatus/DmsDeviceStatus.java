@@ -8,12 +8,16 @@
 
 package us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus;
 
+import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.tms.DMSMessagePriority;
+import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.server.DMSImpl;
+import us.mn.state.dot.tms.server.comm.ttip.TtipPoller;
 import us.mn.state.dot.tms.server.comm.ttip.serializers.common.Head;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -52,6 +56,14 @@ public class DmsDeviceStatus {
     protected String dmsDeviceStatus;
     @XmlElement(name = "dmsCurrentMessage", required = true)
     protected DmsCurrentMessage dmsCurrentMessage;
+
+    /** Creation time */
+    private final long create_time;
+
+    /** Constructor. */
+    public DmsDeviceStatus() {
+        create_time = TimeSteward.currentTimeMillis();
+    }
 
     /**
      * Gets the value of the head property.
@@ -125,4 +137,40 @@ public class DmsDeviceStatus {
         this.dmsCurrentMessage = value;
     }
 
+    /** Check if the record is expired */
+    public boolean isExpired() {
+        long DURATION_MS = 2 * 1000;
+        return create_time + DURATION_MS < TimeSteward.currentTimeMillis();
+    }
+
+    /** Store the record. Called via OpRead. */
+    public void store(DMSImpl d) {
+        d.setOpStatus(getDmsDeviceStatus());
+        d.setMessageCurrent(createMessage(d), null);
+        TtipPoller.log("Stored DMS rec=" + this);
+    }
+
+    /** Converts parsed message into IRIS representation */
+    private SignMessage createMessage(DMSImpl dms) {
+        String NP = "[np]";
+        String NL = "[nl]";
+        String multi;
+        DmsCurrentMessage cur = getDmsCurrentMessage();
+        String p1 = cur.getPhase1Line1() + NL + cur.getPhase1Line2() + NL + cur.getPhase1Line3();
+        String p2 = cur.getPhase2Line1() + NL + cur.getPhase2Line2() + NL + cur.getPhase2Line3();
+
+        if (p1.equals(NL + NL))
+            p1 = "";
+        if (p2.equals(NL + NL))
+            p2 = "";
+
+        if (!p2.equals(""))
+            multi = p1 + NP + p2;
+        else if (!p1.equals("") && p2.equals(""))
+            multi = p1;
+        else
+            multi = "";
+
+        return dms.createMessage(multi, false, DMSMessagePriority.OTHER_SYSTEM);
+    }
 }

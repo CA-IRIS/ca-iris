@@ -49,6 +49,7 @@ import us.mn.state.dot.tms.server.comm.ss105.SS105Poller;
 import us.mn.state.dot.tms.server.comm.ss125.SS125Poller;
 import us.mn.state.dot.tms.server.comm.ssi.SsiPoller;
 import us.mn.state.dot.tms.server.comm.stc.STCPoller;
+import us.mn.state.dot.tms.server.comm.ttip.TtipDmsPoller;
 import us.mn.state.dot.tms.server.comm.urms.UrmsPoller;
 import us.mn.state.dot.tms.server.comm.viconptz.ViconPTZPoller;
 import us.mn.state.dot.tms.server.comm.wizard.WizardPoller;
@@ -59,6 +60,7 @@ import us.mn.state.dot.tms.server.comm.wizard.WizardPoller;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class DevicePollerFactory {
 
@@ -155,6 +157,8 @@ public class DevicePollerFactory {
 			return createPemsPoller();
 		case CA_RWIS:
 			return createCaRwisPoller();
+		case TTIP_DMS:
+			return createTtipDmsPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -438,5 +442,10 @@ public class DevicePollerFactory {
 	/** Create a CA RWIS poller */
 	private DevicePoller createCaRwisPoller() throws IOException {
 		return new CaRwisPoller(name, createHttpFileMessenger());
+	}
+
+	/** Create a TTIP DMS poller */
+	private DevicePoller createTtipDmsPoller() throws IOException {
+		return new TtipDmsPoller(name);
 	}
 }

@@ -8,6 +8,8 @@
 
 package us.mn.state.dot.tms.server.comm.ttip.serializers.common;
 
+import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.LocalResponseGroup;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -43,7 +45,10 @@ public class ResponseGroups<TLocalResponseGroup> {
 
     @XmlElement(name = "responseGroup", required = true)
     protected ResponseGroup responseGroup;
-    @XmlElement(name = "localResponseGroup", required = true)
+
+    // TODO: Following will not work once multiple feeds are being
+    // parsed. Need an alternative to hard-coding type.
+    @XmlElement(name = "localResponseGroup", required = true, type = LocalResponseGroup.class)
     protected TLocalResponseGroup localResponseGroup;
 
     /**
