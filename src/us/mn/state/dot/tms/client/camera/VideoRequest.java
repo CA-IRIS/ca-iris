@@ -243,6 +243,9 @@ public class VideoRequest {
 	 * @param c Camera.
 	 * @return true if stream type is (M)JPEG. */
 	public boolean hasMJPEG(Camera c) {
+		if (null == c)
+			return false;
+
 		if (StreamType.MJPEG == getStreamType(c))
 			return true;
 
