@@ -252,8 +252,9 @@ public class VideoRequest {
 		EncoderType et = CameraHelper.getEncoderType(c);
 		if (EncoderType.GENERIC_URL == et) {
 			String contentType = HttpUtil.getContentType(c.getEncoder());
-			return  "image/jpeg".equals(contentType) ||
-					"video/x-motion-jpeg".equals(contentType);
+			return  contentType != null &&
+					(contentType.equals("image/jpeg") ||
+					contentType.startsWith("multipart/x-mixed-replace"));
 		}
 
 		return false;

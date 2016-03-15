@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Calendar;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -27,6 +28,8 @@ import javax.swing.JLabel;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.CameraHelper;
+import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.StreamType;
 import us.mn.state.dot.tms.utils.HttpUtil;
 
@@ -52,6 +55,9 @@ public class MJPEGStream implements VideoStream {
 
 	/** Input stream to read */
 	private InputStream stream;
+
+	/** Length of image to be read */
+	private int content_len;
 
 	/** Count of rendered frames */
 	private int n_frames = 0;
@@ -79,10 +85,16 @@ public class MJPEGStream implements VideoStream {
 		throws IOException
 	{
 		url = new URL(req.getUrl(c));
-		is_snapshot = "image/jpeg".equals(HttpUtil.getContentType(url));
+		is_snapshot = isSnapshot(c);
 		size = UI.dimension(req.getSize().width, req.getSize().height);
 		job = getStreamJob();
 		s.addJob(job);
+	}
+
+	/** Whether we are "streaming" a static snapshot */
+	private boolean isSnapshot(Camera c) {
+		return CameraHelper.getEncoderType(c) == EncoderType.GENERIC_URL &&
+				"image/jpeg".equals(HttpUtil.getContentType(url));
 	}
 
 	/** Gets background job to retrieving stream frames */
@@ -116,6 +128,7 @@ public class MJPEGStream implements VideoStream {
 		if (resp != HttpURLConnection.HTTP_OK) {
 			throw new IOException(c.getResponseMessage());
 		}
+		content_len = getImageSize(c);
 		return c.getInputStream();
 	}
 
@@ -142,11 +155,10 @@ public class MJPEGStream implements VideoStream {
 
 	/** Get the next image in the mjpeg stream */
 	protected byte[] getImage() throws IOException {
-		int n_size = getImageSize();
-		byte[] image = new byte[n_size];
+		byte[] image = new byte[content_len];
 		int n_bytes = 0;
-		while(n_bytes < n_size) {
-			int r = stream.read(image, n_bytes, n_size - n_bytes);
+		while(n_bytes < content_len) {
+			int r = stream.read(image, n_bytes, content_len - n_bytes);
 			if(r >= 0)
 				n_bytes += r;
 			else
@@ -168,17 +180,21 @@ public class MJPEGStream implements VideoStream {
 	}
 
 	/** Get the length of the next image */
-	private int getImageSize() throws IOException {
-		for(int i = 0; i < 100; i++) {
-			String s = readLine();
-			if(s.toLowerCase().indexOf("content-length") > -1) {
-				// throw away an empty line after the
-				// content-length header
-				readLine();
-				return parseContentLength(s);
+	private int getImageSize(URLConnection c) throws IOException {
+		if (is_snapshot) {
+			return c.getContentLength();
+		} else {
+			for (int i = 0; i < 100; i++) {
+				String s = readLine();
+				if (s.toLowerCase().contains("content-length")) {
+					// throw away an empty line after the
+					// content-length header
+					readLine();
+					return parseContentLength(s);
+				}
 			}
+			throw new IOException("Missing content-length");
 		}
-		throw new IOException("Missing content-length");
 	}
 
 	/** Parse the content-length header */
