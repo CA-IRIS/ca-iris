@@ -18,6 +18,7 @@ import us.mn.state.dot.tms.server.comm.ttip.serializers.common.Head;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -58,6 +59,7 @@ public class DmsDeviceStatus {
     protected DmsCurrentMessage dmsCurrentMessage;
 
     /** Creation time */
+    @XmlTransient
     private final long create_time;
 
     /** Constructor. */
