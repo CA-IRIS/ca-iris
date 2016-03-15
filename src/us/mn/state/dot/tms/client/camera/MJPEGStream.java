@@ -97,6 +97,13 @@ public class MJPEGStream implements VideoStream {
 				"image/jpeg".equals(HttpUtil.getContentType(url));
 	}
 
+	/** Gets the input stream, initing if necessary */
+	private InputStream getStream() throws IOException {
+		if (null == stream)
+			stream = createInputStream();
+		return stream;
+	}
+
 	/** Gets background job to retrieving stream frames */
 	private Job getStreamJob() {
 		int iField = Calendar.MILLISECOND;
@@ -135,8 +142,6 @@ public class MJPEGStream implements VideoStream {
 	/** Read a video stream */
 	private void readStream() {
 		try {
-			if (null == stream)
-				stream = createInputStream();
 			byte[] idata = getImage();
 			screen.setIcon(createIcon(idata));
 		} catch(IOException e) {
@@ -158,7 +163,7 @@ public class MJPEGStream implements VideoStream {
 		byte[] image = new byte[content_len];
 		int n_bytes = 0;
 		while(n_bytes < content_len) {
-			int r = stream.read(image, n_bytes, content_len - n_bytes);
+			int r = getStream().read(image, n_bytes, content_len - n_bytes);
 			if(r >= 0)
 				n_bytes += r;
 			else
@@ -213,7 +218,7 @@ public class MJPEGStream implements VideoStream {
 	private String readLine() throws IOException {
 		StringBuilder b = new StringBuilder();
 		while(true) {
-			int ch = stream.read();
+			int ch = getStream().read();
 			if(ch < 0) {
 				if(b.length() == 0)
 					throw new IOException("End of stream");
