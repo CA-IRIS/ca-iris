@@ -31,6 +31,6 @@ public class TempHeatmapTheme extends HeatmapTheme {
 	 */
 	public TempHeatmapTheme(String n, Shape ls) {
 
-		super(n, ls);
+		super(n, ls, 22);
 	}
 }

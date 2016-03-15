@@ -15,6 +15,7 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
+import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.weather.WeatherSensorModel;
 
@@ -43,5 +44,20 @@ public class Hotspot {
 		this.loc = loc;
 		this.model = model;
 		this.samples = samples;
+	}
+
+	public Integer getAirTemperature() {
+		//FIXME
+		return 1;
+	}
+
+	public Integer getWindSpeed() {
+		//FIXME
+		return 1;
+	}
+
+	public Integer getWindDirection() {
+		//FIXME
+		return 1;
 	}
 }

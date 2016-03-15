@@ -31,6 +31,6 @@ public class HumidityHeatmapTheme extends HeatmapTheme {
 	 */
 	public HumidityHeatmapTheme(String n, Shape ls) {
 
-		super(n, ls);
+		super(n, ls, 22);
 	}
 }

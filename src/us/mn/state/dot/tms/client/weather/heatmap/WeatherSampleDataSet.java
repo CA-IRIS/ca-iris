@@ -24,9 +24,9 @@ import java.util.Map;
  */
 public class WeatherSampleDataSet {
 
-	protected final Map<String, WeatherSensorSample> samples = new HashMap<>();
+	protected final Map<String, WeatherSensorSample> samples = new HashMap<String, WeatherSensorSample>();
 
-	protected final Map<String, WeatherSensorSample> nextSamples = new HashMap<>();
+	protected final Map<String, WeatherSensorSample> nextSamples = new HashMap<String, WeatherSensorSample>();
 
 	public synchronized void updateSample(WeatherSensorSample s) {
 		samples.put(s.getId(), s);

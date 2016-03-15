@@ -31,6 +31,6 @@ public class WindHeatmapTheme extends HeatmapTheme {
 	 */
 	public WindHeatmapTheme(String n, Shape ls) {
 
-		super(n, ls);
+		super(n, ls, 22);
 	}
 }

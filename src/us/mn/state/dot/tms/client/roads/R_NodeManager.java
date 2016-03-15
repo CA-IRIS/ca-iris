@@ -546,7 +546,7 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 	 * @param n0 First node.
 	 * @param n1 Second (adjacent) node.
 	 * @param smp Selected point (spherical mercator position).
-	 * @param d Distance (meters).
+	 * @param dist Distance (meters).
 	 * @return ClientGeoLoc snapped to corridor, or null if not found. */
 	private ClientGeoLoc createGeoLoc(R_Node n0, R_Node n1,
 		SphericalMercatorPosition smp, double dist)

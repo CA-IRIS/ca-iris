@@ -248,7 +248,8 @@ class HeatMapDemo extends JFrame implements ItemListener, FocusListener {
 
 		//----------------------------------------------------------------------
 
-		double[][] data = HeatMap.generateSinCosData(200);
+//		double[][] data = HeatMap.generateSinCosData(200);
+		double[][] data = HeatMap.generatePyramidData(200);
 		boolean useGraphicsYAxis = true;
 
 		// you can use a pre-defined gradient:

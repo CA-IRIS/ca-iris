@@ -447,14 +447,17 @@ public class HeatMap extends JPanel {
 
 		double[][] data = new double[dimension][dimension];
 		double sX, sY; //s for 'Scaled'
-
+		double result = 0d;
 		for (int x = 0; x < dimension; x++) {
 			for (int y = 0; y < dimension; y++) {
 				sX = 2 * Math.PI * (x
 						    / (double) dimension); // 0 < sX < 2 * Pi
 				sY = 2 * Math.PI * (y
 						    / (double) dimension); // 0 < sY < 2 * Pi
-				data[x][y] = Math.sin(sX) * Math.cos(sY);
+
+				result = Math.sin(sX) * Math.cos(sY);
+				System.out.println("data value: " + result);
+				data[x][y] = result;
 			}
 		}
 
@@ -479,15 +482,17 @@ public class HeatMap extends JPanel {
 
 		double[][] data = new double[dimension][dimension];
 		double sX, sY; //s for 'Scaled'
-
+		double result = 0d;
 		for (int x = 0; x < dimension; x++) {
 			for (int y = 0; y < dimension; y++) {
 				sX = 6 * (x / (double) dimension); // 0 < sX < 6
 				sY = 6 * (y / (double) dimension); // 0 < sY < 6
 				sX = sX - 3; // -3 < sX < 3
 				sY = sY - 3; // -3 < sY < 3
-				data[x][y] = Math
+				result = Math
 					.cos(Math.abs(sX) + Math.abs(sY));
+				System.out.println("data value: " + result);
+				data[x][y] = result;
 			}
 		}
 
@@ -571,7 +576,7 @@ public class HeatMap extends JPanel {
 		int width = this.getWidth();
 		int height = this.getHeight();
 
-		this.setOpaque(true);
+		this.setOpaque(false);
 
 		// clear the panel
 		g2d.setColor(bg);

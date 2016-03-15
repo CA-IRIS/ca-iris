@@ -20,6 +20,9 @@ import us.mn.state.dot.map.Style;
 import us.mn.state.dot.map.StyledTheme;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
+
+import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
  * Heatmap theme
@@ -27,16 +30,17 @@ import java.awt.*;
  * @author Jacob Barde
  */
 public class HeatmapTheme extends StyledTheme {
+	/** Size of legend icons */
+	static private final int lsize = UI.scaled(80);
 
 	/**
 	 * Create a new styled theme
 	 *
 	 * @param n
-	 * @param ls
 	 */
-	public HeatmapTheme(String n, Shape ls) {
+	public HeatmapTheme(String n) {
 
-		super(n, ls);
+		super(n, new Ellipse2D.Double(0,0,200,200), lsize);
 	}
 
 	/**
