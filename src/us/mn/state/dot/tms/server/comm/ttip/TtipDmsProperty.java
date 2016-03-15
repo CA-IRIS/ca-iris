@@ -56,7 +56,7 @@ public class TtipDmsProperty extends ControllerProperty {
                 .getDmsListDeviceStatus();
 
             for (DmsDeviceStatus s : status)
-                records.put((int)s.getHead().getId(), s);
+                records.put(s.getHead().getId() & 0xFF, s);
         } catch (Exception e) {
             TtipPoller.log("Failed to parse DMS status: " + e);
         }
