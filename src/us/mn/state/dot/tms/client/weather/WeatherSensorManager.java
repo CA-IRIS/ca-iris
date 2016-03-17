@@ -47,7 +47,7 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 	/** Lane marking map object marker */
-	static protected final WeatherSensorMarker MARKER =
+	static public final WeatherSensorMarker MARKER =
 		new WeatherSensorMarker();
 
 	/** Create a new weather sensor manager */

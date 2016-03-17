@@ -140,6 +140,12 @@ public class Session {
 		return lcs_array_manager;
 	}
 
+	private final WeatherHeatmapManager heatmap_manager;
+
+	public WeatherHeatmapManager getHeatmapManager() {
+		return heatmap_manager;
+	}
+
 	/** Mapping of all tabs */
 	private final HashMap<String, MapTab> all_tabs =
 		new HashMap<String, MapTab>();
@@ -166,6 +172,7 @@ public class Session {
 		cam_manager = new CameraManager(this, loc_manager);
 		dms_manager = new DMSManager(this, loc_manager);
 		lcs_array_manager = new LCSArrayManager(this, loc_manager);
+		heatmap_manager = new WeatherHeatmapManager(this, loc_manager);
 		managers = new LinkedList<ProxyManager<?>>();
 		managers.add(r_node_manager);
 		managers.add(new ControllerManager(this, loc_manager));
@@ -177,8 +184,8 @@ public class Session {
 		managers.add(new LCSIManager(this, loc_manager));
 		managers.add(new LaneMarkingManager(this,loc_manager));
 		managers.add(new BeaconManager(this, loc_manager));
-		managers.add(new WeatherSensorManager(this, loc_manager));
-		managers.add(new WeatherHeatmapManager(this, loc_manager));
+//		managers.add(new WeatherSensorManager(this, loc_manager));
+		managers.add(heatmap_manager);
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();

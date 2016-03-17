@@ -16,25 +16,33 @@
 package us.mn.state.dot.tms.client.weather.heatmap;
 
 import us.mn.state.dot.map.Layer;
+import us.mn.state.dot.map.LayerChange;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
 import us.mn.state.dot.map.Theme;
+import us.mn.state.dot.sonar.SonarObject;
+import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
+import us.mn.state.dot.tms.client.weather.WeatherSensorMarker;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ColorModel;
 
 /**
  * HeatmapLayerState is for...
  *
  * @author Jacob Barde
  */
-public class HeatmapLayerState extends LayerState {
+public class HeatmapLayerState<T extends SonarObject> extends LayerState {
+	public static final String THEME_AIRTEMP = "airTemp";
+	public static final String THEME_WINDSPEED = "windSpeed";
+	public static final String THEME_PRECIP = "precipitation";
+	public static final String THEME_VISIBILITY = "visibility";
 
 	private final HeatmapLayer heatmapLayer;
 
@@ -44,11 +52,10 @@ public class HeatmapLayerState extends LayerState {
 	 * Create a new Heatmap Layer
 	 * @param layer
 	 * @param mb
-	 * @param theme
 	 */
 	public HeatmapLayerState(HeatmapLayer layer, MapBean mb) {
 		super(layer, mb);
-		//add themes?
+		addDefaultThemes();
 		heatmapLayer = layer;
 		manager = layer.getManager();
 	}
@@ -58,12 +65,19 @@ public class HeatmapLayerState extends LayerState {
 	 * @param mb
 	 * @param theme
 	 */
-	public HeatmapLayerState(HeatmapLayer layer,
-		MapBean mb, Theme theme) {
+	public HeatmapLayerState(HeatmapLayer layer, MapBean mb, Theme theme) {
 		super(layer, mb, theme);
-		//add themes?
+		addDefaultThemes();
 		heatmapLayer = layer;
 		manager = layer.getManager();
+	}
+
+	private void addDefaultThemes() {
+		addTheme(new WindHeatmapTheme(THEME_WINDSPEED, WeatherSensorManager.MARKER));
+		addTheme(new TempHeatmapTheme(THEME_AIRTEMP, WeatherSensorManager.MARKER));
+		//FIXME
+		addTheme(new WindHeatmapTheme(THEME_PRECIP, WeatherSensorManager.MARKER));
+		addTheme(new WindHeatmapTheme(THEME_VISIBILITY, WeatherSensorManager.MARKER));
 	}
 
 	/** Is the zoom level past the "individual lane" threshold? */
@@ -81,22 +95,21 @@ public class HeatmapLayerState extends LayerState {
 	@Override
 	public void paint(Graphics2D g) {
 		super.paint(g);
-		Graphics2D g2d = (Graphics2D) g.create();
-		Composite oc = g2d.getComposite();
+		Composite oc = g.getComposite();
 //		BufferedImage bufferedImage = new BufferedImage(data.length, data[0].length,
-//			BufferedImage.TYPE_INT_ARGB);
-		Rectangle r = new Rectangle(100, 100, 100, 100);
-
-		g2d.setPaint(Color.GREEN);
-		g2d.setComposite(makeComposite(0.5f));
-		g2d.fill(r);
-		g2d.setComposite(oc);
+//								BufferedImage.TYPE_INT_ARGB);
+//		g.drawImage(); // buffered image
 	}
 
+	private void paintHeatmap(Graphics2D g) {
+		String tn = getTheme().getName();
+
+	}
 	private static AlphaComposite makeComposite(float alpha) {
 		int type = AlphaComposite.SRC_OVER;
 		return AlphaComposite.getInstance(type, alpha);
 	}
+
 	/**
 	 * Search the layer for a map object containing the given point
 	 *
@@ -137,5 +150,28 @@ public class HeatmapLayerState extends LayerState {
 	public MapObject forEach(MapSearcher s) {
 		return manager.forEach(s, getScale());
 
+	}
+
+	/** Flag to indicate the tab is selected */
+	private boolean tab_selected = false;
+
+	/** Set the tab selected flag */
+	public void setTabSelected(boolean ts) {
+		tab_selected = ts;
+		if(getVisible() == null)
+			fireLayerChanged(LayerChange.visibility);
+	}
+
+	/** Get the visibility flag */
+	@Override
+	public boolean isVisible() {
+		Boolean v = getVisible();
+		return v != null ? v : tab_selected || isZoomVisible();
+	}
+
+	/** Is the layer visible at the current zoom level? */
+	private boolean isZoomVisible() {
+		return manager.isVisible(
+			map.getModel().getZoomLevel().ordinal());
 	}
 }

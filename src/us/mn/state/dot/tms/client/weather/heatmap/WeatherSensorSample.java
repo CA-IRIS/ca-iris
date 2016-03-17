@@ -15,6 +15,8 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
+import us.mn.state.dot.tms.GeoLoc;
+
 /**
  *
  * @author Jacob Barde
@@ -37,10 +39,13 @@ public class WeatherSensorSample {
 
 	public final Integer visibility;
 
+	public final GeoLoc location;
+
 	public WeatherSensorSample(String id, Integer airTemp,
 				   Integer windSpeed, Integer windDir,
 				   Integer gustSpeed, Integer gustDir,
-				   Integer precipRate, Integer visibility) {
+				   Integer precipRate, Integer visibility,
+				   GeoLoc location) {
 
 		this.id = id;
 		this.airTemp = airTemp;
@@ -50,6 +55,7 @@ public class WeatherSensorSample {
 		this.gustDir = gustDir;
 		this.precipRate = precipRate;
 		this.visibility = visibility;
+		this.location = location;
 	}
 
 	public String getId() {
@@ -90,5 +96,9 @@ public class WeatherSensorSample {
 	public Integer getVisibility() {
 
 		return visibility;
+	}
+
+	public GeoLoc getLocation() {
+		return location;
 	}
 }

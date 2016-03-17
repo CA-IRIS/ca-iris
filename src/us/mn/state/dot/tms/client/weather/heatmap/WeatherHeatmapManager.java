@@ -46,38 +46,17 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 /**
  * A weather sensor manager is a container for SONAR weather sensor objects.
  *
- * @author Douglas Lau
- * @author Michael Darter
- * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class WeatherHeatmapManager extends WeatherSensorManager {
 
-	/** Lane marking map object marker */
-	static protected final WeatherSensorMarker MARKER =
-		new WeatherSensorMarker();
+	private final HeatmapLayer heatmapLayer;
 
 	/** Create a new weather sensor manager */
 	public WeatherHeatmapManager(Session s, GeoLocManager lm) {
 
 		super(s, lm);
-	}
-
-	/** Get the sonar type name */
-	@Override
-	public String getSonarType() {
-		return WeatherSensor.SONAR_TYPE;
-	}
-
-	/** Get the weather sensor cache */
-	@Override
-	public TypeCache<WeatherSensor> getCache() {
-		return session.getSonarState().getWeatherSensors();
-	}
-
-	/** Get the shape for a given proxy */
-	@Override
-	protected Shape getShape(AffineTransform at) {
-		return MARKER.createTransformedShape(at);
+		heatmapLayer = new HeatmapLayer(s, this);
 	}
 
 	/** Create a map tab for the managed proxies */
@@ -87,161 +66,12 @@ public class WeatherHeatmapManager extends WeatherSensorManager {
 		return new WeatherHeatmapTab(session, this);
 	}
 
-	/** Create a theme for weather sensors */
-	@Override
-	protected ProxyTheme<WeatherSensor> createTheme() {
-		return new WeatherSensorTheme(this, MARKER);
-	}
-
 	/**
-	 * Does the proxy match the specified style?
-	 * @param is The ItemStyle; may be null.
-	 * @param proxy WeatherSensor proxy; never null.
-	 * @return True if the proxy matches the style, else false.
+	 * getter for heatmapLayer
+	 * @return
 	 */
-	@Override
-	public boolean checkStyle(ItemStyle is, WeatherSensor proxy) {
-		return WeatherSensorHelper.checkStyle(is, proxy);
-	}
+	public HeatmapLayer getHeatmapLayer() {
 
-	// BEGIN FIXME
-	// The below is a workaround.  Figure out why proxyChangedSwing
-	// isn't getting called via ProxyManager.listener, even when
-	// notifies are clearing being sent by WeatherSensorImpl.
-	// Fix the problem, then get rid of this listener, as well as the
-	// initialize() method below.
-	private final ProxyListener<WeatherSensor> tempListener = new
-		ProxyListener<WeatherSensor>()
-	{
-		public void proxyAdded(WeatherSensor proxy) {}
-		public void enumerationComplete() {}
-		public void proxyRemoved(WeatherSensor proxy) {}
-		public void proxyChanged(final WeatherSensor proxy, final String a) {
-			runSwing(new Runnable() {
-					public void run() {
-						proxyChangedSwing(proxy, a);
-					}
-				});
-		}
-	};
-	@Override
-	public void initialize() {
-		super.initialize();
-		getCache().addProxyListener(tempListener);
+		return heatmapLayer;
 	}
-	// END FIXME
-
-	/**
-	 * Listener for calls from ProxyManager's SwingProxyAdapter.
-	 * This is overridden in order to update the marker so that it
-	 * reflects the average wind direction.
-	 */
-	@Override
-	protected void proxyAddedSwing(WeatherSensor proxy) {
-		super.proxyAddedSwing(proxy);
-		updateMarker(proxy);
-	}
-
-	/**
-	 * Listener for calls from ProxyManager's SwingProxyAdapter.
-	 * This is overridden in order to update the marker so that it
-	 * reflects the average wind direction.
-	 */
-	/** Called when a proxy attribute has been changed */
-	@Override
-	protected void proxyChangedSwing(WeatherSensor proxy, String attr) {
-		super.proxyChangedSwing(proxy, attr);
-		if("windDir".equals(attr))
-			updateMarker(proxy);
-	}
-
-	/** Update a proxy marker (e.g., to reflect orientation change) */
-	private void updateMarker(WeatherSensor p) {
-		MapGeoLoc loc = findGeoLoc(p);
-		if (loc == null)
-			return;
-		loc.doUpdate();
-	}
-
-	/** Get the tangent angle for the given location */
-	@Override
-	public Double getTangentAngle(MapGeoLoc loc) {
-		if (loc == null)
-			return null;
-		Iterator<WeatherSensor> i = WeatherSensorHelper.iterator();
-		WeatherSensor ws = null;
-		while (i.hasNext()) {
-			WeatherSensor wsi = i.next();
-			if (findGeoLoc(wsi) == loc) {
-				ws = wsi;
-				break;
-			}
-		}
-		double a = new Angle(ws.getWindDir()).invert().toRads();
-		return Double.valueOf(a);
-	}
-
-	/** Return true if the weather sensor is in a normal state.
-	 * @param p Proxy, never null. */
-	private boolean isNormal(WeatherSensor p) {
-		return !(WeatherSensorHelper.isAwsState(p)
-			|| WeatherSensorHelper.isSampleExpired(p));
-	}
-
-	/** Create a properties form for the specified proxy */
-	@Override
-	protected SonarObjectForm<WeatherSensor> createPropertiesForm(
-		WeatherSensor proxy)
-	{
-		return new WeatherSensorProperties(session, proxy);
-	}
-
-	/** Create a popup menu for the selected proxy object(s) */
-	@Override
-	protected JPopupMenu createPopup() {
-		int n_selected = s_model.getSelectedCount();
-		if(n_selected < 1)
-			return null;
-		if(n_selected == 1) {
-			for(WeatherSensor ws: s_model.getSelected())
-				return createSinglePopup(ws);
-		}
-		JPopupMenu p = new JPopupMenu();
-		p.add(new JLabel("" + n_selected + " Weather Sensors"));
-		p.addSeparator();
-		return p;
-	}
-
-	/** Create a popup menu for a single proxy selection */
-	private JPopupMenu createSinglePopup(WeatherSensor proxy) {
-		JPopupMenu p = new JPopupMenu();
-		p.add(makeMenuLabel(getDescription(proxy)));
-		p.addSeparator();
-		p.add(new PropertiesAction<WeatherSensor>(this, proxy) {
-			protected void do_perform() {
-				showPropertiesForm();
-			}
-		});
-		return p;
-	}
-
-	/** Find the map geo location for a proxy */
-	@Override
-	protected GeoLoc getGeoLoc(WeatherSensor proxy) {
-		return proxy.getGeoLoc();
-	}
-
-	/** Get the layer zoom visibility threshold */
-	protected int getZoomThreshold() {
-		return 4;
-	}
-
-	/** Get the description of a proxy */
-	@Override
-	public String getDescription(WeatherSensor proxy) {
-		String pn = proxy.getName();
-		String sn = SiteDataHelper.getSiteName(pn);
-		return ( (sn != null) ? sn : pn );
-	}
-
 }

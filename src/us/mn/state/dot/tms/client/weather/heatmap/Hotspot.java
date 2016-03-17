@@ -45,19 +45,4 @@ public class Hotspot {
 		this.model = model;
 		this.samples = samples;
 	}
-
-	public Integer getAirTemperature() {
-		//FIXME
-		return 1;
-	}
-
-	public Integer getWindSpeed() {
-		//FIXME
-		return 1;
-	}
-
-	public Integer getWindDirection() {
-		//FIXME
-		return 1;
-	}
 }
