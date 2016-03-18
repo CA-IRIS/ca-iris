@@ -18,6 +18,7 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -54,7 +55,7 @@ public class MJPEGStream implements VideoStream {
 	private final Dimension size;
 
 	/** Input stream to read */
-	private InputStream stream;
+	private PushbackInputStream stream;
 
 	/** Length of image to be read */
 	private int content_len;
@@ -98,9 +99,9 @@ public class MJPEGStream implements VideoStream {
 	}
 
 	/** Gets the input stream, initing if necessary */
-	private InputStream getStream() throws IOException {
+	private PushbackInputStream getStream() throws IOException {
 		if (null == stream)
-			stream = createInputStream();
+			stream = new PushbackInputStream(createInputStream());
 		return stream;
 	}
 
@@ -229,6 +230,14 @@ public class MJPEGStream implements VideoStream {
 			b.append((char)ch);
 			if(ch == '\n')
 				break;
+			else if(ch == '\r') {
+				ch = getStream().read();
+				if (ch == '\n')
+					b.append((char)ch);
+				else
+					getStream().unread(ch);
+				break;
+			}
 		}
 		return b.toString();
 	}
