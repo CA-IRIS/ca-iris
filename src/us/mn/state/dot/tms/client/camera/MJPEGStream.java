@@ -160,10 +160,11 @@ public class MJPEGStream implements VideoStream {
 
 	/** Get the next image in the mjpeg stream */
 	protected byte[] getImage() throws IOException {
+		InputStream stream = getStream();
 		byte[] image = new byte[content_len];
 		int n_bytes = 0;
 		while(n_bytes < content_len) {
-			int r = getStream().read(image, n_bytes, content_len - n_bytes);
+			int r = stream.read(image, n_bytes, content_len - n_bytes);
 			if(r >= 0)
 				n_bytes += r;
 			else
