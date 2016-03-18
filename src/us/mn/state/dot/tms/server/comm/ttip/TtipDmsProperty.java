@@ -16,8 +16,10 @@ package us.mn.state.dot.tms.server.comm.ttip;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.server.comm.ttip.serializers.common.ResponseGroups;
 import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.DmsDeviceStatus;
 import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.DmsInformationResponse;
+import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.LocalResponseGroup;
 
 import javax.xml.bind.JAXB;
 import java.io.EOFException;
@@ -50,13 +52,17 @@ public class TtipDmsProperty extends ControllerProperty {
         try {
             DmsInformationResponse resp =
                 JAXB.unmarshal(is, DmsInformationResponse.class);
-            List<DmsDeviceStatus> status = resp
-                .getResponseGroups()
-                .getLocalResponseGroup()
-                .getDmsListDeviceStatus();
 
-            for (DmsDeviceStatus s : status)
-                records.put(s.getHead().getId() & 0xFF, s);
+            ResponseGroups<LocalResponseGroup> rg = resp.getResponseGroups();
+            if (null != rg) {
+                List<DmsDeviceStatus> status =
+                    rg.getLocalResponseGroup().getDmsListDeviceStatus();
+
+                for (DmsDeviceStatus s : status)
+                    records.put(s.getHead().getId() & 0xFF, s);
+            } else {
+                TtipPoller.log("Received null responseGroup element. Cannot continue.");
+            }
         } catch (Exception e) {
             TtipPoller.log("Failed to parse DMS status: " + e);
         }
