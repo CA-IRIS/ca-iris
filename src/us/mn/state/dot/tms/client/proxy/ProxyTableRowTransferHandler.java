@@ -34,14 +34,45 @@ import java.awt.dnd.DragSource;
  * @author Dan Rossiter
  */
 public class ProxyTableRowTransferHandler extends TransferHandler {
+
     /** What type of data is coming from dragged row */
     private static final DataFlavor localObjectFlavor = new ActivationDataFlavor(
         Integer.class,
         DataFlavor.javaJVMLocalObjectMimeType,
         "Row Index");
 
+    /**
+     * listener allows us to synchronize against received updates from the server
+     * if we continue ordering before the previous re-order is complete things break
+     */
+    private final ProxyListener<SonarObject> listener = new ProxyListener<SonarObject>() {
+        @Override
+        public void proxyAdded(SonarObject proxy) { }
+
+        @Override
+        public void enumerationComplete() { }
+
+        @Override
+        public void proxyRemoved(SonarObject proxy) { }
+
+        /** We wait for one re-order change to complete before moving on to the next re-order. */
+        @Override
+        public void proxyChanged(SonarObject proxy, String a) {
+            synchronized (ProxyTableRowTransferHandler.this) {
+                // once we get our changes back from the server we can move on
+                if (proxy.getName().equals(currentName) && model.getManualSort(proxy) == targetOrder) {
+                    canContinue = true;
+                    ProxyTableRowTransferHandler.this.notifyAll();
+                }
+            }
+        }
+    };
+
     /** The table being operated on */
-    private JTable table;
+    private final JTable table;
+
+    /** The table model being operated on */
+    private final ProxyTableModel<SonarObject> model;
 
     /** The current proxy name whose order is being updated. */
     private String currentName;
@@ -50,11 +81,12 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
     private int targetOrder = -1;
 
     /** Whether we can continue with reordering the next proxy */
-    private boolean canContinue;
+    private volatile boolean canContinue;
 
     /** Construct new ProxyTableRowTransferHandler */
     public ProxyTableRowTransferHandler(final JTable table) {
         this.table = table;
+        model = (ProxyTableModel<SonarObject>)table.getModel();
     }
 
     /**
@@ -109,7 +141,7 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
         JTable.DropLocation dl =
                 (JTable.DropLocation) support.getDropLocation();
         int rowTo = dl.getRow();
-        int max = table.getModel().getRowCount() - 1;
+        int max = model.getRowCount() - 1;
         if (rowTo < 0 || rowTo > max)
             rowTo = max;
 
@@ -120,49 +152,22 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
                 rowTo--;
 
             if (rowFrom != -1 && rowFrom != rowTo) {
-                @SuppressWarnings("unchecked")
-                final ProxyTableModel<SonarObject> model = (ProxyTableModel<SonarObject>)table.getModel();
-
                 // Only rows between the from & to location will be considered as others will not change
                 // rows < the target row index will have index decremented
                 // rows > the target row index will have index incremented
                 final MapExtent[] proxies = model.getRowProxies(new MapExtent[model.getRowCount()]);
 
-                // listener allows us to synchronize against received updates from the server
-                // if we continue ordering before the previous re-order is complete things break
-                final ProxyListener<SonarObject> listener = new ProxyListener<SonarObject>() {
-                    @Override
-                    public void proxyAdded(SonarObject proxy) { }
-
-                    @Override
-                    public void enumerationComplete() { }
-
-                    @Override
-                    public void proxyRemoved(SonarObject proxy) { }
-
-                    /** We wait for one re-order change to complete before moving on to the next re-order. */
-                    @Override
-                    public void proxyChanged(SonarObject proxy, String a) {
-                        synchronized (this) {
-                            // once we get our changes back from the server we can move on
-                            if (proxy.getName().equals(currentName) && model.getManualSort(proxy) == targetOrder) {
-                                canContinue = true;
-                                this.notifyAll();
-                            }
-                        }
-                    }
-                };
-
-                // to avoid temporary violation of unique order property, move target
+                // to avoid temporary violation of unique order DB constraint, move target
                 // proxy out of the way while surrounding proxies are first updated
-                model.cache.addProxyListener(listener);
-                updateProxyOrder(listener, proxies[rowFrom], proxies.length);
-                int i = nextI(rowFrom, rowFrom, rowTo);
-                for (; checkLoopCondition(i, rowFrom, rowTo); i = nextI(i, rowFrom, rowTo)) {
-                    updateProxyOrder(listener, proxies[i], nextI(i, rowTo, rowFrom));
+                synchronized (this) {
+                    model.cache.addProxyListener(listener);
+                    updateProxyOrder(proxies[rowFrom], proxies.length);
+                    int i = nextI(rowFrom, rowFrom, rowTo);
+                    for (; checkLoopCondition(i, rowFrom, rowTo); i = nextI(i, rowFrom, rowTo))
+                        updateProxyOrder(proxies[i], nextI(i, rowTo, rowFrom));
+                    updateProxyOrder(proxies[i], rowTo);
+                    model.cache.removeProxyListener(listener);
                 }
-                updateProxyOrder(listener, proxies[i], rowTo);
-                model.cache.removeProxyListener(listener);
 
                 // reselect the just-reordered row in its new location
                 target.getSelectionModel().addSelectionInterval(rowTo, rowTo);
@@ -176,19 +181,15 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
     }
 
     /** Update the requested proxy order and don't return until the updated proxy is returned from server */
-    private void updateProxyOrder(ProxyListener<SonarObject> listener, SonarObject proxy, int order) {
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (listener) {
-            currentName = proxy.getName();
-            targetOrder = order;
-            canContinue = false;
-            //noinspection unchecked
-            ((ProxyTableModel<SonarObject>)table.getModel()).setManualSort(proxy, order);
-            while (!canContinue) {
-                try {
-                    listener.wait();
-                } catch (InterruptedException e) { }
-            }
+    private void updateProxyOrder(SonarObject proxy, int order) {
+        currentName = proxy.getName();
+        targetOrder = order;
+        canContinue = false;
+        model.setManualSort(proxy, order);
+        while (!canContinue) {
+            try {
+                wait();
+            } catch (InterruptedException e) { }
         }
     }
 
