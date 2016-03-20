@@ -60,10 +60,8 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
         public void proxyChanged(SonarObject proxy, String a) {
             synchronized (ProxyTableRowTransferHandler.this) {
                 // once we get our changes back from the server we can move on
-                if (proxy.getName().equals(currentName) && model.getManualSort(proxy) == targetOrder) {
-                    canContinue = true;
+                if (proxy.getName().equals(currentName) && model.getManualSort(proxy) == targetOrder)
                     ProxyTableRowTransferHandler.this.notifyAll();
-                }
             }
         }
     };
@@ -79,9 +77,6 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
 
     /** The current proxy target order value. */
     private int targetOrder = -1;
-
-    /** Whether we can continue with reordering the next proxy */
-    private volatile boolean canContinue;
 
     /** Construct new ProxyTableRowTransferHandler */
     public ProxyTableRowTransferHandler(final JTable table) {
@@ -184,11 +179,10 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
     private void updateProxyOrder(SonarObject proxy, int order) {
         currentName = proxy.getName();
         targetOrder = order;
-        canContinue = false;
         model.setManualSort(proxy, order);
-        while (!canContinue) {
+        while (model.getManualSort(proxy) != targetOrder) {
             try {
-                wait();
+                wait(50);
             } catch (InterruptedException e) { }
         }
     }
