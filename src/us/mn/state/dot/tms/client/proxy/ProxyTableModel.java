@@ -57,6 +57,9 @@ abstract public class ProxyTableModel<T extends SonarObject>
 	/** Flag to show name text field */
 	private final boolean has_name;
 
+	/** Whether class supports manual sorting */
+	private final boolean has_manual_sort;
+
 	/** Proxy columns */
 	private final ArrayList<ProxyColumn<T>> columns;
 
@@ -132,6 +135,11 @@ abstract public class ProxyTableModel<T extends SonarObject>
 		has_name = hn;
 		columns = createColumns();
 		list = new ArrayList<T>();
+		boolean has_manual_sort = false;
+		try {
+			has_manual_sort = getClass().getMethod("setManualSort").getDeclaringClass() != getClass();
+		} catch (NoSuchMethodException e) { }
+		this.has_manual_sort = has_manual_sort;
 	}
 
 	/** Initialize the proxy table model. This cannot be done in the
@@ -337,10 +345,11 @@ abstract public class ProxyTableModel<T extends SonarObject>
 
 	/**
 	 *  Whether manual sort is enabled for this model.
-	 *  If overridden, setManualSort and getManualSort must also be overridden.
+	 *  Reflection is used to detect whether setManualSort
+	 *  is overridden and has_manual_sort is set accordingly.
 	 **/
 	public boolean hasManualSort() {
-		return false;
+		return has_manual_sort;
 	}
 
 	/** If hasManualSort this sets the manual sort value. */

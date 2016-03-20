@@ -135,11 +135,6 @@ public class MapExtentModel extends ProxyTableModel<MapExtent> {
 		return attrs;
 	}
 
-	/** Whether this model supports user manual sorting */
-	public boolean hasManualSort() {
-		return true;
-	}
-
 	/** If hasManualSort this sets the manual sort value. */
 	public void setManualSort(MapExtent proxy, int sort) {
 		proxy.setPosition(sort);
