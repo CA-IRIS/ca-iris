@@ -18,7 +18,6 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -55,7 +54,7 @@ public class MJPEGStream implements VideoStream {
 	private final Dimension size;
 
 	/** Input stream to read */
-	private PushbackInputStream stream;
+	private InputStream stream;
 
 	/** Length of image to be read */
 	private int content_len;
@@ -98,11 +97,12 @@ public class MJPEGStream implements VideoStream {
 				"image/jpeg".equals(HttpUtil.getContentType(url));
 	}
 
-	/** Gets the input stream, initing if necessary */
-	private PushbackInputStream getStream() throws IOException {
+	/** Inits input stream and content length if necessary */
+	private void initStream() throws IOException {
 		if (null == stream)
-			stream = new PushbackInputStream(createInputStream());
-		return stream;
+			stream = createInputStream();
+		else if (!is_snapshot)
+			content_len = getNonSnapshotImageSize();
 	}
 
 	/** Gets background job to retrieving stream frames */
@@ -161,7 +161,7 @@ public class MJPEGStream implements VideoStream {
 
 	/** Get the next image in the mjpeg stream */
 	protected byte[] getImage() throws IOException {
-		InputStream stream = getStream();
+		initStream();
 		byte[] image = new byte[content_len];
 		int n_bytes = 0;
 		while(n_bytes < content_len) {
@@ -191,17 +191,22 @@ public class MJPEGStream implements VideoStream {
 		if (is_snapshot) {
 			return c.getContentLength();
 		} else {
-			for (int i = 0; i < 100; i++) {
-				String s = readLine();
-				if (s.toLowerCase().contains("content-length")) {
-					// throw away an empty line after the
-					// content-length header
-					readLine();
-					return parseContentLength(s);
-				}
-			}
-			throw new IOException("Missing content-length");
+			return getNonSnapshotImageSize();
 		}
+	}
+
+	/** Get the length of the next image in a non-snapshot stream */
+	private int getNonSnapshotImageSize() throws IOException {
+		for (int i = 0; i < 100; i++) {
+			String s = readLine();
+			if (s.toLowerCase().contains("content-length")) {
+				// throw away an empty line after the
+				// content-length header
+				readLine();
+				return parseContentLength(s);
+			}
+		}
+		throw new IOException("Missing content-length");
 	}
 
 	/** Parse the content-length header */
@@ -220,7 +225,7 @@ public class MJPEGStream implements VideoStream {
 	private String readLine() throws IOException {
 		StringBuilder b = new StringBuilder();
 		while(true) {
-			int ch = getStream().read();
+			int ch = stream.read();
 			if(ch < 0) {
 				if(b.length() == 0)
 					throw new IOException("End of stream");
@@ -230,14 +235,6 @@ public class MJPEGStream implements VideoStream {
 			b.append((char)ch);
 			if(ch == '\n')
 				break;
-			else if(ch == '\r') {
-				ch = getStream().read();
-				if (ch == '\n')
-					b.append((char)ch);
-				else
-					getStream().unread(ch);
-				break;
-			}
 		}
 		return b.toString();
 	}
