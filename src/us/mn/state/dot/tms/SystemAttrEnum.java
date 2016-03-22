@@ -16,6 +16,7 @@
  */
 package us.mn.state.dot.tms;
 
+import java.awt.Color;
 import java.util.HashMap;
 import static us.mn.state.dot.tms.SignMessageHelper.DMS_MESSAGE_MAX_PAGES;
 import us.mn.state.dot.tms.utils.I18N;
@@ -120,8 +121,17 @@ public enum SystemAttrEnum {
 	ROUTE_MAX_LEGS(8, 1, 20),
 	ROUTE_MAX_MILES(16, 1, 30),
 	RTMS_READ_MARGIN_SEC(5,0,15),
+	RWIS_COLOR_HIGH(Color.RED, Change.RESTART_CLIENT),
+	RWIS_COLOR_LOW(Color.CYAN, Change.RESTART_CLIENT),
+	RWIS_COLOR_MID(Color.ORANGE, Change.RESTART_CLIENT),
+	RWIS_HIGH_AIR_TEMP_C(37f, -273.15f),
+	RWIS_HIGH_PRECIP_RATE_MMH(50, 0),
 	RWIS_HIGH_WIND_SPEED_KPH(40, 0),
+	RWIS_HIGH_VISIBILITY_DISTANCE_M(300, 0),
+	RWIS_LOW_AIR_TEMP_C(0f, -273.15f),
+	RWIS_LOW_PRECIP_RATE_MMH(5, 0),
 	RWIS_LOW_VISIBILITY_DISTANCE_M(152, 0),
+	RWIS_LOW_WIND_SPEED_KPH(5, 0),
 	RWIS_OBS_AGE_LIMIT_SECS(240, 0),
 	RWIS_MAX_VALID_WIND_SPEED_KPH(282, 0),
 	RWIS_SORT(0, 0, 2, Change.RESTART_CLIENT),
@@ -224,6 +234,11 @@ public enum SystemAttrEnum {
 		this(Integer.class, d, mn, null, ca);
 	}
 
+	/** Create an Integer attribute with default and min values */
+	private SystemAttrEnum(float d, float mn) {
+		this(Float.class, d, mn, null, Change.NONE);
+	}
+
 	/** Create a Float attribute with default, min and max values */
 	private SystemAttrEnum(float d, float mn, float mx) {
 		this(Float.class, d, mn, mx, Change.NONE);
@@ -232,6 +247,16 @@ public enum SystemAttrEnum {
 	/** Create a Float attribute with default, min and max values */
 	private SystemAttrEnum(float d, float mn, float mx, Change ca) {
 		this(Float.class, d, mn, mx, ca);
+	}
+
+	/** Create a Color attribute */
+	private SystemAttrEnum(Color c) {
+		this(Color.class, c, null, null, Change.NONE);
+	}
+
+	/** Create a Color attribute with change action */
+	private SystemAttrEnum(Color c, Change ca) {
+		this(Color.class, c, null, null, ca);
 	}
 
 	/** Create a system attribute with a null default value */
@@ -254,7 +279,8 @@ public enum SystemAttrEnum {
 		max_value = mx;
 		change_action = ca;
 		assert isValidBoolean() || isValidFloat() ||
-		       isValidInteger() || isValidString();
+		       isValidInteger() || isValidString() ||
+			   isValidColor();
 	}
 
 	/** Get a description of the system attribute enum. */
@@ -299,6 +325,13 @@ public enum SystemAttrEnum {
 		return (atype == String.class) &&
 		       (def_value == null || def_value instanceof String) &&
 		       min_value == null && max_value == null;
+	}
+
+	/** Test if the attribute is a valid color */
+	private boolean isValidColor() {
+		return (atype == Color.class) &&
+			   (def_value == null || def_value instanceof Color) &&
+			   min_value == null && max_value == null;
 	}
 
 	/** Get the attribute name */
@@ -354,6 +387,12 @@ public enum SystemAttrEnum {
 		return (Float)get();
 	}
 
+	/** Get the valu8e of the attribute as a color */
+	public Color getColor() {
+		assert atype == Color.class;
+		return (Color)get();
+	}
+
 	/**
 	 * Get the value of the attribute.
 	 * @return The value of the attribute, never null.
@@ -404,6 +443,8 @@ public enum SystemAttrEnum {
 			return parseInteger(v);
 		if(atype == Float.class)
 			return parseFloat(v);
+		if(atype == Color.class)
+			return parseColor(v);
 		assert false;
 		return null;
 	}
@@ -468,6 +509,16 @@ public enum SystemAttrEnum {
 			}
 		}
 		return f;
+	}
+
+	/** Parse a color attribute value */
+	protected Color parseColor(String v) {
+		try {
+			return new Color(Integer.parseInt(v, 16), true);
+		}
+		catch (NumberFormatException e) {
+			return null;
+		}
 	}
 
 	/** Create a 'missing system attribute' warning message */
