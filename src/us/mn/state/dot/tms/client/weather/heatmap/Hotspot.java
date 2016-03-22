@@ -28,21 +28,34 @@ public class Hotspot {
 	/** weather sensor model */
 	private WeatherSensorModel model;
 
-	/** weather sample data set */
-	private WeatherSampleDataSet samples;
-
 	/** Location of station */
-	public final MapGeoLoc loc;
+	private final MapGeoLoc loc;
+
+	private final WeatherSensor weatherSensor;
 
 	public Hotspot(WeatherSensorModel model,
-		       MapGeoLoc loc,
-		       WeatherSampleDataSet samples) {
+		       MapGeoLoc loc, WeatherSensor ws) {
 
 		assert model != null;
 		assert loc != null;
-		assert samples != null;
+		assert ws != null;
 		this.loc = loc;
 		this.model = model;
-		this.samples = samples;
+		this.weatherSensor = ws;
+	}
+
+	public MapGeoLoc getLoc() {
+
+		return loc;
+	}
+
+	public WeatherSensorModel getModel() {
+
+		return model;
+	}
+
+	public WeatherSensor getWeatherSensor() {
+
+		return weatherSensor;
 	}
 }
