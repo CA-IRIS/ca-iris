@@ -41,17 +41,17 @@ public class OpQueryConfig extends OpTtipDms {
     private void setHardcodedValues() {
         dms.setSignAccess("FRONT");
         dms.setDmsType(UNKNOWN);
-        dms.setFaceHeight(500);
-        dms.setFaceWidth(1620);
-        dms.setHorizontalBorder(75);
-        dms.setVerticalBorder(75);
+        dms.setFaceHeight(6985);
+        dms.setFaceWidth(2057);
+        dms.setHorizontalBorder(152);
+        dms.setVerticalBorder(152);
         dms.setLegend("noLegend");
         dms.setBeaconType("none");
         dms.setTechnology("LED");
-        dms.setHeightPixels(8);
-        dms.setWidthPixels(36);
-        dms.setHorizontalPitch(41);
-        dms.setVerticalPitch(44);
+        dms.setHeightPixels(25);
+        dms.setWidthPixels(96);
+        dms.setHorizontalPitch(70);
+        dms.setVerticalPitch(70);
         // NOTE: these must be set last
         dms.setCharHeightPixels(0);
         dms.setCharWidthPixels(0);
