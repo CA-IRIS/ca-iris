@@ -18,6 +18,7 @@ package us.mn.state.dot.tms.client.weather.heatmap;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.StyleSummary;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 
@@ -34,7 +35,7 @@ public class WeatherHeatmapTab extends MapTab<WeatherSensor> {
 
 	private final StyleSummary<WeatherSensor> summary;
 
-	public WeatherHeatmapTab(Session session, WeatherSensorManager man) {
+	public WeatherHeatmapTab(Session session, ProxyManager<WeatherSensor> man) {
 		super(man);
 		dispatcher = new WeatherHeatmapDispatcher(session, man);
 		summary = man.createStyleSummary();

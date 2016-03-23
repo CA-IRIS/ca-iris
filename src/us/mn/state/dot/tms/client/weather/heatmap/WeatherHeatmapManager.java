@@ -27,6 +27,7 @@ import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
+import us.mn.state.dot.tms.client.proxy.ProxyLayer;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
@@ -48,15 +49,20 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  *
  * @author Jacob Barde
  */
-public class WeatherHeatmapManager extends WeatherSensorManager {
+public class WeatherHeatmapManager extends ProxyManager<WeatherSensor> {
 
-	private final HeatmapLayer heatmapLayer;
+	/** Lane marking map object marker */
+	static public final WeatherSensorMarker WIND_MARKER =
+		new WeatherSensorMarker();
+
+//	private final HeatmapLayer heatmapLayer;
 
 	/** Create a new weather sensor manager */
 	public WeatherHeatmapManager(Session s, GeoLocManager lm) {
 
 		super(s, lm);
-		heatmapLayer = new HeatmapLayer(s, this);
+//		heatmapLayer = new HeatmapLayer(s, this);
+//		layer = new HeatmapLayer(s, this);
 	}
 
 	/** Create a map tab for the managed proxies */
@@ -66,12 +72,39 @@ public class WeatherHeatmapManager extends WeatherSensorManager {
 		return new WeatherHeatmapTab(session, this);
 	}
 
-	/**
-	 * getter for heatmapLayer
-	 * @return
-	 */
-	public HeatmapLayer getHeatmapLayer() {
+	@Override
+	protected ProxyTheme<WeatherSensor> createTheme() {
+		return new WeatherSensorTheme(this, WIND_MARKER);
+	}
 
-		return heatmapLayer;
+	@Override
+	protected Shape getShape(AffineTransform at) {
+		return WIND_MARKER.createTransformedShape(at);
+	}
+
+	@Override
+	protected GeoLoc getGeoLoc(WeatherSensor proxy) {
+		return proxy.getGeoLoc();
+	}
+
+
+	@Override
+	protected ProxyLayer<WeatherSensor> createLayer() {
+		return new HeatmapLayer(this.session, this);
+	}
+
+	@Override
+	public String getSonarType() {
+		return WeatherSensor.SONAR_TYPE;
+	}
+
+	@Override
+	public TypeCache<WeatherSensor> getCache() {
+		return session.getSonarState().getWeatherSensors();
+	}
+
+	@Override
+	protected int getZoomThreshold() {
+		return 1;
 	}
 }

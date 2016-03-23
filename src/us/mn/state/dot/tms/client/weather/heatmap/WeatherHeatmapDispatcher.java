@@ -22,6 +22,7 @@ import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
+import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
@@ -44,7 +45,7 @@ public class WeatherHeatmapDispatcher extends JPanel {
 	/** User session */
 	private final Session session;
 
-	private final WeatherSensorManager manager;
+	private final ProxyManager<WeatherSensor> manager;
 
 	/** Client properties */
 	private final Properties client_props;
@@ -104,7 +105,7 @@ public class WeatherHeatmapDispatcher extends JPanel {
 	private WeatherSensor selected = null;
 
 
-	public WeatherHeatmapDispatcher(Session s, WeatherSensorManager man) {
+	public WeatherHeatmapDispatcher(Session s, ProxyManager<WeatherSensor> man) {
 
 		session = s;
 		manager = man;

@@ -51,6 +51,11 @@ public class ProxyLayer<T extends SonarObject> extends Layer {
 		manager = m;
 	}
 
+	protected ProxyLayer(String n, ProxyManager<T> m) {
+		super(n);
+		manager = m;
+	}
+
 	/** Update the layer geometry */
 	public void updateGeometry() {
 		fireLayerChanged(LayerChange.geometry);

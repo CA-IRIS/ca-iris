@@ -26,6 +26,7 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
+import us.mn.state.dot.tms.client.proxy.ProxyLayer;
 import us.mn.state.dot.tms.client.widget.IWorker;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -42,30 +43,21 @@ import java.util.function.Consumer;
  *
  * @author Jacob Barde
  */
-public class HeatmapLayer extends Layer /*implements Iterable<Hotspot>*/ {
+public class HeatmapLayer extends ProxyLayer /*implements Iterable<Hotspot>*/ {
 
 	/** Shape used for calculating the layer extent */
 	static private final Rectangle2D EXTENT_SHAPE =
 		new Rectangle2D.Float(-500, -500, 1000, 1000);
 
 
-	private WeatherHeatmapManager manager;
-	private final Session session;
 
 	public HeatmapLayer(Session s, WeatherHeatmapManager m) {
-		super(I18N.get("weather.sensors"));
-		manager = m;
-		session = s;
+		super(I18N.get("weather.heatmaps"), m);
 	}
 
 	@Override
 	public LayerState createState(MapBean mb) {
 		return new HeatmapLayerState(this, mb);
-	}
-
-	public WeatherHeatmapManager getManager() {
-
-		return manager;
 	}
 
 
@@ -85,7 +77,7 @@ public class HeatmapLayer extends Layer /*implements Iterable<Hotspot>*/ {
 			@Override
 			public Rectangle2D doInBackground() {
 				ExtentCalculator calc = new ExtentCalculator();
-				manager.forEach(calc, 1);
+				getManager().forEach(calc, 1);
 				return calc.extent;
 			}
 			@Override
