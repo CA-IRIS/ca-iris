@@ -34,11 +34,11 @@ public class R_NodeMarker extends AbstractMarker {
 		float size = MARKER_SIZE_PIX;
 		float half = size / 2;
 		float third = size / 3;
-		path.moveTo(-third, -third);
-		path.lineTo(third, third);
-		path.moveTo(third, -third);
-		path.lineTo(-third, third);
-		path.append(new Arc2D.Float(-half, -half, size, size, 0, 360,
+		moveTo(-third, -third);
+		lineTo(third, third);
+		moveTo(third, -third);
+		lineTo(-third, third);
+		append(new Arc2D.Float(-half, -half, size, size, 0, 360,
 			Arc2D.OPEN), false);
 	}
 }

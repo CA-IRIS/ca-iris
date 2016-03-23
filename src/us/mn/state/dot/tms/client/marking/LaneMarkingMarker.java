@@ -30,8 +30,8 @@ public class LaneMarkingMarker extends AbstractMarker {
 	public LaneMarkingMarker() {
 		super(3);
 		float size = MARKER_SIZE_PIX;
-		path.moveTo(0, 0);
-		path.lineTo(size, size);
-		path.closePath();
+		moveTo(0, 0);
+		lineTo(size, size);
+		closePath();
 	}
 }

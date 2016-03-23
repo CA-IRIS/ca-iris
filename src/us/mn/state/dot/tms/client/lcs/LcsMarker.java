@@ -36,19 +36,19 @@ public class LcsMarker extends AbstractMarker {
 		float half = size / 2;
 		float x = 0;
 		float y = half / 2;
-		path.moveTo(x, y);
-		path.lineTo(x += third, y);
-		path.lineTo(x, y -= tiny);
-		path.lineTo(x += third, y);
-		path.lineTo(x, y += tiny);
-		path.lineTo(x += third, y);
-		path.lineTo(x, y -= half);
-		path.lineTo(x -= third, y);
-		path.lineTo(x, y += tiny);
-		path.lineTo(x -= third, y);
-		path.lineTo(x, y -= tiny);
-		path.lineTo(x -= third, y);
-		path.lineTo(x, y += half);
-		path.closePath();
+		moveTo(x, y);
+		lineTo(x += third, y);
+		lineTo(x, y -= tiny);
+		lineTo(x += third, y);
+		lineTo(x, y += tiny);
+		lineTo(x += third, y);
+		lineTo(x, y -= half);
+		lineTo(x -= third, y);
+		lineTo(x, y += tiny);
+		lineTo(x -= third, y);
+		lineTo(x, y -= tiny);
+		lineTo(x -= third, y);
+		lineTo(x, y += half);
+		closePath();
 	}
 }

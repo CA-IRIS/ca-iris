@@ -38,18 +38,18 @@ public class DmsMarker extends AbstractMarker {
 		float half_height = height / 2;
 		float x = size;
 		float y = 0;
-		path.moveTo(x -= half_width, y -= half_height);
-		path.lineTo(x += size, y);
-		path.lineTo(x, y += fifth_width);
-		path.lineTo(x -= fifth_width, y);
-		path.lineTo(x, y += third_width);
-		path.lineTo(x -= fifth_width, y);
-		path.lineTo(x, y -= third_width);
-		path.lineTo(x -= fifth_width, y);
-		path.lineTo(x, y += third_width);
-		path.lineTo(x -= fifth_width, y);
-		path.lineTo(x, y -= third_width);
-		path.lineTo(x -= fifth_width, y);
-		path.closePath();
+		moveTo(x -= half_width, y -= half_height);
+		lineTo(x += size, y);
+		lineTo(x, y += fifth_width);
+		lineTo(x -= fifth_width, y);
+		lineTo(x, y += third_width);
+		lineTo(x -= fifth_width, y);
+		lineTo(x, y -= third_width);
+		lineTo(x -= fifth_width, y);
+		lineTo(x, y += third_width);
+		lineTo(x -= fifth_width, y);
+		lineTo(x, y -= third_width);
+		lineTo(x -= fifth_width, y);
+		closePath();
 	}
 }

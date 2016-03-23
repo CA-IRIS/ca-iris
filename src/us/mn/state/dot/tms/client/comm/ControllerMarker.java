@@ -40,17 +40,17 @@ public class ControllerMarker extends AbstractMarker {
 	public ControllerMarker() {
 		super(20);
 		// Controller outline
-		path.moveTo(-W2, -H2);
-		path.lineTo(W2, -H2);
-		path.lineTo(W2, H2);
-		path.lineTo(-W2, H2);
-		path.lineTo(-W2, -H2);
+		moveTo(-W2, -H2);
+		lineTo(W2, -H2);
+		lineTo(W2, H2);
+		lineTo(-W2, H2);
+		lineTo(-W2, -H2);
 		// LED Screen
-		path.moveTo(-W1_5, H1_5);
-		path.lineTo(W1_5, H1_5);
-		path.lineTo(W1_5, H2_5);
-		path.lineTo(-W1_5, H2_5);
-		path.lineTo(-W1_5, H1_5);
+		moveTo(-W1_5, H1_5);
+		lineTo(W1_5, H1_5);
+		lineTo(W1_5, H2_5);
+		lineTo(-W1_5, H2_5);
+		lineTo(-W1_5, H1_5);
 		// Buttons
 		addButton(-W1_5, 0);
 		addButton(0, 0);
@@ -61,13 +61,13 @@ public class ControllerMarker extends AbstractMarker {
 		addButton(-W1_5, -H2_5);
 		addButton(0, -H2_5);
 		addButton(W1_5, -H2_5);
-		path.closePath();
+		closePath();
 	}
 
 	/** Add a button to the marker */
 	protected void addButton(float w, float h) {
 		Arc2D.Float arc = new Arc2D.Float(w - H24, h,
 			H12, H12, 0, 360, Arc2D.OPEN);
-		path.append(arc, false);
+		append(arc, false);
 	}
 }

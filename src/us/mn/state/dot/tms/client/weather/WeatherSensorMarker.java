@@ -36,12 +36,12 @@ public class WeatherSensorMarker extends AbstractMarker {
 		final float size = MARKER_SIZE_PIX;
 		final float size12 = size / 2F;
 		final float size16 = size / 6F;
-		path.moveTo(-size12 + size16, -size12);	// 1
-		path.lineTo(size12 - size16, -size12);	// 2
-		path.lineTo(size16, size12);		// 3
-		path.lineTo(0, size12 - size16);	// 4
-		path.lineTo(-size16, size12);		// 5
-		path.closePath();
+		moveTo(-size12 + size16, -size12);	// 1
+		lineTo(size12 - size16, -size12);	// 2
+		lineTo(size16, size12);		// 3
+		lineTo(0, size12 - size16);	// 4
+		lineTo(-size16, size12);		// 5
+		closePath();
 	}
 
 }
