@@ -19,6 +19,7 @@ import us.mn.state.dot.sonar.SonarObject;
 /**
  * Controller
  *
+ * @author Dan Rossiter
  * @author Douglas Lau
  */
 public interface Controller extends SonarObject {
@@ -27,7 +28,7 @@ public interface Controller extends SonarObject {
 	String SONAR_TYPE = "controller";
 
 	/** All I/O pins */
-	int ALL_PINS = 104;
+	int ALL_PINS = 384;
 
 	/** Set the controller cabinet */
 	void setCabinet(Cabinet c);
