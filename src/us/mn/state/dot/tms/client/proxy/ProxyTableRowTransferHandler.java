@@ -160,7 +160,7 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
                     int i = nextI(rowFrom, rowFrom, rowTo);
                     for (; checkLoopCondition(i, rowFrom, rowTo); i = nextI(i, rowFrom, rowTo))
                         updateProxyOrder(proxies[i], nextI(i, rowTo, rowFrom));
-                    updateProxyOrder(proxies[i], rowTo);
+                    updateProxyOrder(proxies[rowFrom], rowTo);
                     model.cache.removeProxyListener(listener);
                 }
 
@@ -182,7 +182,7 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
         model.setManualSort(proxy, order);
         while (model.getManualSort(proxy) != targetOrder) {
             try {
-                wait(50);
+                wait(5000);
             } catch (InterruptedException e) { }
         }
     }
