@@ -19,7 +19,6 @@ import java.util.HashMap;
 
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
-import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.DmsDeviceStatus;
 
@@ -28,10 +27,7 @@ import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.DmsDeviceStatu
  *
  * @author Dan Rossiter
  */
-public class OpRead extends OpDevice {
-
-    /** DMS to read */
-    private final DMSImpl dms;
+public class OpRead extends OpTtipDms {
 
     /** DMS controller pin */
     private final Integer dms_pin;
@@ -43,7 +39,6 @@ public class OpRead extends OpDevice {
     protected OpRead(DMSImpl d, HashMap<Integer, DmsDeviceStatus> recs) {
         super(PriorityLevel.DATA_30_SEC, d);
         records = recs;
-        dms = d;
         dms_pin = dms.getPin();
     }
 

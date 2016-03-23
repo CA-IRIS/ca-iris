@@ -64,11 +64,12 @@ public class TtipDmsPoller extends TtipPoller implements DMSPoller {
     @Override
     public void sendRequest(DMSImpl dms, DeviceRequest r) {
         switch(r) {
+            case QUERY_CONFIGURATION:
+                addOperation(new OpQueryConfig(dms));
+                break;
+            case QUERY_MESSAGE:
             case QUERY_STATUS:
                 addOperation(new OpRead(dms, records));
-                break;
-            default:
-                // NOOP
                 break;
         }
     }
