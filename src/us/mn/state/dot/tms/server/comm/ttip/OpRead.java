@@ -75,7 +75,7 @@ public class OpRead extends OpDevice {
         protected Phase poll(CommMessage mess) throws IOException {
             DmsDeviceStatus rec = records.get(dms_pin);
             if (rec == null || rec.isExpired())
-                TtipPoller.log("Could not find status for " + dms);
+                TtipPoller.log("Could not find status for " + dms + ", pin #" + dms_pin);
             else {
                 TtipPoller.log("Storing status for " + dms);
                 rec.store(dms);
