@@ -49,7 +49,7 @@ public class Head {
     @XmlElement(name = "updateTime")
     protected TimeStamp updateTime;
     @XmlElement(name = "id")
-    protected Byte id;
+    protected Integer id;
     @XmlElement(name = "issuingAgency")
     protected String issuingAgency;
 
@@ -82,10 +82,10 @@ public class Head {
      * 
      * @return
      *     possible object is
-     *     {@link Byte }
+     *     {@link Integer }
      *     
      */
-    public Byte getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -94,10 +94,10 @@ public class Head {
      * 
      * @param value
      *     allowed object is
-     *     {@link Byte }
+     *     {@link Integer }
      *     
      */
-    public void setId(Byte value) {
+    public void setId(Integer value) {
         this.id = value;
     }
 

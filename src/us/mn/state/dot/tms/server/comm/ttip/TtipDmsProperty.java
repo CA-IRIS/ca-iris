@@ -59,7 +59,7 @@ public class TtipDmsProperty extends ControllerProperty {
                     rg.getLocalResponseGroup().getDmsListDeviceStatus();
 
                 for (DmsDeviceStatus s : status)
-                    records.put(s.getHead().getId() & 0xFF, s);
+                    records.put(s.getHead().getId(), s);
             } else {
                 TtipPoller.log("Received null responseGroup element. Cannot continue.");
             }
