@@ -42,8 +42,8 @@ public class OpQueryConfig extends OpTtipDms {
     private void setHardcodedValues() {
         dms.setSignAccess("FRONT");
         dms.setDmsType(UNKNOWN);
-        dms.setFaceHeight(6985);
-        dms.setFaceWidth(2057);
+        dms.setFaceHeight(2057);
+        dms.setFaceWidth(6985);
         dms.setHorizontalBorder(152);
         dms.setVerticalBorder(152);
         dms.setLegend("noLegend");
