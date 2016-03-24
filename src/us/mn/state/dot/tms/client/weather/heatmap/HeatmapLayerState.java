@@ -15,12 +15,15 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
+import us.mn.state.dot.geokit.SphericalMercatorPosition;
+import us.mn.state.dot.geokit.ZoomLevel;
 import us.mn.state.dot.map.LayerChange;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
 import us.mn.state.dot.map.Theme;
+import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
@@ -29,10 +32,10 @@ import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -64,6 +67,9 @@ public class HeatmapLayerState extends LayerState {
 	private BufferedImage bufferedImage;
 	private Graphics2D bufferedGraphics;
 
+	private Rectangle2D layerBounds;
+	private Rectangle2D mapBounds;
+
 	int posX = 0;
 	int posY = 0;
 
@@ -73,18 +79,7 @@ public class HeatmapLayerState extends LayerState {
 	 * @param mb
 	 */
 	public HeatmapLayerState(HeatmapLayer layer, MapBean mb) {
-		super(layer, mb, new WindHeatmapTheme(THEME_WINDSPEED, WeatherSensorManager.MARKER));
-		addDefaultThemes();
-		heatmapLayer = layer;
-		manager = layer.getManager();
-		int w = (int)layer.getExtent().getWidth();
-		int h = (int)layer.getExtent().getHeight();
-		System.out.println(new StringBuilder("init. w=").append(w)
-			.append(", h=").append(h)
-			.append(". total=").append((w*h))
-			.toString());
-		//heatmapData = new double[(int)layer.getExtent().getWidth()][(int)layer.getExtent().getHeight()];
-		colors = Gradient.GRADIENT_GREEN_YELLOW_ORANGE_RED;
+		this(layer, mb, new WindHeatmapTheme(THEME_WINDSPEED, WeatherSensorManager.MARKER));
 	}
 	/**
 	 * Create a new Heatmap Layer
@@ -97,6 +92,9 @@ public class HeatmapLayerState extends LayerState {
 		addDefaultThemes();
 		heatmapLayer = layer;
 		manager = layer.getManager();
+		colors = Gradient.GRADIENT_GREEN_YELLOW_ORANGE_RED;
+		layerBounds = getExtent().getBounds2D();
+		mapBounds = map.getModel().getExtent().getBounds2D();
 	}
 
 	private void addDefaultThemes() {
@@ -107,13 +105,6 @@ public class HeatmapLayerState extends LayerState {
 		addTheme(new WindHeatmapTheme(THEME_VISIBILITY, WeatherSensorManager.MARKER));
 	}
 
-	/** Is the zoom level past the "individual lane" threshold? */
-	private boolean isPastHeatmapZoomThreshold() {
-		return false;
-		/* return map.getModel().getZoomLevel().ordinal() >= 14
-			|| map.getModel().getZoomLevel().ordinal() <= 2; */
-	}
-
 	/**
 	 * Paint the layer
 	 *
@@ -122,63 +113,62 @@ public class HeatmapLayerState extends LayerState {
 	@Override
 	public void paint(final Graphics2D g) {
 		super.paint(g);
-		if(!isVisible()) {
-			return;
+		if(isVisible()) {
+			paintHeatmap(g);
 		}
-
-//		Composite oc = g.getComposite();
-//		BufferedImage bufferedImage = new BufferedImage(data.length, data[0].length,
-//								BufferedImage.TYPE_INT_ARGB);
-//		g.drawImage(); // buffered image
-
-		paintHeatmap(g);
 	}
 
 	private void paintHeatmap(Graphics2D g) {
 		String tn = getTheme().getName();
 
-//		int w = (int)getLayer().getExtent().getWidth();
-//		int h = (int)getLayer().getExtent().getHeight();
-//		System.out.println(new StringBuilder("w=").append(w)
-//			.append(", h=").append(h)
-//			.append(". total=").append((w*h))
-//			.toString());
-
-//		heatmapData = new double[1000][1000];
-		// render heatmap image
-		// draw the heat map
-
-//		if (bufferedImage == null) {
-//			// Ideally, we only call drawData in the constructor, or if we
-//			// change the data or gradients. We include this just to be safe.
-//			drawData();
-//		}
-
 		heatmapData = populateHeatmapData(this.getTheme().getName(), g);
+
 		updateData(heatmapData, true);
-		//updateDataColors();
-		//drawData();
-//		// add image to graphics object
-//		g.drawImage(bufferedImage, g.getTransform(), null);
-		AffineTransform at = new AffineTransform();
-		at.scale(getScale(), getScale());
-		AffineTransformOp atOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-		BufferedImage after = new BufferedImage(bufferedImage.getWidth(), bufferedImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		after = atOp.filter(bufferedImage, after);
-		g.drawImage(bufferedImage, at, null);
-//		g.drawImage(bufferedImage, this.posX, this.posY, null);
-		// add bitmap to map with applied transparency
+//		g.drawImage(bufferedImage, 1, 1, (int)mapBounds.getWidth() - 30, (int)mapBounds.getHeight() - 30, 0,
+//			0, bufferedImage.getWidth(),
+//			bufferedImage.getHeight(), null);
+//		g.setColor(new Color(0,255,0,127));
+//		g.drawImage(bufferedImage, (int)(mapBounds.getX() + mapBounds.getWidth()/2 + 100),
+//			(int)(mapBounds.getY() + mapBounds.getHeight()/2 + 100),
+//			(int)mapBounds.getWidth() - 30, (int)mapBounds.getHeight() - 30,
+//			0, 0, bufferedImage.getWidth(),
+//			bufferedImage.getHeight(), null);
 
+		try {
+			BufferedImage before = this.bufferedImage;
+			int w = before.getWidth();
+			int h = before.getHeight();
+			double mbm = Math.max(mapBounds.getWidth(), mapBounds.getHeight());
+			double geoScale = map.getScale();
+			double sizeScale = mbm/w;
+			System.out.println("geoScale="+geoScale);
+			System.out.println("sizeScale="+sizeScale);
+			g.setColor(new Color(0,0,255, 68));
+			g.fillRect((int)layerBounds.getX(), (int)layerBounds.getY(),
+				(int)layerBounds.getWidth(), (int)layerBounds.getHeight());
+			g.setColor(new Color(255,0,0, 68));
+			g.fillRect((int)mapBounds.getX(), (int)mapBounds.getY(),
+				(int)mapBounds.getWidth(), (int)mapBounds.getHeight());
+			System.out.println("layerBounds.x="+layerBounds.getX()+", layerBounds.y="+layerBounds.getY()
+				+"   layerBounds.w="+layerBounds.getWidth()+", layerBounds.h="+layerBounds.getHeight());
+			System.out.println("mapBounds.x="+mapBounds.getX()+", mapBounds.y="+mapBounds.getY()
+				+"   mapBounds.w="+mapBounds.getWidth()+", mapBounds.h="+mapBounds.getHeight());
+//			System.out.println("before.w="+w);
+//			System.out.println("before.h="+h);
 
-//		double[][] data = HeatMap.generateRampTestData();
-//		boolean useGraphicsYAxis = true;
-//		JPanel panel = new HeatMap(data, useGraphicsYAxis,
-//			Gradient.GRADIENT_BLUE_TO_RED);
-//		Rectangle r = new Rectangle(0, 0, 100, 100);
-//
-//		g.draw(r);
-//		panel.getGraphics();
-
+//			BufferedImage after = new BufferedImage((int)(w*geoScale+1), (int)(h*geoScale+1), BufferedImage.TYPE_INT_ARGB);
+//			AffineTransform at = new AffineTransform();
+//			at.scale(sizeScale, sizeScale);
+//			AffineTransformOp atOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+//			after = atOp.filter(before, after);
+//			System.out.println("after.w="+after.getWidth());
+//			System.out.println("after.h="+after.getHeight());
+//			g.drawImage(after, null,
+//				(int)(mapBounds.getX() + mapBounds.getWidth()/2 - 100),
+//				(int)(mapBounds.getY() + mapBounds.getHeight()/2 - 100));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -207,7 +197,6 @@ public class HeatmapLayerState extends LayerState {
 
 		drawData();
 
-//		repaint();
 	}
 
 	private static AlphaComposite makeComposite(float alpha) {
@@ -218,37 +207,56 @@ public class HeatmapLayerState extends LayerState {
 	protected double[][] populateHeatmapData(String themeName, Graphics2D g) {
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
 		DataHolder dh = new DataHolder();
-		forEach(new MapSearcher() {
-			public boolean next(MapObject mo) {
-//				theme.draw(g, mo, scale);
-//				g.setTransform(t);
-				double x = mo.getShape().getBounds().getX();
-				double y = mo.getShape().getBounds().getY();
-				System.out.println("mo.x=" + x + ", mo.y=" + y);
-				return false;
-			}
-		});
+//		forEach(new MapSearcher() {
+//			public boolean next(MapObject mo) {
+////				theme.draw(g, mo, scale);
+////				g.setTransform(t);
+//				double x = mo.getShape().getBounds().getX();
+//				double y = mo.getShape().getBounds().getY();
+//				System.out.println("mo.x=" + x + ", mo.y=" + y);
+//				return false;
+//			}
+//		});
+
+		layerBounds = getExtent().getBounds2D();
+		mapBounds = map.getModel().getExtent().getBounds2D();
+		ZoomLevel zl = map.getModel().getZoomLevel();
+		System.out.println("PHD: layerBounds.x=" + zl.getPixelX(layerBounds.getX()) + ", layerBounds.y=" + zl.getPixelY(layerBounds.getY()));
+		System.out.println("PHD: layerBounds.w=" + zl.getPixelX(layerBounds.getWidth()) + ", layerBounds.h=" + zl.getPixelY(layerBounds.getHeight()));
+		System.out.println("PHD: mapBounds.x=" + zl.getPixelX(mapBounds.getX()) + ", mapBounds.y=" + zl.getPixelY(mapBounds.getY()));
+		System.out.println("PHD: mapBounds.w=" + zl.getPixelX(mapBounds.getWidth()) + ", mapBounds.h=" + zl.getPixelY(mapBounds.getHeight()));
+		int minMapX = (int)Math.round(zl.getPixelX(mapBounds.getX()));
+		int maxMapX = (int)Math.round(zl.getPixelX(mapBounds.getWidth() + mapBounds.getX()));
+		int minMapY = (int)Math.round(zl.getPixelY(mapBounds.getY()));
+		int maxMapY = (int)Math.round(zl.getPixelY(mapBounds.getHeight() + mapBounds.getY()));
 
 		while(wi.hasNext()) {
 			WeatherSensor ws = wi.next();
 			MapGeoLoc mloc = getManager().findGeoLoc(ws);
-			int x = (int)mloc.getShape().getBounds().getX();
-			int y = (int)mloc.getShape().getBounds().getY();
+			SphericalMercatorPosition pos = GeoLocHelper.getPosition(mloc.getGeoLoc());
+			int x = (int) zl.getPixelX(pos.getX());
+			int y = (int) zl.getPixelY(pos.getY());
+
+			// skip any sensor outside of this map extent view port
+			if(x < minMapX || x > maxMapX || y < minMapY || y > maxMapY) {
+				continue;
+			}
+
 			Integer val = getMeasurement(ws, themeName);
 			if(val == null)
 				val = 0;
-			//heatmapData[x][y] = val;
-			//dh.add(new GraphData(x, y, val));
+//			heatmapData[x][y] = val;
+			dh.add(new GraphData(x, y, val));
 		}
-		int j = 0;
-		int i = 0;
-		dh.add(new GraphData(i, j, 0d));
-
-		int dim = 100;
-		for(i = 0; i<dim; i++) {
-			j = (int) (Math.random()*dim);
-			dh.add(new GraphData(i, j, (10 + Math.random()*21)));
-		}
+//		int j = 0;
+//		int i = 0;
+//		dh.add(new GraphData(i, j, 0d));
+//
+//		int dim = 100;
+//		for(i = 0; i<dim; i++) {
+//			j = (int) (Math.random()*dim);
+//			dh.add(new GraphData(i, j, (10 + Math.random()*21)));
+//		}
 
 		this.posX = dh.minX;
 		this.posY = dh.minY;
@@ -390,14 +398,16 @@ public class HeatmapLayerState extends LayerState {
 	@Override
 	public boolean isVisible() {
 		Boolean v = getVisible();
-		boolean rv = (tab_selected || (v==null?Boolean.FALSE : v)) && isZoomVisible();
+		//boolean rv = (v != null) ? v : tab_selected || isZoomVisible();
+		//boolean rv = (tab_selected || (v==null?Boolean.FALSE : v)) && isZoomVisible();
+		boolean rv = (v != null ? v : tab_selected) && isZoomVisible();
 		return rv;
 	}
 
 	/** Is the layer visible at the current zoom level? */
 	private boolean isZoomVisible() {
-		return manager.isVisible(
-			map.getModel().getZoomLevel().ordinal());
+		int curZoom = map.getModel().getZoomLevel().ordinal();
+		return manager.isVisible(curZoom) /*&& curZoom <= 12*/;
 	}
 
 	private class DataHolder {
@@ -450,11 +460,12 @@ public class HeatmapLayerState extends LayerState {
 
 			System.out.println(sb.toString());
 			for (GraphData g : this.data) {
-//				if(xoff != 0)
-//					g.x += xoff;
-//				if(yoff != 0)
-//					g.y += yoff;
+				if(xoff != 0)
+					g.x += xoff;
+				if(yoff != 0)
+					g.y += yoff;
 				d[g.x][g.y] = g.value;
+				System.out.println("data["+g.x+"]["+g.y+"]="+g.value);
 			}
 
 			return d;
@@ -470,7 +481,7 @@ public class HeatmapLayerState extends LayerState {
 			this.x = x;
 			this.y = y;
 			this.value = v;
-			System.out.println("data["+x+"]["+y+"]="+v);
+//			System.out.println("data["+x+"]["+y+"]="+v);
 		}
 	}
 }

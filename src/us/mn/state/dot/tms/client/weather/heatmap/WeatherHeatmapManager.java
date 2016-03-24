@@ -105,6 +105,6 @@ public class WeatherHeatmapManager extends ProxyManager<WeatherSensor> {
 
 	@Override
 	protected int getZoomThreshold() {
-		return 1;
+		return 8;
 	}
 }
