@@ -29,6 +29,7 @@ import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.camera.CameraTab;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
@@ -67,6 +68,12 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return session.getSonarState().getWeatherSensors();
 	}
 
+	/** Create a weather map tab */
+	@Override
+	public WeatherTab createTab() {
+		return new WeatherTab(session, this);
+	}
+
 	/** Get the shape for a given proxy */
 	@Override
 	protected Shape getShape(AffineTransform at) {
@@ -76,7 +83,9 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a theme for weather sensors */
 	@Override
 	protected ProxyTheme<WeatherSensor> createTheme() {
-		return new WeatherSensorTheme(this, MARKER);
+		WeatherSensorTheme theme = new WeatherSensorTheme(this, MARKER);
+		// TODO: theme.addStyle
+		return theme;
 	}
 
 	/**
