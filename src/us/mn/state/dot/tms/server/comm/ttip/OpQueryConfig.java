@@ -18,6 +18,7 @@ import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 
 import static us.mn.state.dot.tms.DMSType.UNKNOWN;
+import static us.mn.state.dot.tms.DMSType.VMS_FULL;
 
 /**
  * Operation to update configuration.
@@ -47,9 +48,9 @@ public class OpQueryConfig extends OpTtipDms {
         dms.setVerticalBorder(152);
         dms.setLegend("noLegend");
         dms.setBeaconType("none");
-        dms.setTechnology("LED");
+        dms.setTechnology("unknown");
         dms.setHeightPixels(25);
-        dms.setWidthPixels(96);
+        dms.setWidthPixels(110);
         dms.setHorizontalPitch(70);
         dms.setVerticalPitch(70);
         // NOTE: these must be set last
