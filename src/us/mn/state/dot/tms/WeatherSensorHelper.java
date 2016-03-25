@@ -15,12 +15,8 @@
  */
 package us.mn.state.dot.tms;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.Temperature;
-import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
 import us.mn.state.dot.tms.utils.SString;
 
 /**
@@ -29,13 +25,16 @@ import us.mn.state.dot.tms.utils.SString;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class WeatherSensorHelper extends BaseHelper {
 
 	/** All styles */
 	static public final ItemStyle[] STYLES_ALL = {
 		ItemStyle.NORMAL, ItemStyle.EXPIRED,
-		ItemStyle.AWS, ItemStyle.CRAZY
+		ItemStyle.AWS, ItemStyle.CRAZY,
+		ItemStyle.AIR_TEMP, ItemStyle.PRECIPITATION,
+		ItemStyle.WIND_SPEED, ItemStyle.VISIBILITY
 	};
 
 
@@ -144,8 +143,7 @@ public class WeatherSensorHelper extends BaseHelper {
 
 	/** Get the high precipitation limit in mm/hr */
 	static public int getHighPrecipRate() {
-		// FIXME: add a system attribute
-		return 8;
+		return SystemAttrEnum.RWIS_HIGH_PRECIP_RATE_MMH.getInt();
  	}
 
 	/** Is precipitation rate high? */
@@ -161,37 +159,6 @@ public class WeatherSensorHelper extends BaseHelper {
 		return (isSampleExpired(ws))
 		      ? null
 		      : ws.getPrecipRate();
-	}
-
-
-	/**
-	 * Return the direction as a human readable string.
-	 * @param degs Direction in degrees or MISSING_DATA.
-	 * @return The direction as N, NE, E, SE, S, SW, W, NW, or ?
-	 * TODO: use Angle class for this?
-	 */
-	static public String getDirection(int degs) {
-		if (degs == MISSING_DATA)
-			return "?";
-		degs = degs % 360;
-		if (degs <= 22)
-			return "N";
-		else if (degs >= 23 && degs <= 68)
-			return "NE";
-		else if (degs >= 69 && degs <= 112)
-			return "E";
-		else if (degs >= 113 && degs <= 158)
-			return "SE";
-		else if (degs >= 159 && degs <= 202)
-			return "S";
-		else if (degs >= 203 && degs <= 248)
-			return "SW";
-		else if (degs >= 249 && degs <= 292)
-			return "W";
-		else if (degs >= 293 && degs <= 337)
-			return "NW";
-		else
-			return "N";
 	}
 
 	/**
@@ -210,6 +177,14 @@ public class WeatherSensorHelper extends BaseHelper {
 			return isAwsState(p);
 		case CRAZY:
 			return isCrazyState(p);
+		case AIR_TEMP:
+			return null != p.getAirTemp();
+		case PRECIPITATION:
+			return null != p.getPrecipRate();
+		case WIND_SPEED:
+			return null != p.getWindSpeed();
+		case VISIBILITY:
+			return null != p.getVisibility();
 		}
 		return false;
 	}

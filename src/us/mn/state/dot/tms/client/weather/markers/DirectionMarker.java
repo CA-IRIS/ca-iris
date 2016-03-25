@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.client.weather;
+package us.mn.state.dot.tms.client.weather.markers;
 
 import us.mn.state.dot.map.AbstractMarker;
 
@@ -25,13 +25,13 @@ import us.mn.state.dot.map.AbstractMarker;
  * @author Michael Darter
  * @author Travis Swanston
  */
-public class WeatherSensorMarker extends AbstractMarker {
+public class DirectionMarker extends AbstractMarker {
 
-	/** Size, in pixels, to render marker */
+	/** Size, in pixels, to render markers */
 	static protected final int MARKER_SIZE_PIX = 20;
 
-	/** Create a new weather sensor marker, pointing north by default. */
-	public WeatherSensorMarker() {
+	/** Create a new weather sensor markers, pointing north by default. */
+	public DirectionMarker() {
 		super(8);
 		final float size = MARKER_SIZE_PIX;
 		final float size12 = size / 2F;

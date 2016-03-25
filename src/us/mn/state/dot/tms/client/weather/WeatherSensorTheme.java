@@ -14,18 +14,10 @@
  */
 package us.mn.state.dot.tms.client.weather;
 
-import java.awt.Color;
-import java.awt.Shape;
-import us.mn.state.dot.map.MapObject;
-import us.mn.state.dot.tms.Angle;
-import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.Length;
-import us.mn.state.dot.tms.SystemAttributeHelper;
-import us.mn.state.dot.tms.Speed;
-import us.mn.state.dot.tms.Temperature;
-import us.mn.state.dot.tms.WeatherSensor;
-import us.mn.state.dot.tms.WeatherSensorHelper;
+import java.awt.*;
+
+import us.mn.state.dot.map.*;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.ToolTipBuilder;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
@@ -36,8 +28,38 @@ import us.mn.state.dot.tms.utils.STime;
  *
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
+
+	/** Index for low symbol */
+	private static final int LOW_IDX = 0;
+
+	/** Index for mid symbol */
+	private static final int MID_IDX = 1;
+
+	/** Index for high symbol */
+	private static final int HIGH_IDX = 2;
+
+	/** Symbols for low, mid, and high air temp */
+	private static final Symbol[] AIR_TEMP_SYMS = getStyleSymbols(
+		ItemStyle.AIR_TEMP,
+		WeatherSensorManager.TEMP_MARKER);
+
+	/** Symbols for low, mid, and high precipitation */
+	private static final Symbol[] PRECIP_SYMS = getStyleSymbols(
+		ItemStyle.PRECIPITATION,
+		WeatherSensorManager.PRECIP_MARKER);
+
+	/** Symbols for low, mid, and high visibility */
+	private static final Symbol[] VIS_SYMS = getStyleSymbols(
+		ItemStyle.VISIBILITY,
+		WeatherSensorManager.VIS_MARKER);
+
+	/** Symbols for low, mid, and high wind speed */
+	private static final Symbol[] WIND_SPEED_SYMS = getStyleSymbols(
+		ItemStyle.WIND_SPEED,
+		WeatherSensorManager.DIRECTION_MARKER);
 
 	/** Create a new proxy theme */
 	public WeatherSensorTheme(ProxyManager<WeatherSensor> m, Shape s) {
@@ -50,6 +72,28 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.NO_CONTROLLER,
 			ProxyTheme.COLOR_NO_CONTROLLER);
 		addStyle(ItemStyle.ALL);
+
+		addSymbol(WIND_SPEED_SYMS[LOW_IDX]);
+		addSymbol(VIS_SYMS[LOW_IDX]);
+		addSymbol(PRECIP_SYMS[LOW_IDX]);
+		addSymbol(AIR_TEMP_SYMS[LOW_IDX]);
+	}
+
+	/** Generated low, mid, and high symbols fir the given args */
+	private static Symbol[] getStyleSymbols(ItemStyle is, Shape s) {
+		final Symbol[] ret = new Symbol[3];
+		final Color lcolor = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
+		final Color mcolor = SystemAttrEnum.RWIS_COLOR_MID.getColor();
+		final Color hcolor = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
+
+		Style style = new Style(is.toString(), OUTLINE, lcolor);
+		ret[LOW_IDX] = new VectorSymbol(style, s);
+		style = new Style(is.toString(), OUTLINE, mcolor);
+		ret[MID_IDX] = new VectorSymbol(style, s);
+		style = new Style(is.toString(), OUTLINE, hcolor);
+		ret[HIGH_IDX] = new VectorSymbol(style, s);
+
+		return ret;
 	}
 
 	/** Get tooltip text for the given map object */
@@ -114,4 +158,63 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		return t.get();
 	}
 
+	/** Get a symbol for the given map object */
+	public Symbol getSymbol(MapObject mo) {
+		Symbol ret = null;
+		WeatherSensor ws = manager.findProxy(mo);
+
+		if (ws != null)
+			ret = getSymbol(ws);
+		if (ret == null)
+			ret = super.getSymbol(mo);
+
+		return ret;
+	}
+
+	/** Get a symbol for the given weather sensor */
+	private Symbol getSymbol(WeatherSensor ws) {
+		Number n = null;
+		double l = 0, h = 0;
+		Symbol[] syms = null;
+		switch (manager.getStyleSummary().getStyle()) {
+		case AIR_TEMP:
+			syms = AIR_TEMP_SYMS;
+			n = ws.getAirTemp();
+			l = SystemAttrEnum.RWIS_LOW_AIR_TEMP_C.getFloat();
+			h = SystemAttrEnum.RWIS_HIGH_AIR_TEMP_C.getFloat();
+			break;
+
+		case PRECIPITATION:
+			syms = PRECIP_SYMS;
+			n = ws.getPrecipRate();
+			l = SystemAttrEnum.RWIS_LOW_PRECIP_RATE_MMH.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_PRECIP_RATE_MMH.getInt();
+			break;
+
+		case VISIBILITY:
+			syms = VIS_SYMS;
+			n = ws.getVisibility();
+			l = SystemAttrEnum.RWIS_LOW_VISIBILITY_DISTANCE_M.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_VISIBILITY_DISTANCE_M.getInt();
+			break;
+
+		case WIND_SPEED:
+			syms = WIND_SPEED_SYMS;
+			n = ws.getWindSpeed();
+			l = SystemAttrEnum.RWIS_LOW_WIND_SPEED_KPH.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_WIND_SPEED_KPH.getInt();
+			break;
+		}
+
+		return n != null ? getSymbol(syms, n.doubleValue(), l, h) : null;
+	}
+
+	/** Get low, mid, or high symbol based on given num and thresholds */
+	private Symbol getSymbol(Symbol[] syms, double num, double low, double high) {
+		if (num < low)
+			return syms[LOW_IDX];
+		if (num > high)
+			return syms[HIGH_IDX];
+		return syms[MID_IDX];
+	}
 }

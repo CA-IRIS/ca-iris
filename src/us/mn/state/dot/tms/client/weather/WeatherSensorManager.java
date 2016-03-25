@@ -16,10 +16,14 @@
 package us.mn.state.dot.tms.client.weather;
 
 import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.util.Iterator;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
+
+import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
@@ -29,13 +33,12 @@ import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.camera.CameraTab;
-import us.mn.state.dot.tms.client.proxy.GeoLocManager;
-import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
-import us.mn.state.dot.tms.client.proxy.PropertiesAction;
-import us.mn.state.dot.tms.client.proxy.ProxyManager;
-import us.mn.state.dot.tms.client.proxy.ProxyTheme;
-import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
+import us.mn.state.dot.tms.client.proxy.*;
+import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
+import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
+import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
+import us.mn.state.dot.tms.client.weather.markers.VisibilityMarker;
+
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
@@ -44,16 +47,72 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
-	/** Lane marking map object marker */
-	static public final WeatherSensorMarker MARKER =
-		new WeatherSensorMarker();
+	public static final AbstractMarker DIRECTION_MARKER =
+		new DirectionMarker();
+
+	public static final AbstractMarker PRECIP_MARKER =
+		new PrecipitationMarker();
+
+	public static final AbstractMarker VIS_MARKER =
+		new VisibilityMarker();
+
+	public static final AbstractMarker TEMP_MARKER =
+		new TemperatureMarker();
+
+	/** The current marker */
+	protected AbstractMarker marker = DIRECTION_MARKER;
+
+	/** Whether style summary has been initialized */
+	private boolean style_initialized;
+
+	/** Listener to handle the style selection changing */
+	private final ActionListener style_listener = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
+			switch (s) {
+				case AIR_TEMP:
+					marker = TEMP_MARKER;
+					break;
+
+				case PRECIPITATION:
+					marker = PRECIP_MARKER;
+					break;
+
+				case VISIBILITY:
+					marker = VIS_MARKER;
+					break;
+
+				default:
+					marker = DIRECTION_MARKER;
+					break;
+			}
+		}
+	};
 
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
+	}
+
+	/** Gets the style summary for this proxy type, with no cell
+	 * renderer size buttons. */
+	public StyleSummary<WeatherSensor> getStyleSummary() {
+		StyleSummary<WeatherSensor> ret = super.getStyleSummary();
+		if (!style_initialized) {
+			ret.addSelectionListener(style_listener);
+			style_initialized = true;
+		}
+		return ret;
+	}
+
+	/** Get the current marker */
+	public AbstractMarker getMarker() {
+		return marker;
 	}
 
 	/** Get the sonar type name */
@@ -77,15 +136,13 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Get the shape for a given proxy */
 	@Override
 	protected Shape getShape(AffineTransform at) {
-		return MARKER.createTransformedShape(at);
+		return marker.createTransformedShape(at);
 	}
 
 	/** Create a theme for weather sensors */
 	@Override
 	protected ProxyTheme<WeatherSensor> createTheme() {
-		WeatherSensorTheme theme = new WeatherSensorTheme(this, MARKER);
-		// TODO: theme.addStyle
-		return theme;
+		return new WeatherSensorTheme(this, DIRECTION_MARKER);
 	}
 
 	/**
@@ -128,7 +185,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 	/**
 	 * Listener for calls from ProxyManager's SwingProxyAdapter.
-	 * This is overridden in order to update the marker so that it
+	 * This is overridden in order to update the markers so that it
 	 * reflects the average wind direction.
 	 */
 	@Override
@@ -146,8 +203,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	protected void proxyChangedSwing(WeatherSensor proxy, String attr) {
 		super.proxyChangedSwing(proxy, attr);
-		if("windDir".equals(attr))
-			updateMarker(proxy);
+		updateMarker(proxy);
 	}
 
 	/** Update a proxy marker (e.g., to reflect orientation change) */
