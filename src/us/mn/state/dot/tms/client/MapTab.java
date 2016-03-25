@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms.client;
 
 import java.awt.BorderLayout;
+import java.awt.LayoutManager;
 import javax.swing.JPanel;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
@@ -53,7 +54,12 @@ abstract public class MapTab<T extends SonarObject> extends JPanel {
 
 	/** Create a new map tab */
 	protected MapTab(ProxyManager<T> m) {
-		super(new BorderLayout());
+		this(m, new BorderLayout());
+	}
+
+	/** Create a new map tab */
+	protected MapTab(ProxyManager<T> m, LayoutManager l) {
+		super(l);
 		manager = m;
 		String t = m.getSonarType() + ".tab";
 		name = I18N.get(t);
