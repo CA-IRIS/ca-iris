@@ -39,13 +39,10 @@ public class WeatherTab extends MapTab<WeatherSensor> {
 
     /** Create a new weather sensor tab for the IRIS client */
     public WeatherTab(Session session, WeatherSensorManager man) {
-        super(man);
+        super(man, new GridBagLayout());
         thresholds = new WeatherThresholdsPanel(session);
         selected = new WeatherPanel(session, man.getSelectionModel());
         summary = man.getStyleSummary();
-        add(thresholds, BorderLayout.PAGE_START);
-        add(selected, BorderLayout.CENTER);
-        add(summary, BorderLayout.PAGE_END);
     }
 
     /** Get the tab ID */
@@ -57,6 +54,17 @@ public class WeatherTab extends MapTab<WeatherSensor> {
     /** Initialize the map tab */
     @Override
     public void initialize() {
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.gridx = 0;
+        gc.gridy = 0;
+        add(thresholds, gc);
+        gc.gridy = 1;
+        add(selected, gc);
+        gc.fill = GridBagConstraints.BOTH;
+        gc.gridy = 2;
+        add(summary, gc);
+
         thresholds.initialize();
         selected.initialize();
         summary.initialize();

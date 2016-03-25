@@ -32,6 +32,15 @@ import us.mn.state.dot.tms.utils.STime;
  */
 public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
+	/** The "low" color */
+	private static final Color LCOLOR = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
+
+	/** The "mid" color */
+	private static final Color MCOLOR = SystemAttrEnum.RWIS_COLOR_MID.getColor();
+
+	/** The "high" color */
+	private static final Color HCOLOR = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
+
 	/** Index for low symbol */
 	private static final int LOW_IDX = 0;
 
@@ -42,22 +51,22 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	private static final int HIGH_IDX = 2;
 
 	/** Symbols for low, mid, and high air temp */
-	private static final Symbol[] AIR_TEMP_SYMS = getStyleSymbols(
+	private static final VectorSymbol[] AIR_TEMP_SYMS = getStyleSymbols(
 		ItemStyle.AIR_TEMP,
 		WeatherSensorManager.TEMP_MARKER);
 
 	/** Symbols for low, mid, and high precipitation */
-	private static final Symbol[] PRECIP_SYMS = getStyleSymbols(
+	private static final VectorSymbol[] PRECIP_SYMS = getStyleSymbols(
 		ItemStyle.PRECIPITATION,
 		WeatherSensorManager.PRECIP_MARKER);
 
 	/** Symbols for low, mid, and high visibility */
-	private static final Symbol[] VIS_SYMS = getStyleSymbols(
+	private static final VectorSymbol[] VIS_SYMS = getStyleSymbols(
 		ItemStyle.VISIBILITY,
 		WeatherSensorManager.VIS_MARKER);
 
 	/** Symbols for low, mid, and high wind speed */
-	private static final Symbol[] WIND_SPEED_SYMS = getStyleSymbols(
+	private static final VectorSymbol[] WIND_SPEED_SYMS = getStyleSymbols(
 		ItemStyle.WIND_SPEED,
 		WeatherSensorManager.DIRECTION_MARKER);
 
@@ -73,26 +82,27 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			ProxyTheme.COLOR_NO_CONTROLLER);
 		addStyle(ItemStyle.ALL);
 
+		// FIXME: This is nasty and relies on undocumented
+		// behavior that is probably actually a proxy bug
+		addStyle(WIND_SPEED_SYMS[LOW_IDX].style);
 		addSymbol(WIND_SPEED_SYMS[LOW_IDX]);
+		addStyle(VIS_SYMS[LOW_IDX].style);
 		addSymbol(VIS_SYMS[LOW_IDX]);
+		addStyle(PRECIP_SYMS[LOW_IDX].style);
 		addSymbol(PRECIP_SYMS[LOW_IDX]);
+		addStyle(AIR_TEMP_SYMS[LOW_IDX].style);
 		addSymbol(AIR_TEMP_SYMS[LOW_IDX]);
 	}
 
 	/** Generated low, mid, and high symbols fir the given args */
-	private static Symbol[] getStyleSymbols(ItemStyle is, Shape s) {
-		final Symbol[] ret = new Symbol[3];
-		final Color lcolor = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
-		final Color mcolor = SystemAttrEnum.RWIS_COLOR_MID.getColor();
-		final Color hcolor = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
-
-		Style style = new Style(is.toString(), OUTLINE, lcolor);
+	private static VectorSymbol[] getStyleSymbols(ItemStyle is, Shape s) {
+		final VectorSymbol[] ret = new VectorSymbol[3];
+		Style style = new Style(is.toString(), OUTLINE, LCOLOR);
 		ret[LOW_IDX] = new VectorSymbol(style, s);
-		style = new Style(is.toString(), OUTLINE, mcolor);
+		style = new Style(is.toString(), OUTLINE, MCOLOR);
 		ret[MID_IDX] = new VectorSymbol(style, s);
-		style = new Style(is.toString(), OUTLINE, hcolor);
+		style = new Style(is.toString(), OUTLINE, HCOLOR);
 		ret[HIGH_IDX] = new VectorSymbol(style, s);
-
 		return ret;
 	}
 
