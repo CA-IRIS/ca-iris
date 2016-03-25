@@ -387,7 +387,7 @@ public enum SystemAttrEnum {
 		return (Float)get();
 	}
 
-	/** Get the valu8e of the attribute as a color */
+	/** Get the value of the attribute as a color */
 	public Color getColor() {
 		assert atype == Color.class;
 		return (Color)get();
@@ -514,7 +514,7 @@ public enum SystemAttrEnum {
 	/** Parse a color attribute value */
 	protected Color parseColor(String v) {
 		try {
-			return new Color(Integer.parseInt(v, 16), true);
+			return Color.decode("0x" + v);
 		}
 		catch (NumberFormatException e) {
 			return null;
