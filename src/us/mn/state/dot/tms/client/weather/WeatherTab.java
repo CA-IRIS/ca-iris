@@ -56,6 +56,7 @@ public class WeatherTab extends MapTab<WeatherSensor> {
     public void initialize() {
         GridBagConstraints gc = new GridBagConstraints();
         gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1;
         gc.gridx = 0;
         gc.gridy = 0;
         add(thresholds, gc);
