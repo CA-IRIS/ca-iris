@@ -139,6 +139,7 @@ public class WeatherThresholdsPanel extends JPanel {
         add(high_color_button, gc);
 
         gc = new GridBagConstraints();
+        gc.anchor = GridBagConstraints.LINE_START;
         gc.gridx = 0;
         gc.gridy = 0;
         add(new JLabel("Air Temp (\u00B0C)"), gc);
@@ -149,6 +150,7 @@ public class WeatherThresholdsPanel extends JPanel {
         gc.gridy = 3;
         add(new JLabel("Wind Speed (kph)"), gc);
 
+        gc.fill = GridBagConstraints.HORIZONTAL;
         gc.gridx = 2;
         gc.gridy = 0;
         add(low_air_tmp_text, gc);
