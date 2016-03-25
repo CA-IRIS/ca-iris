@@ -113,9 +113,6 @@ public class HeatmapLayerState extends LayerState {
 	@Override
 	public void paint(final Graphics2D g) {
 		super.paint(g);
-		if(isVisible()) {
-			paintHeatmap(g);
-		}
 	}
 
 	private void paintHeatmap(Graphics2D g) {
@@ -141,7 +138,7 @@ public class HeatmapLayerState extends LayerState {
 			double mbm = Math.max(mapBounds.getWidth(), mapBounds.getHeight());
 			double geoScale = map.getScale();
 			double sizeScale = mbm/w;
-			System.out.println("geoScale="+geoScale);
+			System.out.println("geoScale="+geoScale + " -- zoom=" + map.getModel().getZoomLevel().ordinal());
 			System.out.println("sizeScale="+sizeScale);
 			g.setColor(new Color(0,0,255, 68));
 			g.fillRect((int)layerBounds.getX(), (int)layerBounds.getY(),

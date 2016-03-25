@@ -474,4 +474,8 @@ abstract public class ProxyManager<T extends SonarObject> {
 	public final boolean hasLayer() {
 		return canRead() && (getZoomThreshold() > 0);
 	}
+
+	protected ProxyLayer<T> getLayer() {
+		return layer;
+	}
 }

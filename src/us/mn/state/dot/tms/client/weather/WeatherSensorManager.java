@@ -2,6 +2,8 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2014  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
+ *
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +36,7 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.*;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
@@ -48,6 +51,7 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  * @author Michael Darter
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
@@ -295,4 +299,8 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return ( (sn != null) ? sn : pn );
 	}
 
+	@Override
+	protected ProxyLayer<WeatherSensor> createLayer() {
+		return new HeatmapLayer(session, this);
+	}
 }
