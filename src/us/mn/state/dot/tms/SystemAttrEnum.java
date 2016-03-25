@@ -17,6 +17,7 @@
 package us.mn.state.dot.tms;
 
 import java.awt.Color;
+import java.math.BigInteger;
 import java.util.HashMap;
 import static us.mn.state.dot.tms.SignMessageHelper.DMS_MESSAGE_MAX_PAGES;
 import us.mn.state.dot.tms.utils.I18N;
@@ -514,7 +515,9 @@ public enum SystemAttrEnum {
 	/** Parse a color attribute value */
 	protected Color parseColor(String v) {
 		try {
-			return Color.decode("0x" + v);
+			return (v.length() == 6)
+				? Color.decode(v)
+				: new Color(new BigInteger(v, 16).intValue(), true);
 		}
 		catch (NumberFormatException e) {
 			return null;
