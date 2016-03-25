@@ -62,6 +62,7 @@ public class WeatherTab extends MapTab<WeatherSensor> {
         gc.gridy = 1;
         add(selected, gc);
         gc.fill = GridBagConstraints.BOTH;
+        gc.weighty = 1;
         gc.gridy = 2;
         add(summary, gc);
 
