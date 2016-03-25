@@ -38,7 +38,7 @@ public class WeatherHeatmapTab extends MapTab<WeatherSensor> {
 	public WeatherHeatmapTab(Session session, ProxyManager<WeatherSensor> man) {
 		super(man);
 		dispatcher = new WeatherHeatmapDispatcher(session, man);
-		summary = man.createStyleSummary();
+		summary = man.getStyleSummary();
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
 	}

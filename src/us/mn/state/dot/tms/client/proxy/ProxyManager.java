@@ -121,6 +121,9 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Default style */
 	private final ItemStyle def_style;
 
+	/** Style summary */
+	private StyleSummary<T> style_summary;
+
 	/** Create a new proxy manager */
 	protected ProxyManager(Session s, GeoLocManager lm, ItemStyle ds) {
 		session = s;
@@ -305,15 +308,19 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return s_model;
 	}
 
-	/** Create a new style summary for this proxy type, with no cell
+	/** Gets the style summary for this proxy type, with no cell
 	 * renderer size buttons. */
-	public StyleSummary<T> createStyleSummary() {
-		return new StyleSummary<T>(this, def_style, false);
+	public StyleSummary<T> getStyleSummary() {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, false);
+		return style_summary;
 	}
 
-	/** Create a new style summary for this proxy type */
-	public StyleSummary<T> createStyleSummary(boolean enableCellSizeBtns) {
-		return new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+	/** Gets the style summary for this proxy type */
+	public StyleSummary<T> getStyleSummary(boolean enableCellSizeBtns) {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+		return style_summary;
 	}
 
 	/** Get the specified style list model */

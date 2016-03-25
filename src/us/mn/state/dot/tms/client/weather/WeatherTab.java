@@ -42,7 +42,7 @@ public class WeatherTab extends MapTab<WeatherSensor> {
         super(man);
         thresholds = new WeatherThresholdsPanel(session);
         selected = new WeatherPanel(session, man.getSelectionModel());
-        summary = man.createStyleSummary();
+        summary = man.getStyleSummary();
         add(thresholds, BorderLayout.PAGE_START);
         add(selected, BorderLayout.CENTER);
         add(summary, BorderLayout.PAGE_END);

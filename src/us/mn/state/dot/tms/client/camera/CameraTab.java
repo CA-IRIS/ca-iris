@@ -37,7 +37,7 @@ public class CameraTab extends MapTab<Camera> {
 	public CameraTab(Session session, CameraManager man) {
 		super(man);
 		dispatcher = new CameraDispatcher(session, man);
-		summary = man.createStyleSummary();
+		summary = man.getStyleSummary();
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
 	}
