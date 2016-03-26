@@ -80,7 +80,6 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.NORMAL, Color.GREEN);
 		addStyle(ItemStyle.NO_CONTROLLER,
 			ProxyTheme.COLOR_NO_CONTROLLER);
-		addStyle(ItemStyle.ALL);
 
 		// FIXME: This is nasty and relies on undocumented
 		// behavior that is probably actually a proxy bug
@@ -92,6 +91,9 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addSymbol(PRECIP_SYMS[LOW_IDX]);
 		addStyle(AIR_TEMP_SYMS[LOW_IDX].style);
 		addSymbol(AIR_TEMP_SYMS[LOW_IDX]);
+		// FIXME: END
+
+		addStyle(ItemStyle.ALL);
 	}
 
 	/** Generated low, mid, and high symbols fir the given args */
