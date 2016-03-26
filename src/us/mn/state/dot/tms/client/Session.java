@@ -180,6 +180,7 @@ public class Session {
 		managers.add(new WeatherSensorManager(this, loc_manager));
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
+		managers.add(new WeatherSensorManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
