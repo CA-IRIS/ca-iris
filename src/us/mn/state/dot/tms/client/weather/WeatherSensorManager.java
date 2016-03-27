@@ -41,6 +41,7 @@ import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
 import us.mn.state.dot.tms.client.weather.markers.VisibilityMarker;
+import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
@@ -158,6 +159,19 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	public boolean checkStyle(ItemStyle is, WeatherSensor proxy) {
 		return WeatherSensorHelper.checkStyle(is, proxy);
+	}
+
+	/** Create a popup menu for a single weather sensor selection */
+	@Override
+	protected JPopupMenu createPopupSingle(WeatherSensor ws) {
+		SmartDesktop desktop = session.getDesktop();
+		JPopupMenu p = new JPopupMenu();
+		p.add(makeMenuLabel(getDescription(ws)));
+		p.addSeparator();
+		p.add(new MapAction(desktop.client, ws, ws.getGeoLoc()));
+		p.addSeparator();
+		p.add(new PropertiesAction<WeatherSensor>(this, ws));
+		return p;
 	}
 
 	// BEGIN FIXME
