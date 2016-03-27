@@ -33,13 +33,13 @@ import us.mn.state.dot.tms.utils.STime;
 public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
 	/** The "low" color */
-	private static final Color LCOLOR = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
+	public static final Color LCOLOR = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
 
 	/** The "mid" color */
-	private static final Color MCOLOR = SystemAttrEnum.RWIS_COLOR_MID.getColor();
+	public static final Color MCOLOR = SystemAttrEnum.RWIS_COLOR_MID.getColor();
 
 	/** The "high" color */
-	private static final Color HCOLOR = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
+	public static final Color HCOLOR = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
 
 	/** Index for low symbol */
 	private static final int LOW_IDX = 0;

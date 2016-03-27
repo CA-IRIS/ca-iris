@@ -19,6 +19,7 @@ import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyLayer;
+import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 import us.mn.state.dot.tms.utils.I18N;
 
 /**
@@ -26,10 +27,10 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Jacob Barde
  */
-public class HeatmapLayer extends ProxyLayer /*implements Iterable<Hotspot>*/ {
+public class HeatmapLayer extends ProxyLayer {
 
-	public HeatmapLayer(Session s, WeatherHeatmapManager m) {
-		super(I18N.get("weather.heatmaps"), m);
+	public HeatmapLayer(Session s, WeatherSensorManager m) {
+		super(m);
 	}
 
 	@Override

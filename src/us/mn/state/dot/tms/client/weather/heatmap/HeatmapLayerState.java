@@ -22,7 +22,6 @@ import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
-import us.mn.state.dot.map.Theme;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.WeatherSensor;
@@ -51,21 +50,11 @@ public class HeatmapLayerState extends LayerState {
 	 * @param mb
 	 */
 	public HeatmapLayerState(HeatmapLayer layer, MapBean mb) {
-		super(layer, mb);
+		super(layer, mb, new HeatmapTheme(layer.getManager()));
 		heatmapLayer = layer;
 		manager = layer.getManager();
 	}
-	/**
-	 * Create a new Heatmap Layer
-	 * @param layer
-	 * @param mb
-	 * @param theme
-	 */
-	public HeatmapLayerState(HeatmapLayer layer, MapBean mb, Theme theme) {
-		super(layer, mb, theme);
-		heatmapLayer = layer;
-		manager = layer.getManager();
-	}
+
 
 	/**
 	 * Paint the layer
@@ -119,6 +108,10 @@ public class HeatmapLayerState extends LayerState {
 
 		return null;
 	}
+
+//	private static Color getRadiiColor(WeatherSensor ws) {
+//		if
+//	}
 
 	public HeatmapLayer getHeatmapLayer() {
 
