@@ -90,8 +90,8 @@ public class HeatmapLayerState extends LayerState {
 			WeatherSensor ws = wi.next();
 			mloc = getManager().findGeoLoc(ws);
 			SphericalMercatorPosition pos = GeoLocHelper.getPosition(mloc.getGeoLoc());
-			x = (int)zoomLevel.getPixelX(pos.getX()) - r;
-			y = (int)zoomLevel.getPixelY(pos.getY()) - r;
+			x = (int) pos.getX() - r;
+			y = (int) pos.getY() - r;
 
 			Integer measurement = getMeasurement(ws, mtype);
 			Color c = getMeasurementColor(ws, mtype, measurement);
