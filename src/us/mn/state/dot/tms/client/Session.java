@@ -150,9 +150,6 @@ public class Session {
 	/** Segment layer */
 	private final SegmentLayer seg_layer;
 
-	/** heatmap layer */
-	private final HeatmapLayer heatmapLayer;
-
 	/** Tile layer */
 	private final TileLayer tile_layer;
 
@@ -187,7 +184,6 @@ public class Session {
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
-		heatmapLayer = heatmap_manager.getHeatmapLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
 
@@ -255,7 +251,6 @@ public class Session {
 	public void createLayers(MapBean mb, MapModel mm) {
 		if (tile_layer != null)
 			mm.addLayer(tile_layer.createState(mb));
-		mm.addLayer(heatmapLayer.createState(mb));
 		mm.addLayer(seg_layer.createState(mb));
 		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.hasLayer())

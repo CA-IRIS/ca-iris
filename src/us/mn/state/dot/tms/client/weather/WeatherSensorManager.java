@@ -17,14 +17,6 @@
  */
 package us.mn.state.dot.tms.client.weather;
 
-import java.awt.Shape;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.util.Iterator;
-import javax.swing.JLabel;
-import javax.swing.JPopupMenu;
-
 import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
@@ -35,13 +27,27 @@ import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.*;
+import us.mn.state.dot.tms.client.proxy.GeoLocManager;
+import us.mn.state.dot.tms.client.proxy.MapAction;
+import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
+import us.mn.state.dot.tms.client.proxy.PropertiesAction;
+import us.mn.state.dot.tms.client.proxy.ProxyManager;
+import us.mn.state.dot.tms.client.proxy.ProxyTheme;
+import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
+import us.mn.state.dot.tms.client.proxy.StyleSummary;
 import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
 import us.mn.state.dot.tms.client.weather.markers.VisibilityMarker;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
+
+import javax.swing.JPopupMenu;
+import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
+import java.util.Iterator;
 
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
@@ -104,16 +110,9 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		}
 	};
 
-	public HeatmapLayer getHeatmapLayer() {
-		return heatmapLayer;
-	}
-
-	private final HeatmapLayer heatmapLayer;
-
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
-		heatmapLayer = new HeatmapLayer(s, this);
 	}
 
 	/** Gets the style summary for this proxy type, with no cell
