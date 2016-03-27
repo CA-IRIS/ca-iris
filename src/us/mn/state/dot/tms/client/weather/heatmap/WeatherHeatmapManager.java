@@ -182,8 +182,11 @@ public class WeatherHeatmapManager extends WeatherSensorManager {
 				break;
 			}
 		}
-		double a = new Angle(ws.getWindDir()).invert().toRads();
-		return Double.valueOf(a);
+		Double ret = null;
+		if (ws != null) {
+			ret = new Angle(ws.getWindDir()).invert().toRads();
+		}
+		return ret;
 	}
 
 	/** Return true if the weather sensor is in a normal state.
