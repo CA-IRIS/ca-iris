@@ -237,6 +237,11 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	public Double getTangentAngle(MapGeoLoc loc) {
 		if (loc == null)
 			return null;
+		final ItemStyle cur = getStyleSummary().getStyle();
+		if (cur == ItemStyle.AIR_TEMP ||
+			cur == ItemStyle.PRECIPITATION ||
+			cur == ItemStyle.VISIBILITY)
+			return null;
 		Iterator<WeatherSensor> i = WeatherSensorHelper.iterator();
 		WeatherSensor ws = null;
 		while (i.hasNext()) {
@@ -246,8 +251,11 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 				break;
 			}
 		}
-		double a = new Angle(ws.getWindDir()).invert().toRads();
-		return Double.valueOf(a);
+		Double ret = null;
+		if (ws != null) {
+			ret = new Angle(ws.getWindDir()).invert().toRads();
+		}
+		return ret;
 	}
 
 	/** Return true if the weather sensor is in a normal state.
@@ -263,35 +271,6 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		WeatherSensor proxy)
 	{
 		return new WeatherSensorProperties(session, proxy);
-	}
-
-	/** Create a popup menu for the selected proxy object(s) */
-	@Override
-	protected JPopupMenu createPopup() {
-		int n_selected = s_model.getSelectedCount();
-		if(n_selected < 1)
-			return null;
-		if(n_selected == 1) {
-			for(WeatherSensor ws: s_model.getSelected())
-				return createSinglePopup(ws);
-		}
-		JPopupMenu p = new JPopupMenu();
-		p.add(new JLabel("" + n_selected + " Weather Sensors"));
-		p.addSeparator();
-		return p;
-	}
-
-	/** Create a popup menu for a single proxy selection */
-	private JPopupMenu createSinglePopup(WeatherSensor proxy) {
-		JPopupMenu p = new JPopupMenu();
-		p.add(makeMenuLabel(getDescription(proxy)));
-		p.addSeparator();
-		p.add(new PropertiesAction<WeatherSensor>(this, proxy) {
-			protected void do_perform() {
-				showPropertiesForm();
-			}
-		});
-		return p;
 	}
 
 	/** Find the map geo location for a proxy */
