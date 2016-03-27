@@ -47,6 +47,7 @@ import us.mn.state.dot.tms.client.roads.R_NodeManager;
 import us.mn.state.dot.tms.client.roads.SegmentLayer;
 import us.mn.state.dot.tms.client.schedule.PlanManager;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
 /**
@@ -140,12 +141,17 @@ public class Session {
 		return lcs_array_manager;
 	}
 
+	private final WeatherSensorManager heatmap_manager;
+
 	/** Mapping of all tabs */
 	private final HashMap<String, MapTab> all_tabs =
 		new HashMap<String, MapTab>();
 
 	/** Segment layer */
 	private final SegmentLayer seg_layer;
+
+	/** heatmap layer */
+	private final HeatmapLayer heatmapLayer;
 
 	/** Tile layer */
 	private final TileLayer tile_layer;
@@ -181,6 +187,7 @@ public class Session {
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
+		heatmapLayer = heatmap_manager.getHeatmapLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
 
@@ -248,6 +255,7 @@ public class Session {
 	public void createLayers(MapBean mb, MapModel mm) {
 		if (tile_layer != null)
 			mm.addLayer(tile_layer.createState(mb));
+		mm.addLayer(heatmapLayer.createState(mb));
 		mm.addLayer(seg_layer.createState(mb));
 		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.hasLayer())
