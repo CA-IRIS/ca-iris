@@ -15,10 +15,10 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
+import us.mn.state.dot.map.Layer;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.ProxyLayer;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -27,10 +27,19 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Jacob Barde
  */
-public class HeatmapLayer extends ProxyLayer {
+public class HeatmapLayer extends Layer {
+	private final Session session;
+
+	public WeatherSensorManager getManager() {
+		return manager;
+	}
+
+	private final WeatherSensorManager manager;
 
 	public HeatmapLayer(Session s, WeatherSensorManager m) {
-		super(m);
+		super(I18N.get("weather.heatmaps"));
+		session = s;
+		manager = m;
 	}
 
 	@Override

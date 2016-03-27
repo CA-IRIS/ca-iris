@@ -77,6 +77,12 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** The current marker */
 	protected AbstractMarker marker = DIRECTION_MARKER;
 
+	public HeatmapLayer getHeatmapLayer() {
+		return heatmapLayer;
+	}
+
+	private final HeatmapLayer heatmapLayer;
+
 	/** Whether style summary has been initialized */
 	private boolean style_initialized;
 
@@ -113,6 +119,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
+		heatmapLayer = new HeatmapLayer(s, this);
 	}
 
 	/** Gets the style summary for this proxy type, with no cell

@@ -141,7 +141,7 @@ public class Session {
 		return lcs_array_manager;
 	}
 
-	private final WeatherSensorManager heatmap_manager;
+	private final WeatherSensorManager weather_manager;
 
 	/** Mapping of all tabs */
 	private final HashMap<String, MapTab> all_tabs =
@@ -149,6 +149,8 @@ public class Session {
 
 	/** Segment layer */
 	private final SegmentLayer seg_layer;
+
+	private final HeatmapLayer heatmapLayer;
 
 	/** Tile layer */
 	private final TileLayer tile_layer;
@@ -169,6 +171,7 @@ public class Session {
 		cam_manager = new CameraManager(this, loc_manager);
 		dms_manager = new DMSManager(this, loc_manager);
 		lcs_array_manager = new LCSArrayManager(this, loc_manager);
+		weather_manager = new WeatherSensorManager(this, loc_manager);
 		managers = new LinkedList<ProxyManager<? extends SonarObject>>();
 		managers.add(r_node_manager);
 		managers.add(new ControllerManager(this, loc_manager));
@@ -180,10 +183,11 @@ public class Session {
 		managers.add(new LCSIManager(this, loc_manager));
 		managers.add(new LaneMarkingManager(this,loc_manager));
 		managers.add(new BeaconManager(this, loc_manager));
-		managers.add(new WeatherSensorManager(this, loc_manager));
+		managers.add(weather_manager);
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
+		heatmapLayer = weather_manager.getHeatmapLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
 
@@ -251,6 +255,7 @@ public class Session {
 	public void createLayers(MapBean mb, MapModel mm) {
 		if (tile_layer != null)
 			mm.addLayer(tile_layer.createState(mb));
+		mm.addLayer(heatmapLayer.createState(mb));
 		mm.addLayer(seg_layer.createState(mb));
 		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.hasLayer())

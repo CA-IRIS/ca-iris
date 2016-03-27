@@ -64,7 +64,6 @@ public class HeatmapLayerState extends LayerState {
 		manager = layer.getManager();
 	}
 
-
 	/**
 	 * Paint the layer
 	 *
@@ -102,12 +101,6 @@ public class HeatmapLayerState extends LayerState {
 
 	private static Integer getMeasurement(WeatherSensor ws, ItemStyle mtype) {
 
-		// figure the data is bad after an hour
-//		if((TimeSteward.currentTimeMillis() - ws.getObsTime()) > 3600000)
-//			return null;
-
-		// all values return a minimum of 0. so temperature is returned
-		// as Kelvin
 		switch (mtype) {
 		case AIR_TEMP:
 			return ws.getAirTemp();
