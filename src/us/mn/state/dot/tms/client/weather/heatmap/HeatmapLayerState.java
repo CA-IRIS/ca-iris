@@ -24,13 +24,19 @@ import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.Iterator;
+
+import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.HCOLOR;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.LCOLOR;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
 
 /**
  * HeatmapLayerState is for...
@@ -38,8 +44,11 @@ import java.util.Iterator;
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
-	private static final int DEG_KELVIN = 273;
-
+	private static final int OPACITY = 64;
+	private static final double RADIUS_METERS = 10000d;
+	private static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
+	private static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
+	private static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
 	private final HeatmapLayer heatmapLayer;
 
 	private final ProxyManager<WeatherSensor> manager;
@@ -73,6 +82,7 @@ public class HeatmapLayerState extends LayerState {
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
 		MapGeoLoc mloc;
 		ZoomLevel zoomLevel = map.getModel().getZoomLevel();
+		int r = (int) (RADIUS_METERS / zoomLevel.scale);
 		int x = 0;
 		int y = 0;
 		ItemStyle mtype = manager.getStyleSummary().getStyle();
@@ -80,10 +90,13 @@ public class HeatmapLayerState extends LayerState {
 			WeatherSensor ws = wi.next();
 			mloc = getManager().findGeoLoc(ws);
 			SphericalMercatorPosition pos = GeoLocHelper.getPosition(mloc.getGeoLoc());
-			x = (int)zoomLevel.getPixelX(pos.getX());
-			y = (int)zoomLevel.getPixelY(pos.getY());
+			x = (int)zoomLevel.getPixelX(pos.getX()) - r;
+			y = (int)zoomLevel.getPixelY(pos.getY()) - r;
 
 			Integer measurement = getMeasurement(ws, mtype);
+			Color c = getMeasurementColor(ws, mtype, measurement);
+			g.setColor(c);
+			g.fillOval(x, y, 2*r, 2*r);
 		}
 	}
 
@@ -109,9 +122,44 @@ public class HeatmapLayerState extends LayerState {
 		return null;
 	}
 
-//	private static Color getRadiiColor(WeatherSensor ws) {
-//		if
-//	}
+	private static Color getMeasurementColor(WeatherSensor ws, ItemStyle mtype, Integer x) {
+
+		double l = 0, h = 0;
+		switch (mtype) {
+		case AIR_TEMP:
+			l = SystemAttrEnum.RWIS_LOW_AIR_TEMP_C.getFloat();
+			h = SystemAttrEnum.RWIS_HIGH_AIR_TEMP_C.getFloat();
+			break;
+
+		case PRECIPITATION:
+			l = SystemAttrEnum.RWIS_LOW_PRECIP_RATE_MMH.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_PRECIP_RATE_MMH.getInt();
+			break;
+
+		case VISIBILITY:
+			l = SystemAttrEnum.RWIS_LOW_VISIBILITY_DISTANCE_M
+				.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_VISIBILITY_DISTANCE_M
+				.getInt();
+			break;
+
+		case WIND_SPEED:
+			l = SystemAttrEnum.RWIS_LOW_WIND_SPEED_KPH.getInt();
+			h = SystemAttrEnum.RWIS_HIGH_WIND_SPEED_KPH.getInt();
+			break;
+		}
+
+		if(x == null)
+			return new Color(255,255,255,0);
+
+		if(x < l)
+			return LOCOLOR;
+		else if(x > h)
+			return HOCOLOR;
+		else
+			return MOCOLOR;
+
+	}
 
 	public HeatmapLayer getHeatmapLayer() {
 
