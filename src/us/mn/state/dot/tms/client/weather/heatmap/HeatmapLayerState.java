@@ -44,11 +44,12 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
-	private static final int OPACITY = 64;
-	private static final double RADIUS_METERS = 10000d;
+	private static final int OPACITY = 96;
+	private static final double RADIUS_METERS = 16093.44d;
 	private static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
 	private static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
 	private static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
+
 	private final HeatmapLayer heatmapLayer;
 
 	private final ProxyManager<WeatherSensor> manager;
@@ -81,7 +82,7 @@ public class HeatmapLayerState extends LayerState {
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
 		MapGeoLoc mloc;
 		ZoomLevel zoomLevel = map.getModel().getZoomLevel();
-		int r = (int) (RADIUS_METERS / zoomLevel.scale);
+		int r = (int) RADIUS_METERS;
 		int x = 0;
 		int y = 0;
 		ItemStyle mtype = manager.getStyleSummary().getStyle();
