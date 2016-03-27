@@ -168,6 +168,11 @@ public class WeatherHeatmapManager extends WeatherSensorManager {
 	public Double getTangentAngle(MapGeoLoc loc) {
 		if (loc == null)
 			return null;
+		final ItemStyle cur = getStyleSummary().getStyle();
+		if (cur == ItemStyle.AIR_TEMP ||
+			cur == ItemStyle.PRECIPITATION ||
+			cur == ItemStyle.VISIBILITY)
+			return null;
 		Iterator<WeatherSensor> i = WeatherSensorHelper.iterator();
 		WeatherSensor ws = null;
 		while (i.hasNext()) {
