@@ -291,9 +291,4 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		String sn = SiteDataHelper.getSiteName(pn);
 		return ( (sn != null) ? sn : pn );
 	}
-
-	@Override
-	protected ProxyLayer<WeatherSensor> createLayer() {
-		return new HeatmapLayer(session, this);
-	}
 }
