@@ -79,6 +79,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
+			AbstractMarker old_marker = marker;
 			switch (s) {
 				case AIR_TEMP:
 					marker = TEMP_MARKER;
@@ -95,6 +96,10 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 				default:
 					marker = DIRECTION_MARKER;
 					break;
+			}
+
+			if (old_marker != marker) {
+				updateExtent();
 			}
 		}
 	};
@@ -248,7 +253,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		if (cur == ItemStyle.AIR_TEMP ||
 			cur == ItemStyle.PRECIPITATION ||
 			cur == ItemStyle.VISIBILITY)
-			return null;
+			return 0.0;
 		Iterator<WeatherSensor> i = WeatherSensorHelper.iterator();
 		WeatherSensor ws = null;
 		while (i.hasNext()) {
