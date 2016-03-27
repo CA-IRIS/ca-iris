@@ -260,7 +260,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		if (cur == ItemStyle.AIR_TEMP ||
 			cur == ItemStyle.PRECIPITATION ||
 			cur == ItemStyle.VISIBILITY)
-			return new Angle(0.0).invert().toRads();
+			return 0.0;
 		Iterator<WeatherSensor> i = WeatherSensorHelper.iterator();
 		WeatherSensor ws = null;
 		while (i.hasNext()) {
