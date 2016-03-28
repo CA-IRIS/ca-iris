@@ -16,7 +16,6 @@
 package us.mn.state.dot.tms.client.weather.heatmap;
 
 import us.mn.state.dot.geokit.SphericalMercatorPosition;
-import us.mn.state.dot.geokit.ZoomLevel;
 import us.mn.state.dot.map.LayerChange;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
@@ -24,7 +23,6 @@ import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
@@ -32,11 +30,10 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Iterator;
-
-import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.HCOLOR;
-import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.LCOLOR;
-import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
+import java.util.List;
 
 /**
  * HeatmapLayerState is for...
@@ -44,16 +41,23 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
-	private static final int OPACITY = 96;
 	private static final double RADIUS_METERS = 16093.44d;
-	private static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
-	private static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
-	private static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
 
 	private final HeatmapLayer heatmapLayer;
 
 	private final ProxyManager<WeatherSensor> manager;
 
+	private final WeatherMeasurementDataSet dataSet;
+
+	/** Listener to handle the style selection changing */
+	private final ActionListener style_listener = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
+
+			refreshDataSet(s);
+		}
+	};
 	/**
 	 * Create a new Heatmap Layer
 	 * @param layer
@@ -63,6 +67,20 @@ public class HeatmapLayerState extends LayerState {
 		super(layer, mb, new HeatmapTheme(layer.getManager()));
 		heatmapLayer = layer;
 		manager = layer.getManager();
+		dataSet = new WeatherMeasurementDataSet();
+	}
+
+	private void refreshDataSet(ItemStyle s) {
+		ItemStyle mtype = manager.getStyleSummary().getStyle();
+		if(s != null)
+			mtype = s;
+		dataSet.changeDataType(mtype);
+
+		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
+		while(wi.hasNext()) {
+			WeatherSensor ws = wi.next();
+			dataSet.add(ws);
+		}
 	}
 
 	/**
@@ -79,82 +97,35 @@ public class HeatmapLayerState extends LayerState {
 	}
 
 	private void paintRadii(final Graphics2D g) {
-		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
+		for (Color c : new Color[] {WeatherMeasurementDataSet.LOCOLOR,
+			WeatherMeasurementDataSet.MOCOLOR,
+			WeatherMeasurementDataSet.HOCOLOR}) {
+
+			//FIXME temporary until listener is added.
+			refreshRadii(g, c);
+		}
+	}
+
+	private void refreshRadii(final Graphics2D g, Color c) {
+		g.setColor(c);
 		MapGeoLoc mloc;
-		ZoomLevel zoomLevel = map.getModel().getZoomLevel();
 		int r = (int) RADIUS_METERS;
-		int x = 0;
-		int y = 0;
-		ItemStyle mtype = manager.getStyleSummary().getStyle();
-		while(wi.hasNext()) {
-			WeatherSensor ws = wi.next();
+		int x;
+		int y;
+		List<WeatherMeasurementSample> samples = dataSet.getList(c);
+		for(WeatherMeasurementSample sample : samples) {
+			WeatherSensor ws = sample.getWeatherSensor();
 			mloc = getManager().findGeoLoc(ws);
-			SphericalMercatorPosition pos = GeoLocHelper.getPosition(mloc.getGeoLoc());
+			SphericalMercatorPosition pos = GeoLocHelper
+				.getPosition(mloc.getGeoLoc());
+
 			x = (int) pos.getX() - r;
 			y = (int) pos.getY() - r;
 
-			Integer measurement = getMeasurement(ws, mtype);
-			Color c = getMeasurementColor(ws, mtype, measurement);
-			g.setColor(c);
 			g.fillOval(x, y, 2*r, 2*r);
 		}
-	}
-
-	private static Integer getMeasurement(WeatherSensor ws, ItemStyle mtype) {
-
-		switch (mtype) {
-		case AIR_TEMP:
-			return ws.getAirTemp();
-		case WIND_SPEED:
-			return ws.getWindSpeed();
-		case PRECIPITATION:
-			return ws.getPrecipRate();
-		case VISIBILITY:
-			return ws.getPrecipRate();
-		}
-
-		return null;
-	}
-
-	private static Color getMeasurementColor(WeatherSensor ws, ItemStyle mtype, Integer x) {
-
-		double l = 0, h = 0;
-		switch (mtype) {
-		case AIR_TEMP:
-			l = SystemAttrEnum.RWIS_LOW_AIR_TEMP_C.getFloat();
-			h = SystemAttrEnum.RWIS_HIGH_AIR_TEMP_C.getFloat();
-			break;
-
-		case PRECIPITATION:
-			l = SystemAttrEnum.RWIS_LOW_PRECIP_RATE_MMH.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_PRECIP_RATE_MMH.getInt();
-			break;
-
-		case VISIBILITY:
-			l = SystemAttrEnum.RWIS_LOW_VISIBILITY_DISTANCE_M
-				.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_VISIBILITY_DISTANCE_M
-				.getInt();
-			break;
-
-		case WIND_SPEED:
-			l = SystemAttrEnum.RWIS_LOW_WIND_SPEED_KPH.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_WIND_SPEED_KPH.getInt();
-			break;
-		}
-
-		if(x == null)
-			return new Color(255,255,255,0);
-
-		if(x < l)
-			return LOCOLOR;
-		else if(x > h)
-			return HOCOLOR;
-		else
-			return MOCOLOR;
 
 	}
-
 	public HeatmapLayer getHeatmapLayer() {
 
 		return heatmapLayer;
@@ -170,29 +141,17 @@ public class HeatmapLayerState extends LayerState {
 		return manager.forEach(s, getScale());
 	}
 
-	/** Flag to indicate the tab is selected */
-	private boolean tab_selected = false;
-
-	/** Set the tab selected flag */
-	public void setTabSelected(boolean ts) {
-		tab_selected = ts;
-		if(getVisible() == null)
-			fireLayerChanged(LayerChange.visibility);
-	}
-
 	/** Get the visibility flag */
 	@Override
 	public boolean isVisible() {
 		Boolean v = getVisible();
-		//boolean rv = (v != null) ? v : tab_selected || isZoomVisible();
-		//boolean rv = (tab_selected || (v==null?Boolean.FALSE : v)) && isZoomVisible();
-		boolean rv = (v != null ? v : tab_selected) && isZoomVisible();
+		boolean rv = (v != null ? v : Boolean.FALSE) && isZoomVisible();
 		return rv;
 	}
 
 	/** Is the layer visible at the current zoom level? */
 	private boolean isZoomVisible() {
 		int curZoom = map.getModel().getZoomLevel().ordinal();
-		return manager.isVisible(curZoom) /*&& curZoom <= 12*/;
+		return manager.isVisible(curZoom);
 	}
 }
