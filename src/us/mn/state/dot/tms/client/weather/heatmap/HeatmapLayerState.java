@@ -28,7 +28,9 @@ import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -58,6 +60,7 @@ public class HeatmapLayerState extends LayerState {
 			refreshDataSet(s);
 		}
 	};
+
 	/**
 	 * Create a new Heatmap Layer
 	 * @param layer
@@ -70,11 +73,8 @@ public class HeatmapLayerState extends LayerState {
 		dataSet = new WeatherMeasurementDataSet();
 	}
 
-	private void refreshDataSet(ItemStyle s) {
-		ItemStyle mtype = manager.getStyleSummary().getStyle();
-		if(s != null)
-			mtype = s;
-		dataSet.changeDataType(mtype);
+	public void refreshDataSet(ItemStyle s) {
+		dataSet.changeDataType(s);
 
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
 		while(wi.hasNext()) {
@@ -92,18 +92,24 @@ public class HeatmapLayerState extends LayerState {
 	public void paint(final Graphics2D g) {
 		super.paint(g);
 		if(isVisible()) {
+			refreshDataSet(manager.getStyleSummary().getStyle());
 			paintRadii(g);
 		}
 	}
 
 	private void paintRadii(final Graphics2D g) {
+		Composite origComposite = g.getComposite();
 		for (Color c : new Color[] {WeatherMeasurementDataSet.LOCOLOR,
 			WeatherMeasurementDataSet.MOCOLOR,
 			WeatherMeasurementDataSet.HOCOLOR}) {
 
+			//FIXME fix compositing so later drawings disregard any overlap from previous drawing so as not to affect transparency nor color.
+			AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
+			g.setComposite(ac);
 			//FIXME temporary until listener is added.
 			refreshRadii(g, c);
 		}
+		g.setComposite(origComposite);
 	}
 
 	private void refreshRadii(final Graphics2D g, Color c) {

@@ -36,7 +36,7 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
  * @author Jacob Barde
  */
 public class WeatherMeasurementDataSet {
-	private static final int OPACITY = 96;
+	public static final int OPACITY = 96;
 	public static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
 	public static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
 	public static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
@@ -70,12 +70,16 @@ public class WeatherMeasurementDataSet {
 	}
 
 	private void addSample(WeatherSensor ws) {
+		if(ws == null)
+			return;
 		Integer measurement = getMeasurement(ws, datatype);
 		Color c = getMeasurementColor(datatype, measurement);
-		list.get(c).add(new WeatherMeasurementSample(ws, measurement, c, datatype));
+		if(c != null && measurement != null)
+			list.get(c).add(new WeatherMeasurementSample(ws, measurement, c, datatype));
 	}
 
 	public List<WeatherMeasurementSample> getList(Color c) {
+		System.out.println(c + " samples=" + list.get(c).size());
 		return list.get(c);
 	}
 
