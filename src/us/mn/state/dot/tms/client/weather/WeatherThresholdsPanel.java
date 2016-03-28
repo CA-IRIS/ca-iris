@@ -18,6 +18,7 @@ import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.SystemAttribute;
+import us.mn.state.dot.tms.client.EditModeListener;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -76,7 +77,7 @@ public class WeatherThresholdsPanel extends JPanel {
     private final JTextField high_visibility_text = new JTextField();
 
     /** System attribute proxy listener */
-    private final ProxyListener<SystemAttribute> listener = new ProxyListener<SystemAttribute>() {
+    private final ProxyListener<SystemAttribute> proxy_listener = new ProxyListener<SystemAttribute>() {
         @Override
         public void proxyAdded(SystemAttribute proxy) { }
 
@@ -111,6 +112,14 @@ public class WeatherThresholdsPanel extends JPanel {
         }
     };
 
+    /** Edit mode listener */
+    private final EditModeListener edit_listener = new EditModeListener() {
+        @Override
+        public void editModeChanged() {
+            setEnabled(session.canUpdate(SystemAttribute.SONAR_TYPE));
+        }
+    };
+
     /** Create new weather thresholds panel */
     public WeatherThresholdsPanel(Session s) {
         super(new GridBagLayout());
@@ -125,7 +134,8 @@ public class WeatherThresholdsPanel extends JPanel {
         initColors();
         initTextFields();
 
-        sys_attrs.addProxyListener(listener);
+        sys_attrs.addProxyListener(proxy_listener);
+        session.addEditModeListener(edit_listener);
 
         GridBagConstraints gc = new GridBagConstraints();
         gc.fill = GridBagConstraints.BOTH;
@@ -316,7 +326,8 @@ public class WeatherThresholdsPanel extends JPanel {
 
     /** Dispose of the panel */
     public void dispose() {
-        sys_attrs.removeProxyListener(listener);
+        sys_attrs.removeProxyListener(proxy_listener);
+        session.removeEditModeListener(edit_listener);
     }
 
     /** Set enabled */
