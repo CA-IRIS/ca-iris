@@ -71,6 +71,13 @@ public class HeatmapLayerState extends LayerState {
 		heatmapLayer = layer;
 		manager = layer.getManager();
 		dataSet = new WeatherMeasurementDataSet();
+		manager.getStyleSummary().addSelectionListener(style_listener);
+	}
+
+	@Override
+	public void dispose() {
+		super.dispose();
+		manager.getStyleSummary().removeSelectionListener(style_listener);
 	}
 
 	public void refreshDataSet(ItemStyle s) {
@@ -92,7 +99,6 @@ public class HeatmapLayerState extends LayerState {
 	public void paint(final Graphics2D g) {
 		super.paint(g);
 		if(isVisible()) {
-			refreshDataSet(manager.getStyleSummary().getStyle());
 			paintRadii(g);
 		}
 	}
@@ -104,9 +110,9 @@ public class HeatmapLayerState extends LayerState {
 			WeatherMeasurementDataSet.HOCOLOR}) {
 
 			//FIXME fix compositing so later drawings disregard any overlap from previous drawing so as not to affect transparency nor color.
-			AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
-			g.setComposite(ac);
-			//FIXME temporary until listener is added.
+			//AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
+			//g.setComposite(ac);
+
 			refreshRadii(g, c);
 		}
 		g.setComposite(origComposite);
