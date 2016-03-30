@@ -3,6 +3,7 @@
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
  * Copyright (C) 2011  Berkeley Transportation Systems Inc.
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +54,7 @@ import us.mn.state.dot.tms.server.event.CommEvent;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class ControllerImpl extends BaseObjectImpl implements Controller {
 
@@ -648,6 +650,11 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 			e.printStackTrace();
 		}
 		failTime = ft;
+	}
+
+	/** FIXME: CA-only temporary fix. */
+	public void setFailTimeCA(Long ft) {
+		setFailTime(ft);
 	}
 
 	/** Set the failed status of the controller */
