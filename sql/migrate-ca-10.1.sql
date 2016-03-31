@@ -45,7 +45,12 @@ INSERT INTO iris.system_attribute(name, value) VALUES('rwis_color_mid', 'FFC800'
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_high_air_temp_c', 37.0);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_high_precip_rate_mmh', 50);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_high_visibility_distance_m', 300);
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_high_wind_speed_kph', 40);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_air_temp_c', 0.0);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_precip_rate_mmh', 5);
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_visibility_distance_m', 152);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_wind_speed_kph', 5);
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_max_valid_wind_speed_kph', 282);
 
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_opacity_percentage', 30);
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_measurement_radius', 16093.44);
