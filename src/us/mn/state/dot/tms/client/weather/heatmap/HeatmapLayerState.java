@@ -37,13 +37,15 @@ import java.awt.event.ActionListener;
 import java.util.Iterator;
 import java.util.List;
 
+import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_MEASUREMENT_RADIUS;
+
 /**
  * HeatmapLayerState is for...
  *
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
-	private static final double RADIUS_METERS = 16093.44d;
+	private static final double RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
 
 	private final HeatmapLayer heatmapLayer;
 

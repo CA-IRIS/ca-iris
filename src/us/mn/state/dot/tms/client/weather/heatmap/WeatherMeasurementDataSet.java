@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_OPACITY_PERCENTAGE;
 import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.HCOLOR;
 import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.LCOLOR;
 import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
@@ -36,7 +37,7 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
  * @author Jacob Barde
  */
 public class WeatherMeasurementDataSet {
-	public static final int OPACITY = 96;
+	public static final int OPACITY = (int) (RWIS_OPACITY_PERCENTAGE.getInt() * (0xFF/100));
 	public static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
 	public static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
 	public static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);

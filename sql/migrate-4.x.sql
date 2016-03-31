@@ -21,3 +21,6 @@ INSERT INTO iris.system_attribute(name, value) VALUES('rwis_high_visibility_dist
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_air_temp_c', 0.0);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_precip_rate_mmh', 5);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_wind_speed_kph', 5);
+
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_opacity_percentage', 30);
+INSERT INTO iris.system_attribute(name, value) VALUES('rwis_measurement_radius', 16093.44f);
