@@ -45,7 +45,7 @@ import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_MEASUREMENT_RADIUS;
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
-	private static final double RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
+	private static final float RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
 
 	private final HeatmapLayer heatmapLayer;
 
