@@ -80,7 +80,6 @@ public class WeatherMeasurementDataSet {
 	}
 
 	public List<WeatherMeasurementSample> getList(Color c) {
-		System.out.println(c + " samples=" + list.get(c).size());
 		return list.get(c);
 	}
 
