@@ -100,6 +100,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final EditModeListener edit_lsnr = new EditModeListener() {
 		public void editModeChanged() {
 			updateButtonPanel();
+			table.setDragEnabled(model.canUpdate(getFirstProxy()));
 		}
 	};
 
@@ -242,7 +243,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		if (!model.hasManualSort())
 			return;
 
-		table.setDragEnabled(true);
+		table.setDragEnabled(model.canUpdate(getFirstProxy()));
 		table.setDropMode(DropMode.INSERT_ROWS);
 		table.setTransferHandler(new ProxyTableRowTransferHandler(table));
 	}
@@ -278,6 +279,11 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		return (ri >= 0)
 		     ? model.getRowProxy(table.convertRowIndexToModel(ri))
 		     : null;
+	}
+
+	/** Get the proxy for the first row */
+	private T getFirstProxy() {
+		return table.getRowCount() > 0 ? model.getRowProxy(table.convertRowIndexToModel(0)) : null;
 	}
 
 	/** Select a new proxy */
