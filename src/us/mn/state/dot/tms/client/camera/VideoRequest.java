@@ -17,13 +17,18 @@ package us.mn.state.dot.tms.client.camera;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.StreamType;
+
 import us.mn.state.dot.tms.utils.HttpUtil;
+import us.mn.state.dot.tms.utils.SString;
 import us.mn.state.dot.tms.utils.URIUtils;
 
 /**
@@ -85,6 +90,14 @@ public class VideoRequest {
 		String host = p.getProperty(VIDEO_HOST);
 		String port = p.getProperty(VIDEO_PORT);
 		return (host != null) ? createBaseUrl(host, port) : null;
+	}
+
+	/** Returns a list of excluded hosts from properties given */
+	private List<String> createExcludedHosts(Properties p) {
+		String prop = p.getProperty("video.excluded.hosts");
+		if (null == prop)
+			return new ArrayList<String>(0);
+		return SString.split(prop, ",");
 	}
 
 	/** Create a url for connecting to the video server */
@@ -150,6 +163,9 @@ public class VideoRequest {
 	/** The base URL of the video server */
 	private final String base_url;
 
+	/** The hosts to not be passed through video server */
+	private final List<String> excluded_hosts;
+
 	/** District ID */
 	private final String district;
 
@@ -159,13 +175,30 @@ public class VideoRequest {
 	/** Create a new video request */
 	public VideoRequest(Properties p, Size sz) {
 		base_url = createBaseUrl(p);
+		excluded_hosts = createExcludedHosts(p);
 		district = p.getProperty("district", "tms");
 		size = sz;
 	}
 
 	/** Create a URL for a stream */
 	public String getUrl(Camera c) throws IOException {
-		return (base_url != null) ? getServletUrl(c) : getCameraUrl(c);
+		String url = getCameraUrl(c);
+		if (null == base_url || isUrlExcluded(url))
+			return url;
+		return getServletUrl(c);
+	}
+
+	/** Whether URL's host is in excluded hosts */
+	private boolean isUrlExcluded(String u) {
+		boolean ret = false;
+		try {
+			URI url = URI.create(u);
+			ret = excluded_hosts.contains(url.getHost());
+		} catch (Exception e) {
+			// Nothing we can do here
+		}
+
+		return ret;
 	}
 
 	/** Create a video servlet URL */
