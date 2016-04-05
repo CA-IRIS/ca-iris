@@ -97,10 +97,10 @@ public class MJPEGStream implements VideoStream {
 				"image/jpeg".equals(HttpUtil.getContentType(url));
 	}
 
-	/** Inits input stream and content length if necessary */
-	private void initStream() throws IOException {
+	/** Inits content length. Additionally stream if null. */
+	private void initContentLength() throws IOException {
 		if (null == stream)
-			stream = createInputStream();
+			initInputStream();
 		else if (!is_snapshot)
 			content_len = getNonSnapshotImageSize();
 	}
@@ -127,7 +127,7 @@ public class MJPEGStream implements VideoStream {
 	}
 
 	/** Create an input stream from an HTTP connection */
-	protected InputStream createInputStream() throws IOException {
+	protected InputStream initInputStream() throws IOException {
 		HttpURLConnection c = (HttpURLConnection)url.openConnection();
 		HttpURLConnection.setFollowRedirects(true);
 		c.setConnectTimeout(HttpUtil.TIMEOUT_DIRECT);
@@ -136,6 +136,7 @@ public class MJPEGStream implements VideoStream {
 		if (resp != HttpURLConnection.HTTP_OK) {
 			throw new IOException(c.getResponseMessage());
 		}
+		stream = c.getInputStream();
 		content_len = getImageSize(c);
 		return c.getInputStream();
 	}
@@ -161,7 +162,7 @@ public class MJPEGStream implements VideoStream {
 
 	/** Get the next image in the mjpeg stream */
 	protected byte[] getImage() throws IOException {
-		initStream();
+		initContentLength();
 		byte[] image = new byte[content_len];
 		int n_bytes = 0;
 		while(n_bytes < content_len) {
