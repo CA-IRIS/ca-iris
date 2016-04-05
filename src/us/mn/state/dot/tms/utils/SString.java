@@ -65,7 +65,7 @@ public class SString {
 
     /** Splits the given string using the given delimiter and removing empty strings */
     public static List<String> split(String s, String d) {
-        List<String> ret = new ArrayList<>();
+        List<String> ret = new ArrayList<String>();
         String[] test = s.split(d);
 
         for(String t : test)
