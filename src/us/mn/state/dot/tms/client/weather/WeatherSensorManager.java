@@ -18,6 +18,8 @@
 package us.mn.state.dot.tms.client.weather;
 
 import us.mn.state.dot.map.AbstractMarker;
+import us.mn.state.dot.map.MapObject;
+import us.mn.state.dot.map.MapSearcher;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
@@ -40,6 +42,7 @@ import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
 import us.mn.state.dot.tms.client.weather.markers.VisibilityMarker;
+import us.mn.state.dot.tms.client.widget.Invokable;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
 import javax.swing.JPopupMenu;
@@ -49,6 +52,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.util.Iterator;
 
+import static us.mn.state.dot.tms.client.widget.SwingRunner.runQueued;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
@@ -308,4 +312,31 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		String sn = SiteDataHelper.getSiteName(pn);
 		return ( (sn != null) ? sn : pn );
 	}
+
+	/**
+	 * Update theme
+	 * This forces each object on the layer to be updated.  Needed due to
+	 * the use of multiple icons/symbols (styles?) in use by
+	 * WeatherSensorTheme
+	 */
+	@Override
+	public void updateTheme() {
+		if (getLayer() != null) {
+			runQueued(new Invokable() {
+				public void invoke() {
+					getLayer().updateTheme();
+					forEach(new MapSearcher() {
+						@Override
+						public boolean next(MapObject mo) {
+							if(mo instanceof MapGeoLoc)
+								((MapGeoLoc)mo).doUpdate();
+							return false;
+						}
+					}, null);
+				}
+			});
+		}
+
+	}
+
 }

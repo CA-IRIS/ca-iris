@@ -215,7 +215,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Update theme */
-	public final void updateTheme() {
+	public void updateTheme() {
 		if (layer != null) {
 			runQueued(new Invokable() {
 				public void invoke() {
@@ -422,7 +422,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Iterate through all proxy objects */
-	private MapObject forEach(MapSearcher ms, AffineTransform at) {
+	protected MapObject forEach(MapSearcher ms, AffineTransform at) {
 		shape = getShape(at);
 		synchronized(map_cache) {
 			for(MapGeoLoc loc: map_cache) {
