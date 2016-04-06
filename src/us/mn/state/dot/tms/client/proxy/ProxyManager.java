@@ -203,12 +203,23 @@ abstract public class ProxyManager<T extends SonarObject> {
 		}
 	}
 
-	/** Update layer extend */
+	/** Update layer extent */
 	public final void updateExtent() {
 		if (layer != null) {
 			runQueued(new Invokable() {
 				public void invoke() {
 					layer.updateExtent();
+				}
+			});
+		}
+	}
+
+	/** Update theme */
+	public final void updateTheme() {
+		if (layer != null) {
+			runQueued(new Invokable() {
+				public void invoke() {
+					layer.updateTheme();
 				}
 			});
 		}

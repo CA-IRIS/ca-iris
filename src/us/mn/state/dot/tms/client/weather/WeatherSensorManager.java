@@ -110,10 +110,8 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 				break;
 			}
 
-			if (old_marker != marker) {
-				updateGeometry();
-				updateExtent();
-			}
+			if (old_marker != marker)
+				updateTheme();
 		}
 	};
 
