@@ -37,7 +37,6 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
 import us.mn.state.dot.tms.client.proxy.StyleSummary;
-import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
@@ -81,12 +80,6 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** The current marker */
 	protected AbstractMarker marker = DIRECTION_MARKER;
 
-	public HeatmapLayer getHeatmapLayer() {
-		return heatmapLayer;
-	}
-
-	private final HeatmapLayer heatmapLayer;
-
 	/** Whether style summary has been initialized */
 	private boolean style_initialized;
 
@@ -122,7 +115,6 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
-		heatmapLayer = new HeatmapLayer(s, this);
 	}
 
 	/** Gets the style summary for this proxy type, with no cell
@@ -313,18 +305,12 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return ( (sn != null) ? sn : pn );
 	}
 
-	/**
-	 * Update theme
-	 * This forces each object on the layer to be updated.  Needed due to
-	 * the use of multiple icons/symbols (styles?) in use by
-	 * WeatherSensorTheme
-	 */
 	@Override
 	public void updateTheme() {
-		if (getLayer() != null) {
+		super.updateTheme();
+		if (layer != null) {
 			runQueued(new Invokable() {
 				public void invoke() {
-					getLayer().updateTheme();
 					forEach(new MapSearcher() {
 						@Override
 						public boolean next(MapObject mo) {
@@ -338,5 +324,4 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		}
 
 	}
-
 }

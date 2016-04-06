@@ -116,7 +116,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	private final ProxyMapCache<T> map_cache = new ProxyMapCache<T>();
 
 	/** Map layer for the proxy type */
-	private final ProxyLayer<T> layer;
+	protected final ProxyLayer<T> layer;
 
 	/** Default style */
 	private final ItemStyle def_style;
