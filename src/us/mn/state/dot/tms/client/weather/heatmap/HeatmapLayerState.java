@@ -40,17 +40,24 @@ import java.util.List;
 import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_MEASUREMENT_RADIUS;
 
 /**
- * HeatmapLayerState is for...
+ * HeatmapLayerState manages the rendering of the low/medium/high weather station
+ * area circles that denote an easy means of determining important weather-related
+ * information for the given area.
  *
  * @author Jacob Barde
  */
 public class HeatmapLayerState extends LayerState {
+
+	/** radius of circles (meters) */
 	private static final float RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
 
+	/** heatmap layer */
 	private final HeatmapLayer heatmapLayer;
 
+	/** manager */
 	private final ProxyManager<WeatherSensor> manager;
 
+	/** weather measurement data set */
 	private final WeatherMeasurementDataSet dataSet;
 
 	/** Listener to handle the style selection changing */
@@ -64,9 +71,10 @@ public class HeatmapLayerState extends LayerState {
 	};
 
 	/**
-	 * Create a new Heatmap Layer
-	 * @param layer
-	 * @param mb
+	 * Create a new Heatmap LayerState
+	 *
+	 * @param layer heatmap layer
+	 * @param mb mapbean
 	 */
 	public HeatmapLayerState(HeatmapLayer layer, MapBean mb) {
 		super(layer, mb, new HeatmapTheme(layer.getManager()));
@@ -76,12 +84,18 @@ public class HeatmapLayerState extends LayerState {
 		manager.getStyleSummary().addSelectionListener(style_listener);
 	}
 
+	/** Dispose of the layer state */
 	@Override
 	public void dispose() {
 		super.dispose();
 		manager.getStyleSummary().removeSelectionListener(style_listener);
 	}
 
+	/**
+	 * Refresh the dataset dependent for the [selected] item style
+	 *
+	 * @param s item style
+	 */
 	public void refreshDataSet(ItemStyle s) {
 		dataSet.changeDataType(s);
 
@@ -92,11 +106,7 @@ public class HeatmapLayerState extends LayerState {
 		}
 	}
 
-	/**
-	 * Paint the layer
-	 *
-	 * @param g
-	 */
+	/** Paint the layer */
 	@Override
 	public void paint(final Graphics2D g) {
 		super.paint(g);
@@ -105,6 +115,10 @@ public class HeatmapLayerState extends LayerState {
 		}
 	}
 
+	/**
+	 * paint the circles on the the graphics object in order of lowest
+	 * threshold to highest threshold
+	 */
 	private void paintRadii(final Graphics2D g) {
 		Composite origComposite = g.getComposite();
 		for (Color c : new Color[] {WeatherMeasurementDataSet.LOCOLOR,
@@ -120,6 +134,12 @@ public class HeatmapLayerState extends LayerState {
 		g.setComposite(origComposite);
 	}
 
+	/**
+	 * paint the circles of a color type
+	 *
+	 * @param g graphics
+	 * @param c color to paint
+	 */
 	private void refreshRadii(final Graphics2D g, Color c) {
 		g.setColor(c);
 		MapGeoLoc mloc;
@@ -138,18 +158,21 @@ public class HeatmapLayerState extends LayerState {
 
 			g.fillOval(x, y, 2*r, 2*r);
 		}
-
 	}
+
+	/** Get the heatmap layer */
 	public HeatmapLayer getHeatmapLayer() {
 
 		return heatmapLayer;
 	}
 
+	/** Get the manager */
 	public ProxyManager<WeatherSensor> getManager() {
 
 		return manager;
 	}
 
+	/** Call the specified callback for each map object in the layer */
 	@Override
 	public MapObject forEach(MapSearcher s) {
 		return manager.forEach(s, getScale());

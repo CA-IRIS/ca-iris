@@ -25,19 +25,25 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 
 /**
- * HeatmapTheme is for...
+ * HeatmapTheme is defined purely to satisfy the Layer-Theme relationship
+ * As a heatmap does not need any traditional shapes, this serves placate
+ * the existing framework.
  *
  * @author Jacob Barde
  */
 public class HeatmapTheme extends ProxyTheme {
 
+	/** Constructor */
 	public HeatmapTheme(ProxyManager m) {
 		this(m, new DummyShape());
 	}
+
+	/** Constructor */
 	public HeatmapTheme(ProxyManager m, Shape s) {
 		super(m, s);
 	}
 
+	/** required shape of a rectangle of zero width and height */
 	private static class DummyShape extends RectangularShape {
 
 		public DummyShape() {

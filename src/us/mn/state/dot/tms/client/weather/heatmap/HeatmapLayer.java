@@ -23,25 +23,38 @@ import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 import us.mn.state.dot.tms.utils.I18N;
 
 /**
- * HeatmapLayer is for...
+ * A layer specific to heatmap related objects.
+ * Since traditional vector markers are not used (like most layers), most of
+ * the functionality for this layer is handled by its corresponding LayerState
+ * @see HeatmapLayerState
  *
  * @author Jacob Barde
  */
 public class HeatmapLayer extends Layer {
+
+	/** session */
 	private final Session session;
 
+	/** Get the weather sensor manager */
 	public WeatherSensorManager getManager() {
 		return manager;
 	}
 
+	/** weather sensor manager */
 	private final WeatherSensorManager manager;
 
+	/**
+	 * Constructor to create the heatmap layer
+	 * @param s session
+	 * @param m manager
+	 */
 	public HeatmapLayer(Session s, WeatherSensorManager m) {
 		super(I18N.get("weather.heatmaps"));
 		session = s;
 		manager = m;
 	}
 
+	/** Create a new layer state */
 	@Override
 	public LayerState createState(MapBean mb) {
 		return new HeatmapLayerState(this, mb);

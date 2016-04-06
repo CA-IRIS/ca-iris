@@ -18,6 +18,7 @@ package us.mn.state.dot.tms.client.weather.heatmap;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.WeatherSensor;
+import us.mn.state.dot.tms.WeatherSensorHelper;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -31,85 +32,119 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.LCOLOR;
 import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
 
 /**
- * WeatherMeasurementDataSet is for...
+ * WeatherMeasurementDataSet is for holding weather data of particular type in
+ * a means accessible via a threshold color.
  *
- * FIXME come back and redo this.
  * @author Jacob Barde
  */
 public class WeatherMeasurementDataSet {
+
+	/** opacity for colors */
 	public static final int OPACITY = (int) (RWIS_OPACITY_PERCENTAGE.getInt() * (0xFF/100));
+
+	/** low-threshold color, with opacity applied */
 	public static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
+
+	/** medium-threshold color, with opacity applied */
 	public static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
+
+	/** high-threshold color, with opacity applied */
 	public static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
 
-	public ItemStyle getDatatype() {
-		return datatype;
-	}
-
+	/** data-type of the dataset */
 	private ItemStyle datatype = ItemStyle.WIND_SPEED;
 
-	private Map<Color, List<WeatherMeasurementSample>> list = new HashMap<Color, List<WeatherMeasurementSample>>();
+	/** hashmap containing the data */
+	private Map<Color, List<WeatherMeasurementSample>> color_data = new HashMap<Color, List<WeatherMeasurementSample>>();
 
+	/** Constructor */
 	public WeatherMeasurementDataSet() {
 		init();
 	}
 
+	/** change the data set's data-type to desired measurement type */
 	public void changeDataType(ItemStyle mtype) {
 		datatype = mtype;
 		reset();
 		init();
 	}
 
+	/** initialize the internal data set */
 	public void init() {
-		list.put(LOCOLOR, new ArrayList<WeatherMeasurementSample>());
-		list.put(MOCOLOR, new ArrayList<WeatherMeasurementSample>());
-		list.put(HOCOLOR, new ArrayList<WeatherMeasurementSample>());
+		color_data.put(LOCOLOR, new ArrayList<WeatherMeasurementSample>());
+		color_data.put(MOCOLOR, new ArrayList<WeatherMeasurementSample>());
+		color_data.put(HOCOLOR, new ArrayList<WeatherMeasurementSample>());
 	}
 
+	/**
+	 * add weather sensor's data to the data set.
+	 * appropriate data will be read into the data set depending on the
+	 * data-type of this data set.
+	 *
+	 * @param ws weather sensor
+	 */
 	public void add(WeatherSensor ws) {
 		addSample(ws);
 	}
 
+	/** add appropriate data to data set */
 	private void addSample(WeatherSensor ws) {
 		if(ws == null)
 			return;
+
 		Integer measurement = getMeasurement(ws, datatype);
 		Color c = getMeasurementColor(datatype, measurement);
 		if(c != null && measurement != null)
-			list.get(c).add(new WeatherMeasurementSample(ws, measurement, c, datatype));
+			color_data.get(c).add(new WeatherMeasurementSample(ws, measurement, c, datatype));
 	}
 
+	/** get a list of data for a given threshold color */
 	public List<WeatherMeasurementSample> getList(Color c) {
-		return list.get(c);
+		return color_data.get(c);
 	}
 
+	/** reset the data set to an empty state */
 	public void reset() {
 		clearAll();
 	}
 
+	/** remove all data in the data set */
 	private void clearAll() {
-		list.clear();
+		color_data.clear();
 	}
 
-	public static Integer getMeasurement(WeatherSensor ws, ItemStyle mtype) {
+	/**
+	 * get a measurement from a weather sensor based on request data type
+	 *
+	 * @param ws weather sensor
+	 * @param mtype desired weather data (air temp, wind speed, precipitation, visibility)
+	 *
+	 * @return Integer object containing the measurement value (nulls allowed)
+	 */
+	private static Integer getMeasurement(WeatherSensor ws, ItemStyle mtype) {
+
+		if(WeatherSensorHelper.isSampleExpired(ws))
+			return null;
 
 		switch (mtype) {
 		case AIR_TEMP:
 			return ws.getAirTemp();
 		case WIND_SPEED:
-			return ws.getWindSpeed();
+			return (WeatherSensorHelper.isCrazyState(ws)) ? null : ws.getWindSpeed();
 		case PRECIPITATION:
 			return ws.getPrecipRate();
 		case VISIBILITY:
-			return ws.getPrecipRate();
+			return ws.getVisibility();
 		}
 
 		return null;
 	}
 
-	public static Color getMeasurementColor(ItemStyle mtype, Integer x) {
+	/** get threshold color for the data type and measurement value */
+	private static Color getMeasurementColor(ItemStyle mtype, Integer x) {
 
 		double l = 0, h = 0;
+
 		switch (mtype) {
 		case AIR_TEMP:
 			l = SystemAttrEnum.RWIS_LOW_AIR_TEMP_C.getFloat();
@@ -143,6 +178,5 @@ public class WeatherMeasurementDataSet {
 			return HOCOLOR;
 		else
 			return MOCOLOR;
-
 	}
 }

@@ -21,17 +21,28 @@ import us.mn.state.dot.tms.WeatherSensor;
 import java.awt.Color;
 
 /**
- * WeatherMeasurementSample is for...
+ * WeatherMeasurementSample is a container for data samples utilized by
+ * WeatherMeasurementDataSet
+ *
+ * @see WeatherMeasurementDataSet
  *
  * @author Jacob Barde
  */
 public class WeatherMeasurementSample {
 
+	/** weather sensor */
 	private WeatherSensor weatherSensor;
+
+	/** data value (based on styleType/data type) */
 	private Integer value;
+
+	/** threshold color for data value */
 	private Color color;
+
+	/** item style / data type of measurement */
 	private ItemStyle styleType;
 
+	/** Constructor */
 	public WeatherMeasurementSample(WeatherSensor ws, Integer v, Color c, ItemStyle s) {
 		weatherSensor = ws;
 		value = v;
@@ -39,18 +50,22 @@ public class WeatherMeasurementSample {
 		styleType = s;
 	}
 
+	/** Get weatherSensor of sample */
 	public WeatherSensor getWeatherSensor() {
 		return weatherSensor;
 	}
 
+	/** Get color of sample */
 	public Color getColor() {
 		return color;
 	}
 
+	/** Get item style of sample */
 	public ItemStyle getStyleType() {
 		return styleType;
 	}
 
+	/** Get value of sample */
 	public Integer getValue() {
 		return value;
 	}
