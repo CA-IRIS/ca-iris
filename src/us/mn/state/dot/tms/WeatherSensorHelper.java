@@ -184,17 +184,18 @@ public class WeatherSensorHelper extends BaseHelper {
 			return false;
 
 		Integer windSpeed = getWindSpeedKph(ws);
-		if (windSpeed > getMaxValidWindSpeedKph())
+		if (windSpeed != null && windSpeed > getMaxValidWindSpeedKph())
 			return true;
 
 		Integer precip = getPrecipRate(ws);
-		if (precip > CRAZY_PRECIP_RATE
-			|| precip < 0)
+		if (precip != null && (precip > CRAZY_PRECIP_RATE
+			|| precip < 0))
 			return true;
 
 		Float airTemp = getAirTempCelsius(ws);
-		if (airTemp > CRAZY_HIGH_AIR_TEMPERATURE_C
-			|| airTemp < CRAZY_LOW_AIR_TEMPERATURE_C)
+		if (airTemp != null
+			&& (airTemp > CRAZY_HIGH_AIR_TEMPERATURE_C
+				|| airTemp < CRAZY_LOW_AIR_TEMPERATURE_C))
 			return true;
 
 		return false;
