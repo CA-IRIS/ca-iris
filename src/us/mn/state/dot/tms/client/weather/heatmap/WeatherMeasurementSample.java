@@ -33,9 +33,6 @@ public class WeatherMeasurementSample {
 	/** weather sensor */
 	private WeatherSensor weatherSensor;
 
-	/** data value (based on styleType/data type) */
-	private Integer value;
-
 	/** threshold color for data value */
 	private Color color;
 
@@ -43,9 +40,8 @@ public class WeatherMeasurementSample {
 	private ItemStyle styleType;
 
 	/** Constructor */
-	public WeatherMeasurementSample(WeatherSensor ws, Integer v, Color c, ItemStyle s) {
+	public WeatherMeasurementSample(WeatherSensor ws, Color c, ItemStyle s) {
 		weatherSensor = ws;
-		value = v;
 		color = c;
 		styleType = s;
 	}
@@ -65,8 +61,4 @@ public class WeatherMeasurementSample {
 		return styleType;
 	}
 
-	/** Get value of sample */
-	public Integer getValue() {
-		return value;
-	}
 }

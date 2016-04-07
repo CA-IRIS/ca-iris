@@ -2413,9 +2413,9 @@ rwis_color_mid	FFC800
 rwis_high_air_temp_c	37
 rwis_high_precip_rate_mmh	50
 rwis_high_wind_speed_kph	40
-rwis_high_visibility_distance_m	300
+rwis_high_visibility_distance_m	3000
 rwis_low_air_temp_c	0
-rwis_low_precip_rate_mmh	5
+rwis_low_precip_rate_mmh	0
 rwis_low_visibility_distance_m	152
 rwis_low_wind_speed_kph	5
 rwis_obs_age_limit_secs	240
