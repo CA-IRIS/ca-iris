@@ -327,7 +327,11 @@ public class WeatherSensorHelper extends BaseHelper {
 		if (isSampleExpired(ws))
 			return false;
 		Integer pr = ws.getPrecipRate();
-		return (pr != null) && pr >= getHighPrecipRate();
+
+		if(pr == null)
+			return false;
+
+		return pr <= CRAZY_PRECIP_RATE && pr > getHighPrecipRate();
 	}
 
 	/** Is precipitation rate low? */
@@ -335,7 +339,11 @@ public class WeatherSensorHelper extends BaseHelper {
 		if (isSampleExpired(ws))
 			return false;
 		Integer pr = ws.getPrecipRate();
-		return (pr != null) && pr <= getLowPrecipRate();
+
+		if(pr == null)
+			return false;
+
+		return pr <= CRAZY_PRECIP_RATE && pr < getLowPrecipRate();
 	}
 
 	/** Get a valid precipitation rate, or null */
