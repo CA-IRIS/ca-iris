@@ -98,9 +98,8 @@ public class WeatherMeasurementDataSet {
 		if (ws == null)
 			return;
 
-		Number measurement = getMeasurement(ws, measurementType);
 		Color c = getMeasurementColor(measurementType, ws);
-		if (c != null && measurement != null)
+		if (c != null)
 			color_data.get(c)
 				.add(new WeatherMeasurementSample(ws, c,
 					measurementType));
@@ -121,33 +120,6 @@ public class WeatherMeasurementDataSet {
 		color_data.clear();
 	}
 
-	/**
-	 * get a measurement from a weather sensor based on request data type
-	 *
-	 * @param ws    weather sensor
-	 * @param mtype desired weather measurement (air temp, wind speed, precipitation, visibility)
-	 * @return Number object containing the measurement value (nulls allowed)
-	 */
-	private static Number getMeasurement(WeatherSensor ws,
-		ItemStyle mtype) {
-
-		if (isSampleExpired(ws) || isCrazyState(ws))
-			return null;
-
-		switch (mtype) {
-		case AIR_TEMP:
-			return getAirTempCelsius(ws);
-		case WIND_SPEED:
-			return getWindSpeedKph(ws);
-		case PRECIPITATION:
-			return getPrecipRate(ws);
-		case VISIBILITY:
-			return getVisibilityMeters(ws);
-		}
-
-		return null;
-	}
-
 	/** get threshold color for the measurement type and measurement value */
 	public static Color getMeasurementColor(ItemStyle mtype,
 		WeatherSensor ws) {
@@ -157,37 +129,44 @@ public class WeatherMeasurementDataSet {
 
 		Boolean lb;
 		Boolean hb;
+		Number n;
 
 		switch (mtype) {
 		case AIR_TEMP:
 			hb = isHighAirTempCelsius(ws);
 			lb = isLowAirTempCelsius(ws);
+			n = getAirTempCelsius(ws);
 			break;
 
 		case PRECIPITATION:
 			hb = isHighPrecipRate(ws);
 			lb = isLowPrecipRate(ws);
+			n = getPrecipRate(ws);
 			break;
 
 		case VISIBILITY:
 			hb = isHighVisibility(ws);
 			lb = isLowVisibility(ws);
+			n = getVisibilityMeters(ws);
 			break;
 
 		case WIND_SPEED:
 			hb = isHighWind(ws);
 			lb = isLowWind(ws);
+			n = getWindSpeedKph(ws);
 			break;
 
 		default:
 			return null;
 		}
 
+		if (n == null)
+			return null;
 		if (lb)
 			return LOCOLOR;
-		else if (hb)
+		if (hb)
 			return HOCOLOR;
-		else
-			return MOCOLOR;
+
+		return MOCOLOR;
 	}
 }

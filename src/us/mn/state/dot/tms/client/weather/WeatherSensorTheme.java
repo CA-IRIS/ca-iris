@@ -23,8 +23,11 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.utils.STime;
 
+import static us.mn.state.dot.tms.WeatherSensorHelper.getAirTempCelsius;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getMultiTempsString;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getPrecipRate;
+import static us.mn.state.dot.tms.WeatherSensorHelper.getVisibilityMeters;
+import static us.mn.state.dot.tms.WeatherSensorHelper.getWindSpeedKph;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isCrazyState;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isHighAirTempCelsius;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isHighPrecipRate;
@@ -194,6 +197,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
 		Boolean lb;
 		Boolean hb;
+		Number n;
 
 		Symbol[] syms;
 
@@ -202,34 +206,41 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			syms = AIR_TEMP_SYMS;
 			lb = isLowAirTempCelsius(ws);
 			hb = isHighAirTempCelsius(ws);
+			n = getAirTempCelsius(ws);
 			break;
 
 		case PRECIPITATION:
 			syms = PRECIP_SYMS;
 			lb = isLowPrecipRate(ws);
 			hb = isHighPrecipRate(ws);
+			n = getPrecipRate(ws);
 			break;
 
 		case VISIBILITY:
 			syms = VIS_SYMS;
 			lb = isLowVisibility(ws);
 			hb = isHighVisibility(ws);
+			n = getVisibilityMeters(ws);
 			break;
 
 		case WIND_SPEED:
 			syms = WIND_SPEED_SYMS;
 			lb = isLowWind(ws);
 			hb = isHighWind(ws);
+			n = getWindSpeedKph(ws);
 			break;
 
 		default:
 			return null;
 		}
 
+		if (n == null)
+			return null;
 		if (lb)
 			return syms[LOW_IDX];
 		if (hb)
 			return syms[HIGH_IDX];
+
 		return syms[MID_IDX];
 	}
 }
