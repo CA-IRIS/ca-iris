@@ -87,6 +87,9 @@ public class MJPEGStream implements VideoStream {
 		url = new URL(req.getUrl(c));
 		is_snapshot = isSnapshot(c);
 		size = UI.dimension(req.getSize().width, req.getSize().height);
+		if (is_snapshot) {
+			s.addJob(getImmediateSnapshotJob());
+		}
 		job = getStreamJob();
 		s.addJob(job);
 	}
@@ -122,6 +125,21 @@ public class MJPEGStream implements VideoStream {
 			}
 			public boolean isRepeating() {
 				return running;
+			}
+		};
+	}
+
+	/**
+	 * Gets first frame for snapshot "stream"
+	 * FIXME: This shouldn't be necessary, but doesn't seem possible to have a Job
+	 * run immediately, then reoccur at given interval. May be missing something.
+	 **/
+	private Job getImmediateSnapshotJob() {
+		return new Job() {
+			@Override
+			public void perform() {
+				if(running)
+					readStream();
 			}
 		};
 	}
