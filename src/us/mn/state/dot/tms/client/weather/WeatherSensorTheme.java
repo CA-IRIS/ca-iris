@@ -23,6 +23,19 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.utils.STime;
 
+import static us.mn.state.dot.tms.WeatherSensorHelper.getMultiTempsString;
+import static us.mn.state.dot.tms.WeatherSensorHelper.getPrecipRate;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isCrazyState;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isHighAirTempCelsius;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isHighPrecipRate;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isHighVisibility;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isHighWind;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isLowAirTempCelsius;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isLowPrecipRate;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isLowVisibility;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isLowWind;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isSampleExpired;
+
 /**
  * Theme for weather sensor objects on the map.
  *
@@ -96,7 +109,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.ALL);
 	}
 
-	/** Generated low, mid, and high symbols fir the given args */
+	/** Generated low, mid, and high symbols for the given args */
 	private static VectorSymbol[] getStyleSymbols(ItemStyle is, Shape s) {
 		final VectorSymbol[] ret = new VectorSymbol[3];
 		Style style = new Style(is.toString(), OUTLINE, LCOLOR);
@@ -123,46 +136,36 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
 		Integer ws = p.getWindSpeed();
 		Integer wd = p.getWindDir();
-		String windVal = "";
-		if ((ws != null) && (!("".equals(ws)))) {
-			windVal += new Speed(ws).toString2();
-			windVal += " ";
-			}
-		if ((wd != null) && (!("".equals(wd)))) {
-			windVal += new Angle(wd).toShortDir();
-			}
-		t.addLine("Wind avg.", windVal);
+		StringBuilder val = new StringBuilder();
+		if ((ws != null) && (!("".equals(ws))))
+			val.append(new Speed(ws).toString2()).append(" ");
+		if ((wd != null) && (!("".equals(wd))))
+			val.append(new Angle(wd).toShortDir());
+		t.addLine("Wind avg.", val.toString());
 
 		Integer gs = p.getGustSpeed();
 		Integer gd = p.getGustDir();
-		String gustVal = "";
-		if ((gs != null) && (!("".equals(gs)))) {
-			gustVal += new Speed(gs).toString2();
-			gustVal += " ";
-			}
-		if ((gd != null) && (!("".equals(gd)))) {
-			gustVal += new Angle(gd).toShortDir();
-			}
-		t.addLine("Wind gust", gustVal);
+		val = new StringBuilder();
+		if ((gs != null) && (!("".equals(gs))))
+			val.append(new Speed(gs).toString2()).append(" ");
+		if ((gd != null) && (!("".equals(gd))))
+			val.append(new Angle(gd).toShortDir());
+		t.addLine("Wind gust", val.toString());
 
 		t.addLine("Air temp",
 			new Temperature(p.getAirTemp()).toString2());
 
-		t.addLine("Surface temps", WeatherSensorHelper
-			.getMultiTempsString(p.getSurfaceTemps()));
-		t.addLine("Subsurface temps", WeatherSensorHelper
-			.getMultiTempsString(p.getSubsurfaceTemps()));
+		t.addLine("Surface temps",
+			getMultiTempsString(p.getSurfaceTemps()));
+		t.addLine("Subsurface temps",
+			getMultiTempsString(p.getSubsurfaceTemps()));
 
-		t.addLine("Precip rate", p.getPrecipRate());
+		t.addLine("Precip rate", getPrecipRate(p));
 
-		t.addLineMaybe("Crazy data state",
-			WeatherSensorHelper.isCrazyState(p));
-		t.addLineMaybe("Low visibility state", WeatherSensorHelper
-			.isLowVisibility(p));
-		t.addLineMaybe("High wind state", WeatherSensorHelper
-			.isHighWind(p));
-		t.addLineMaybe("Last sample is expired", WeatherSensorHelper
-			.isSampleExpired(p));
+		t.addLineMaybe("Crazy data state", isCrazyState(p));
+		t.addLineMaybe("Low visibility state", isLowVisibility(p));
+		t.addLineMaybe("High wind state", isHighWind(p));
+		t.addLineMaybe("Last sample is expired", isSampleExpired(p));
 
 		t.setLast();
 		String obsTime = STime.getDateString(p.getObsTime());
@@ -185,47 +188,47 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
 	/** Get a symbol for the given weather sensor */
 	private Symbol getSymbol(WeatherSensor ws) {
-		Number n = null;
-		double l = 0, h = 0;
-		Symbol[] syms = null;
+
+		if (isSampleExpired(ws) || isCrazyState(ws))
+			return null;
+
+		Boolean lb;
+		Boolean hb;
+
+		Symbol[] syms;
+
 		switch (manager.getStyleSummary().getStyle()) {
 		case AIR_TEMP:
 			syms = AIR_TEMP_SYMS;
-			n = ws.getAirTemp();
-			l = SystemAttrEnum.RWIS_LOW_AIR_TEMP_C.getFloat();
-			h = SystemAttrEnum.RWIS_HIGH_AIR_TEMP_C.getFloat();
+			lb = isLowAirTempCelsius(ws);
+			hb = isHighAirTempCelsius(ws);
 			break;
 
 		case PRECIPITATION:
 			syms = PRECIP_SYMS;
-			n = ws.getPrecipRate();
-			l = SystemAttrEnum.RWIS_LOW_PRECIP_RATE_MMH.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_PRECIP_RATE_MMH.getInt();
+			lb = isLowPrecipRate(ws);
+			hb = isHighPrecipRate(ws);
 			break;
 
 		case VISIBILITY:
 			syms = VIS_SYMS;
-			n = ws.getVisibility();
-			l = SystemAttrEnum.RWIS_LOW_VISIBILITY_DISTANCE_M.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_VISIBILITY_DISTANCE_M.getInt();
+			lb = isLowVisibility(ws);
+			hb = isHighVisibility(ws);
 			break;
 
 		case WIND_SPEED:
 			syms = WIND_SPEED_SYMS;
-			n = ws.getWindSpeed();
-			l = SystemAttrEnum.RWIS_LOW_WIND_SPEED_KPH.getInt();
-			h = SystemAttrEnum.RWIS_HIGH_WIND_SPEED_KPH.getInt();
+			lb = isLowWind(ws);
+			hb = isHighWind(ws);
 			break;
+
+		default:
+			return null;
 		}
 
-		return n != null ? getSymbol(syms, n.doubleValue(), l, h) : null;
-	}
-
-	/** Get low, mid, or high symbol based on given num and thresholds */
-	private Symbol getSymbol(Symbol[] syms, double num, double low, double high) {
-		if (num < low)
+		if (lb)
 			return syms[LOW_IDX];
-		if (num > high)
+		if (hb)
 			return syms[HIGH_IDX];
 		return syms[MID_IDX];
 	}

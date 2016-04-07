@@ -401,18 +401,18 @@ public class WeatherSensorHelper extends BaseHelper {
 	 * @return The string
 	 */
 	static public String getMultiTempsString(Integer[] temps) {
-		String ts = "";
+		StringBuilder ts = new StringBuilder();
 		if (temps == null)
-			return ts;
+			return ts.toString();
 		for (int i = 0; i < temps.length; ++i) {
 			if (temps[i] != null)
-				ts += new Temperature(temps[i]).toString2();
+				ts.append(new Temperature(temps[i]).toString2());
 			else
-				ts += "?";
+				ts.append("?");
 			if (i < (temps.length - 1))
-				ts += ",";
+				ts.append(",");
 		}
-		return ts;
+		return ts.toString();
 	}
 
 }
