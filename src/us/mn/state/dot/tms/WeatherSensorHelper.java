@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2015  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +28,14 @@ import us.mn.state.dot.tms.utils.SString;
  * @author Michael Darter
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class WeatherSensorHelper extends BaseHelper {
 
 	/**
 	 * a "clear" day visibility distance defined
 	 * <p>
-	 * distance to horizon on a clear day from a height of 2 meters is 5048m
+	 * distance to horizon on a clear day from a height of 2 meters: ~5048m
 	 * distance in meters = 3570 * √h
 	 * aviation standards may be higher
 	 */
@@ -195,7 +197,7 @@ public class WeatherSensorHelper extends BaseHelper {
 		Float airTemp = getAirTempCelsius(ws);
 		if (airTemp != null
 			&& (airTemp > CRAZY_HIGH_AIR_TEMPERATURE_C
-				|| airTemp < CRAZY_LOW_AIR_TEMPERATURE_C))
+			|| airTemp < CRAZY_LOW_AIR_TEMPERATURE_C))
 			return true;
 
 		return false;
@@ -359,13 +361,13 @@ public class WeatherSensorHelper extends BaseHelper {
 		case CRAZY:
 			return isCrazyState(p);
 		case AIR_TEMP:
-			return null != p.getAirTemp();
+			return null != getAirTempCelsius(p);
 		case PRECIPITATION:
-			return null != p.getPrecipRate();
+			return null != getPrecipRate(p);
 		case WIND_SPEED:
-			return null != p.getWindSpeed();
+			return null != getWindSpeedKph(p);
 		case VISIBILITY:
-			return null != p.getVisibility();
+			return null != getVisibilityMeters(p);
 		}
 		return false;
 	}

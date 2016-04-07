@@ -62,7 +62,7 @@ public class WeatherPanel extends JPanel {
         }
     };
 
-    /** Set a new r_node */
+    /** Set a new weather sensor */
     public void setWeatherSensor(WeatherSensor n) {
         if(n != null)
             loc_pnl.setGeoLoc(n.getGeoLoc());
@@ -71,7 +71,7 @@ public class WeatherPanel extends JPanel {
         watcher.setProxy(n);
     }
 
-    /** Create a new roadway node panel */
+    /** Create a new weather sensor panel */
     public WeatherPanel(Session s, ProxySelectionModel<WeatherSensor> sm) {
         super(new BorderLayout());
         sel_model = sm;

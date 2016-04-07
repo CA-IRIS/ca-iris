@@ -4,7 +4,6 @@
  * Copyright (C) 2011-2015  AHMCT, University of California
  * Copyright (C) 2016       Southwest Research Institute
  *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -37,6 +36,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
 import us.mn.state.dot.tms.client.proxy.StyleSummary;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
@@ -80,6 +80,12 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** The current marker */
 	protected AbstractMarker marker = DIRECTION_MARKER;
 
+	public HeatmapLayer getHeatmapLayer() {
+		return heatmapLayer;
+	}
+
+	private final HeatmapLayer heatmapLayer;
+
 	/** Whether style summary has been initialized */
 	private boolean style_initialized;
 
@@ -87,7 +93,8 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	private final ActionListener style_listener = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
+			ItemStyle s = ItemStyle
+				.lookupStyle(e.getActionCommand());
 			AbstractMarker old_marker = marker;
 			switch (s) {
 			case AIR_TEMP:
@@ -115,10 +122,13 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
+		heatmapLayer = new HeatmapLayer(s, this);
 	}
 
-	/** Gets the style summary for this proxy type, with no cell
-	 * renderer size buttons. */
+	/**
+	 * Gets the style summary for this proxy type, with no cell
+	 * renderer size buttons.
+	 */
 	public StyleSummary<WeatherSensor> getStyleSummary() {
 		StyleSummary<WeatherSensor> ret = super.getStyleSummary();
 		if (!style_initialized) {
@@ -165,7 +175,8 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 	/**
 	 * Does the proxy match the specified style?
-	 * @param is The ItemStyle; may be null.
+	 *
+	 * @param is    The ItemStyle; may be null.
 	 * @param proxy WeatherSensor proxy; never null.
 	 * @return True if the proxy matches the style, else false.
 	 */
@@ -194,19 +205,21 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	// Fix the problem, then get rid of this listener, as well as the
 	// initialize() method below.
 	private final ProxyListener<WeatherSensor> tempListener = new
-		ProxyListener<WeatherSensor>()
-	{
-		public void proxyAdded(WeatherSensor proxy) {}
-		public void enumerationComplete() {}
-		public void proxyRemoved(WeatherSensor proxy) {}
-		public void proxyChanged(final WeatherSensor proxy, final String a) {
-			runSwing(new Runnable() {
+		ProxyListener<WeatherSensor>() {
+			public void proxyAdded(WeatherSensor proxy) {}
+			public void enumerationComplete() {}
+			public void proxyRemoved(WeatherSensor proxy) {}
+
+			public void proxyChanged(final WeatherSensor proxy,
+				final String a) {
+				runSwing(new Runnable() {
 					public void run() {
 						proxyChangedSwing(proxy, a);
 					}
 				});
-		}
-	};
+			}
+		};
+
 	@Override
 	public void initialize() {
 		super.initialize();
@@ -271,18 +284,10 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return ret;
 	}
 
-	/** Return true if the weather sensor is in a normal state.
-	 * @param p Proxy, never null. */
-	private boolean isNormal(WeatherSensor p) {
-		return !(WeatherSensorHelper.isAwsState(p)
-			|| WeatherSensorHelper.isSampleExpired(p));
-	}
-
 	/** Create a properties form for the specified proxy */
 	@Override
 	protected SonarObjectForm<WeatherSensor> createPropertiesForm(
-		WeatherSensor proxy)
-	{
+		WeatherSensor proxy) {
 		return new WeatherSensorProperties(session, proxy);
 	}
 
@@ -302,26 +307,35 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	public String getDescription(WeatherSensor proxy) {
 		String pn = proxy.getName();
 		String sn = SiteDataHelper.getSiteName(pn);
-		return ( (sn != null) ? sn : pn );
+		return ((sn != null) ? sn : pn);
 	}
 
+	/**
+	 * Update theme
+	 * This forces each object on the layer to be updated.  Needed due to
+	 * the use of multiple icons/symbols (styles?) in use by
+	 * WeatherSensorTheme
+	 */
 	@Override
 	public void updateTheme() {
-		super.updateTheme();
-		if (layer != null) {
-			runQueued(new Invokable() {
-				public void invoke() {
-					forEach(new MapSearcher() {
-						@Override
-						public boolean next(MapObject mo) {
-							if(mo instanceof MapGeoLoc)
-								((MapGeoLoc)mo).doUpdate();
-							return false;
-						}
-					}, null);
-				}
-			});
-		}
 
+		if (getLayer() == null)
+			return;
+
+		runQueued(new Invokable() {
+			public void invoke() {
+				getLayer().updateTheme();
+				forEach(new MapSearcher() {
+					@Override
+					public boolean next(
+						MapObject mo) {
+						if (mo instanceof MapGeoLoc)
+							((MapGeoLoc) mo)
+								.doUpdate();
+						return false;
+					}
+				}, null);
+			}
+		});
 	}
 }

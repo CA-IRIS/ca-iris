@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2004-2015  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California, Davis
+ * Copyright (C) 2010       AHMCT, University of California, Davis
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +54,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Dan Rossiter
  */
 public class StyleSummary<T extends SonarObject> extends JPanel {
 
