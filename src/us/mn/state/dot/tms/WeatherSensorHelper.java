@@ -118,9 +118,11 @@ public class WeatherSensorHelper extends BaseHelper {
 
 	/** get the air temperature in ℃ */
 	static public Float getAirTempCelsius(WeatherSensor ws) {
-		return isSampleExpired(ws) ? null : ws.getAirTemp()
-			.floatValue();
+		if (isSampleExpired(ws))
+			return null;
+		Integer i = ws.getAirTemp();
 
+		return (i == null) ? null : i.floatValue();
 	}
 
 	/** is high air temperature? */
