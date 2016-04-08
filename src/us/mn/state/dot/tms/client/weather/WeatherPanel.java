@@ -77,7 +77,7 @@ public class WeatherPanel extends JPanel {
         sel_model = sm;
         loc_pnl = new WeatherLocationPanel(s);
         TypeCache<WeatherSensor> cache =
-            s.getSonarState().getWeatherSensors();
+            s.getSonarState().getWeatherSensorsCache();
         watcher = new ProxyWatcher<WeatherSensor>(cache, view, false);
         setBorder(BorderFactory.createTitledBorder(I18N.get(
             "weather.selected")));

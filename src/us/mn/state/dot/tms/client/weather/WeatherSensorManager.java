@@ -19,7 +19,6 @@ package us.mn.state.dot.tms.client.weather;
 import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
-import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
 import us.mn.state.dot.tms.GeoLoc;
@@ -152,7 +151,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Get the weather sensor cache */
 	@Override
 	public TypeCache<WeatherSensor> getCache() {
-		return session.getSonarState().getWeatherSensors();
+		return session.getSonarState().getWeatherSensorsCache();
 	}
 
 	/** Create a weather map tab */
@@ -204,27 +203,27 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	// notifies are clearing being sent by WeatherSensorImpl.
 	// Fix the problem, then get rid of this listener, as well as the
 	// initialize() method below.
-	private final ProxyListener<WeatherSensor> tempListener = new
-		ProxyListener<WeatherSensor>() {
-			public void proxyAdded(WeatherSensor proxy) {}
-			public void enumerationComplete() {}
-			public void proxyRemoved(WeatherSensor proxy) {}
-
-			public void proxyChanged(final WeatherSensor proxy,
-				final String a) {
-				runSwing(new Runnable() {
-					public void run() {
-						proxyChangedSwing(proxy, a);
-					}
-				});
-			}
-		};
-
-	@Override
-	public void initialize() {
-		super.initialize();
-		getCache().addProxyListener(tempListener);
-	}
+//	private final ProxyListener<WeatherSensor> tempListener = new
+//		ProxyListener<WeatherSensor>() {
+//			public void proxyAdded(WeatherSensor proxy) {}
+//			public void enumerationComplete() {}
+//			public void proxyRemoved(WeatherSensor proxy) {}
+//
+//			public void proxyChanged(final WeatherSensor proxy,
+//				final String a) {
+//				runSwing(new Runnable() {
+//					public void run() {
+//						proxyChangedSwing(proxy, a);
+//					}
+//				});
+//			}
+//		};
+//
+//	@Override
+//	public void initialize() {
+//		super.initialize();
+//		getCache().addProxyListener(tempListener);
+//	}
 	// END FIXME
 
 	/**

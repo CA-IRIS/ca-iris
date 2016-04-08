@@ -257,12 +257,19 @@ public class SonarState extends Client {
 	}
 
 	/** Cache of weather sensors */
-	private final TypeCache<WeatherSensor> weather_sensors =
-		new TypeCache<WeatherSensor>(WeatherSensor.class, this);
+	private final TypeCache<WeatherSensor> weather_sensors_cache;
 
 	/** Get the weather sensor cache */
-	public TypeCache<WeatherSensor> getWeatherSensors() {
-		return weather_sensors;
+	public TypeCache<WeatherSensor> getWeatherSensorsCache() {
+		return weather_sensors_cache;
+	}
+
+	/** weather sensor proxy list model */
+	private final ProxyListModel<WeatherSensor> weather_sensor_model;
+
+	/** Get the weather sensor array list model */
+	public ProxyListModel<WeatherSensor> getWeatherSensorModel() {
+		return weather_sensor_model;
 	}
 
 	/** Cache of tag readers */
@@ -447,6 +454,11 @@ public class SonarState extends Client {
 		det_cache = new DetCache(this);
 		dms_cache = new DmsCache(this);
 		lcs_cache = new LcsCache(this);
+		weather_sensors_cache =
+		new TypeCache<WeatherSensor>(WeatherSensor.class, this);
+		weather_sensor_model = new ProxyListModel<WeatherSensor>(
+			weather_sensors_cache);
+		weather_sensor_model.initialize();
 		gate_arm_array_model = new ProxyListModel<GateArmArray>(
 			gate_arm_arrays);
 		gate_arm_array_model.initialize();
@@ -534,10 +546,10 @@ public class SonarState extends Client {
 		populateReadable(lane_markings);
 		if(canRead(LaneMarking.SONAR_TYPE))
 			lane_markings.ignoreAttribute("operation");
-		populateReadable(weather_sensors);
+		populateReadable(weather_sensors_cache);
 		if(canRead(WeatherSensor.SONAR_TYPE)) {
-			weather_sensors.ignoreAttribute("operation");
-			weather_sensors.ignoreAttribute("stamp");
+			weather_sensors_cache.ignoreAttribute("operation");
+			weather_sensors_cache.ignoreAttribute("stamp");
 		}
 		populateReadable(tag_readers);
 		if (canRead(TagReader.SONAR_TYPE))

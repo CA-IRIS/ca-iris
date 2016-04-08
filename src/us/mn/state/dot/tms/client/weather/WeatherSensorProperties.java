@@ -28,7 +28,6 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.comm.ControllerForm;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
-import us.mn.state.dot.tms.client.roads.LocationPanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel.Stretch;
 import us.mn.state.dot.tms.utils.I18N;
@@ -62,7 +61,7 @@ public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 	/** Get the SONAR type cache */
 	@Override
 	protected TypeCache<WeatherSensor> getTypeCache() {
-		return state.getWeatherSensors();
+		return state.getWeatherSensorsCache();
 	}
 
 	/** Initialize the widgets on the form */

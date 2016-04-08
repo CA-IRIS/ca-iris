@@ -378,6 +378,8 @@ public class WeatherSensorHelper extends BaseHelper {
 			return null != getWindSpeedKph(p);
 		case VISIBILITY:
 			return null != getVisibilityMeters(p);
+		case ALL:
+			return true;
 		}
 		return false;
 	}
