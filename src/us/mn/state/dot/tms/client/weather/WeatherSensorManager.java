@@ -19,6 +19,7 @@ package us.mn.state.dot.tms.client.weather;
 import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
+import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
 import us.mn.state.dot.tms.GeoLoc;
@@ -151,7 +152,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Get the weather sensor cache */
 	@Override
 	public TypeCache<WeatherSensor> getCache() {
-		return session.getSonarState().getWeatherSensorsCache();
+		return session.getSonarState().getWeatherSensorsCache().getWeatherSensors();
 	}
 
 	/** Create a weather map tab */
@@ -203,27 +204,27 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	// notifies are clearing being sent by WeatherSensorImpl.
 	// Fix the problem, then get rid of this listener, as well as the
 	// initialize() method below.
-//	private final ProxyListener<WeatherSensor> tempListener = new
-//		ProxyListener<WeatherSensor>() {
-//			public void proxyAdded(WeatherSensor proxy) {}
-//			public void enumerationComplete() {}
-//			public void proxyRemoved(WeatherSensor proxy) {}
-//
-//			public void proxyChanged(final WeatherSensor proxy,
-//				final String a) {
-//				runSwing(new Runnable() {
-//					public void run() {
-//						proxyChangedSwing(proxy, a);
-//					}
-//				});
-//			}
-//		};
-//
-//	@Override
-//	public void initialize() {
-//		super.initialize();
-//		getCache().addProxyListener(tempListener);
-//	}
+	private final ProxyListener<WeatherSensor> tempListener = new
+		ProxyListener<WeatherSensor>() {
+			public void proxyAdded(WeatherSensor proxy) {}
+			public void enumerationComplete() {}
+			public void proxyRemoved(WeatherSensor proxy) {}
+
+			public void proxyChanged(final WeatherSensor proxy,
+				final String a) {
+				runSwing(new Runnable() {
+					public void run() {
+						proxyChangedSwing(proxy, a);
+					}
+				});
+			}
+		};
+
+	@Override
+	public void initialize() {
+		super.initialize();
+		getCache().addProxyListener(tempListener);
+	}
 	// END FIXME
 
 	/**
@@ -247,6 +248,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	protected void proxyChangedSwing(WeatherSensor proxy, String attr) {
 		super.proxyChangedSwing(proxy, attr);
 		updateMarker(proxy);
+		updateHeatmapLayer();
 	}
 
 	/** Update a proxy marker (e.g., to reflect orientation change) */
@@ -309,6 +311,14 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return ((sn != null) ? sn : pn);
 	}
 
+	private void updateHeatmapLayer() {
+		if(getHeatmapLayer() == null)
+			return;
+
+		getHeatmapLayer().updateGeometry();
+		getHeatmapLayer().updateStatus();
+	}
+
 	/**
 	 * Update theme
 	 * This forces each object on the layer to be updated.  Needed due to
@@ -318,11 +328,16 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	public void updateTheme() {
 
-		if (getLayer() == null)
-			return;
-
 		runQueued(new Invokable() {
 			public void invoke() {
+				updateNormalLayer();
+				updateHeatmapLayer();
+			}
+
+			private void updateNormalLayer() {
+				if (getLayer() == null)
+					return;
+
 				getLayer().updateTheme();
 				forEach(new MapSearcher() {
 					@Override

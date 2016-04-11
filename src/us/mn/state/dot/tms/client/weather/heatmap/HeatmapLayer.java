@@ -16,6 +16,7 @@
 package us.mn.state.dot.tms.client.weather.heatmap;
 
 import us.mn.state.dot.map.Layer;
+import us.mn.state.dot.map.LayerChange;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.tms.client.Session;
@@ -43,6 +44,11 @@ public class HeatmapLayer extends Layer {
 	/** weather sensor manager */
 	private final WeatherSensorManager manager;
 
+	private LayerState layerState;
+
+	public LayerState getLayerState() {
+		return layerState;
+	}
 	/**
 	 * Constructor to create the heatmap layer
 	 * @param s session
@@ -57,6 +63,21 @@ public class HeatmapLayer extends Layer {
 	/** Create a new layer state */
 	@Override
 	public LayerState createState(MapBean mb) {
-		return new HeatmapLayerState(this, mb);
+		if(layerState == null)
+			layerState = new HeatmapLayerState(this, mb);
+		return layerState;
 	}
+
+	/** Update the layer geometry */
+	public void updateGeometry() {
+		fireLayerChanged(LayerChange.geometry);
+	}
+
+	/** Update the layer status */
+	public void updateStatus() {
+		fireLayerChanged(LayerChange.status);
+//		fireLayerChanged(LayerChange.theme);
+	}
+
+
 }

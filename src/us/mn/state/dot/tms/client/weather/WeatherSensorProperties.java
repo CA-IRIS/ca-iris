@@ -61,7 +61,7 @@ public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 	/** Get the SONAR type cache */
 	@Override
 	protected TypeCache<WeatherSensor> getTypeCache() {
-		return state.getWeatherSensorsCache();
+		return state.getWeatherSensorsCache().getWeatherSensors();
 	}
 
 	/** Initialize the widgets on the form */

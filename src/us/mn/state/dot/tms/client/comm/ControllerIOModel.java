@@ -211,7 +211,7 @@ public class ControllerIOModel extends AbstractTableModel {
 		b_list = new ControllerIOList<Beacon>(
 			state.getBeacons());
 		wsensor_list = new ControllerIOList<WeatherSensor>(
-			state.getWeatherSensorsCache());
+			state.getWeatherSensorsCache().getWeatherSensors());
 		tr_list = new ControllerIOList<TagReader>(
 			state.getTagReaders());
 	}

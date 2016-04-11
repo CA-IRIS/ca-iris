@@ -21,6 +21,7 @@ import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
+import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.WeatherSensor;
@@ -38,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_MEASUREMENT_RADIUS;
+import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
  * HeatmapLayerState manages the rendering of the low/medium/high weather station
@@ -60,13 +62,39 @@ public class HeatmapLayerState extends LayerState {
 	/** weather measurement data set */
 	private final WeatherMeasurementDataSet dataSet;
 
+	private ItemStyle current_style = null;
+
 	/** Listener to handle the style selection changing */
 	private final ActionListener style_listener = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
+			current_style = s;
 
 			refreshDataSet(s);
+		}
+	};
+
+	private final ProxyListener<WeatherSensor> sensor_listener = new ProxyListener<WeatherSensor>() {
+		@Override
+		public void proxyAdded(WeatherSensor proxy) {
+		}
+
+		@Override
+		public void enumerationComplete() {}
+
+		@Override
+		public void proxyRemoved(WeatherSensor proxy) {
+		}
+
+		@Override
+		public void proxyChanged(WeatherSensor proxy, String a) {
+			runSwing(new Runnable() {
+				public void run() {
+					refreshDataSet(current_style);
+					fireLayerChanged(LayerChange.status);
+				}
+			});
 		}
 	};
 
@@ -82,6 +110,7 @@ public class HeatmapLayerState extends LayerState {
 		manager = layer.getManager();
 		dataSet = new WeatherMeasurementDataSet();
 		manager.getStyleSummary().addSelectionListener(style_listener);
+		manager.getCache().addProxyListener(sensor_listener);
 	}
 
 	/** Dispose of the layer state */
@@ -89,6 +118,7 @@ public class HeatmapLayerState extends LayerState {
 	public void dispose() {
 		super.dispose();
 		manager.getStyleSummary().removeSelectionListener(style_listener);
+		manager.getCache().removeProxyListener(sensor_listener);
 	}
 
 	/**
@@ -97,6 +127,9 @@ public class HeatmapLayerState extends LayerState {
 	 * @param s item style
 	 */
 	public void refreshDataSet(ItemStyle s) {
+		if (s == null)
+			return;
+
 		dataSet.changeDataType(s);
 
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
