@@ -95,9 +95,12 @@ public class VideoRequest {
 	/** Returns a list of excluded hosts from properties given */
 	private List<String> createExcludedHosts(Properties p) {
 		String prop = p.getProperty("video.excluded.hosts");
-		if (null == prop)
-			return new ArrayList<String>(0);
-		return SString.split(prop, ",");
+		List<String> ret = (null != prop)
+			? SString.split(prop, ",")
+			: new ArrayList<String>(0);
+		for (int i = 0; i < ret.size(); i++)
+			ret.set(i, ret.get(i).toLowerCase());
+		return ret;
 	}
 
 	/** Create a url for connecting to the video server */
@@ -193,7 +196,7 @@ public class VideoRequest {
 		boolean ret = false;
 		try {
 			URI url = URI.create(u);
-			ret = excluded_hosts.contains(url.getHost());
+			ret = excluded_hosts.contains(url.getHost().toLowerCase());
 		} catch (Exception e) {
 			// Nothing we can do here
 		}
