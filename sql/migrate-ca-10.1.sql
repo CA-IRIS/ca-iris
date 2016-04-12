@@ -54,3 +54,8 @@ INSERT INTO iris.system_attribute(name, value) VALUES('rwis_low_wind_speed_kph',
 
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_opacity_percentage', 30);
 INSERT INTO iris.system_attribute(name, value) VALUES('rwis_measurement_radius', 16093.44);
+
+-- CA trac 528
+INSERT INTO iris.comm_protocol (id, description) VALUES(34, 'TTIP DMS');
+
+

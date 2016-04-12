@@ -517,9 +517,7 @@ public enum SystemAttrEnum {
 	/** Parse a color attribute value */
 	protected Color parseColor(String v) {
 		try {
-			return (v.length() == 6)
-				? Color.decode(v)
-				: new Color(new BigInteger(v, 16).intValue(), true);
+			return new Color(new BigInteger(v, 16).intValue(), v.length() > 6);
 		}
 		catch (NumberFormatException e) {
 			return null;
