@@ -18,6 +18,7 @@ package us.mn.state.dot.tms.client.proxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Iterator;
 import javax.swing.DropMode;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -100,7 +101,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final EditModeListener edit_lsnr = new EditModeListener() {
 		public void editModeChanged() {
 			updateButtonPanel();
-			table.setDragEnabled(model.canUpdate(getFirstProxy()));
+			table.setDragEnabled(model.canUpdate(getExampleProxy()));
 		}
 	};
 
@@ -243,7 +244,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		if (!model.hasManualSort())
 			return;
 
-		table.setDragEnabled(model.canUpdate(getFirstProxy()));
+		table.setDragEnabled(model.canUpdate(getExampleProxy()));
 		table.setDropMode(DropMode.INSERT_ROWS);
 		table.setTransferHandler(new ProxyTableRowTransferHandler(table));
 	}
@@ -281,9 +282,10 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		     : null;
 	}
 
-	/** Get the proxy for the first row */
-	private T getFirstProxy() {
-		return table.getRowCount() > 0 ? model.getRowProxy(table.convertRowIndexToModel(0)) : null;
+	/** Get an example proxy for testing [permissons, etc] */
+	private T getExampleProxy() {
+		Iterator<T> i = model.cache.iterator();
+		return i.hasNext() ? i.next() : null;
 	}
 
 	/** Select a new proxy */
