@@ -16,7 +16,6 @@ package us.mn.state.dot.tms.client.proxy;
 
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.ProxyListener;
-import us.mn.state.dot.tms.MapExtent;
 
 import javax.activation.ActivationDataFlavor;
 import javax.activation.DataHandler;
@@ -150,7 +149,7 @@ public class ProxyTableRowTransferHandler extends TransferHandler {
                 // Only rows between the from & to location will be considered as others will not change
                 // rows < the target row index will have index decremented
                 // rows > the target row index will have index incremented
-                final MapExtent[] proxies = model.getRowProxies(new MapExtent[model.getRowCount()]);
+                final SonarObject[] proxies = model.getRowProxies(new SonarObject[model.getRowCount()]);
 
                 // to avoid temporary violation of unique order DB constraint, move target
                 // proxy out of the way while surrounding proxies are first updated
