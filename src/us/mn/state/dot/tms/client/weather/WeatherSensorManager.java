@@ -49,7 +49,9 @@ import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runQueued;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
@@ -91,10 +93,17 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 	/** Listener to handle the style selection changing */
 	private final ActionListener style_listener = new ActionListener() {
+		/** Non-standard states */
+		private final List<ItemStyle> special = Arrays.asList(
+			ItemStyle.VISIBILITY, ItemStyle.AIR_TEMP,
+			ItemStyle.WIND_SPEED, ItemStyle.PRECIPITATION);
+
+		/** The previous state */
+		private ItemStyle oldS = ItemStyle.ALL;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ItemStyle s = ItemStyle
-				.lookupStyle(e.getActionCommand());
+			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
 			AbstractMarker old_marker = marker;
 			switch (s) {
 			case AIR_TEMP:
@@ -114,8 +123,12 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 				break;
 			}
 
-			if (old_marker != marker)
+			// either marker changed or we went from standard to non-standard
+			// status types (not mutually exclusive (eg: All to Wind Speed)
+			if (old_marker != marker || (special.contains(s) != special.contains(oldS)))
 				updateTheme();
+
+			oldS = s;
 		}
 	};
 
