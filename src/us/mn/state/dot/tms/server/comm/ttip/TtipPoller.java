@@ -75,6 +75,7 @@ public abstract class TtipPoller extends MessagePoller {
         HttpFileMessenger m = null;
         try {
             m = new HttpFileMessenger(new URL(uri));
+            log("Opening TTIP URL: " + uri);
         } catch (MalformedURLException e) {
             log("Malformed URI could not be parsed: " + uri);
         }

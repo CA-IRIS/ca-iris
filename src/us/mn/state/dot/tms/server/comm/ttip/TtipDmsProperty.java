@@ -24,6 +24,7 @@ import us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus.LocalResponseG
 import javax.xml.bind.JAXB;
 import java.io.EOFException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 
@@ -62,6 +63,9 @@ public class TtipDmsProperty extends ControllerProperty {
                     records.put(s.getHead().getId(), s);
             } else {
                 TtipPoller.log("Received null responseGroup element. Cannot continue.");
+                StringWriter sw = new StringWriter();
+                JAXB.marshal(resp, sw);
+                TtipPoller.log(sw.toString());
             }
         } catch (Exception e) {
             TtipPoller.log("Failed to parse DMS status: " + e);
