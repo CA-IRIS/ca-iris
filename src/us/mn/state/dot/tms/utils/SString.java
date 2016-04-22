@@ -439,4 +439,15 @@ public class SString {
 		return s.toLowerCase().startsWith(sw.toLowerCase());
 	}
 
+	/** Treat empty / blank (only spaces) as null */
+	public static String emptyBecomesNull(final String s) {
+		if(s != null) {
+			String rv = s.trim();
+
+			if("".equals(rv))
+				return null;
+		}
+
+		return s;
+	}
 }

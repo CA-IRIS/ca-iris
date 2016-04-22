@@ -244,11 +244,13 @@ public class SiteDataPanel extends IPanel implements ProxyView<SiteData> {
 		// FIXME: nasty kludge to wait for object creation.
 		// do this some other way.
 		SiteData sd = null;
-		for (int i=0; i<50; ++i) {
-			TimeSteward.sleep_well(50);
+
+		for (int i=0; i<20; ++i) {
+			// wait for up to 20 seconds for proxy to be created
 			sd = cache.lookupObject(name);
 			if (sd != null)
 				break;
+			TimeSteward.sleep_well(100);
 		}
 		sd.setCounty(null);
 		sd.setSiteName(null);

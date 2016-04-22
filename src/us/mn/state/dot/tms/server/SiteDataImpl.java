@@ -14,13 +14,14 @@
  */
 package us.mn.state.dot.tms.server;
 
+import us.mn.state.dot.tms.SiteData;
+import us.mn.state.dot.tms.TMSException;
+
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
-import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.SiteData;
-import us.mn.state.dot.tms.TMSException;
+
+import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 
 /**
  * SiteDataImpl represents a single site data entity, which corresponds to a
@@ -150,10 +151,11 @@ public class SiteDataImpl extends BaseObjectImpl implements SiteData {
 	public void doSetSiteName(String sn) throws TMSException {
 		if ((sn != null) && (sn.equals(site_name)))
 			return;
-		store.update(this, "site_name", sn);
-		setSiteName(sn);
+		// treat empty strings as null for database constraints
+		String tsn = emptyBecomesNull(sn);
+		store.update(this, "site_name", tsn);
+		setSiteName(tsn);
 	}
-
 
 	/** The format string */
 	private String format;
