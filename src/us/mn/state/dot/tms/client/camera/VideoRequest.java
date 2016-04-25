@@ -185,8 +185,14 @@ public class VideoRequest {
 
 	/** Create a URL for a stream */
 	public String getUrl(Camera c) throws IOException {
-		String url = getCameraUrl(c);
-		if (null == base_url || isUrlExcluded(url))
+		String url;
+		try {
+			url = getCameraUrl(c);
+		} catch (IOException e) {
+			url = null;
+		}
+
+		if (null != url && (null == base_url || isUrlExcluded(url)))
 			return url;
 		return getServletUrl(c);
 	}
