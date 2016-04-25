@@ -42,6 +42,13 @@ public class WeatherSensorHelper extends BaseHelper {
 	static private final int CLEAR_DISTANCE_M = 5048;
 
 	/**
+	 * crazy visibility distance
+	 * Summit of Denali (aka Mt. McKinley) is highest point in USA, at 6190m
+	 * theoretically you could see ~280km to the sea-level horizon.
+	 */
+	static private final int CRAZY_VISIBLITY_M = 285000;
+
+	/**
 	 * crazy high temperature.
 	 * world (USA) record is 56.7 ℃ in Death Valley, California
 	 * This is higher, in case of global warming
@@ -120,6 +127,7 @@ public class WeatherSensorHelper extends BaseHelper {
 	static public Float getAirTempCelsius(WeatherSensor ws) {
 		if (isSampleExpired(ws))
 			return null;
+
 		Integer i = ws.getAirTemp();
 
 		return (i == null) ? null : i.floatValue();
@@ -176,7 +184,15 @@ public class WeatherSensorHelper extends BaseHelper {
 
 	/** Get the wind speed in kph */
 	static public Integer getWindSpeedKph(WeatherSensor ws) {
-		return isSampleExpired(ws) ? null : ws.getWindSpeed();
+		if (isSampleExpired(ws))
+			return null;
+
+		Integer wind = ws.getWindSpeed();
+
+		if(wind == null || wind < 0)
+			return null;
+
+		return wind;
 	}
 
 	/**
@@ -192,14 +208,17 @@ public class WeatherSensorHelper extends BaseHelper {
 			return true;
 
 		Integer precip = getPrecipRate(ws);
-		if (precip != null && (precip > CRAZY_PRECIP_RATE
-			|| precip < 0))
+		if (precip != null && precip > CRAZY_PRECIP_RATE)
 			return true;
 
 		Float airTemp = getAirTempCelsius(ws);
 		if (airTemp != null
 			&& (airTemp > CRAZY_HIGH_AIR_TEMPERATURE_C
 			|| airTemp < CRAZY_LOW_AIR_TEMPERATURE_C))
+			return true;
+
+		Integer vis = getVisibilityMeters(ws);
+		if(vis != null && vis > CRAZY_VISIBLITY_M)
 			return true;
 
 		return false;
@@ -266,8 +285,17 @@ public class WeatherSensorHelper extends BaseHelper {
 		return SystemAttrEnum.RWIS_LOW_VISIBILITY_DISTANCE_M.getInt();
 	}
 
+	/** Get a valid visibility (0 or greater), or null */
 	static public Integer getVisibilityMeters(WeatherSensor ws) {
-		return isSampleExpired(ws) ? null : ws.getVisibility();
+		if (isSampleExpired(ws))
+			return null;
+
+		Integer vis = ws.getVisibility();
+
+		if(vis == null || vis < 0)
+			return null;
+
+		return vis;
 	}
 
 	/** Is visibility low? */
@@ -348,9 +376,17 @@ public class WeatherSensorHelper extends BaseHelper {
 		return pr <= CRAZY_PRECIP_RATE && pr < getLowPrecipRate();
 	}
 
-	/** Get a valid precipitation rate, or null */
+	/** Get a valid precipitation rate (0 or greater), or null */
 	static public Integer getPrecipRate(WeatherSensor ws) {
-		return isSampleExpired(ws) ? null : ws.getPrecipRate();
+		if (isSampleExpired(ws))
+			return null;
+
+		Integer pr = ws.getPrecipRate();
+
+		if (pr == null || pr < 0)
+			return null;
+
+		return pr;
 	}
 
 	/**
