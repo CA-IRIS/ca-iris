@@ -74,10 +74,25 @@ public class NaturalOrderComparator implements Comparator
 		}
 	}
 
-	public int compare(Object o1, Object o2)
-	{
-		String a = o1.toString();
-		String b = o2.toString();
+	/**
+	 * compare objects, but respect case-sensitivity
+	 * over-ride if case-insensitive is needed
+	 */
+	public int compare(Object o1, Object o2) {
+		return compare(o1, o2, true);
+	}
+
+	/**
+	 * compare two objects.
+	 *
+	 * @param o1 first object
+	 * @param o2 second object
+	 * @param cs compare case-sensitive? (uppercase before lowercase values)
+	 * @return
+	 */
+	public int compare(Object o1, Object o2, boolean cs) {
+		String a = cs ? o1.toString() : o1.toString().toLowerCase();
+		String b = cs ? o2.toString() : o2.toString().toLowerCase();
 
 		int ia = 0, ib = 0;
 		int nza = 0, nzb = 0;
@@ -154,9 +169,9 @@ public class NaturalOrderComparator implements Comparator
 	}
 
 	// added for use by ProxyComparator
-	public static int compareStrings(String arg_a, String arg_b) {
+	public static int compareStrings(String arg_a, String arg_b, boolean caseSensitive) {
 		NaturalOrderComparator n = new NaturalOrderComparator();
-		return n.compare(arg_a, arg_b);
+		return n.compare(arg_a, arg_b, caseSensitive);
 	}
 
 	static char charAt(String s, int i)

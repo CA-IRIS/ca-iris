@@ -78,13 +78,15 @@ public class ProxyComparator<T extends SonarObject> implements Comparator<T> {
 		else
 			sort_mode = 0;
 
-		// sort modes: 0:hybrid, 1:alphanumeric, 2:numeric
+		// 1: alphanumeric [ascii-betical], case-insensitive
 		if (sort_mode == 1)
 			return compareAlphaNumeric(sa, sb);
+		// 2: numeric only
 		else if (sort_mode == 2)
 			return compareNumeric(sa, sb);
+		// 0:human-natural case-insensitive
 		else
-			return NaturalOrderComparator.compareStrings(sa, sb);
+			return NaturalOrderComparator.compareStrings(sa, sb, false);
 	}
 
 	/** Compare two strings alphanumerically. */
