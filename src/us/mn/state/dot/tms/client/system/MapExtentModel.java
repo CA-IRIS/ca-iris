@@ -150,4 +150,15 @@ public class MapExtentModel extends ProxyTableModel<MapExtent> {
 	protected int getManualSort(MapExtent proxy) {
 		return proxy.getPosition();
 	}
+
+	/** Deletes the given proxy */
+	public void deleteProxy(MapExtent proxy) {
+		int removed = proxy.getPosition();
+		super.deleteProxy(proxy);
+		for (MapExtent e : getRowProxies(new MapExtent[getRowCount()])) {
+			if (e.getPosition() > removed) {
+				e.setPosition(e.getPosition() - 1);
+			}
+		}
+	}
 }

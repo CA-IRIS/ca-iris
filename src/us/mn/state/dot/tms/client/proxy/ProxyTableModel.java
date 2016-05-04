@@ -335,6 +335,12 @@ abstract public class ProxyTableModel<T extends SonarObject>
 			cache.createObject(n);
 	}
 
+	/** Deletes the given proxy */
+	public void deleteProxy(T p) {
+		if (p != null && canRemove(p))
+			p.destroy();
+	}
+
 	/**
 	 *  Whether manual sort is enabled for this model.
 	 *  If overridden, setManualSort and getManualSort must also be overridden.

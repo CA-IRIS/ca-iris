@@ -83,8 +83,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final IAction del_proxy = new IAction("device.delete") {
 		protected void doActionPerformed(ActionEvent e) {
 			T proxy = getSelectedProxy();
-			if (proxy != null)
-				proxy.destroy();
+			model.deleteProxy(proxy);
 		}
 	};
 
