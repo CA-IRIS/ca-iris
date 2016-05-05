@@ -60,7 +60,7 @@ public class CameraManager extends ProxyManager<Camera> {
 	static private final Color COLOR_ACTIVE = new Color(0, 192, 255);
 
 	/** Color for occupied camera style */
-	static private final Color COLOR_DEPLOYED = new Color(177, 0, 0);
+	static private final Color COLOR_IN_USE = new Color(177, 0, 0);
 
 	/** camera direction if override present */
 	private Double overrideDirectionRadians = null;
@@ -191,7 +191,7 @@ public class CameraManager extends ProxyManager<Camera> {
 			ProxyTheme.OUTLINE_INACTIVE);
 		theme.addStyle(ItemStyle.PLAYLIST, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.ACTIVE, COLOR_ACTIVE);
-		theme.addStyle(ItemStyle.DEPLOYED, COLOR_DEPLOYED);
+		theme.addStyle(ItemStyle.IN_USE, COLOR_IN_USE);
 		theme.addStyle(ItemStyle.ALL);
 		return theme;
 	}
@@ -206,7 +206,7 @@ public class CameraManager extends ProxyManager<Camera> {
 	@Override
 	public boolean checkStyle(ItemStyle is, Camera proxy) {
 		switch (is) {
-		case DEPLOYED:
+		case IN_USE:
 			return ControllerHelper.isActive(proxy.getController())
 				&& isCameraInUse(proxy.getName());
 		case ACTIVE:
