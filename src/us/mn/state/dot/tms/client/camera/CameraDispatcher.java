@@ -216,7 +216,7 @@ public class CameraDispatcher extends JPanel {
 		cam_ptz = new CameraPTZ(s);
 		joy_ptz = new JoystickPTZ(cam_ptz);
 		vw_manager = new VideoWallManager(session, client_props);
-		updateDecMap();                // initial map, needed to create output_cbx
+		updateDecMap();  // initial map, needed to create output_cbx
 		output_cbx = createOutputComboCA();
 		info_pnl = createInfoPanel();
 		stream_pnl = createStreamPanel();

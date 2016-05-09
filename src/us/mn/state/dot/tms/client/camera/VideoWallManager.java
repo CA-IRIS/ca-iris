@@ -157,7 +157,7 @@ public class VideoWallManager {
 		// get camera count map
 		url = base_url + "?cmd=camconns";
 		resp = querySwitchServer(url);
-		if(resp == null)
+		if(resp != null)
 			cam_count_map = decodeCamconnsResponse(resp.trim());
 
 		// update at once
@@ -198,6 +198,14 @@ public class VideoWallManager {
 			return 0;
 	}
 
+	public List<String> getInUseCameraList() {
+		List<String> rv = new ArrayList<String>();
+		for(Map.Entry<String, Integer> entry : ccmap.entrySet())
+			if (entry.getValue() != null && entry.getValue() > 0)
+				rv.add(entry.getKey());
+
+		return rv;
+	}
 
 	public List<String> getCameraList() {
 		ArrayList<String> cams = new ArrayList<String>();
