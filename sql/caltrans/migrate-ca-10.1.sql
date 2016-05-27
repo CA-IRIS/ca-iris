@@ -330,7 +330,7 @@ WHERE name IN ('camera_pelcod_conn_mode', 'camera_pelcod_max_idle',
 INSERT INTO iris.comm_protocol (id, description) VALUES(34, 'TTIP DMS');
 
 -- update window title / version
-UPDATE iris.system_attribute SET value = 'CA-IRIS 10.1.0 [D]:'
+UPDATE iris.system_attribute SET value = 'CA-IRIS 10.1.0 [D1]:'
 WHERE name = 'window_title';
 
 -- CA trac 401 clean-up
