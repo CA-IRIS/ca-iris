@@ -32,11 +32,11 @@ public class MeterMarker extends AbstractMarker {
 	public MeterMarker() {
 		super(4);
 		float size = MARKER_SIZE_PIX;
-		path.moveTo(0, 0);
+		moveTo(0, 0);
 		Arc2D.Float arc = new Arc2D.Float(0, -size, size, size,
 			-90, 270, Arc2D.OPEN);
-		path.append(arc, true);
-		path.closePath();
-		path.lineTo(size / 2, -size / 2);
+		append(arc, true);
+		closePath();
+		lineTo(size / 2, -size / 2);
 	}
 }

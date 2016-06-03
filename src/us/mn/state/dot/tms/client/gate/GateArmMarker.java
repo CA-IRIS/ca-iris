@@ -35,15 +35,15 @@ public class GateArmMarker extends AbstractMarker {
 		float quarter = size / 4;
 		float third = size / 3;
 		float half = size / 2;
-		path.moveTo(fifth, half);
-		path.lineTo(size, size - quarter);
-		path.lineTo(size, size - third);
-		path.lineTo(quarter, third);
-		path.lineTo(quarter, half);
-		path.moveTo(0, half);
-		path.lineTo(quarter, half);
-		path.lineTo(quarter, 0);
-		path.lineTo(0, 0);
-		path.closePath();
+		moveTo(fifth, half);
+		lineTo(size, size - quarter);
+		lineTo(size, size - third);
+		lineTo(quarter, third);
+		lineTo(quarter, half);
+		moveTo(0, half);
+		lineTo(quarter, half);
+		lineTo(quarter, 0);
+		lineTo(0, 0);
+		closePath();
 	}
 }

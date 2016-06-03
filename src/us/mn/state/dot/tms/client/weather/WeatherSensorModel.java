@@ -54,7 +54,7 @@ public class WeatherSensorModel extends ProxyTableModel<WeatherSensor> {
 
 	/** Create a new weather sensor table model */
 	public WeatherSensorModel(Session s) {
-		super(s, s.getSonarState().getWeatherSensors(),
+		super(s, s.getSonarState().getWeatherSensorsCache().getWeatherSensors(),
 		      true,	/* has_properties */
 		      true,	/* has_create_delete */
 		      true);	/* has_name */

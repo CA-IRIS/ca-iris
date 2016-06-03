@@ -15,7 +15,7 @@
 package us.mn.state.dot.tms.client.schedule;
 
 import java.awt.BorderLayout;
-import us.mn.state.dot.map.Layer;
+
 import us.mn.state.dot.tms.ActionPlan;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
@@ -38,7 +38,7 @@ public class PlanTab extends MapTab<ActionPlan> {
   	public PlanTab(Session session, PlanManager m) {
 		super(m);
 		dispatcher = new PlanDispatcher(session, m);
-		summary = m.createStyleSummary();
+		summary = m.getStyleSummary();
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
 	}

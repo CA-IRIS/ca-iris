@@ -73,7 +73,11 @@ public enum ItemStyle {
 	NORMAL,
 	EXPIRED,
 	CRAZY,
-	AWS;
+	AWS,
+	AIR_TEMP,
+	PRECIPITATION,
+	VISIBILITY,
+	WIND_SPEED;
 
 	/** Get a string representation of the item style */
 	public String toString() {

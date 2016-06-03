@@ -116,10 +116,13 @@ abstract public class ProxyManager<T extends SonarObject> {
 	private final ProxyMapCache<T> map_cache = new ProxyMapCache<T>();
 
 	/** Map layer for the proxy type */
-	private final ProxyLayer<T> layer;
+	protected final ProxyLayer<T> layer;
 
 	/** Default style */
 	private final ItemStyle def_style;
+
+	/** Style summary */
+	private StyleSummary<T> style_summary;
 
 	/** Create a new proxy manager */
 	protected ProxyManager(Session s, GeoLocManager lm, ItemStyle ds) {
@@ -200,12 +203,23 @@ abstract public class ProxyManager<T extends SonarObject> {
 		}
 	}
 
-	/** Update layer extend */
+	/** Update layer extent */
 	public final void updateExtent() {
 		if (layer != null) {
 			runQueued(new Invokable() {
 				public void invoke() {
 					layer.updateExtent();
+				}
+			});
+		}
+	}
+
+	/** Update theme */
+	public void updateTheme() {
+		if (layer != null) {
+			runQueued(new Invokable() {
+				public void invoke() {
+					layer.updateTheme();
 				}
 			});
 		}
@@ -305,15 +319,19 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return s_model;
 	}
 
-	/** Create a new style summary for this proxy type, with no cell
+	/** Gets the style summary for this proxy type, with no cell
 	 * renderer size buttons. */
-	public StyleSummary<T> createStyleSummary() {
-		return new StyleSummary<T>(this, def_style, false);
+	public StyleSummary<T> getStyleSummary() {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, false);
+		return style_summary;
 	}
 
-	/** Create a new style summary for this proxy type */
-	public StyleSummary<T> createStyleSummary(boolean enableCellSizeBtns) {
-		return new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+	/** Gets the style summary for this proxy type */
+	public StyleSummary<T> getStyleSummary(boolean enableCellSizeBtns) {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+		return style_summary;
 	}
 
 	/** Get the specified style list model */
@@ -404,7 +422,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Iterate through all proxy objects */
-	private MapObject forEach(MapSearcher ms, AffineTransform at) {
+	protected MapObject forEach(MapSearcher ms, AffineTransform at) {
 		shape = getShape(at);
 		synchronized(map_cache) {
 			for(MapGeoLoc loc: map_cache) {
@@ -466,5 +484,9 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Check if manager has a layer to display */
 	public final boolean hasLayer() {
 		return canRead() && (getZoomThreshold() > 0);
+	}
+
+	protected ProxyLayer<T> getLayer() {
+		return layer;
 	}
 }

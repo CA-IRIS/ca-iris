@@ -35,17 +35,17 @@ public class BeaconMarker extends AbstractMarker {
 		float sixth = size / 6;
 		float third = size / 3;
 		float half = size / 2;
-		path.moveTo(half, half);
-		path.lineTo(half + third, sixth);
-		path.lineTo(half + sixth, sixth);
-		path.lineTo(half + sixth, -half);
-		path.lineTo(half - sixth, -half);
-		path.lineTo(half - sixth, sixth);
-		path.lineTo(half - third, sixth);
-		path.closePath();
-		path.append(new Ellipse2D.Float(0, -sixth, third, third),
+		moveTo(half, half);
+		lineTo(half + third, sixth);
+		lineTo(half + sixth, sixth);
+		lineTo(half + sixth, -half);
+		lineTo(half - sixth, -half);
+		lineTo(half - sixth, sixth);
+		lineTo(half - third, sixth);
+		closePath();
+		append(new Ellipse2D.Float(0, -sixth, third, third),
 			false);
-		path.append(new Ellipse2D.Float(half + sixth, -sixth,
+		append(new Ellipse2D.Float(half + sixth, -sixth,
 			third, third), false);
 	}
 }

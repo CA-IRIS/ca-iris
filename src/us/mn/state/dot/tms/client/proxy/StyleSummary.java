@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2004-2015  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California, Davis
+ * Copyright (C) 2010       AHMCT, University of California, Davis
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.AbstractButton;
@@ -52,6 +54,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Dan Rossiter
  */
 public class StyleSummary<T extends SonarObject> extends JPanel {
 
@@ -78,11 +81,18 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 	private final DefaultListSelectionModel dummy_model =
 		new DefaultListSelectionModel();
 
+	/** The listeners of this style summary */
+	private final ArrayList<ActionListener> lsnrs =
+		new ArrayList<ActionListener>();
+
 	/** Selected style list model */
 	private StyleListModel<T> model;
 
 	/** Proxy list */
 	private final ProxyJList<T> p_list;
+
+	/** The current style */
+	private String style;
 
 	/** Style status counter */
 	private final ProxyListener<T> counter = new ProxyListener<T>() {
@@ -343,8 +353,14 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		}
 	}
 
+	/** Get the current style */
+	public ItemStyle getStyle() {
+		return ItemStyle.lookupStyle(style);
+	}
+
 	/** Button click action */
 	private void setStyleAction(String style) {
+		this.style = style;
 		String t = I18N.get(manager.getSonarType()) + " " +
 			I18N.get("device.status") + ": " + style;
 		border.setTitle(t);
@@ -361,10 +377,32 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 			model.setFilter(mdl.getFilter());
 			mdl.dispose();
 		}
+		fireSelectionChanged();
+	}
+
+	/** Add a proxy selection listener to the model */
+	public void addSelectionListener(ActionListener l) {
+		lsnrs.add(l);
+	}
+
+	/** Remove a proxy selection listener from the model */
+	public void removeSelectionListener(ActionListener l) {
+		lsnrs.remove(l);
+	}
+
+	/** Fire a selection changed event to all listeners */
+	private void fireSelectionChanged() {
+		for (ActionListener l : lsnrs) {
+			l.actionPerformed(new ActionEvent(
+				this,
+				ActionEvent.ACTION_PERFORMED,
+				style));
+		}
 	}
 
 	/** Dispose of the widget */
 	public void dispose() {
+		lsnrs.clear();
 		manager.getCache().removeProxyListener(counter);
 		filter_text_field.removeKeyListener(filter_key_listener);
 		removeAll();

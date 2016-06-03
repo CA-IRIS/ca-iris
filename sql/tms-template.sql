@@ -2407,8 +2407,17 @@ operation_retry_threshold	3
 rtms_read_margin_sec	5
 route_max_legs	8
 route_max_miles	16
+rwis_color_high	FF0000
+rwis_color_low	00FFFF
+rwis_color_mid	FFC800
+rwis_high_air_temp_c	37
+rwis_high_precip_rate_mmh	50
 rwis_high_wind_speed_kph	40
+rwis_high_visibility_distance_m	3000
+rwis_low_air_temp_c	0
+rwis_low_precip_rate_mmh	0
 rwis_low_visibility_distance_m	152
+rwis_low_wind_speed_kph	5
 rwis_obs_age_limit_secs	240
 rwis_max_valid_wind_speed_kph	282
 rwis_sort	0

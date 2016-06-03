@@ -33,10 +33,10 @@ public class PlanMarker extends AbstractMarker {
 		float quarter = size / 4;
 		float x = quarter;
 		float y = quarter;
-		path.moveTo(x, y);
-		path.lineTo(x += quarter, y += quarter);
-		path.lineTo(x -= quarter, y += quarter);
-		path.lineTo(x -= quarter, y -= quarter);
-		path.closePath();
+		moveTo(x, y);
+		lineTo(x += quarter, y += quarter);
+		lineTo(x -= quarter, y += quarter);
+		lineTo(x -= quarter, y -= quarter);
+		closePath();
 	}
 }
