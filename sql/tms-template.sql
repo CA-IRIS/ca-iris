@@ -2317,6 +2317,7 @@ COPY iris.system_attribute (name, value) FROM stdin;
 camera_autoplay	true
 camera_cohu_conn_mode	0
 camera_cohu_max_idle	30
+camera_direction_override	
 camera_id_blank	
 camera_manager_show_location	true
 camera_num_preset_btns	3

@@ -85,4 +85,22 @@ public enum Direction {
 			a.add(d.abbrev);
 		return a.toArray(new String[0]);
 	}
+
+	/**
+	 * get a direction from a string.
+	 * @param s string to parse for a direction
+	 * @param d direction to return if parsing failed for any reason
+	 */
+	public static Direction parseString(String s, Direction d) {
+		Direction dir;
+
+		try {
+			dir = valueOf(s.toUpperCase());
+		} catch (Exception e) {
+			// swallow any exception, use default
+			dir = d;
+		}
+
+		return dir;
+	}
 }

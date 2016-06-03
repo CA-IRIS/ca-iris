@@ -7,3 +7,6 @@ UPDATE iris.system_attribute SET value = '4.XX.X' -- change me
 
 -- CA trac 318
 INSERT INTO iris.system_attribute(name, value) VALUES('system_protected_user_role','administrator');
+
+-- CA trac 504
+INSERT INTO iris.system_attribute(name, value) VALUES('camera_direction_override','');

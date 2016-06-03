@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +19,14 @@ package us.mn.state.dot.tms.client.camera;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.util.List;
 import java.util.HashSet;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
-import javax.swing.ListCellRenderer;
+
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Camera;
-import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.ControllerHelper;
+import us.mn.state.dot.tms.Direction;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
@@ -35,6 +35,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
+import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
@@ -47,6 +48,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class CameraManager extends ProxyManager<Camera> {
 
@@ -56,12 +58,99 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Color for active camera style */
 	static private final Color COLOR_ACTIVE = new Color(0, 192, 255);
 
+	/** camera direction if override present */
+	private Double overrideDirectionRadians = null;
+
+	/** is there a override */
+	private Boolean isOverrideDirection = null;
+
 	/** Set of cameras in the playlist */
 	private final HashSet<Camera> playlist = new HashSet<Camera>();
 
 	/** Create a new camera manager */
 	public CameraManager(Session s, GeoLocManager lm) {
 		super(s, lm, ItemStyle.ALL);
+	}
+
+	/**
+	 * override the camera direction if settings are so.
+	 *
+	 * CAMERA_DIRECTION_OVERRIDE values of NORTH, EAST, SOUTH or WEST
+	 * will result in all icons facing desired cardinal direction.
+	 * Numerical values between 0 and 360 will be honored. Any other values
+	 * will result in default behavior.
+	 */
+	@Override
+	public Double getTangentAngle(MapGeoLoc loc) {
+
+		if (Boolean.TRUE.equals(isOverrideDirection)
+			&& overrideDirectionRadians != null)
+			return overrideDirectionRadians;
+		else if (Boolean.FALSE.equals(isOverrideDirection))
+			return super.getTangentAngle(loc);
+
+		/*
+		 * the remainder of this method should only execute once.
+		 * values will be set so this isn't recomputed anymore.
+		 */
+		isOverrideDirection = false;
+		Double dirRad = null;
+
+		try {
+			// check if the override is compass degrees
+			int dir = Integer.parseInt(
+				SystemAttrEnum.CAMERA_DIRECTION_OVERRIDE
+					.getString());
+
+			if (dir < 0)
+				throw new Exception("CAMERA_DIRECTION_OVERRIDE"
+					+ " value less than zero.");
+			if (dir > 360)
+				throw new Exception("CAMERA_DIRECTION_OVERRIDE"
+					+ " value greater than 360");
+			if (dir == 360)
+				dir = 0;
+
+			dir = 360 - (dir + 90); // compass to trig degrees
+			if (dir >= 360)
+				dir -= 360;
+
+			dirRad = Math.toRadians(dir);
+			isOverrideDirection = true;
+
+		} catch (Exception e) {
+
+			// check if the override is a cardinal direction
+			Direction so = Direction.parseString(
+				SystemAttrEnum.CAMERA_DIRECTION_OVERRIDE
+					.getString(), Direction.UNKNOWN);
+
+			switch (so) {
+			case NORTH:
+				dirRad = MapGeoLoc.RAD_EAST;
+				break;
+			case EAST:
+				dirRad = MapGeoLoc.RAD_SOUTH;
+				break;
+			case SOUTH:
+				dirRad = MapGeoLoc.RAD_WEST;
+				break;
+			case WEST:
+				dirRad = MapGeoLoc.RAD_NORTH;
+				break;
+			}
+
+			if (dirRad != null)
+				isOverrideDirection = true;
+
+		} finally {
+			if (isOverrideDirection)
+				overrideDirectionRadians = dirRad;
+			else
+				dirRad = super.getTangentAngle(loc);
+		}
+
+		return dirRad;
 	}
 
 	/** Get the sonar type name */
