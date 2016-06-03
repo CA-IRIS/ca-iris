@@ -16,12 +16,13 @@ package us.mn.state.dot.tms.utils;
 
 import java.lang.IllegalArgumentException;
 import java.net.URI;
-
+import java.net.URISyntaxException;
 
 /**
  * Misc. URI/URL utilities
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class URIUtils {
 
@@ -49,6 +50,42 @@ public class URIUtils {
 			/* scheme undefined */
 			return false;
 		return (uriScheme.equals(scheme));
+	}
+
+	/**
+	 * Tests whether the given URI matches RFC-2396 specs.
+	 * @param uri The string to be tested.
+	 * @param errMsg On false, will be populated with brief failure description.
+	 * @return Whether the given string is a valid URI.
+	 */
+	static public boolean isValidUri(String uri, StringBuilder errMsg) {
+		boolean ret = true;
+		if (uri == null) {
+			if (errMsg != null) {
+				errMsg.append("URI is null");
+			}
+			ret = false;
+		} else {
+			try {
+				new URI(uri);
+			} catch (URISyntaxException se) {
+				ret = false;
+				if (errMsg != null) {
+					errMsg.append(se.getMessage());
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Tests whether the given URI matches RFC-3986 specs.
+	 * @param uri The string to be tested.
+	 * @return Whether the given string is a valid URI.
+	 */
+	static public boolean isValidUri(String uri) {
+		return isValidUri(uri, null);
 	}
 
 }

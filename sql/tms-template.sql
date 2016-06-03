@@ -2305,7 +2305,7 @@ COPY iris.encoder_type (id, description) FROM stdin;
 3	Infinova MPEG4
 4	Axis MP4 axrtsp
 5	Axis MP4 axrtsphttp
-6	Generic MMS
+6	Generic URL
 7	Axis JPEG
 \.
 

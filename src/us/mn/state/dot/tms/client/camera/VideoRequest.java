@@ -23,7 +23,6 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.StreamType;
-import us.mn.state.dot.tms.client.MainClient;
 import us.mn.state.dot.tms.utils.URIUtils;
 
 /**
@@ -32,6 +31,7 @@ import us.mn.state.dot.tms.utils.URIUtils;
  * @author Timothy Johnson
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class VideoRequest {
 
@@ -169,12 +169,12 @@ public class VideoRequest {
 
 	/** Create a video servlet URL */
 	private String getServletUrl(Camera cam) {
-		return new String("http://" + base_url +
-			"/video/" + servlet_type.servlet +
-			"/" + district +
-			"/" + cam.getName() +
-			"?size=" + size.code +
-			"&ssid=" + sonarSessionId);
+		return "http://" + base_url +
+				"/video/" + servlet_type.servlet +
+				"/" + district +
+				"/" + cam.getName() +
+				"?size=" + size.code +
+				"&ssid=" + sonarSessionId;
 	}
 
 	/** Create a camera encoder URL */
@@ -205,9 +205,10 @@ public class VideoRequest {
 		case AXIS_MP4_AXRTSPHTTP:
 			return "axrtsphttp://" + enc + "/mpeg4/" + chan +
 				"/media.amp";
-		case GENERIC_MMS:
-			if (!URIUtils.checkScheme(enc, "mms"))
-				throw new IOException("Invalid encoder field");
+		case GENERIC_URL:
+			StringBuilder sb = new StringBuilder();
+			if (!URIUtils.isValidUri(enc, sb))
+				throw new IOException("Invalid encoder field. " + sb.toString() + '.');
 			return enc;
 		case AXIS_JPEG:
 		default:
