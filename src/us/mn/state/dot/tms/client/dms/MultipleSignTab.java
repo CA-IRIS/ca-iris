@@ -16,6 +16,9 @@ package us.mn.state.dot.tms.client.dms;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.DefaultListModel;
@@ -35,6 +38,7 @@ import us.mn.state.dot.tms.client.widget.ILabel;
 import us.mn.state.dot.tms.client.widget.IListSelectionAdapter;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * A MultipleSignTab is a GUI component for sending a message to multiple signs
@@ -62,6 +66,13 @@ public class MultipleSignTab extends JPanel {
 
 	/** Selection model */
 	private final ProxySelectionModel<DMS> sel_model;
+
+	/** Detector comparator */
+	static private final Comparator<DMS> comparitor = new Comparator<DMS>() {
+		public int compare(DMS a, DMS b) {
+			return NumericAlphaComparator.compareStrings(a.getName(), b.getName());
+		}
+	};
 
 	/** Selection listener */
 	private final ProxySelectionListener sel_listener =
@@ -151,7 +162,9 @@ public class MultipleSignTab extends JPanel {
 	private void doSelectionChanged() {
 		sign_mdl.clear();
 		SignGroup group = getSelectedGroup();
-		for (DMS dms : sel_model.getSelected()) {
+		ArrayList<DMS> selected = new ArrayList<DMS>(sel_model.getSelected());
+		Collections.sort(selected, comparitor);
+		for (DMS dms : selected) {
 			sign_mdl.addElement(dms);
 			if (group != null && !isGroupMember(dms, group)) {
 				group_list.clearSelection();
