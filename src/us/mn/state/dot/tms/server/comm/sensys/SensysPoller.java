@@ -20,7 +20,6 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.Operation;
 import us.mn.state.dot.tms.server.comm.SamplePoller;
@@ -51,6 +50,7 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  *
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class SensysPoller extends MessagePoller implements SamplePoller {
 
@@ -69,7 +69,7 @@ public class SensysPoller extends MessagePoller implements SamplePoller {
 	 * @param m Associated messenger
 	 */
 	public SensysPoller(String n, Messenger m) {
-		super(n, m, ConnMode.PER_OP, 0);
+		super(n, m);
 		log("n=" + n + ", m=" + m);
 	}
 

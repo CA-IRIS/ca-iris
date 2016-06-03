@@ -22,10 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import us.mn.state.dot.tms.CommProtocol;
-import us.mn.state.dot.tms.SystemAttrEnum;
-import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ModemImpl;
-import static us.mn.state.dot.tms.server.comm.MessagePoller.ConnMode;
 import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoMessenger;
@@ -325,14 +322,7 @@ public class DevicePollerFactory {
 	/** Create a PelcoD poller */
 	private DevicePoller createPelcoDPoller() throws IOException {
 		Messenger sm = createSocketMessenger(UDP);
-		int mode = SystemAttrEnum.CAMERA_PELCOD_CONN_MODE.getInt();
-		int idle = SystemAttrEnum.CAMERA_PELCOD_MAX_IDLE.getInt();
-		if (mode == ConnMode.PERSIST.ordinal())
-			return new PelcoDPoller(name, sm);
-		else if (mode == ConnMode.AUTO.ordinal())
-			return new PelcoDPoller(name, sm, idle);
-		else
-			return new PelcoDPoller(name, sm);
+		return new PelcoDPoller(name, sm);
 	}
 
 	/** Create a Manchester poller */
@@ -399,14 +389,7 @@ public class DevicePollerFactory {
 	/** Create a Cohu PTZ poller */
 	private DevicePoller createCohuPTZPoller() throws IOException {
 		Messenger sm = createSocketMessenger(TCP);
-		int mode = SystemAttrEnum.CAMERA_COHU_CONN_MODE.getInt();
-		int idle = SystemAttrEnum.CAMERA_COHU_MAX_IDLE.getInt();
-		if (mode == ConnMode.PERSIST.ordinal())
-			return new CohuPTZPoller(name, sm);
-		else if (mode == ConnMode.AUTO.ordinal())
-			return new CohuPTZPoller(name, sm, idle);
-		else
-			return new CohuPTZPoller(name, sm);
+		return new CohuPTZPoller(name, sm);
 	}
 
 	/** Create an Axis PTZ poller */

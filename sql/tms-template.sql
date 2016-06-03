@@ -373,7 +373,8 @@ CREATE TABLE iris.comm_link (
 	protocol smallint NOT NULL REFERENCES iris.comm_protocol(id),
 	poll_enabled BOOLEAN NOT NULL,
 	poll_period INTEGER NOT NULL,
-	timeout integer NOT NULL
+	timeout integer NOT NULL,
+	idle_secs integer NOT NULL
 );
 
 CREATE TABLE iris.modem (
@@ -2316,14 +2317,10 @@ COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
 
 COPY iris.system_attribute (name, value) FROM stdin;
 camera_autoplay	true
-camera_cohu_conn_mode	0
-camera_cohu_max_idle	30
 camera_direction_override	
 camera_id_blank	
 camera_manager_show_location	true
 camera_num_preset_btns	3
-camera_pelcod_conn_mode	0
-camera_pelcod_max_idle	30
 camera_preset_panel_columns	6
 camera_preset_panel_enable	false
 camera_preset_store_enable	false

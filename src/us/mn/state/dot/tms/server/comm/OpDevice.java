@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
+import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 
@@ -30,6 +31,9 @@ abstract public class OpDevice<T extends ControllerProperty>
 
 	/** Require exclusive access to device */
 	private final boolean exclusive;
+
+	/** Priority change log */
+	static private final DebugLog PRIO_LOG = new DebugLog("prio");
 
 	/** Create a new device operation */
 	protected OpDevice(PriorityLevel p, DeviceImpl d, boolean ex) {
@@ -59,8 +63,18 @@ abstract public class OpDevice<T extends ControllerProperty>
 			throws DeviceContentionException
 		{
 			OpDevice owner = device.acquire(OpDevice.this);
-			if(owner != OpDevice.this)
+			if(owner != OpDevice.this) {
+				PRIO_LOG.log("CONTENTION owner="
+					+ owner.getOpName()
+					+ " exclusive=" + owner.exclusive
+					+ " hash=" + owner.hashCode()
+					+ OpDevice.class.getSimpleName() + "="
+					+ OpDevice.this.getOpName()
+					+ " exclusive=" + OpDevice.this.exclusive
+					+ " hash=" + OpDevice.this.hashCode()
+				);
 				throw new DeviceContentionException(owner);
+			}
 			return phaseTwo();
 		}
 	}

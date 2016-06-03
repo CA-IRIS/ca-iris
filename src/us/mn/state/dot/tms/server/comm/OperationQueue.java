@@ -14,7 +14,6 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import java.io.PrintStream;
 
 /**
  * A prioritized queue which sorts Operation objects by their priority
@@ -48,6 +47,14 @@ public final class OperationQueue<T extends ControllerProperty> {
 		} else
 			return false;
 	}
+
+//	public synchronized boolean enqueue(Operation<T> op, boolean force) {
+//		if(!force)
+//			return enqueue(op);
+//		op.begin();
+//		add(op);
+//		return true;
+//	}
 
 	/** Check if an operation should be added to the queue */
 	private boolean shouldAdd(Operation<T> op) {

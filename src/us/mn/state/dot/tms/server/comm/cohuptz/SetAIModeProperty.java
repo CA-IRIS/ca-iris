@@ -16,7 +16,6 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
@@ -24,6 +23,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * This class creates a Cohu PTZ request to change auto-iris mode.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class SetAIModeProperty extends CohuPTZProperty {
 
@@ -39,30 +39,18 @@ public class SetAIModeProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		byte[] message = new byte[6];		// max. msg size of 6
-		int i = 0;
-		message[i++] = (byte)0xf8;
-		message[i++] = (byte)c.getDrop();
-
-		boolean validRequest = true;
+		byte[] payload = null;
 		switch (devReq) {
 			case CAMERA_IRIS_MANUAL:
-				message[i++] = (byte)0x63;
-				message[i++] = (byte)0x49;
-				message[i++] = (byte)0x4d;
+				payload = new byte[]{ 'c', 'I', 'M' };
 				break;
 			case CAMERA_IRIS_AUTO:
-				message[i++] = (byte)0x63;
-				message[i++] = (byte)0x49;
-				message[i++] = (byte)0x41;
-				break;
-			default:
-				validRequest = false;
+				payload = new byte[]{ 'c', 'I', 'A' };
 				break;
 		}
-		if (validRequest) {
-			message[i] = calculateChecksum(message, 1, i - 1);
-			os.write(Arrays.copyOf(message, i + 1));
+
+		if (payload != null) {
+			writePayload(os, c.getDrop(), payload);
 		}
 	}
 

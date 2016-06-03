@@ -23,6 +23,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  * This class creates a Cohu PTZ request to initiate a focus movement.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class MoveFocusProperty extends CohuPTZProperty {
 
@@ -38,32 +39,21 @@ public class MoveFocusProperty extends CohuPTZProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		byte[] message = new byte[5];
-		int i = 0;
-		message[i++] = (byte)0xf8;
-		message[i++] = (byte)c.getDrop();
-
-		boolean validRequest = true;
+		byte[] payload = null;
 		switch (devReq) {
 			case CAMERA_FOCUS_STOP:
-				message[i++] = (byte)0x46;
-				message[i++] = (byte)0x53;
+				payload = new byte[]{ 'F', 'S' };
 				break;
 			case CAMERA_FOCUS_NEAR:
-				message[i++] = (byte)0x46;
-				message[i++] = (byte)0x4e;
+				payload = new byte[]{ 'F', 'N' };
 				break;
 			case CAMERA_FOCUS_FAR:
-				message[i++] = (byte)0x46;
-				message[i++] = (byte)0x46;
-				break;
-			default:
-				validRequest = false;
+				payload = new byte[]{ 'F', 'F' };
 				break;
 		}
-		if (validRequest) {
-			message[i] = calculateChecksum(message, 1, i - 1);
-			os.write(message);
+
+		if (payload != null) {
+			writePayload(os, c.getDrop(), payload);
 		}
 	}
 }

@@ -74,7 +74,8 @@ public class PTZButton extends JButton {
 		if (getModel().isPressed()) {
 			cam_ptz.sendPtz(speed * pan, speed * tilt,
 				speed * zoom);
-		} else
+		} else {
 			cam_ptz.clearMovement();
+		}
 	}
 }

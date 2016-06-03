@@ -16,17 +16,21 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
 /**
  * A property to tilt a camera
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class TiltProperty extends CohuPTZProperty {
 
 	/** Requested vector [-1..1] */
-	protected final float value;
+	private final float value;
 
 	/** Create the property */
 	public TiltProperty(float v) {
@@ -36,29 +40,10 @@ public class TiltProperty extends CohuPTZProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
-		byte[] cmd = new byte[2];
+		throws IOException {
 
-		if (Math.abs(value) < PTZ_THRESH) {
-			cmd[0] = (byte)0x54;
-			cmd[1] = (byte)0x53;
-		}
-		else if (value < 0) {
-			cmd[0] = (byte)0x64;
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
-		else if (value > 0) {
-			cmd[0] = (byte)0x75;
-			cmd[1] = getPanTiltSpeedByte(value);
-		}
+		byte[] cmd = processPTZInfo(Command.TILT, value, new byte[] {});
 
-		byte[] msg = new byte[5];
-		msg[0] = (byte)0xf8;
-		msg[1] = (byte)c.getDrop();
-		msg[2] = cmd[0];
-		msg[3] = cmd[1];
-		msg[4] = calculateChecksum(msg, 1, 3);
-		os.write(msg);
+		writePayload(os, c.getDrop(), cmd);
 	}
 }

@@ -24,14 +24,9 @@ import us.mn.state.dot.tms.SystemAttrEnum;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class Operation<T extends ControllerProperty> {
-
-	/** Strip all characters up to the last dot */
-	static private String stripToLastDot(String v) {
-		int i = v.lastIndexOf('.');
-		return (i >= 0) ? v.substring(i + 1) : v;
-	}
 
 	/** Priority of the operation */
 	private PriorityLevel priority;
@@ -157,7 +152,7 @@ abstract public class Operation<T extends ControllerProperty> {
 
 	/** Get the operation name */
 	protected final String getOpName() {
-		return stripToLastDot(getClass().getName());
+		return getClass().getSimpleName();
 	}
 
 	/** Operation equality test */
@@ -169,18 +164,13 @@ abstract public class Operation<T extends ControllerProperty> {
 	/** Get a string description of the operation */
 	@Override
 	public String toString() {
-		return stripToLastDot(phaseClass().getName());
+		return phaseClass().getSimpleName();
 	}
 
 	/** Get the class of the current phase */
-	private Class phaseClass() {
+	public Class phaseClass() {
 		Phase<T> p = phase;
 		return (p != null) ? p.getClass() : getClass();
-	}
-
-	/** Get the current phase */
-	public Phase<T> getPhase() {
-		return phase;
 	}
 
 }

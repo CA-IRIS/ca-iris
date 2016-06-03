@@ -16,17 +16,21 @@ package us.mn.state.dot.tms.server.comm.cohuptz;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
 /**
  * A property to zoom a camera
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class ZoomProperty extends CohuPTZProperty {
 
 	/** Requested vector [-1..1] */
-	protected final float value;
+	private final float value;
 
 	/** Create the property */
 	public ZoomProperty(float v) {
@@ -36,35 +40,10 @@ public class ZoomProperty extends CohuPTZProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
-		byte[] cmd = new byte[0];
+		throws IOException {
 
-		if (Math.abs(value) < PTZ_THRESH) {
-			cmd = new byte[2];
-			cmd[0] = (byte)0x5a;
-			cmd[1] = (byte)0x53;
-		}
-		else if (value < 0) {
-			cmd = new byte[3];
-			cmd[0] = (byte)0x63;
-			cmd[1] = (byte)0x7a;
-			cmd[2] = getZoomSpeedByte(value);
-		}
-		else if (value > 0) {
-			cmd = new byte[3];
-			cmd[0] = (byte)0x63;
-			cmd[1] = (byte)0x5a;
-			cmd[2] = getZoomSpeedByte(value);
-		}
+		byte[] cmd = processPTZInfo(Command.ZOOM, value, new byte[] {});
 
-		byte[] msg = new byte[3 + cmd.length];
-		msg[0] = (byte)0xf8;
-		msg[1] = (byte)c.getDrop();
-		int i = 2;
-		for (byte b : cmd)
-			msg[i++] = b;
-		msg[i] = calculateChecksum(msg, 1, cmd.length + 1);
-		os.write(msg);
+		writePayload(os, c.getDrop(), cmd);
 	}
 }

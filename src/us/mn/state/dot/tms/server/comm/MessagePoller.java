@@ -25,6 +25,8 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
+import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
+import us.mn.state.dot.tms.units.*;
 
 /**
  * MessagePoller is an abstract class which represents a communication channel 
@@ -32,6 +34,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class MessagePoller<T extends ControllerProperty>
 	implements DevicePoller
@@ -44,12 +47,6 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		else
 			return e.getClass().getSimpleName();
 	}
-
-	/** Connection mode enum */
-	public enum ConnMode {PERSIST, AUTO, PER_OP};
-
-	/** The connection mode */
-	private final ConnMode conn_mode;
 
 	/** Auto-closer job service period (sec) */
 	static private final int CLOSER_PERIOD = 3;
@@ -88,10 +85,13 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	protected final Messenger messenger;
 
 	/** Thread state */
-	private ThreadState state = ThreadState.NOT_STARTED;
+	private volatile ThreadState state = ThreadState.NOT_STARTED;
+
+	/** Whether we are performing a device acquisition */
+	private boolean is_acquiring = true;
 
 	/** Set the thread state */
-	private synchronized void setThreadState(ThreadState st) {
+	private void setThreadState(ThreadState st) {
 		state = st;
 		plog("state: " + st);
 	}
@@ -116,8 +116,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Check if ready for operation */
 	@Override
-	public synchronized boolean isReady() {
-		switch(state) {
+	public boolean isReady() {
+		ThreadState ts = state;
+		switch(ts) {
 		case NOT_STARTED:
 		case STARTING:
 		case RUNNING:
@@ -129,8 +130,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Check if poller is connected */
 	@Override
-	public synchronized boolean isConnected() {
-		switch(state) {
+	public boolean isConnected() {
+		ThreadState ts = state;
+		switch(ts) {
 		case STARTING:
 		case RUNNING:
 			return true;
@@ -148,8 +150,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		return hung_up;
 	}
 
-	/** Max idle time (sec) for connection mode AUTO */
-	private long max_idle = 0;
+	/** Max idle time (sec) */
+	private long max_idle = Integer.MAX_VALUE;
 
 	/** Scheduler job to automatically close idle connections */
 	private class CloserJob extends Job {
@@ -172,12 +174,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	 * Create a new message poller.
 	 * @param n CommLink name
 	 * @param m the Messenger
-	 * @param cm the connection mode
-	 * @param idle max idle time (sec) to use for conn mode AUTO
 	 */
-	protected MessagePoller(String n, Messenger m, ConnMode cm, int idle) {
-		conn_mode = cm;
-		max_idle = idle;
+	protected MessagePoller(String n, Messenger m) {
 		closer_job = new CloserJob();
  		thread = new Thread(GROUP, "Poller: " + n) {
 			@Override
@@ -190,19 +188,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		messenger = m;
 	}
 
-	/**
-	 * Create a new message poller with persistent connection mode.
-	 * @param n CommLink name
-	 * @param m the Messenger
-	 */
-	protected MessagePoller(String n, Messenger m) {
-		this(n, m, ConnMode.PERSIST, 0);
-	}
-
 	/** Set the receive timeout */
 	@Override
 	public final void setTimeout(int t) throws IOException {
 		messenger.setTimeout(t);
+	}
+
+	/** Set the allowed idle time in secs */
+	public void setIdleSecs(int is) {
+		max_idle = is;
 	}
 
 	/** Add an operation to the message poller */
@@ -220,8 +214,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	}
 
 	/** Should the thread be started? */
-	private synchronized boolean shouldStart() {
-		if (state == ThreadState.NOT_STARTED) {
+	private boolean shouldStart() {
+		ThreadState ts = state;
+		if (ts == ThreadState.NOT_STARTED) {
 			setThreadState(ThreadState.STARTING);
 			return true;
 		} else
@@ -230,7 +225,12 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Start polling */
 	protected void startPolling() {
-		thread.start();
+		try {
+			thread.start();
+		} catch (IllegalThreadStateException e) {
+			// thread was started on another thread between shouldStart returning true and us getting here
+			plog("Attempted to start polling when we were already polling.");
+		}
 	}
 
 	/** Stop polling */
@@ -248,10 +248,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Open messenger and perform operations */
 	private void operationLoop() {
 		try {
-			if (conn_mode == ConnMode.PERSIST)
-				ensureOpen();
-			else if (conn_mode == ConnMode.AUTO)
-				CLOSER.addJob(closer_job);
+			ensureOpen();
+			CLOSER.addJob(closer_job);
 			setThreadState(ThreadState.RUNNING);
 			performOperations();
 			setThreadState(ThreadState.CLOSING);
@@ -269,8 +267,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		finally {
 			ensureClosed();
 			drainQueue();
-			if (conn_mode == ConnMode.AUTO)
-				CLOSER.removeJob(closer_job);
+			CLOSER.removeJob(closer_job);
 			setThreadState(ThreadState.STOPPED);
 		}
 	}
@@ -281,33 +278,64 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Timestamp of last activity */
 	private long last_activity = 0;
 
-	private synchronized void ensureOpen() throws IOException {
-		if (messenger_open)
-			return;
-		messenger.open();
+	/** Accessing the last_activity should be performed within synchronization on this object */
+	private final Object last_activity_lock = new Object();
+
+	/** Open messenger connection if none present */
+	private void ensureOpen() throws IOException {
+		synchronized (messenger) {
+			if (messenger_open)
+				return;
+
+			messenger.open();
+			messenger_open = true;
+		}
 		plog("messenger opened.");
-		messenger_open = true;
 	}
 
-	private synchronized void ensureClosed() {
-		if (!messenger_open)
-			return;
-		messenger.close();
+	/** Close messenger connection if present */
+	private void ensureClosed() {
+		synchronized (messenger) {
+			if (!messenger_open)
+				return;
+
+			messenger.close();
+			messenger_open = false;
+		}
 		plog("messenger closed.");
-		messenger_open = false;
 	}
-	private synchronized void closeIfIdle() {
-		long now = TimeSteward.currentTimeMillis();
-		long idle = now - last_activity;
-		if ((messenger_open) && (idle >= (max_idle * 1000))) {
+
+	/** If socket has been idle longer than max_idle then close connection */
+	private void closeIfIdle() {
+		if (is_acquiring)
+			return;
+
+		boolean closed = false;
+		long idle = 0;
+
+		// do not allow closing based on idle state mid-poll
+		synchronized (messenger) {
+			if (messenger_open) {
+				synchronized (last_activity_lock) {
+					idle = calculate_elapsed(last_activity);
+				}
+				if (idle >= (max_idle * 1000L)) {
+					closed = true;
+					ensureClosed();
+				}
+			}
+		}
+		// avoid performing file I/O inside sync block
+		if (closed) {
 			plog("idle time " + idle + " ms.  closing messenger.");
-			ensureClosed();
 		}
 	}
 
 	/** Update last activity time to current time */
-	private synchronized void bump() {
-		last_activity = TimeSteward.currentTimeMillis();
+	private void bump() {
+		synchronized (last_activity_lock) {
+			last_activity = TimeSteward.currentTimeMillis();
+		}
 	}
 
 	/** Drain the poll queue */
@@ -325,90 +353,122 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	/** Perform operations on the poll queue */
 	private void performOperations() throws IOException {
 		while(true) {
+			// ensure for 0-sec idle timeout we do not start a second op
+			closeIfIdle();
 			Operation<T> o = queue.next();
-			boolean acquire = (o.getPhase() instanceof
-				OpDevice.AcquireDevice);
-			// bump before poll to prevent closure during poll
-			bump();
-			ensureOpen();
 			if(o instanceof KillThread)
 				break;
-			doPoll(o);
-			// final bump when poll complete
-			bump();
-			// don't disconnect after AcquireDevice phases
-			if ((conn_mode == ConnMode.PER_OP) && (!acquire))
-				ensureClosed();
+			synchronized (messenger) {
+				ensureOpen();
+				doPoll(o);
+				bump();
+			}
+			// set after performing poll to ensure we never close before attempting at least one op
+			is_acquiring = (o.phaseClass() == OpDevice.AcquireDevice.class);
 		}
 	}
 
 	/** Perform one poll for an operation */
 	private void doPoll(final Operation<T> o) throws IOException {
+
 		final String oname = o.toString();
-		long start = TimeSteward.currentTimeMillis();
+		final long start = TimeSteward.currentTimeMillis();
+		boolean error = true;
+
 		try {
-			o.poll(createMessage(o));
-		}
-		catch(DeviceContentionException e) {
+			if (o instanceof OpPTZCamera)
+				plog("attempting polling PTZ start: "
+					+ ((OpPTZCamera) o).toString2());
+
+
+			synchronized (messenger) {
+				o.poll(createMessage(o));
+			}
+
+			error = false;
+		} catch (DeviceContentionException e) {
+			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);
-		}
-		catch(DownloadRequestException e) {
+		} catch (DownloadRequestException e) {
+			plog("ERROR: DownloadRequestException.");
 			if (o instanceof OpController)
-				download(((OpController<T>)o).getController(),
-				((OpController<T>)o).getPriority());
-		}
-		catch(ChecksumException e) {
+				download(((OpController<T>) o).getController(),
+					((OpController<T>) o).getPriority());
+		} catch (ChecksumException e) {
+			plog("ERROR: ChecksumException, draining queue.");
 			o.handleCommError(EventType.CHECKSUM_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
-		}
-		catch(ParsingException e) {
+		} catch (ParsingException e) {
+			plog("ERROR: ParsingException, draining queue.");
 			o.handleCommError(EventType.PARSING_ERROR,
 				exceptionMessage(e));
 			messenger.drain();
-		}
-		catch(ControllerException e) {
+		} catch (ControllerException e) {
+			plog("ERROR: ControllerException.");
 			if (o instanceof OpController) {
-				((OpController<T>)o).handleCommError(
+				((OpController<T>) o).handleCommError(
 					EventType.CONTROLLER_ERROR,
 					exceptionMessage(e));
-				((OpController<T>)o).setFailed();
-				((OpController<T>)o).setMaintStatus(
+				((OpController<T>) o).setFailed();
+				((OpController<T>) o).setMaintStatus(
 					exceptionMessage(e));
 			}
-		}
-		catch(SocketTimeoutException e) {
+		} catch (SocketTimeoutException e) {
+			plog("ERROR: SocketTimeoutException.");
 			o.handleCommError(EventType.POLL_TIMEOUT_ERROR,
 				exceptionMessage(e));
-		}
-		finally {
-			if(o.isDone() || !requeueOperation(o))
+		} finally {
+			if (o.isDone() || !requeueOperation(o))
 				o.cleanup();
-			if(POLL_LOG.isOpen()) {
-				plog(oname + " elapsed: " +
-					calculate_elapsed(start));
-			}
+
+			if (!error && o instanceof OpPTZCamera)
+				plog("polled PTZ complete: "
+					+ ((OpPTZCamera) o).toString2());
+
+			plog(oname + " elapsed: " + calculate_elapsed(start));
 		}
 	}
 
 	/** Handle device contention.  Another operation has the device lock.
 	 * Ensure that we don't have a priority inversion problem. */
 	private void handleContention(Operation<T> op,
-		DeviceContentionException e)
-	{
+		DeviceContentionException e) {
 		Operation<T> oc = e.operation;
-		if(oc.getPriority().ordinal() > op.getPriority().ordinal()) {
-			if(PRIO_LOG.isOpen()) {
+		PRIO_LOG.log("Contention with " + op + " (" + op.getPriority()
+			.ordinal()
+			+ ").  Impeded by " + oc + " (" + oc.getPriority()
+			.ordinal() + ").");
+		if (oc.getPriority().ordinal() > op.getPriority().ordinal()) {
+			if (PRIO_LOG.isOpen()) {
 				PRIO_LOG.log("BUMPING " + oc + " from " +
 					oc.getPriority() + " to " +
 					op.getPriority());
 			}
 			oc.setPriority(op.getPriority());
+
 			// If, for some crazy reason, the operation is
 			// not on our queue, it will not be requeued.
-			if(!requeueOperation(oc)) {
+			if (!requeueOperation(oc)) {
 				oc.setFailed();
 				oc.cleanup();
+			}
+		} else if (oc.getPriority().ordinal() == op.getPriority()
+			.ordinal()) {
+			// If, for some crazy reason, the operation is
+			// not on our queue, it will not be requeued.
+			if (!requeueOperation(oc)) {
+				oc.setFailed();
+				oc.cleanup();
+			} else {
+				if (PRIO_LOG.isOpen()) {
+					PRIO_LOG.log(
+						"BUMPING " + op + " from " +
+							op.getPriority()
+							+ " to " +
+							PriorityLevel.URGENT);
+				}
+				op.setPriority(PriorityLevel.URGENT);
 			}
 		}
 	}
@@ -424,7 +484,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	}
 
 	/** Calculate the elapsed time */
-	private long calculate_elapsed(long start) {
+	private static long calculate_elapsed(long start) {
 		return TimeSteward.currentTimeMillis() - start;
 	}
 
@@ -432,12 +492,12 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	abstract public boolean isAddressValid(int drop);
 
 	/** Create a CommMessage, based on Operation type. */
-	private final CommMessage<T> createMessage(Operation<T> o)
+	private CommMessage<T> createMessage(Operation<T> o)
 		throws IOException
 	{
 		if (o instanceof OpController)
 			return createCommMessage((OpController<T>)o);
-		else if (o instanceof Operation)
+		else if (o != null)
 			return createCommMessageOp(o);
 		else
 			return null;

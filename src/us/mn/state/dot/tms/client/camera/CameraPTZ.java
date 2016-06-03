@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2014  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +19,7 @@ package us.mn.state.dot.tms.client.camera;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionListener;
@@ -30,6 +32,7 @@ import java.awt.event.ActionListener;
  * @author Douglas Lau
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class CameraPTZ {
 
@@ -144,9 +147,9 @@ public class CameraPTZ {
 	 * of doSendPtz().
 	 * Observes controlEnabled.
 	 */
-	public void sendPtz(float p, float t, float z) {
+	public synchronized void sendPtz(float p, float t, float z) {
 		if (controlEnabled)
-			doSendPtz(p,t,z);
+			doSendPtz(p, t, z);
 	}
 
 	/**
@@ -155,7 +158,7 @@ public class CameraPTZ {
 	 */
 	private synchronized void doSendPtz(float p, float t, float z) {
 		if (canControlPtz()) {
-			if (p != 0 || t != 0 || z != 0 || ptzMoving()) {
+			if (anyNonZero(p, t, z) || ptzMoving()) {
 				ptz[0] = p;
 				ptz[1] = t;
 				ptz[2] = z;
@@ -166,15 +169,21 @@ public class CameraPTZ {
 	}
 
 	/** Was the most recent PTZ update a move? */
-	private boolean ptzMoving() {
-		return ptz[0] != 0 || ptz[1] != 0 || ptz[2] != 0;
+	private synchronized boolean ptzMoving() {
+		return anyNonZero(ptz[0], ptz[1], ptz[2]);
+	}
+
+	private boolean anyNonZero(float p, float t, float z) {
+		return NumericAlphaComparator.compareFloats(p, 0f) != 0
+			|| NumericAlphaComparator.compareFloats(t, 0f) != 0
+			|| NumericAlphaComparator.compareFloats(z, 0f) != 0;
 	}
 
 	/**
 	 * Send a device request to the current camera.
 	 * Observes controlEnabled.
 	 */
-	public void sendRequest(DeviceRequest dr) {
+	public synchronized void sendRequest(DeviceRequest dr) {
 		if (controlEnabled)
 			doSendRequest(dr);
 	}
@@ -218,7 +227,8 @@ public class CameraPTZ {
 	 * of controlEnabled) and clear the movement state variables.
 	 */
 	public synchronized void clearMovement() {
-		doSendPtz(0, 0, 0);
+		doSendPtz(0f, 0f, 0f);
+		//TODO: doSendRequest(DeviceRequest.CAMERA_PTZ_FULL_STOP);
 		if (focusMoving)
 			doSendRequest(DeviceRequest.CAMERA_FOCUS_STOP);
 		if (irisMoving)
@@ -227,7 +237,7 @@ public class CameraPTZ {
 	}
 
 	/** Ensure states are cleared */
-	private void clearState() {
+	private synchronized void clearState() {
 		ptz[0] = 0f;
 		ptz[1] = 0f;
 		ptz[2] = 0f;
