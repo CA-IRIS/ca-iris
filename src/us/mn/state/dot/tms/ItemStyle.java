@@ -51,6 +51,7 @@ public enum ItemStyle {
 	/* Camera styles */
 	PLAYLIST,
 	UNPUBLISHED,
+	INUSE,
 	/* Ramp meter styles */
 	LOCKED,
 	METERING,

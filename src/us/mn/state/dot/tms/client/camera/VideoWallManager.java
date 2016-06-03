@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.client.Session;
 
@@ -63,6 +64,9 @@ public class VideoWallManager {
 		= new HashMap<String, String>();
 	private volatile Map<String, String> grouputil_map
 		= new HashMap<String, String>();
+	private volatile Map<String, Integer> ccmap
+		= new HashMap<String, Integer>();
+
 
 	/** Scheduler that runs refresh job */
 	static private final Scheduler REFRESH
@@ -82,7 +86,6 @@ public class VideoWallManager {
 
 	/** Refresh job */
 	private final Job refresh_job = new RefreshJob();
-
 
 	/** Create a new form */
 	public VideoWallManager(Session sess, Properties props) {
@@ -137,6 +140,7 @@ public class VideoWallManager {
 
 		Map<String, String> dmap = null;
 		Map<String, String> gumap = null;
+		Map<String, Integer> cam_count_map = null;
 
 		// get decoder map
 		url = base_url + "?cmd=decstat";
@@ -150,11 +154,19 @@ public class VideoWallManager {
 		if (resp != null)
 			gumap = decodeGrouputilResponse(resp.trim());
 
+		// get camera count map
+		url = base_url + "?cmd=camconns";
+		resp = querySwitchServer(url);
+		if(resp != null)
+			cam_count_map = decodeCamconnsResponse(resp.trim());
+
 		// update at once
 		if (dmap != null)
 			decstat_map = dmap;
 		if (gumap != null)
 			grouputil_map = gumap;
+		if (cam_count_map != null)
+			ccmap = cam_count_map;
 	}
 
 
@@ -171,21 +183,29 @@ public class VideoWallManager {
 	public int getNumConns(String cid) {
 		if (cid == null)
 			return -1;
-		String url = base_url + "?cmd=camconns";
-		String resp = querySwitchServer(url);
-		if (resp == null)
-			return -2;
-		Map<String, Integer> ccmap = decodeCamconnsResponse(
-			resp.trim());
+
 		if (ccmap == null)
 			return -3;
+
+		if (ccmap.isEmpty())
+			return 0;
+
 		Integer num = ccmap.get(cid);
+
 		if (num != null)
 			return num.intValue();
 		else
 			return 0;
 	}
 
+	public List<String> getInUseCameraList() {
+		List<String> rv = new ArrayList<String>();
+		for(Map.Entry<String, Integer> entry : ccmap.entrySet())
+			if (entry.getValue() != null && entry.getValue() > 0)
+				rv.add(entry.getKey());
+
+		return rv;
+	}
 
 	public List<String> getCameraList() {
 		ArrayList<String> cams = new ArrayList<String>();

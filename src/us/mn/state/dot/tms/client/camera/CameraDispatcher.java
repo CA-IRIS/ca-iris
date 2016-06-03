@@ -32,14 +32,15 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
+
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
+
 import us.mn.state.dot.tms.Camera;
-import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
@@ -97,36 +98,40 @@ public class CameraDispatcher extends JPanel {
 
 	/** Selection listener */
 	private final ProxySelectionListener sel_listener =
-		new ProxySelectionListener()
-	{
-		public void selectionChanged() {
-			selectCamera(sel_model.getSingleSelection());
-		}
-	};
+		new ProxySelectionListener() {
+			public void selectionChanged() {
+				selectCamera(sel_model.getSingleSelection());
+			}
+		};
 
 	/** Cache of Camera proxy objects */
 	private final TypeCache<Camera> cache;
 
 	/** Proxy listener */
 	private final ProxyListener<Camera> proxy_listener =
-		new ProxyListener<Camera>()
-	{
-		public void proxyAdded(Camera proxy) {}
-		public void enumerationComplete() {}
-		public void proxyRemoved(Camera proxy) {}
-		public void proxyChanged(Camera proxy, String a) {
-			if (proxy != selected)
-				return;
-			if ((a == null) || ("opStatus".equals(a))) {
-				final String stat = proxy.getOpStatus();
-				runSwing(new Runnable() {
-					public void run() {
-						updateOpStatus(stat);
-					}
-				});
+		new ProxyListener<Camera>() {
+			public void proxyAdded(Camera proxy) {
 			}
-		}
-	};
+
+			public void enumerationComplete() {
+			}
+
+			public void proxyRemoved(Camera proxy) {
+			}
+
+			public void proxyChanged(Camera proxy, String a) {
+				if (proxy != selected)
+					return;
+				if ((a == null) || ("opStatus".equals(a))) {
+					final String stat = proxy.getOpStatus();
+					runSwing(new Runnable() {
+						public void run() {
+							updateOpStatus(stat);
+						}
+					});
+				}
+			}
+		};
 
 	/** Stream status listener */
 	private final StreamStatusListener ss_listener;
@@ -180,13 +185,16 @@ public class CameraDispatcher extends JPanel {
 
 	/** Timer listener for video wall status update timer. */
 	private class DecMapUpdater implements ActionListener {
+
 		public void actionPerformed(ActionEvent e) {
 			// performed on event dispatch thread
 			updateDecMap();
-			updateOutputComboCA();	// needed, since mapping can change from elsewhere
+			updateOutputComboCA();        // needed, since mapping can change from elsewhere
 			updateCamControls();
 		}
-	};
+	}
+
+	;
 
 	/** Decoder map update timer */
 	private final Timer decmap_timer = new Timer(DECMAP_UPDATE_PERIOD_MS,
@@ -208,7 +216,7 @@ public class CameraDispatcher extends JPanel {
 		cam_ptz = new CameraPTZ(s);
 		joy_ptz = new JoystickPTZ(cam_ptz);
 		vw_manager = new VideoWallManager(session, client_props);
-		updateDecMap();		// initial map, needed to create output_cbx
+		updateDecMap();  // initial map, needed to create output_cbx
 		output_cbx = createOutputComboCA();
 		info_pnl = createInfoPanel();
 		stream_pnl = createStreamPanel();
@@ -300,6 +308,7 @@ public class CameraDispatcher extends JPanel {
 			public void onStreamStarted(Camera c) {
 				updateCamControls();
 			}
+
 			@Override
 			public void onStreamFinished(Camera c) {
 				maybeReturnHome(c);
@@ -312,6 +321,7 @@ public class CameraDispatcher extends JPanel {
 	/**
 	 * Update the Op Status field.  The resulting field will contain the
 	 * status string and a current timestamp.
+	 *
 	 * @param stat the status string
 	 */
 	private void updateOpStatus(String stat) {
@@ -326,13 +336,13 @@ public class CameraDispatcher extends JPanel {
 	 * Update the enable/disable status of the camera controls.
 	 * The criteria used to determine what is enabled/disabled include:
 	 * <ul>
-	 *   <li> if a camera is currently selected
-	 *   <li> if the camera has a controller
-	 *   <li> if the user has any camera control permissions
-	 *   <li> the value of the CAMERA_PTZ_BLIND system attribute
-	 *   <li> if a stream is currently active
+	 * <li> if a camera is currently selected
+	 * <li> if the camera has a controller
+	 * <li> if the user has any camera control permissions
+	 * <li> the value of the CAMERA_PTZ_BLIND system attribute
+	 * <li> if a stream is currently active
 	 * </ul>
-	 *
+	 * <p>
 	 * Note: if the selected camera's EncoderType requires an external
 	 * viewer, the PTZ controls are enabled as long as the user has
 	 * permissions and the camera has a controller.  This is because
@@ -362,11 +372,11 @@ public class CameraDispatcher extends JPanel {
 	/**
 	 * Return a camera to its "Home" preset if all the following are true:
 	 * <ul>
-	 *   <li> the sysattr "camera_ptz_return_home" is true
-	 *   <li> the camera is capable of indirect streaming
-	 *   <li> a HOME preset alias mapping exists for the camera
-	 *   <li> no other streams from this camera are active, including
-	 *        decoder connections
+	 * <li> the sysattr "camera_ptz_return_home" is true
+	 * <li> the camera is capable of indirect streaming
+	 * <li> a HOME preset alias mapping exists for the camera
+	 * <li> no other streams from this camera are active, including
+	 * decoder connections
 	 * </ul>
 	 */
 	private void maybeReturnHome(Camera c) {
@@ -382,7 +392,7 @@ public class CameraDispatcher extends JPanel {
 		if (p == null)
 			return;
 
-		TimeSteward.sleep_well(250);	// kludge to avoid race
+		TimeSteward.sleep_well(250);        // kludge to avoid race
 		int numConns = vw_manager.getNumConns(c.getName());
 		// were we the last connection to this camera?
 		if (numConns == 0)
@@ -552,7 +562,7 @@ public class CameraDispatcher extends JPanel {
 	private void monitorSelected() {
 		Object o = output_cbx.getSelectedItem();
 		if (o instanceof VideoMonitor) {
-			video_monitor = (VideoMonitor)o;
+			video_monitor = (VideoMonitor) o;
 			selectMonitorCamera();
 		} else
 			video_monitor = null;
@@ -568,7 +578,7 @@ public class CameraDispatcher extends JPanel {
 		String dec = null;
 		Object o = output_cbx.getSelectedItem();
 		if (o instanceof String) {
-			dec = (String)o;
+			dec = (String) o;
 		} else
 			dec = null;
 		if (dec == null)
@@ -611,4 +621,10 @@ public class CameraDispatcher extends JPanel {
 		control_pnl.setEnabled(false);
 		op_status_lbl.setText("");
 	}
+
+	/** get the video wall manager */
+	protected VideoWallManager getVideoWallManager() {
+		return vw_manager;
+	}
+
 }
