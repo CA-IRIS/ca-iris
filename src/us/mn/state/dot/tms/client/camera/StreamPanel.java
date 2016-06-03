@@ -54,6 +54,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * @author Timothy Johnson
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class StreamPanel extends JPanel {
 
@@ -159,6 +160,15 @@ public class StreamPanel extends JPanel {
 		boolean ctrl, boolean auto)
 	{
 		super(new GridBagLayout());
+		if (cam_ptz != null) {
+			cam_ptz.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					resetStreamTimeout();
+				}
+			});
+		}
+
 		video_req = req;
 		external_viewer = (s == null) ? null
 			: UserProperty.getExternalVideoViewer(s.getProperties());
@@ -360,7 +370,7 @@ public class StreamPanel extends JPanel {
 			JComponent screen = stream.getComponent();
 			screen.setPreferredSize(screen_pnl.getPreferredSize());
 			screen_pnl.add(screen);
-			start_time = System.currentTimeMillis();
+			resetStreamTimeout();
 			int dur = video_req.getDuration();
 			if (dur > 0) {
 				progress.setMaximum(dur);
@@ -374,6 +384,12 @@ public class StreamPanel extends JPanel {
 		catch (IOException e) {
 			setStatusText(e.getMessage());
 		}
+	}
+
+	/** Reset the stream start time to now */
+	protected void resetStreamTimeout() {
+		if (stream != null)
+			start_time = System.currentTimeMillis();
 	}
 
 	/** Create a new video stream */

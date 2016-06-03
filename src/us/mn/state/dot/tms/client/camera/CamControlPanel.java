@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.client.camera;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
+
 import us.mn.state.dot.tms.SystemAttrEnum;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 

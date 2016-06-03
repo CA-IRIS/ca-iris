@@ -19,6 +19,9 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.client.Session;
 
+import javax.swing.event.EventListenerList;
+import java.awt.event.ActionListener;
+
 /**
  * Camera PTZ control.  This is required to ensure that all continous camera
  * operations (e.g. PTZ move, focus move, iris move) are stopped before
@@ -26,6 +29,7 @@ import us.mn.state.dot.tms.client.Session;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class CameraPTZ {
 
@@ -47,9 +51,39 @@ public class CameraPTZ {
 	/** Is camera control currently enabled? */
 	private boolean controlEnabled = true;
 
+	/** List of listeners for control interaction. */
+	private final EventListenerList actionListenerList;
+
 	/** Create a new camera PTZ control */
 	public CameraPTZ(Session s) {
 		session = s;
+		actionListenerList = new EventListenerList();
+	}
+
+	/** Add listener to be notified when action is performed on camera */
+	public void addActionListener(ActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.add(ActionListener.class, listener);
+		}
+	}
+
+	/** Remove listener to be notified when action is performed on camera */
+	public void removeActionListener(ActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.remove(ActionListener.class, listener);
+		}
+	}
+
+	/** Notify listeners that action was performed on camera */
+	protected void fireActionPerformed() {
+		Object[] listeners;
+		synchronized (actionListenerList) {
+			listeners = actionListenerList.getListeners(ActionListener.class);
+		}
+
+		for (Object listener : listeners) {
+			((ActionListener)listener).actionPerformed(null);
+		}
 	}
 
 	/** Can a ptz control be made */
@@ -126,6 +160,7 @@ public class CameraPTZ {
 				ptz[1] = t;
 				ptz[2] = z;
 				camera.setPtz(ptz);
+				fireActionPerformed();
 			}
 		}
 	}
@@ -152,6 +187,7 @@ public class CameraPTZ {
 		if (canRequestDevice()) {
 			updateFocusAndIris(dr);
 			camera.setDeviceRequest(dr.ordinal());
+			fireActionPerformed();
 		}
 	}
 
@@ -207,6 +243,7 @@ public class CameraPTZ {
 		if (controlEnabled && canRecallPreset()) {
 			camera.setRecallPreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 
@@ -218,6 +255,7 @@ public class CameraPTZ {
 		if (controlEnabled && canStorePreset()) {
 			camera.setStorePreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 }
