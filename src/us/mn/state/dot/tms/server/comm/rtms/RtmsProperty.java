@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +37,9 @@ import us.mn.state.dot.tms.utils.ByteBlob;
  *
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
+ *
+ * FIXME may need to rewrite to properly utilize controller
  */
 public class RtmsProperty extends ControllerProperty {
 
@@ -189,6 +193,7 @@ public class RtmsProperty extends ControllerProperty {
 		RtmsPoller.log("cl=" + cl + ": VDS c=" + ci +
 			", stationids=" + sids + ", msg=" + m);
 		ci.setErrorStatus(m);
+		ci.setFailTimeCA(now); //FIXME bandaid for D10 and Trac #562
 		ci.setFailed(true);
 		ci.completeOperation(ci.toString(), false);
 	}
