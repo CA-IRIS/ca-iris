@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2015 AHMCT, University of California
+ * Copyright (C) 2016      Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +23,13 @@ import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.WeatherSensor;
+import us.mn.state.dot.tms.utils.NaturalOrderComparator;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Comparator for SONAR proxy objects.
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 
 // TODO: Refactor this, along with NumericAlphaComparator.
@@ -75,13 +78,15 @@ public class ProxyComparator<T extends SonarObject> implements Comparator<T> {
 		else
 			sort_mode = 0;
 
-		// sort modes: 0:hybrid, 1:alphanumeric, 2:numeric
+		// 1: alphanumeric [ascii-betical], case-insensitive
 		if (sort_mode == 1)
 			return compareAlphaNumeric(sa, sb);
+		// 2: numeric only
 		else if (sort_mode == 2)
 			return compareNumeric(sa, sb);
+		// 0:human-natural case-insensitive
 		else
-			return NumericAlphaComparator.compareStrings(sa, sb);
+			return NaturalOrderComparator.compareStrings(sa, sb, false);
 	}
 
 	/** Compare two strings alphanumerically. */
