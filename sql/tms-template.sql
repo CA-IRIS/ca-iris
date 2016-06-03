@@ -2208,6 +2208,7 @@ COPY iris.comm_protocol (id, description) FROM stdin;
 31	ADDCO
 32	TransCore E6
 33	CA RWIS
+34	TTIP DMS
 \.
 
 COPY iris.cabinet_style (name, dip) FROM stdin;

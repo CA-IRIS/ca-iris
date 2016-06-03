@@ -35,3 +35,6 @@ ALTER TABLE iris.map_extent ALTER COLUMN position DROP DEFAULT;
 -- CA trac 504
 INSERT INTO iris.system_attribute(name, value) VALUES('camera_direction_override','');
 
+-- CA trac 528
+INSERT INTO iris.comm_protocol (id, description) VALUES(34, 'TTIP DMS');
+

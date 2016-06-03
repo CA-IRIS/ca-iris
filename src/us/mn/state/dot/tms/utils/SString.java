@@ -15,11 +15,15 @@
  */
 package us.mn.state.dot.tms.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * String convenience methods.
  *
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  * @see SStringTest
  */
 public class SString {
@@ -58,6 +62,18 @@ public class SString {
 				++n;
 		return n;
 	}
+
+    /** Splits the given string using the given delimiter and removing empty strings */
+    public static List<String> split(String s, String d) {
+        List<String> ret = new ArrayList<String>();
+        String[] test = s.split(d);
+
+        for(String t : test)
+            if(t != null && t.length() > 0)
+                ret.add(t);
+
+        return ret;
+    }
 
 	/**
 	 * Does a string contain the specified char?

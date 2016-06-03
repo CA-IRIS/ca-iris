@@ -23,6 +23,7 @@ import java.util.LinkedList;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Dan Rossiter
  */
 public enum CommProtocol {
 
@@ -126,7 +127,10 @@ public enum CommProtocol {
 	TRANSCORE_E6("TransCore E6"),
 
 	/** CA RWIS (33) */
-	CA_RWIS("CA RWIS");
+	CA_RWIS("CA RWIS"),
+
+	/** TTIP DMS (34) */
+	TTIP_DMS("TTIP DMS");
 
 	/** Create a new comm protocol value */
 	private CommProtocol(String d) {
@@ -150,6 +154,6 @@ public enum CommProtocol {
 		LinkedList<String> d = new LinkedList<String>();
 		for (CommProtocol cp: values())
 			d.add(cp.description);
-		return d.toArray(new String[0]);
+		return d.toArray(new String[d.size()]);
 	}
 }
