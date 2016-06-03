@@ -14,13 +14,17 @@
  */
 package us.mn.state.dot.tms.client.system;
 
-import java.util.ArrayList;
-import java.util.TreeSet;
 import us.mn.state.dot.sonar.Capability;
 import us.mn.state.dot.sonar.Role;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
+import us.mn.state.dot.tms.utils.I18N;
+
+import javax.swing.JOptionPane;
+import java.util.ArrayList;
+import java.util.TreeSet;
 
 /**
  * Table model for capabilities assigned to IRIS roles
@@ -40,17 +44,39 @@ public class RoleCapabilityModel extends ProxyTableModel<Capability> {
 			}
 		});
 		cols.add(new ProxyColumn<Capability>("capability.assigned", 80,
-			Boolean.class)
-		{
+			Boolean.class) {
+
 			public Object getValueAt(Capability c) {
 				return isAssigned(c);
 			}
+
 			public boolean isEditable(Capability c) {
 				return canUpdate(role, "capabilities");
 			}
+
+			@Override
+			public boolean isRequireConfirmation(Capability c) {
+				return SystemAttrEnum.SYSTEM_PROTECTED_USER_ROLE.getString()
+					.equalsIgnoreCase(role.getName())
+					&& isAssigned(c)
+					&& canUpdate(c);
+			}
+
 			public void setValueAt(Capability c, Object value) {
+				if (isRequireConfirmation(c)) {
+					int cv = JOptionPane
+						.showConfirmDialog(null,
+							I18N.get(
+								"capability.admin.warning"),
+							I18N.get(
+								"help.exception.warning"),
+							JOptionPane.YES_NO_OPTION,
+							JOptionPane.WARNING_MESSAGE);
+					if (cv != 0)
+						return;
+				}
 				if (value instanceof Boolean)
-					setAssigned(c, (Boolean)value);
+					setAssigned(c, (Boolean) value);
 			}
 		});
 		return cols;
@@ -59,7 +85,7 @@ public class RoleCapabilityModel extends ProxyTableModel<Capability> {
 	/** Check if the given capability is assigned to the role */
 	private boolean isAssigned(Capability cap) {
 		if (role != null) {
-			for (Capability c: role.getCapabilities())
+			for (Capability c : role.getCapabilities())
 				if (c == cap)
 					return true;
 		}
@@ -84,16 +110,16 @@ public class RoleCapabilityModel extends ProxyTableModel<Capability> {
 	/** Create a new role-capability table model */
 	public RoleCapabilityModel(Session s, Role r) {
 		super(s, s.getSonarState().getCapabilities(),
-		      false,	/* has_properties */
-		      false,	/* has_create_delete */
-		      false);	/* has_name */
+			false,	/* has_properties */
+			false,	/* has_create_delete */
+			false);	/* has_name */
 		role = r;
 	}
 
 	/** Add a capability to an array of capabilities */
 	private Capability[] addCapability(Capability[] caps, Capability cap) {
 		TreeSet<Capability> cs = new TreeSet<Capability>(comparator());
-		for (Capability c: caps)
+		for (Capability c : caps)
 			cs.add(c);
 		cs.add(cap);
 		return cs.toArray(new Capability[0]);
@@ -101,10 +127,9 @@ public class RoleCapabilityModel extends ProxyTableModel<Capability> {
 
 	/** Remove a capability from an array of capabilities */
 	private Capability[] removeCapability(Capability[] caps,
-		Capability cap)
-	{
+		Capability cap) {
 		TreeSet<Capability> cs = new TreeSet<Capability>(comparator());
-		for (Capability c: caps)
+		for (Capability c : caps)
 			cs.add(c);
 		cs.remove(cap);
 		return cs.toArray(new Capability[0]);

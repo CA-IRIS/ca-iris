@@ -14,12 +14,14 @@
  */
 package us.mn.state.dot.tms.client.proxy;
 
+import us.mn.state.dot.sonar.SonarObject;
+import us.mn.state.dot.tms.utils.I18N;
+
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import us.mn.state.dot.sonar.SonarObject;
-import us.mn.state.dot.tms.utils.I18N;
+
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
@@ -39,10 +41,13 @@ abstract public class ProxyColumn<T extends SonarObject> {
 	/** Column width (pixels) */
 	protected final int width;
 
-	/** Create a new proxy column.
+	/**
+	 * Create a new proxy column.
+	 *
 	 * @param tid Text ID for column header.
-	 * @param w Width in pixels.
-	 * @param c Column class. */
+	 * @param w   Width in pixels.
+	 * @param c   Column class.
+	 */
 	public ProxyColumn(String tid, int w, Class c) {
 		header = I18N.get(tid);
 		width = UI.scaled(w);
@@ -70,7 +75,7 @@ abstract public class ProxyColumn<T extends SonarObject> {
 
 	/** Create a table column */
 	protected TableColumn createTableColumn(int col) {
-		if(width > 0)
+		if (width > 0)
 			return new TableColumn(col, width);
 		else
 			return new TableColumn(col);
@@ -79,6 +84,11 @@ abstract public class ProxyColumn<T extends SonarObject> {
 	/** Get the column class */
 	public Class getColumnClass() {
 		return c_class;
+	}
+
+	/** check if editing column value requires confirmation */
+	public boolean isRequireConfirmation(T proxy) {
+		return false;
 	}
 
 	/** Create the table cell renderer */
