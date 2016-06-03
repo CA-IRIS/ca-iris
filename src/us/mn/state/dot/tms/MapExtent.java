@@ -43,4 +43,10 @@ public interface MapExtent extends SonarObject {
 
 	/** Get the zoom level */
 	int getZoom();
+
+	/** Set the display position */
+	void setPosition(int p);
+
+	/** Get the display position */
+	int getPosition();
 }

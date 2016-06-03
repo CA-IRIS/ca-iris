@@ -20,7 +20,8 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
-import java.util.TreeMap;
+import java.util.Arrays;
+import java.util.Comparator;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -129,21 +130,24 @@ public class ScreenPane extends JPanel {
 	/** Create the tool panels */
 	public void createToolPanels(Session s) {
 		map_bar.addMenu();
-		TreeMap<String, MapExtent> extents = buildExtents(s);
-		for(String n: extents.keySet()) {
-			MapExtent me = extents.get(n);
+		for(MapExtent me : buildExtents(s))
 			map_bar.addButton(createMapButton(me));
-		}
 		tool_bar.createToolPanels(s);
 	}
 
 	/** Build a mapping of extent names to map extents */
-	private TreeMap<String, MapExtent> buildExtents(Session s) {
+	private MapExtent[] buildExtents(Session s) {
 		TypeCache<MapExtent> tc = s.getSonarState().getMapExtents();
-		TreeMap<String, MapExtent> extents =
-			new TreeMap<String, MapExtent>();
-		for(MapExtent me: tc)
-			extents.put(me.getName(), me);
+		MapExtent[] extents = new MapExtent[tc.size()];
+		int i = 0;
+		for(MapExtent me : tc)
+			extents[i++] = me;
+		Arrays.sort(extents, new Comparator<MapExtent>() {
+			@Override
+			public int compare(MapExtent e1, MapExtent e2) {
+				return Integer.compare(e1.getPosition(), e2.getPosition());
+			}
+		});
 		return extents;
 	}
 

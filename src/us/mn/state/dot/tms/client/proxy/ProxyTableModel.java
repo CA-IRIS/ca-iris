@@ -21,7 +21,6 @@ import java.util.Comparator;
 import javax.swing.RowSorter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
@@ -69,7 +68,19 @@ abstract public class ProxyTableModel<T extends SonarObject>
 
 	/** Get a proxy comparator */
 	protected Comparator<T> comparator() {
-		return new ProxyComparator<T>();
+		Comparator<T> comparator;
+		if (hasManualSort()) {
+			comparator = new Comparator<T>() {
+				@Override
+				public int compare(T p1, T p2) {
+					return Integer.compare(getManualSort(p1), getManualSort(p2));
+				}
+			};
+		} else {
+			comparator = new ProxyComparator<T>();
+		}
+
+		return comparator;
 	}
 
 	/** Proxy listener for SONAR updates */
@@ -265,6 +276,12 @@ abstract public class ProxyTableModel<T extends SonarObject>
 		return (row >= 0) ? list.get(row) : null;
 	}
 
+	/** Get all row proxies */
+	@SuppressWarnings("unchecked")
+	public <TReturn> TReturn[] getRowProxies(TReturn[] array) {
+		return list.toArray(array);
+	}
+
 	/** Get the index of the given proxy */
 	public int getIndex(T proxy) {
 		for (int i = 0; i < list.size(); ++i) {
@@ -316,6 +333,28 @@ abstract public class ProxyTableModel<T extends SonarObject>
 		String n = name.trim();
 		if (n.length() > 0)
 			cache.createObject(n);
+	}
+
+	/** Deletes the given proxy */
+	public void deleteProxy(T p) {
+		if (p != null && canRemove(p))
+			p.destroy();
+	}
+
+	/**
+	 *  Whether manual sort is enabled for this model.
+	 *  If overridden, setManualSort and getManualSort must also be overridden.
+	 **/
+	public boolean hasManualSort() {
+		return false;
+	}
+
+	/** If hasManualSort this sets the manual sort value. */
+	protected void setManualSort(T proxy, int sort) { }
+
+	/** If hasManualSort this gets the manual sort value. */
+	protected int getManualSort(T proxy) {
+		return -1;
 	}
 
 	/** Determine if name text field is available */

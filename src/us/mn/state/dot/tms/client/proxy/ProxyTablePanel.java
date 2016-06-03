@@ -18,6 +18,8 @@ package us.mn.state.dot.tms.client.proxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Iterator;
+import javax.swing.DropMode;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -81,8 +83,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final IAction del_proxy = new IAction("device.delete") {
 		protected void doActionPerformed(ActionEvent e) {
 			T proxy = getSelectedProxy();
-			if (proxy != null)
-				proxy.destroy();
+			model.deleteProxy(proxy);
 		}
 	};
 
@@ -99,6 +100,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final EditModeListener edit_lsnr = new EditModeListener() {
 		public void editModeChanged() {
 			updateButtonPanel();
+			table.setDragEnabled(model.canUpdate(getExampleProxy()));
 		}
 	};
 
@@ -120,6 +122,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		createJobs();
 		updateSortFilter();
 		model.getSession().addEditModeListener(edit_lsnr);
+		initRowDragDrop();
 		initButtonPanel();
 		layoutPanel();
 	}
@@ -235,6 +238,16 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		button_pnl.setLayout(gl);
 	}
 
+	/** Initialize the drag/drop behavior for rows if needed */
+	private void initRowDragDrop() {
+		if (!model.hasManualSort())
+			return;
+
+		table.setDragEnabled(model.canUpdate(getExampleProxy()));
+		table.setDropMode(DropMode.INSERT_ROWS);
+		table.setTransferHandler(new ProxyTableRowTransferHandler(table));
+	}
+
 	/** Add create/delete widgets to the button panel */
 	protected void addCreateDeleteWidgets(GroupLayout.SequentialGroup hg,
 		GroupLayout.ParallelGroup vg)
@@ -266,6 +279,12 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		return (ri >= 0)
 		     ? model.getRowProxy(table.convertRowIndexToModel(ri))
 		     : null;
+	}
+
+	/** Get an example proxy for testing [permissons, etc] */
+	private T getExampleProxy() {
+		Iterator<T> i = model.cache.iterator();
+		return i.hasNext() ? i.next() : null;
 	}
 
 	/** Select a new proxy */
