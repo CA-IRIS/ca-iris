@@ -138,6 +138,12 @@ public class DmsXmlPoller extends MessagePoller implements DMSPoller {
 		if(r == DeviceRequest.QUERY_CONFIGURATION) {
 			addOperation(new OpQueryConfig(dms, u));
 		} else if(r == DeviceRequest.QUERY_MESSAGE) {
+
+			// so that PhaseQueryMsg is not dependant upon a
+			// 'successful' PhaseGetConfig
+			if(!dms.getConfigure())
+				addOperation(new OpQueryConfig(dms, u));
+
 			addOperation(new OpQueryMsg(dms, u, r, startup));
 		} else if(r == DeviceRequest.RESET_DEVICE) {
 			addOperation(new OpReset(dms, u));
