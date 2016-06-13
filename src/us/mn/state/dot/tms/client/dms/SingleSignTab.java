@@ -416,6 +416,7 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		RasterGraphic[] rg;
 		if(dms != null && (rg = dispatcher.getPixmaps()) != null) {
 			String ms = dispatcher.getMessage();
+			preview_pnl.setDimensions(dms);
 			setPager(new DMSPanelPager(preview_pnl, rg, ms));
 		} else {
 			setPager(null);
