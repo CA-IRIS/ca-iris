@@ -76,13 +76,18 @@ public class ProxyListModel<T extends SonarObject>
 				fireIntervalAdded(this, i, i);
 		}
 		protected void enumerationCompleteSwing(Collection<T> proxies) {
+			indices.clear();
 			for (T proxy: proxies) {
 				if (check(proxy))
 					list.add(proxy);
 			}
 			int sz = list.size() - 1;
-			if (sz >= 0)
+			if (sz >= 0) {
+				Filter<T> f = getFilter();
+				setFilter(null);
 				fireIntervalAdded(this, 0, sz);
+				setFilter(f);
+			}
 		}
 		protected void proxyRemovedSwing(T proxy) {
 			int i = doProxyRemoved(proxy);
@@ -223,7 +228,10 @@ public class ProxyListModel<T extends SonarObject>
 	/** Get the element at the specified index (for ListModel) */
 	@Override
 	public Object getElementAt(int index) {
-		return list.get((filter != null) ? indices.get(index) : index);
+		int idx = index;
+		if(filter != null)
+			idx = indices.get(index);
+		return list.get(idx);
 	}
 
 	/** Get the proxy at the specified index */
