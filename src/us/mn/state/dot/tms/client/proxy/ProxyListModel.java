@@ -76,21 +76,17 @@ public class ProxyListModel<T extends SonarObject>
 				fireIntervalAdded(this, i, i);
 		}
 		protected void enumerationCompleteSwing(Collection<T> proxies) {
-			indices.clear();
 			for (T proxy: proxies) {
 				if (check(proxy))
 					list.add(proxy);
 			}
 			int sz = list.size() - 1;
 			if (sz >= 0) {
-				Filter<T> f = getFilter();
-				setFilter(null);
 				fireIntervalAdded(this, 0, sz);
-				setFilter(f);
 			}
 		}
 		protected void proxyRemovedSwing(T proxy) {
-			int i = doProxyRemoved(proxy);
+			int i = doProxyRemoved(proxy, false);
 			if (i >= 0)
 				fireIntervalRemoved(this, i, i);
 		}
@@ -162,7 +158,12 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Remove a proxy from the model */
 	protected int doProxyRemoved(T proxy) {
-		int i = getIndex(proxy);
+		return doProxyRemoved(proxy, true);
+	}
+
+	/** remove a proxy from model while defining filtered or not */
+	protected int doProxyRemoved(T proxy, boolean useFilteredList) {
+		int i = getIndex(proxy, useFilteredList);
 		if (i >= 0)
 			list.remove(i);
 		return i;
@@ -170,7 +171,7 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Change a proxy in the list model */
 	private void proxyChangedSwing(T proxy) {
-		int pre = doProxyRemoved(proxy);
+		int pre = doProxyRemoved(proxy, false);
 		int post = doProxyAdded(proxy);
 		if (pre >= 0 && post >= 0) {
 			int r0 = Math.min(pre, post);
@@ -213,7 +214,7 @@ public class ProxyListModel<T extends SonarObject>
 
 
 		if (oldIndices.size() != indices.size() || !IterableUtil.sequenceEqual(oldIndices, indices)) {
-			fireContentsChanged(this, 0, getSize() - 1);
+			fireContentsChanged(this, 0, getSize(true) - 1);
 		}
 
 		applyingFilter = false;
@@ -222,27 +223,48 @@ public class ProxyListModel<T extends SonarObject>
 	/** Gets the size */
 	@Override
 	public int getSize() {
-		return (filter != null) ? indices.size() : list.size();
+		return getSize(true);
+	}
+
+	/** get the size while defining filtered or not */
+	public int getSize(boolean useFilteredList) {
+		return (useFilteredList && filter != null)
+			? indices.size() : list.size();
 	}
 
 	/** Get the element at the specified index (for ListModel) */
 	@Override
 	public Object getElementAt(int index) {
+		return getElementAt(index, true);
+	}
+
+	/** get the element at specified index while defining filtered or not */
+	public Object getElementAt(int index, boolean useFilteredList) {
 		int idx = index;
-		if(filter != null)
+		if(useFilteredList && filter != null)
 			idx = indices.get(index);
 		return list.get(idx);
 	}
 
 	/** Get the proxy at the specified index */
 	public T getProxy(int index) {
-		return (T)getElementAt(index);
+		return getProxy(index, true);
+	}
+
+	/** get the proxy at specified index while defining filtered or not */
+	public T getProxy(int index, boolean useFilteredList) {
+		return (T)getElementAt(index, useFilteredList);
 	}
 
 	/** Get the index of the given proxy */
 	public int getIndex(T proxy) {
-		for (int i = 0; i < getSize(); ++i) {
-			if (proxy == getProxy(i))
+		return getIndex(proxy, true);
+	}
+
+	/** get index of a given proxy while defining filtered or not */
+	public int getIndex(T proxy, boolean useFilteredList) {
+		for (int i = 0; i < getSize(useFilteredList); ++i) {
+			if (proxy == getProxy(i, useFilteredList))
 				return i;
 		}
 		return -1;

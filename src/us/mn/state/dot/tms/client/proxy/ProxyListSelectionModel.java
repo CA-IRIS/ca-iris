@@ -52,7 +52,7 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		adjusting++;
 		clearSelection();
 		for (T proxy : sel_model.getSelected()) {
-			int i = model.getIndex(proxy);
+			int i = model.getIndex(proxy, false);
 			if (i >= 0)
 				super.addSelectionInterval(i, i);
 		}
@@ -82,7 +82,7 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		// NOTE: if the proxies being added are already selected,
 		//       we need to add them to this selection model
 		for (int i = index; i < index + length; i++) {
-			T proxy = model.getProxy(i);
+			T proxy = model.getProxy(i, false);
 			if (proxy != null && sel_model.isSelected(proxy))
 				super.addSelectionInterval(i, i);
 		}
@@ -94,7 +94,7 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		super.addSelectionInterval(index0, index1);
 		Set<T> proxies = sel_model.getSelected();
 		for (int i = index0; i <= index1; i++) {
-			T proxy = model.getProxy(i);
+			T proxy = model.getProxy(i, false);
 			if (proxy != null)
 				proxies.add(proxy);
 		}
@@ -107,7 +107,7 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		super.removeSelectionInterval(index0, index1);
 		Set<T> proxies = sel_model.getSelected();
 		for (int i = index0; i <= index1; i++) {
-			T proxy = model.getProxy(i);
+			T proxy = model.getProxy(i, false);
 			if (proxy != null)
 				proxies.remove(proxy);
 		}
@@ -120,7 +120,7 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		super.setSelectionInterval(index0, index1);
 		HashSet<T> proxies = new HashSet<T>();
 		for (int i = index0; i <= index1; i++) {
-			T proxy = model.getProxy(i);
+			T proxy = model.getProxy(i, false);
 			if (proxy != null)
 				proxies.add(proxy);
 		}

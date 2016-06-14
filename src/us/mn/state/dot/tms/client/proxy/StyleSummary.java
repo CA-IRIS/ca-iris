@@ -367,7 +367,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		p_list.setSelectionModel(model.getSelectionModel());
 
 		// wipes out text field
-		filter_text_field.setText("");
+//		filter_text_field.setText("");
 		if(mdl != null) {
 			model.setFilter(mdl.getFilter());
 			mdl.dispose();
