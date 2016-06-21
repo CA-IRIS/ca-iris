@@ -19,7 +19,6 @@ package us.mn.state.dot.tms.client.camera;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -65,8 +64,8 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Color for active camera style */
 	static private final Color COLOR_ACTIVE = new Color(0, 192, 255);
 
-	/** Color for occupied camera style */
-	static private final Color COLOR_INUSE = new Color(177, 0, 0);
+	/** Color for playlist camera style */
+	static private final Color COLOR_PLAYLIST = new Color(177, 0, 0);
 
 	/** camera direction if override present */
 	private Double overrideDirectionRadians = null;
@@ -234,8 +233,8 @@ public class CameraManager extends ProxyManager<Camera> {
 			ProxyTheme.COLOR_UNAVAILABLE);
 		theme.addStyle(ItemStyle.INACTIVE, ProxyTheme.COLOR_INACTIVE,
 			ProxyTheme.OUTLINE_INACTIVE);
-		theme.addStyle(ItemStyle.PLAYLIST, ProxyTheme.COLOR_DEPLOYED);
-		theme.addStyle(ItemStyle.INUSE, COLOR_INUSE);
+		theme.addStyle(ItemStyle.PLAYLIST, COLOR_PLAYLIST);
+		theme.addStyle(ItemStyle.INUSE, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.ACTIVE, COLOR_ACTIVE);
 		theme.addStyle(ItemStyle.ALL);
 		return theme;
