@@ -32,6 +32,12 @@ import us.mn.state.dot.tms.server.comm.ControllerProperty;
  */
 abstract public class AxisPTZProperty extends ControllerProperty {
 
+	/**
+	 * Absolute value of PTZ movement threshold.
+	 * PTZ vectors below this value will be considered as stop commands.
+	*/
+	static public final float PTZ_THRESH = 0.001F;
+
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
@@ -55,7 +61,7 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 	 *
 	 * @param ci     The ControllerImpl
 	 * @param os     The OutputStream
-	 * @param cmd    The VapixCmd
+	 * @param c      The VapixCmd
 	 */
 	protected void issueRequest(ControllerImpl ci, OutputStream os,
 		VapixCmd c)

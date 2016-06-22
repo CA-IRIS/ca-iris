@@ -27,6 +27,7 @@ import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.utils.HexString;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Axis VAPIX PTZ poller.
@@ -104,7 +105,11 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/** Map a [-1.0,1.0] float value to an [-100,100] integer value. */
 	static protected int mapPTZ(float v) {
-		int mapped = Math.round(v * 100.0F);
+		int mapped = 0;
+
+		if(NumericAlphaComparator.compareFloats(v, 0.0F, AxisPTZProperty.PTZ_THRESH) != 0)
+			mapped = Math.round(v * 100.0F);
+
 		// sanity:
 		if (mapped < -100)
 			mapped = -100;
@@ -116,14 +121,18 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 	/** Send a PTZ camera move command */
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		if ((p != cur_p) || (t != cur_t)) {
+		if ((NumericAlphaComparator.compareFloats(p, cur_p,
+			AxisPTZProperty.PTZ_THRESH) != 0) ||
+			(NumericAlphaComparator.compareFloats(t, cur_t,
+			AxisPTZProperty.PTZ_THRESH) != 0)) {
 			AxisPTZProperty prop = new PanTiltProperty(mapPTZ(p),
 				mapPTZ(t));
 			addOperation(new OpAxisPTZ(c, prop));
 			cur_p = p;
 			cur_t = t;
 		}
-		if (z != cur_z) {
+		if (NumericAlphaComparator.compareFloats(z, cur_z,
+			AxisPTZProperty.PTZ_THRESH) != 0) {
 			AxisPTZProperty prop = new ZoomProperty(mapPTZ(z));
 			addOperation(new OpAxisPTZ(c, prop));
 			cur_z = z;
@@ -182,7 +191,7 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/**
 	 * Get a SerialWriteProperty, given a DeviceRequest.
-	 * @param dr Device request.
+	 * @param r Device request.
 	 * @return the SerialWriteProperty
 	 */
 	static private AxisPTZProperty getSerialWriteProperty(DeviceRequest r)
