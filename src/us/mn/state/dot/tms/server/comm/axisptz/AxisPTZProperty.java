@@ -35,15 +35,13 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
+		throws IOException {
 	}
 
 	/** Decode a STORE request */
 	@Override
 	public void decodeStore(ControllerImpl c, InputStream is)
-		throws IOException
-	{
+		throws IOException {
 	}
 
 	/** Get a short description of the property */
@@ -55,11 +53,11 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 	 *
 	 * @param ci     The ControllerImpl
 	 * @param os     The OutputStream
-	 * @param cmd    The VapixCmd
+	 * @param c      The VapixCmd
 	 */
 	protected void issueRequest(ControllerImpl ci, OutputStream os,
-		VapixCmd c)
-	{
+		VapixCmd c) {
+
 		String reqpath = c.getCommand();
 		Map<String, String> pmap = c.getParams();
 

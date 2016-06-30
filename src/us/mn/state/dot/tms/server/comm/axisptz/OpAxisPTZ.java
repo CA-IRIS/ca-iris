@@ -51,12 +51,13 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 	}
 
 	protected class PhaseTwo extends Phase<AxisPTZProperty> {
+
 		protected Phase<AxisPTZProperty> poll(
-			CommMessage<AxisPTZProperty> mess) throws IOException
-		{
+			CommMessage<AxisPTZProperty> mess) throws IOException {
 			mess.add(prop);
 			mess.storeProps();
 			updateOpStatus("cmd sent");
+
 			return null;
 		}
 	}
@@ -80,5 +81,8 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 		device.setOpStatus(s);
 	}
 
+	public AxisPTZProperty getProp() {
+		return prop;
+	}
 }
 

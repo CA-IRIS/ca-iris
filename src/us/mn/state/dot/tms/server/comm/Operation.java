@@ -173,4 +173,9 @@ abstract public class Operation<T extends ControllerProperty> {
 		return (p != null) ? p.getClass() : getClass();
 	}
 
+	/** Get the current phase */
+	public Phase<T> getPhase() {
+		return phase;
+	}
+
 }

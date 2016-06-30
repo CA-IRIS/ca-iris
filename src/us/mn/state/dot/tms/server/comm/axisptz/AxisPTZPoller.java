@@ -123,6 +123,7 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 			cur_p = p;
 			cur_t = t;
 		}
+
 		if (z != cur_z) {
 			AxisPTZProperty prop = new ZoomProperty(mapPTZ(z));
 			addOperation(new OpAxisPTZ(c, prop));
@@ -182,7 +183,7 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/**
 	 * Get a SerialWriteProperty, given a DeviceRequest.
-	 * @param dr Device request.
+	 * @param r Device request.
 	 * @return the SerialWriteProperty
 	 */
 	static private AxisPTZProperty getSerialWriteProperty(DeviceRequest r)

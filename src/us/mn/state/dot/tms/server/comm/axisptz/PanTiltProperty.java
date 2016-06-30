@@ -17,6 +17,8 @@ package us.mn.state.dot.tms.server.comm.axisptz;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
 /**
@@ -52,9 +54,17 @@ public class PanTiltProperty extends AxisPTZProperty {
 
 	/** Get a short description of the property */
 	@Override
-	public String getDesc() {
-		return "P/T";
-	}
+	public String getDesc() { return "P/T"; }
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(getDesc());
+
+		sb.append(": ")
+			.append("p=").append(pan)
+			.append(", t=").append(tilt);
+
+		return sb.toString();
+	}
 }
 
