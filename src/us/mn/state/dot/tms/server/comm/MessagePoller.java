@@ -355,40 +355,37 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Perform operations on the poll queue */
 	private void performOperations() throws IOException {
+
+		Class clazz;
+
 		while(true) {
 			// ensure for 0-sec idle timeout we do not start a second op
 			if(this instanceof AxisPTZPoller) {
 				plog("loop...");
-				plog("pre-idleClose: is_acquiring=" + is_acquiring);
 			}
 
-			plog("performOperations's closeIfIdle start.");
 			closeIfIdle();
-			plog("performOperations's closeIfIdle end.");
-
-			if(this instanceof AxisPTZPoller && is_acquiring)
-				plog("Acquiring... not closing.");
 
 			Operation<T> o = queue.next();
 
 			if(o instanceof KillThread)
 				break;
 
-			plog("pre-poll: is_acquiring="+is_acquiring + ", o.phaseClass()=" + o.phaseClass());
+			// identify what phase is being polled prior to polling
+			clazz = o.phaseClass();
+			plog("pre-poll: is_acquiring="+is_acquiring + ", o.phaseClass()=" + clazz);
 
-			Class clazz = o.phaseClass();
 			synchronized (messenger) {
 				ensureOpen();
 				doPoll(o);
 				bump();
 			}
 
-			// set after performing poll to ensure we never close before attempting at least one op
+			// set after performing poll to ensure we never close
+			// before attempting at least one op
 			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
-			boolean is_acquiring_old = (o.getPhase() instanceof OpDevice.AcquireDevice);
 			plog("post-poll: is_acquiring="+is_acquiring
-				+ ", is_acquiring_old="+is_acquiring_old
-				+ ", o.phaseClass()=" + o.phaseClass());
+				+ ", o.phaseClass()=" + clazz);
 		}
 	}
 
@@ -403,15 +400,13 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			if (o instanceof OpPTZCamera)
 				plog("attempting polling PTZ start: "
 					+ ((OpPTZCamera) o).toString2());
+
 			if(this instanceof AxisPTZPoller && o instanceof OpAxisPTZ)
 				plog("attempting Axis PTZ poll op: " + ((OpAxisPTZ)o).getProp().toString());
 
 			synchronized (messenger) {
 				o.poll(createMessage(o));
 			}
-
-			if(this instanceof AxisPTZPoller && o instanceof OpAxisPTZ)
-				plog("completed Axis PTZ poll op");
 
 			error = false;
 		} catch (DeviceContentionException e) {
