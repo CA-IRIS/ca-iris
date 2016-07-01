@@ -362,7 +362,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 				plog("pre-idleClose: is_acquiring=" + is_acquiring);
 			}
 
+			plog("performOperations's closeIfIdle start.");
 			closeIfIdle();
+			plog("performOperations's closeIfIdle end.");
 
 			if(this instanceof AxisPTZPoller && is_acquiring)
 				plog("Acquiring... not closing.");
@@ -374,6 +376,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 			plog("pre-poll: is_acquiring="+is_acquiring + ", o.phaseClass()=" + o.phaseClass());
 
+			Class clazz = o.phaseClass();
 			synchronized (messenger) {
 				ensureOpen();
 				doPoll(o);
@@ -381,7 +384,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			}
 
 			// set after performing poll to ensure we never close before attempting at least one op
-			is_acquiring = (o.phaseClass() == OpDevice.AcquireDevice.class);
+			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
 			boolean is_acquiring_old = (o.getPhase() instanceof OpDevice.AcquireDevice);
 			plog("post-poll: is_acquiring="+is_acquiring
 				+ ", is_acquiring_old="+is_acquiring_old
@@ -403,9 +406,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			if(this instanceof AxisPTZPoller && o instanceof OpAxisPTZ)
 				plog("attempting Axis PTZ poll op: " + ((OpAxisPTZ)o).getProp().toString());
 
-//			synchronized (messenger) {
+			synchronized (messenger) {
 				o.poll(createMessage(o));
-//			}
+			}
 
 			if(this instanceof AxisPTZPoller && o instanceof OpAxisPTZ)
 				plog("completed Axis PTZ poll op");
