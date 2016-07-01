@@ -35,6 +35,16 @@ abstract public class OpDevice<T extends ControllerProperty>
 	/** Priority change log */
 	static private final DebugLog PRIO_LOG = new DebugLog("prio");
 
+	/** Polling log */
+	static protected final DebugLog POLL_LOG = new DebugLog("polling");
+	/** Write a message to the polling log */
+	protected void plog(String msg) {
+		if(POLL_LOG.isOpen())
+			POLL_LOG.log(this.getOpName() + " " + msg);
+	}
+
+
+
 	/** Create a new device operation */
 	protected OpDevice(PriorityLevel p, DeviceImpl d, boolean ex) {
 		super(p, (ControllerImpl)d.getController(), d.getName());
@@ -60,9 +70,11 @@ abstract public class OpDevice<T extends ControllerProperty>
 
 		/** Perform the acquire device phase */
 		protected Phase<T> poll(CommMessage<T> mess)
-			throws DeviceContentionException
-		{
+			throws DeviceContentionException {
+
+			plog("executing " + this.getClass() + ".poll(mess)");
 			OpDevice owner = device.acquire(OpDevice.this);
+
 			if(owner != OpDevice.this) {
 				PRIO_LOG.log("CONTENTION owner="
 					+ owner.getOpName()
@@ -75,6 +87,7 @@ abstract public class OpDevice<T extends ControllerProperty>
 				);
 				throw new DeviceContentionException(owner);
 			}
+
 			return phaseTwo();
 		}
 	}

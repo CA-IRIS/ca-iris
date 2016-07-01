@@ -15,20 +15,19 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Calendar;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
 import us.mn.state.dot.tms.server.comm.axisptz.OpAxisPTZ;
 import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
-import us.mn.state.dot.tms.units.*;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Calendar;
 
 /**
  * MessagePoller is an abstract class which represents a communication channel 
@@ -54,10 +53,10 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	static private final int CLOSER_PERIOD = 3;
 
 	/** Message polling log */
-	static private final DebugLog POLL_LOG = new DebugLog("polling");
+	static protected final DebugLog POLL_LOG = new DebugLog("polling");
 
 	/** Priority change log */
-	static private final DebugLog PRIO_LOG = new DebugLog("prio");
+	static protected final DebugLog PRIO_LOG = new DebugLog("prio");
 
 	/** Thread group for all message poller threads */
 	static private final ThreadGroup GROUP = new ThreadGroup("Poller");
@@ -72,7 +71,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	}
 
 	/** Write a message to the polling log */
-	private void plog(String msg) {
+	protected void plog(String msg) {
 		if(POLL_LOG.isOpen())
 			POLL_LOG.log(thread.getName() + " " + msg);
 	}
@@ -358,8 +357,10 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	private void performOperations() throws IOException {
 		while(true) {
 			// ensure for 0-sec idle timeout we do not start a second op
-			if(this instanceof AxisPTZPoller)
+			if(this instanceof AxisPTZPoller) {
 				plog("loop...");
+				plog("pre-idleClose: is_acquiring=" + is_acquiring);
+			}
 
 			closeIfIdle();
 
@@ -380,8 +381,11 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			}
 
 			// set after performing poll to ensure we never close before attempting at least one op
-			is_acquiring = (o.getPhase() instanceof OpDevice.AcquireDevice);
-			plog("post-poll: is_acquiring="+is_acquiring + ", o.phaseClass()=" + o.phaseClass());
+			is_acquiring = (o.phaseClass() == OpDevice.AcquireDevice.class);
+			boolean is_acquiring_old = (o.getPhase() instanceof OpDevice.AcquireDevice);
+			plog("post-poll: is_acquiring="+is_acquiring
+				+ ", is_acquiring_old="+is_acquiring_old
+				+ ", o.phaseClass()=" + o.phaseClass());
 		}
 	}
 

@@ -14,12 +14,12 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
-import java.io.IOException;
-import java.lang.Math;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+
+import java.io.IOException;
 
 /**
  * Axis VAPIX PTZ operation.
@@ -54,6 +54,8 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 
 		protected Phase<AxisPTZProperty> poll(
 			CommMessage<AxisPTZProperty> mess) throws IOException {
+
+			plog("executing " + this.getClass() + ".poll(mess)");
 			mess.add(prop);
 			mess.storeProps();
 			updateOpStatus("cmd sent");
