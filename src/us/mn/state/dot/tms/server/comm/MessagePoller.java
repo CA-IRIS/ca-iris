@@ -316,13 +316,21 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 		// do not allow closing based on idle state mid-poll
 		synchronized (messenger) {
-			plog("messenger_open=" + messenger_open);
 			if (messenger_open) {
 				synchronized (last_activity_lock) {
 					idle = calculate_elapsed(last_activity);
 				}
-				plog("max_idle=" + max_idle + ", idle=" + idle);
-				if (idle >= (max_idle * 1000L)) {
+
+				long mxidle = max_idle * 1000L;
+
+				// allow a 10 millisecond idle state
+				if (mxidle == 0)
+					mxidle += 10;
+
+				plog("max_idle=" + max_idle
+					+ ", mxidle=" + mxidle
+					+ ", idle=" + idle);
+				if (idle >= mxidle) {
 					closed = true;
 					ensureClosed();
 				}
@@ -373,19 +381,21 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 			// identify what phase is being polled prior to polling
 			clazz = o.phaseClass();
-			plog("pre-poll: is_acquiring="+is_acquiring + ", o.phaseClass()=" + clazz);
+			plog("pre-poll: is_acquiring="+is_acquiring + ", clazz=" + clazz);
 
 			synchronized (messenger) {
 				ensureOpen();
 				doPoll(o);
 				bump();
 			}
+			plog("post-poll: is_acquiring="+is_acquiring
+				+ ", o.phaseClass()=" + o.phaseClass());
 
 			// set after performing poll to ensure we never close
 			// before attempting at least one op
 			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
-			plog("post-poll: is_acquiring="+is_acquiring
-				+ ", o.phaseClass()=" + clazz);
+			plog("post-eval: is_acquiring="+is_acquiring
+				+ ", o.phaseClass()=" + o.phaseClass());
 		}
 	}
 
