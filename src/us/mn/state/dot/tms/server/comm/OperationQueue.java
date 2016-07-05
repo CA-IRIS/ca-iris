@@ -58,7 +58,12 @@ public final class OperationQueue<T extends ControllerProperty> {
 
 	/** Check if an operation should be added to the queue */
 	private boolean shouldAdd(Operation<T> op) {
-		return !closing && !contains(op);
+		boolean c = !closing;
+		boolean h = !contains(op);
+		if(OpDevice.POLL_LOG.isOpen())
+			OpDevice.POLL_LOG.log("OperationQueue.shouldAdd: closing=" + !c + ", contains=" + !h);
+
+		return c && h;
 	}
 
 	/** Check if the queue contains a given operation */
