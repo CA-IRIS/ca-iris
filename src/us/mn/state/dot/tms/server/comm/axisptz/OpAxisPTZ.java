@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
@@ -28,6 +29,11 @@ import java.io.IOException;
  */
 public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 
+	/** Minimum time interval (ms) to enforce between Axis commands */
+	static protected final int MIN_CMD_INTERVAL_MS = 30;
+
+	private final AxisPTZPoller poller;
+
 	/** Op property */
 	private final AxisPTZProperty prop;
 
@@ -38,10 +44,11 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 	 * Create a new operation.
 	 * @param c the CameraImpl instance
 	 */
-	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p) {
+	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p, AxisPTZPoller poll) {
 		super(PriorityLevel.COMMAND, c);
 		prop = p;
 		op_desc = p.getDesc();
+		poller = poll;
 		device.setOpStatus("sending cmd");
 	}
 
@@ -57,7 +64,9 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 
 			plog("executing " + this.getClass() + ".poll(mess)");
 			mess.add(prop);
+			pauseIfNeeded();
 			mess.storeProps();
+			poller.setLastCmdTime(TimeSteward.currentTimeMillis());
 			updateOpStatus("cmd sent");
 
 			return null;
@@ -85,6 +94,19 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 
 	public AxisPTZProperty getProp() {
 		return prop;
+	}
+
+
+	/**
+	 * If CohuPTZPoller.MIN_CMD_INTERVAL_MS milliseconds have not passed
+	 * since the previous device transaction, sleep until they have.
+	 */
+	protected void pauseIfNeeded() {
+		long lastCmdTime = poller.getLastCmdTime();
+		long curTime = System.currentTimeMillis();
+		long delta = curTime - lastCmdTime;
+		if (delta < MIN_CMD_INTERVAL_MS)
+			TimeSteward.sleep_well(MIN_CMD_INTERVAL_MS - delta);
 	}
 }
 

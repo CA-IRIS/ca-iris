@@ -49,6 +49,17 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 	private String host = null;
 	private Integer port = null;
 
+	public long getLastCmdTime() {
+		return lastCmdTime;
+	}
+
+	public void setLastCmdTime(long lastCmdTime) {
+		this.lastCmdTime = lastCmdTime;
+	}
+
+	/** Timestamp of most recent transaction with the device. */
+	protected long lastCmdTime = 0;
+
 	/** Current unmapped pan value */
 	private float cur_p = 0.0F;
 
@@ -119,14 +130,14 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 		if ((p != cur_p) || (t != cur_t)) {
 			AxisPTZProperty prop = new PanTiltProperty(mapPTZ(p),
 				mapPTZ(t));
-			addOperation(new OpAxisPTZ(c, prop));
+			addOperation(new OpAxisPTZ(c, prop, this));
 			cur_p = p;
 			cur_t = t;
 		}
 
 		if (z != cur_z) {
 			AxisPTZProperty prop = new ZoomProperty(mapPTZ(z));
-			addOperation(new OpAxisPTZ(c, prop));
+			addOperation(new OpAxisPTZ(c, prop, this));
 			cur_z = z;
 		}
 	}
@@ -135,14 +146,14 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
 		AxisPTZProperty prop = new PresetProperty(true, preset);
-		addOperation(new OpAxisPTZ(c, prop));
+		addOperation(new OpAxisPTZ(c, prop, this));
 	}
 
 	/** Send a recall camera preset command */
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
 		AxisPTZProperty prop = new PresetProperty(false, preset);
-		addOperation(new OpAxisPTZ(c, prop));
+		addOperation(new OpAxisPTZ(c, prop, this));
 	}
 
 	/**
@@ -178,7 +189,7 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 		else if (r == DeviceRequest.CAMERA_WIPER_ONESHOT)
 			prop = getSerialWriteProperty(r);
 		if (prop != null)
-			addOperation(new OpAxisPTZ(c, prop));
+			addOperation(new OpAxisPTZ(c, prop, this));
 	}
 
 	/**

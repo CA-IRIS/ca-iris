@@ -394,7 +394,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			// set after performing poll to ensure we never close
 			// before attempting at least one op
 			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
-			plog("post-eval: is_acquiring="+is_acquiring
+			plog("post-eval: is_acquiring=" + is_acquiring
+				+ ", clazz=" + clazz
 				+ ", o.phaseClass()=" + o.phaseClass());
 		}
 	}
