@@ -321,16 +321,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 					idle = calculate_elapsed(last_activity);
 				}
 
-				long mxidle = max_idle * 1000L;
-
-				// allow a 10 millisecond idle state
-				if (mxidle == 0)
-					mxidle += 10;
-
 				plog("max_idle=" + max_idle
-					+ ", mxidle=" + mxidle
 					+ ", idle=" + idle);
-				if (idle >= mxidle) {
+				if (idle >= (max_idle * 1000L)) {
 					closed = true;
 					ensureClosed();
 				}

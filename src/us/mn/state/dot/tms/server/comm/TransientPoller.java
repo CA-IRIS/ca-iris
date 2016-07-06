@@ -45,16 +45,15 @@ abstract public class TransientPoller<T extends ControllerProperty>
 		 * where queued operations can build up, that valid operations
 		 * are removed from the queue that results in unwanted behavior
 		 * within PTZ cameras, such as camera spinning.  This has been
-		 * seen in Cohu and Axis. Assumed to be the same for Manchester,
-		 * PelcoD and Vicon. Contention handling may also contribute in
-		 * concert with the logic below to cause this behavior.
+		 * seen in Cohu cameras. Contention handling may also contribute
+		 * in concert with the logic below to cause this behavior.
 		 */
-//		queue.forEach(new OperationHandler<T>() {
-//			public void handle(PriorityLevel prio, Operation<T> o) {
-//				if(o.equals(op))
-//					o.setSucceeded();
-//			}
-//		});
+		queue.forEach(new OperationHandler<T>() {
+			public void handle(PriorityLevel prio, Operation<T> o) {
+				if(o.equals(op))
+					o.setSucceeded();
+			}
+		});
 
 		super.addOperation(op);
 	}
