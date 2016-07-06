@@ -37,6 +37,8 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 	/** Op property */
 	private final AxisPTZProperty prop;
 
+	private final long created;
+
 	/** Operation description */
 	private final String op_desc;
 
@@ -50,6 +52,7 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 		op_desc = p.getDesc();
 		poller = poll;
 		device.setOpStatus("sending cmd");
+		created = System.nanoTime();
 	}
 
 	/** Create the second phase of the operation */
@@ -96,6 +99,22 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 		return prop;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof OpAxisPTZ)) return false;
+		if (!super.equals(o)) return false;
+
+		OpAxisPTZ opAxisPTZ = (OpAxisPTZ) o;
+
+		return prop.equals(opAxisPTZ.prop);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return prop.hashCode();
+	}
 
 	/**
 	 * If CohuPTZPoller.MIN_CMD_INTERVAL_MS milliseconds have not passed
