@@ -14,12 +14,10 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * This class performs a VAPIX request for a continuous pan/tilt movement.

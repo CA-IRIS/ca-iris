@@ -21,9 +21,6 @@ import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
-import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
-import us.mn.state.dot.tms.server.comm.axisptz.OpAxisPTZ;
-import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -204,11 +201,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	protected void addOperation(Operation<T> op) {
 		if(queue.enqueue(op))
 			ensureStarted();
-		else {
+		else
 			plog("DROPPING: " + op);
-			if(op instanceof OpAxisPTZ)
-				plog("DROPPING initial queuing of op: " + ((OpAxisPTZ)op).getProp().toString());
-		}
 	}
 
 	/** Ensure the thread is started */
@@ -231,9 +225,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	protected void startPolling() {
 		try {
 			thread.start();
-			plog("polling started.");
 		} catch (IllegalThreadStateException e) {
-			// thread was started on another thread between shouldStart returning true and us getting here
+			// thread was started on another thread between
+			// shouldStart returning true and us getting here
 			plog("Attempted to start polling when we were already polling.");
 		}
 	}
@@ -321,8 +315,6 @@ abstract public class MessagePoller<T extends ControllerProperty>
 					idle = calculate_elapsed(last_activity);
 				}
 
-				plog("max_idle=" + max_idle
-					+ ", idle=" + idle);
 				if (idle >= (max_idle * 1000L)) {
 					closed = true;
 					ensureClosed();
@@ -360,11 +352,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		Class clazz;
 
 		while(true) {
-			// ensure for 0-sec idle timeout we do not start a second op
-			if(this instanceof AxisPTZPoller) {
-				plog("loop...");
-			}
-
+			// for 0-sec idle timeout, do not start a second op
 			closeIfIdle();
 
 			Operation<T> o = queue.next();
@@ -374,22 +362,16 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 			// identify what phase is being polled prior to polling
 			clazz = o.phaseClass();
-			plog("pre-poll: is_acquiring="+is_acquiring + ", clazz=" + clazz);
 
 			synchronized (messenger) {
 				ensureOpen();
 				doPoll(o);
 				bump();
 			}
-			plog("post-poll: is_acquiring="+is_acquiring
-				+ ", o.phaseClass()=" + o.phaseClass());
 
 			// set after performing poll to ensure we never close
 			// before attempting at least one op
 			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
-			plog("post-eval: is_acquiring=" + is_acquiring
-				+ ", clazz=" + clazz
-				+ ", o.phaseClass()=" + o.phaseClass());
 		}
 	}
 
@@ -398,21 +380,12 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 		final String oname = o.toString();
 		final long start = TimeSteward.currentTimeMillis();
-		boolean error = true;
 
 		try {
-			if (o instanceof OpPTZCamera)
-				plog("attempting polling PTZ start: "
-					+ ((OpPTZCamera) o).toString2());
-
-			if(this instanceof AxisPTZPoller && o instanceof OpAxisPTZ)
-				plog("attempting Axis PTZ poll op: " + ((OpAxisPTZ)o).getProp().toString());
-
 			synchronized (messenger) {
 				o.poll(createMessage(o));
 			}
 
-			error = false;
 		} catch (DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);
@@ -448,10 +421,6 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		} finally {
 			if (o.isDone() || !requeueOperation(o))
 				o.cleanup();
-
-			if (!error && o instanceof OpPTZCamera)
-				plog("polled PTZ complete: "
-					+ ((OpPTZCamera) o).toString2());
 
 			plog(oname + " elapsed: " + calculate_elapsed(start));
 		}
@@ -506,8 +475,6 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			return true;
 		else {
 			plog("DROPPING: " + op);
-			if(op instanceof OpAxisPTZ)
-				plog("DROPPING initial queuing of op: " + ((OpAxisPTZ)op).getProp().toString());
 			return false;
 		}
 	}

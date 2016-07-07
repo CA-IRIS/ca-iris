@@ -14,9 +14,6 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.CommLinkHelper;
@@ -28,6 +25,10 @@ import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.utils.HexString;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /**
  * Axis VAPIX PTZ poller.
  *
@@ -35,8 +36,8 @@ import us.mn.state.dot.tms.utils.HexString;
  * @author Dan Rossiter
  */
 public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
-	implements CameraPoller
-{
+	implements CameraPoller {
+
 	/** Debug log */
 	static private final DebugLog DEBUG_LOG = new DebugLog("axisptz");
 
@@ -71,25 +72,29 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/**
 	 * Create a new Axis PTZ poller.
+	 *
 	 * @param n CommLink name
 	 * @param m the Messenger
 	 */
 	public AxisPTZPoller(String n, Messenger m) {
+
 		super(n, m);
 		log("AxisPTZPoller instantiated.");
+
 		comm_link = CommLinkHelper.lookup(n);
 		if (comm_link == null) {
 			log("Failed to find CommLink.");
 			return;
 		}
+
 		int to = comm_link.getTimeout();
 		try {
 			m.setTimeout(to);
 			log("Set Messenger timeout to " + to + ".");
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			log("Failed to set Messenger timeout.");
 		}
+
 		parseUri();
 	}
 
@@ -115,18 +120,21 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/** Map a [-1.0,1.0] float value to an [-100,100] integer value. */
 	static protected int mapPTZ(float v) {
+
 		int mapped = Math.round(v * 100.0F);
 		// sanity:
 		if (mapped < -100)
 			mapped = -100;
 		if (mapped > 100)
-			mapped =  100;
+			mapped = 100;
+
 		return mapped;
 	}
 
 	/** Send a PTZ camera move command */
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
+
 		if ((p != cur_p) || (t != cur_t)) {
 			AxisPTZProperty prop = new PanTiltProperty(mapPTZ(p),
 				mapPTZ(t));
@@ -158,12 +166,15 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 
 	/**
 	 * Send a device request
+	 *
 	 * @param c The CameraImpl object.
 	 * @param r The desired DeviceRequest.
 	 */
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
+
 		AxisPTZProperty prop = null;
+
 		if (r == DeviceRequest.CAMERA_FOCUS_NEAR)
 			prop = new FocusProperty(mapPTZ(-1.0F));
 		else if (r == DeviceRequest.CAMERA_FOCUS_FAR)
@@ -188,19 +199,22 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 			prop = getSerialWriteProperty(r);
 		else if (r == DeviceRequest.CAMERA_WIPER_ONESHOT)
 			prop = getSerialWriteProperty(r);
+
 		if (prop != null)
 			addOperation(new OpAxisPTZ(c, prop, this));
 	}
 
 	/**
 	 * Get a SerialWriteProperty, given a DeviceRequest.
+	 *
 	 * @param r Device request.
 	 * @return the SerialWriteProperty
 	 */
-	static private AxisPTZProperty getSerialWriteProperty(DeviceRequest r)
-	{
+	static private AxisPTZProperty getSerialWriteProperty(DeviceRequest r) {
+
 		int port = SystemAttrEnum.CAMERA_PTZ_AXIS_COMPORT.getInt();
 		String byteString = null;
+
 		switch (r) {
 		case RESET_DEVICE:
 			byteString = SystemAttrEnum.CAMERA_PTZ_AXIS_RESET
@@ -214,46 +228,51 @@ public class AxisPTZPoller extends TransientPoller<AxisPTZProperty>
 			byteString = "";
 			break;
 		}
+
 		byte[] data = null;
 		try {
 			data = HexString.parse(byteString);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			data = new byte[0];
 		}
+
 		return new SerialWriteProperty(port, data);
 	}
 
 	private void parseUri() {
+
 		if (comm_link == null)
 			return;
+
 		String sUri = comm_link.getUri();
 		if (sUri == null) {
 			log("unable to determine URI");
 			return;
 		}
+
 		URI uri = null;
 		try {
 			uri = new URI(sUri);
-		}
-		catch (URISyntaxException e) {
+		} catch (URISyntaxException e) {
 			// NOP
 		}
+
 		if (uri == null) {
 			try {
 				uri = new URI("//" + sUri);
-			}
-			catch (URISyntaxException e) {
+			} catch (URISyntaxException e) {
 				log("unable to parse URI");
 				return;
 			}
 		}
+
 		String h = uri.getHost();
 		int p = uri.getPort();
 		if ((h == null) || (p < 1)) {
 			log("unable to parse URI");
 			return;
 		}
+
 		host = h;
 		port = p;
 	}

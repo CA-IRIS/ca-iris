@@ -37,22 +37,22 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 	/** Op property */
 	private final AxisPTZProperty prop;
 
-	private final long created;
-
 	/** Operation description */
 	private final String op_desc;
 
 	/**
 	 * Create a new operation.
+	 *
 	 * @param c the CameraImpl instance
 	 */
-	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p, AxisPTZPoller poll) {
+	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p,
+		AxisPTZPoller poll) {
+
 		super(PriorityLevel.COMMAND, c);
 		prop = p;
 		op_desc = p.getDesc();
 		poller = poll;
 		device.setOpStatus("sending cmd");
-		created = System.nanoTime();
 	}
 
 	/** Create the second phase of the operation */
@@ -65,7 +65,6 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 		protected Phase<AxisPTZProperty> poll(
 			CommMessage<AxisPTZProperty> mess) throws IOException {
 
-			plog("executing " + this.getClass() + ".poll(mess)");
 			mess.add(prop);
 			pauseIfNeeded();
 			mess.storeProps();

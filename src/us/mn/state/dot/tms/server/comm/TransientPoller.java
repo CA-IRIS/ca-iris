@@ -40,13 +40,16 @@ abstract public class TransientPoller<T extends ControllerProperty>
 	@Override
 	protected void addOperation(final Operation<T> op) {
 		/*
-		 * FIXME the logic commented out below fails for slower networks
+		 * FIXME Cohu now uses MessagePoller
 		 * California has documented that in networks that are slower,
 		 * where queued operations can build up, that valid operations
 		 * are removed from the queue that results in unwanted behavior
-		 * within PTZ cameras, such as camera spinning.  This has been
+		 * within PTZ cameras, such as camera spinning. This has been
 		 * seen in Cohu cameras. Contention handling may also contribute
 		 * in concert with the logic below to cause this behavior.
+		 * Additionally, equality testing of operations may contribute
+		 * to this (as it did in Axis). Further investigation is
+		 * required.
 		 */
 		queue.forEach(new OperationHandler<T>() {
 			public void handle(PriorityLevel prio, Operation<T> o) {
