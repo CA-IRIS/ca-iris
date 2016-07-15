@@ -15,18 +15,16 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Calendar;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
-import us.mn.state.dot.tms.server.comm.cohuptz.OpPTZCamera;
-import us.mn.state.dot.tms.units.*;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Calendar;
 
 /**
  * MessagePoller is an abstract class which represents a communication channel 
@@ -52,10 +50,10 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	static private final int CLOSER_PERIOD = 3;
 
 	/** Message polling log */
-	static private final DebugLog POLL_LOG = new DebugLog("polling");
+	static protected final DebugLog POLL_LOG = new DebugLog("polling");
 
 	/** Priority change log */
-	static private final DebugLog PRIO_LOG = new DebugLog("prio");
+	static protected final DebugLog PRIO_LOG = new DebugLog("prio");
 
 	/** Thread group for all message poller threads */
 	static private final ThreadGroup GROUP = new ThreadGroup("Poller");
@@ -70,7 +68,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	}
 
 	/** Write a message to the polling log */
-	private void plog(String msg) {
+	protected void plog(String msg) {
 		if(POLL_LOG.isOpen())
 			POLL_LOG.log(thread.getName() + " " + msg);
 	}
@@ -204,7 +202,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		if(queue.enqueue(op))
 			ensureStarted();
 		else
-			plog("DROPPING " + op);
+			plog("DROPPING: " + op);
 	}
 
 	/** Ensure the thread is started */
@@ -228,7 +226,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		try {
 			thread.start();
 		} catch (IllegalThreadStateException e) {
-			// thread was started on another thread between shouldStart returning true and us getting here
+			// thread was started on another thread between
+			// shouldStart returning true and us getting here
 			plog("Attempted to start polling when we were already polling.");
 		}
 	}
@@ -253,18 +252,14 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			setThreadState(ThreadState.RUNNING);
 			performOperations();
 			setThreadState(ThreadState.CLOSING);
-		}
-		catch (HangUpException e) {
+		} catch (HangUpException e) {
 			setStatus(exceptionMessage(e));
 			hung_up = true;
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			setStatus(exceptionMessage(e));
-		}
-		catch (RuntimeException e) {
+		} catch (RuntimeException e) {
 			e.printStackTrace();
-		}
-		finally {
+		} finally {
 			ensureClosed();
 			drainQueue();
 			CLOSER.removeJob(closer_job);
@@ -319,6 +314,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 				synchronized (last_activity_lock) {
 					idle = calculate_elapsed(last_activity);
 				}
+
 				if (idle >= (max_idle * 1000L)) {
 					closed = true;
 					ensureClosed();
@@ -352,19 +348,30 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Perform operations on the poll queue */
 	private void performOperations() throws IOException {
+
+		Class clazz;
+
 		while(true) {
-			// ensure for 0-sec idle timeout we do not start a second op
+			// for 0-sec idle timeout, do not start a second op
 			closeIfIdle();
+
 			Operation<T> o = queue.next();
+
 			if(o instanceof KillThread)
 				break;
+
+			// identify what phase is being polled prior to polling
+			clazz = o.phaseClass();
+
 			synchronized (messenger) {
 				ensureOpen();
 				doPoll(o);
 				bump();
 			}
-			// set after performing poll to ensure we never close before attempting at least one op
-			is_acquiring = (o.phaseClass() == OpDevice.AcquireDevice.class);
+
+			// set after performing poll to ensure we never close
+			// before attempting at least one op
+			is_acquiring = (OpDevice.AcquireDevice.class.equals(clazz));
 		}
 	}
 
@@ -373,19 +380,12 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 		final String oname = o.toString();
 		final long start = TimeSteward.currentTimeMillis();
-		boolean error = true;
 
 		try {
-			if (o instanceof OpPTZCamera)
-				plog("attempting polling PTZ start: "
-					+ ((OpPTZCamera) o).toString2());
-
-
 			synchronized (messenger) {
 				o.poll(createMessage(o));
 			}
 
-			error = false;
 		} catch (DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);
@@ -421,10 +421,6 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		} finally {
 			if (o.isDone() || !requeueOperation(o))
 				o.cleanup();
-
-			if (!error && o instanceof OpPTZCamera)
-				plog("polled PTZ complete: "
-					+ ((OpPTZCamera) o).toString2());
 
 			plog(oname + " elapsed: " + calculate_elapsed(start));
 		}
@@ -478,7 +474,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		if(queue.requeue(op))
 			return true;
 		else {
-			plog("DROPPING " + op);
+			plog("DROPPING: " + op);
 			return false;
 		}
 	}
@@ -493,31 +489,34 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Create a CommMessage, based on Operation type. */
 	private CommMessage<T> createMessage(Operation<T> o)
-		throws IOException
-	{
+		throws IOException {
 		if (o instanceof OpController)
-			return createCommMessage((OpController<T>)o);
+			return createCommMessage((OpController<T>) o);
 		else if (o != null)
 			return createCommMessageOp(o);
 		else
 			return null;
 	}
 
-	/** Create a message for the specified OpController.
+	/**
+	 * Create a message for the specified OpController.
+	 *
 	 * @param o The OpController.
-	 * @return New comm message. */
+	 * @return New comm message.
+	 */
 	protected CommMessage<T> createCommMessage(OpController<T> o)
-		throws IOException
-	{
+		throws IOException {
 		return new CommMessageImpl<T>(messenger, o, protocolLog());
 	}
 
-	/** Create a message for the specified Operation.
+	/**
+	 * Create a message for the specified Operation.
+	 *
 	 * @param o The Operation.
-	 * @return New comm message. */
+	 * @return New comm message.
+	 */
 	protected CommMessage<T> createCommMessageOp(Operation<T> o)
-		throws IOException
-	{
+		throws IOException {
 		// to be overriden by subclass if needed
 		return null;
 	}

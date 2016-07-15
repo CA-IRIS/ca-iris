@@ -14,15 +14,16 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
-import java.io.InputStream;
+import us.mn.state.dot.tms.server.ControllerImpl;
+import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.utils.Base64;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
-import us.mn.state.dot.tms.utils.Base64;
-import us.mn.state.dot.tms.server.ControllerImpl;
-import us.mn.state.dot.tms.server.comm.ControllerProperty;
 
 
 /**
@@ -35,15 +36,13 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 	/** Encode a STORE request */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
+		throws IOException {
 	}
 
 	/** Decode a STORE request */
 	@Override
 	public void decodeStore(ControllerImpl c, InputStream is)
-		throws IOException
-	{
+		throws IOException {
 	}
 
 	/** Get a short description of the property */
@@ -53,13 +52,13 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 	 * Issue a VAPIX request to the Axis controller.
 	 * NOTE: Currently, this method performs no special URL encoding.
 	 *
-	 * @param ci     The ControllerImpl
-	 * @param os     The OutputStream
-	 * @param cmd    The VapixCmd
+	 * @param ci The ControllerImpl
+	 * @param os The OutputStream
+	 * @param c  The VapixCmd
 	 */
 	protected void issueRequest(ControllerImpl ci, OutputStream os,
-		VapixCmd c)
-	{
+		VapixCmd c) {
+
 		String reqpath = c.getCommand();
 		Map<String, String> pmap = c.getParams();
 
@@ -83,8 +82,7 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 		OutputStreamWriter writer = null;
 		try {
 			writer = new OutputStreamWriter(os, "UTF-8");
-		}
-		catch (UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException e) {
 			AxisPTZPoller.log("UnsupportedEncodingException: "
 				+ e);
 			return;
@@ -93,16 +91,14 @@ abstract public class AxisPTZProperty extends ControllerProperty {
 		String msg = ""
 			+ "GET " + reqpath + " HTTP/1.0\r\n"
 			+ "Host: " + host + ":" + port + "\r\n"
-			+ ( (auth != null)
+			+ ((auth != null)
 				? ("Authorization: Basic " + auth + "\r\n")
 				: "")
-			+ "\r\n"
-			;
+			+ "\r\n";
 		try {
 			writer.write(msg);
 			writer.flush();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			AxisPTZPoller.log("IOException: " + e);
 			return;
 		}

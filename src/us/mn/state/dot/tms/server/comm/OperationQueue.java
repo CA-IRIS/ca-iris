@@ -40,21 +40,15 @@ public final class OperationQueue<T extends ControllerProperty> {
 
 	/** Enqueue a new operation */
 	public synchronized boolean enqueue(Operation<T> op) {
+
 		if (shouldAdd(op)) {
 			op.begin();
 			add(op);
 			return true;
-		} else
-			return false;
-	}
+		}
 
-//	public synchronized boolean enqueue(Operation<T> op, boolean force) {
-//		if(!force)
-//			return enqueue(op);
-//		op.begin();
-//		add(op);
-//		return true;
-//	}
+		return false;
+	}
 
 	/** Check if an operation should be added to the queue */
 	private boolean shouldAdd(Operation<T> op) {
@@ -62,9 +56,11 @@ public final class OperationQueue<T extends ControllerProperty> {
 	}
 
 	/** Check if the queue contains a given operation */
-	private boolean contains(Operation<T> op) {
+	private synchronized boolean contains(Operation<T> op) {
+
 		if (op.equals(work) && !work.isDone())
 			return true;
+
 		Node<T> node = front;
 		while (node != null) {
 			Operation<T> nop = node.operation;
@@ -72,11 +68,13 @@ public final class OperationQueue<T extends ControllerProperty> {
 				return true;
 			node = node.next;
 		}
+
 		return false;
 	}
 
 	/** Add an operation to the queue */
 	private void add(Operation<T> op) {
+
 		PriorityLevel priority = op.getPriority();
 		Node<T> prev = null;
 		Node<T> node = front;
@@ -86,29 +84,35 @@ public final class OperationQueue<T extends ControllerProperty> {
 			prev = node;
 			node = node.next;
 		}
+
 		node = new Node<T>(op, node);
 		if(prev == null)
 			front = node;
 		else
 			prev.next = node;
+
 		notify();
 	}
 
 	/** Requeue an in-progress operation */
 	public synchronized boolean requeue(Operation<T> op) {
+
 		if((remove(op) == op) && !closing) {
 			add(op);
 			return true;
-		} else
-			return false;
+		}
+
+		return false;
 	}
 
 	/** Remove an operation from the queue */
-	private Operation<T> remove(Operation<T> op) {
+	private synchronized Operation<T> remove(Operation<T> op) {
+
 		if(op == work) {
 			work = null;
 			return op;
 		}
+
 		Node<T> prev = null;
 		Node<T> node = front;
 		while(node != null) {
@@ -117,11 +121,13 @@ public final class OperationQueue<T extends ControllerProperty> {
 					front = node;
 				else
 					prev.next = node;
+
 				return op;
 			}
 			prev = node;
 			node = node.next;
 		}
+
 		return null;
 	}
 
@@ -132,10 +138,12 @@ public final class OperationQueue<T extends ControllerProperty> {
 
 	/** Get the next operation from the queue (and remove it) */
 	public synchronized Operation<T> next() {
+
 		work = null;
 		waitOp();
 		work = front.operation;
 		front = front.next;
+
 		return work;
 	}
 
@@ -153,6 +161,7 @@ public final class OperationQueue<T extends ControllerProperty> {
 
 	/** Inner class for nodes in the queue */
 	static private final class Node<T extends ControllerProperty> {
+
 		final Operation<T> operation;
 		final PriorityLevel priority;
 		Node<T> next;
@@ -165,9 +174,11 @@ public final class OperationQueue<T extends ControllerProperty> {
 
 	/** Do something to each operation in the queue */
 	public synchronized void forEach(OperationHandler<T> handler) {
+
 		Operation<T> w = work;
 		if(w != null)
 			handler.handle(w.getPriority(), w);
+
 		Node<T> node = front;
 		while(node != null) {
 			handler.handle(node.priority, node.operation);

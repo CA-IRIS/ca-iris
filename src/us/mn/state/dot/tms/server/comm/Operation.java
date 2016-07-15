@@ -16,6 +16,7 @@
 package us.mn.state.dot.tms.server.comm;
 
 import java.io.IOException;
+
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.SystemAttrEnum;
 
@@ -31,8 +32,11 @@ abstract public class Operation<T extends ControllerProperty> {
 	/** Priority of the operation */
 	private PriorityLevel priority;
 
-	/** Get the priority of the operation.
-	 * @return Priority of the operation (@see PriorityLevel) */
+	/**
+	 * Get the priority of the operation.
+	 *
+	 * @return Priority of the operation (@see PriorityLevel)
+	 */
 	public final PriorityLevel getPriority() {
 		return priority;
 	}
@@ -46,8 +50,11 @@ abstract public class Operation<T extends ControllerProperty> {
 	/** Base class for operation phases */
 	abstract protected class Phase<T extends ControllerProperty> {
 
-		/** Perform a poll.
-		 * @return The next phase of the operation, or null */
+		/**
+		 * Perform a poll.
+		 *
+		 * @return The next phase of the operation, or null
+		 */
 		abstract protected Phase<T> poll(CommMessage<T> mess)
 			throws IOException, DeviceContentionException;
 	}
@@ -60,21 +67,28 @@ abstract public class Operation<T extends ControllerProperty> {
 		priority = prio;
 	}
 
-	/** Begin the operation.  The operation begins when it is queued for
-	 * processing. */
+	/**
+	 * Begin the operation.  The operation begins when it is queued for
+	 * processing.
+	 */
 	public final void begin() {
 		phase = phaseOne();
 	}
 
-	/** Create the first phase of the operation.  This method cannot be
+	/**
+	 * Create the first phase of the operation.  This method cannot be
 	 * called in the Operation constructor, because the object may not
-	 * have been fully constructed yet (subclass initialization). */
+	 * have been fully constructed yet (subclass initialization).
+	 */
 	abstract protected Phase<T> phaseOne();
 
-	/** Cleanup the operation.  The operation gets cleaned up after
+	/**
+	 * Cleanup the operation.  The operation gets cleaned up after
 	 * processing is complete and it is removed from the queue.  This method
-	 * may get called more than once after the operation is done. */
-	public void cleanup() { }
+	 * may get called more than once after the operation is done.
+	 */
+	public void cleanup() {
+	}
 
 	/** Success or failure of operation */
 	private boolean success = true;
@@ -103,11 +117,13 @@ abstract public class Operation<T extends ControllerProperty> {
 		phase = null;
 	}
 
-	/** Perform a poll with the current phase.
-	 * @param mess Message to use for polling. */
+	/**
+	 * Perform a poll with the current phase.
+	 *
+	 * @param mess Message to use for polling.
+	 */
 	public final void poll(CommMessage<T> mess) throws IOException,
-		DeviceContentionException
-	{
+		DeviceContentionException {
 		Phase<T> p = phase;
 		if (p != null)
 			updatePhase(p.poll(mess));
@@ -171,6 +187,11 @@ abstract public class Operation<T extends ControllerProperty> {
 	public Class phaseClass() {
 		Phase<T> p = phase;
 		return (p != null) ? p.getClass() : getClass();
+	}
+
+	/** Get the current phase */
+	public Phase<T> getPhase() {
+		return phase;
 	}
 
 }

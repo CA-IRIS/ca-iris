@@ -14,12 +14,13 @@
  */
 package us.mn.state.dot.tms.server.comm.axisptz;
 
-import java.io.IOException;
-import java.lang.Math;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+
+import java.io.IOException;
 
 /**
  * Axis VAPIX PTZ operation.
@@ -27,6 +28,11 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  * @author Travis Swanston
  */
 public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
+
+	/** Minimum time interval (ms) to enforce between Axis commands */
+	static protected final int MIN_CMD_INTERVAL_MS = 30;
+
+	private final AxisPTZPoller poller;
 
 	/** Op property */
 	private final AxisPTZProperty prop;
@@ -36,12 +42,16 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 
 	/**
 	 * Create a new operation.
+	 *
 	 * @param c the CameraImpl instance
 	 */
-	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p) {
+	protected OpAxisPTZ(CameraImpl c, AxisPTZProperty p,
+		AxisPTZPoller poll) {
+
 		super(PriorityLevel.COMMAND, c);
 		prop = p;
 		op_desc = p.getDesc();
+		poller = poll;
 		device.setOpStatus("sending cmd");
 	}
 
@@ -51,12 +61,16 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 	}
 
 	protected class PhaseTwo extends Phase<AxisPTZProperty> {
+
 		protected Phase<AxisPTZProperty> poll(
-			CommMessage<AxisPTZProperty> mess) throws IOException
-		{
+			CommMessage<AxisPTZProperty> mess) throws IOException {
+
 			mess.add(prop);
+			pauseIfNeeded();
 			mess.storeProps();
+			poller.setLastCmdTime(TimeSteward.currentTimeMillis());
 			updateOpStatus("cmd sent");
+
 			return null;
 		}
 	}
@@ -80,5 +94,37 @@ public class OpAxisPTZ extends OpDevice<AxisPTZProperty> {
 		device.setOpStatus(s);
 	}
 
+	public AxisPTZProperty getProp() {
+		return prop;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof OpAxisPTZ)) return false;
+		if (!super.equals(o)) return false;
+
+		OpAxisPTZ opAxisPTZ = (OpAxisPTZ) o;
+
+		return prop.equals(opAxisPTZ.prop);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return prop.hashCode();
+	}
+
+	/**
+	 * If CohuPTZPoller.MIN_CMD_INTERVAL_MS milliseconds have not passed
+	 * since the previous device transaction, sleep until they have.
+	 */
+	protected void pauseIfNeeded() {
+		long lastCmdTime = poller.getLastCmdTime();
+		long curTime = System.currentTimeMillis();
+		long delta = curTime - lastCmdTime;
+		if (delta < MIN_CMD_INTERVAL_MS)
+			TimeSteward.sleep_well(MIN_CMD_INTERVAL_MS - delta);
+	}
 }
 
