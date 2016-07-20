@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,26 +27,33 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  */
 public class OpResetCamera extends OpCohuPTZ {
 
+	/** Op description */
+	static private final String OP_DESC = "reset";
+
 	/**
 	 * Create the operation.
 	 * @param c the CameraImpl instance
 	 * @param cp the CohuPTZPoller instance
 	 */
 	public OpResetCamera(CameraImpl c, CohuPTZPoller cp) {
-		super(PriorityLevel.COMMAND, c, cp);
+		super(PriorityLevel.COMMAND, c, cp, OP_DESC);
 	}
 
 	/** Begin the operation. */
 	@Override
-	protected Phase phaseTwo() {
+	protected Phase<CohuPTZProperty> phaseTwo() {
 		return new ResetCamera();
 	}
 
 	/** Main phase. */
-	protected class ResetCamera extends Phase {
-		protected Phase poll(CommMessage mess) throws IOException {
+	protected class ResetCamera extends Phase<CohuPTZProperty> {
+		protected Phase<CohuPTZProperty> poll(
+			CommMessage<CohuPTZProperty> mess)
+			throws IOException
+		{
 			mess.add(new ResetCameraProperty());
 			doStoreProps(mess);
+			updateOpStatus("cmd sent");
 			return null;
 		}
 	}

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +15,14 @@
  */
 package us.mn.state.dot.tms;
 
+import java.lang.Integer;
 import java.util.Iterator;
 
 /**
  * Camera preset helper methods.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class CameraPresetHelper extends BaseHelper {
 
@@ -50,4 +53,17 @@ public class CameraPresetHelper extends BaseHelper {
 		}
 		return null;
 	}
+
+	/** Get a sorted array of the allowed preset values */
+	static public Integer[] getAllowedPresets() {
+		int min = CameraPreset.MIN_PRESET;
+		int max = CameraPreset.MAX_PRESET;
+		int num = (max - min) + 1;
+		Integer[] presets = new Integer[num];
+		for (int i=0; i<num; ++i) {
+			presets[i] = Integer.valueOf(i+min);
+		}
+		return presets;
+	}
+
 }

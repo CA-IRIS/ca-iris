@@ -1,0 +1,11 @@
+\set ON_ERROR_STOP
+
+SET SESSION AUTHORIZATION 'tms';
+
+CREATE SCHEMA video;
+ALTER SCHEMA video OWNER TO tms;
+CREATE TABLE video.decoder_map (
+	did VARCHAR(64) NOT NULL,
+	cid VARCHAR(64) NOT NULL
+	);
+

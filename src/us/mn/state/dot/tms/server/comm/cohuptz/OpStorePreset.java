@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  */
 public class OpStorePreset extends OpCohuPTZ {
 
+	/** Op description */
+	static private final String OP_DESC = "store";
+
 	/** The camera preset to store */
 	private final int preset;
 
@@ -38,22 +41,26 @@ public class OpStorePreset extends OpCohuPTZ {
 	 */
 
 	public OpStorePreset(CameraImpl c, CohuPTZPoller cp, int p) {
-		super(PriorityLevel.COMMAND, c, cp);
+		super(PriorityLevel.COMMAND, c, cp, OP_DESC);
 		preset = p;
 	}
 
 	/** Begin the operation */
 	@Override
-	public Phase phaseTwo() {
+	protected Phase<CohuPTZProperty> phaseTwo() {
 		return new StorePreset();
 	}
 
 	/** Phase to store a camera preset */
-	protected class StorePreset extends Phase {
+	protected class StorePreset extends Phase<CohuPTZProperty> {
 		/** Command controller to store the camera preset */
-		protected Phase poll(CommMessage mess) throws IOException {
+		protected Phase<CohuPTZProperty> poll(
+			CommMessage<CohuPTZProperty> mess)
+			throws IOException
+		{
 			mess.add(new StorePresetProperty(preset));
 			doStoreProps(mess);
+			updateOpStatus("cmd sent");
 			return null;
 		}
 	}

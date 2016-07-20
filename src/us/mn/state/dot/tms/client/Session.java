@@ -16,7 +16,6 @@
 package us.mn.state.dot.tms.client;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,6 +46,7 @@ import us.mn.state.dot.tms.client.roads.R_NodeManager;
 import us.mn.state.dot.tms.client.roads.SegmentLayer;
 import us.mn.state.dot.tms.client.schedule.PlanManager;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
 /**
@@ -54,6 +54,7 @@ import us.mn.state.dot.tms.client.widget.SmartDesktop;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class Session {
 
@@ -105,7 +106,7 @@ public class Session {
 	private final GeoLocManager loc_manager;
 
 	/** List of proxy managers */
-	private final LinkedList<ProxyManager<?>> managers;
+	private final LinkedList<ProxyManager<? extends SonarObject>> managers;
 
 	/** R_Node manager */
 	private final R_NodeManager r_node_manager;
@@ -139,12 +140,16 @@ public class Session {
 		return lcs_array_manager;
 	}
 
+	private final WeatherSensorManager weather_manager;
+
 	/** Mapping of all tabs */
 	private final HashMap<String, MapTab> all_tabs =
 		new HashMap<String, MapTab>();
 
 	/** Segment layer */
 	private final SegmentLayer seg_layer;
+
+	private final HeatmapLayer heatmapLayer;
 
 	/** Tile layer */
 	private final TileLayer tile_layer;
@@ -165,7 +170,8 @@ public class Session {
 		cam_manager = new CameraManager(this, loc_manager);
 		dms_manager = new DMSManager(this, loc_manager);
 		lcs_array_manager = new LCSArrayManager(this, loc_manager);
-		managers = new LinkedList<ProxyManager<?>>();
+		weather_manager = new WeatherSensorManager(this, loc_manager);
+		managers = new LinkedList<ProxyManager<? extends SonarObject>>();
 		managers.add(r_node_manager);
 		managers.add(new ControllerManager(this, loc_manager));
 		managers.add(cam_manager);
@@ -176,10 +182,11 @@ public class Session {
 		managers.add(new LCSIManager(this, loc_manager));
 		managers.add(new LaneMarkingManager(this,loc_manager));
 		managers.add(new BeaconManager(this, loc_manager));
-		managers.add(new WeatherSensorManager(this, loc_manager));
+		managers.add(weather_manager);
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
 		seg_layer = r_node_manager.getSegmentLayer();
+		heatmapLayer = weather_manager.getHeatmapLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
 
@@ -205,15 +212,15 @@ public class Session {
 	/** Initialize all the proxy managers */
 	private void initializeManagers() {
 		loc_manager.initialize();
-		for (ProxyManager<?> man: managers)
+		for (ProxyManager<? extends SonarObject> man: managers)
 			man.initialize();
 	}
 
 	/** Create all map tabs in all_tabs mapping */
 	private void createTabs() {
-		for (ProxyManager<?> man: managers) {
+		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.canRead()) {
-				MapTab<?> tab = man.createTab();
+				MapTab<? extends SonarObject> tab = man.createTab();
 				if (tab != null) {
 					tab.initialize();
 					all_tabs.put(tab.getTabId(), tab);
@@ -238,7 +245,8 @@ public class Session {
 		return all_tabs.get(tid);
 	}
 
-	/** Create the layer states.  The map bean and model must be seperate
+	/**
+	 * Create the layer states.  The map bean and model must be separate
 	 * parameters so that the model can be built before calling setModel
 	 * on the map bean.
 	 * @param mb Map bean to render the layer states.
@@ -246,8 +254,9 @@ public class Session {
 	public void createLayers(MapBean mb, MapModel mm) {
 		if (tile_layer != null)
 			mm.addLayer(tile_layer.createState(mb));
+		mm.addLayer(heatmapLayer.createState(mb));
 		mm.addLayer(seg_layer.createState(mb));
-		for (ProxyManager<?> man: managers) {
+		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.hasLayer())
 				mm.addLayer(man.createState(mb));
 		}
@@ -438,7 +447,7 @@ public class Session {
 		for (MapTab tab: all_tabs.values())
 			tab.dispose();
 		all_tabs.clear();
-		for (ProxyManager<?> man: managers)
+		for (ProxyManager<? extends SonarObject> man: managers)
 			man.dispose();
 		managers.clear();
 		loc_manager.dispose();

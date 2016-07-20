@@ -133,30 +133,33 @@ public class MousePTZ {
 	private void setComponent(final Component c) {
 		MouseAdapter mouser = new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				cancelPanTilt();
-			}
+			public void mouseClicked(MouseEvent e) { cancelPanTilt(); }
+
 			@Override
 			public void mousePressed(MouseEvent e) {
 				updatePanTilt(e);
 			}
+
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				cancelPanTilt();
-			}
+			public void mouseReleased(MouseEvent e) { cancelPanTilt(); }
+
 			@Override
-			public void mouseExited(MouseEvent e) {
-				cancelPanTilt();
-			}
+			public void mouseExited(MouseEvent e) { cancelPanTilt(); }
+
+//			@Override
+//			public void mouseEntered(MouseEvent e) { cancelPanTilt(); }
+
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				updatePanTilt(e);
 				c.setCursor(getCursor(e));
 			}
+
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				c.setCursor(getCursor(e));
 			}
+
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				n_zoom -= e.getWheelRotation();
@@ -164,6 +167,7 @@ public class MousePTZ {
 				cam_ptz.sendPtz(pan, tilt, zoom);
 			}
 		};
+
 		c.addMouseListener(mouser);
 		c.addMouseMotionListener(mouser);
 		c.addMouseWheelListener(mouser);
@@ -243,8 +247,8 @@ public class MousePTZ {
 
 	/** Cancel the pan/tilt action */
 	private void cancelPanTilt() {
-		pan = 0;
-		tilt = 0;
+		pan = 0F;
+		tilt = 0F;
 		cam_ptz.sendPtz(pan, tilt, zoom);
 	}
 

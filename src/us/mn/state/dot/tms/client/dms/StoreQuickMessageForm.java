@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,19 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.MultiParser;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignGroup;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.widget.AbstractForm;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.ILabel;
 import us.mn.state.dot.tms.client.widget.Widgets;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
  * A GUI form for storing a composed message into the quick-message library.
@@ -190,6 +193,10 @@ public class StoreQuickMessageForm extends AbstractForm {
 
 		// initialize elements
 		store_btn.setEnabled(false);
+		if (SystemAttrEnum.DMS_QUICKMSG_UPPERCASE_NAMES.getBoolean())
+			((AbstractDocument)name_txt.getDocument())
+				.setDocumentFilter(
+				new UppercaseDocumentFilter());
 		name_txt.getDocument().addDocumentListener(text_listener);
 		group_cbx.addActionListener(group_listener);
 		multi_txt.getDocument().addDocumentListener(text_listener);

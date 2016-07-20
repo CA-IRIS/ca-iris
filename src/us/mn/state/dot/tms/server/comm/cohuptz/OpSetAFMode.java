@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  */
 public class OpSetAFMode extends OpCohuPTZ {
 
+	/** Op description */
+	static private final String OP_DESC = "A/F";
+
 	protected final DeviceRequest devReq;
 
 	/**
@@ -37,21 +40,25 @@ public class OpSetAFMode extends OpCohuPTZ {
 	 * @param dr the DeviceRequest representing the desired op
 	 */
 	public OpSetAFMode(CameraImpl c, CohuPTZPoller cp, DeviceRequest dr) {
-		super(PriorityLevel.COMMAND, c, cp);
+		super(PriorityLevel.COMMAND, c, cp, OP_DESC);
 		devReq = dr;
 	}
 
 	/** Begin the operation. */
 	@Override
-	protected Phase phaseTwo() {
+	protected Phase<CohuPTZProperty> phaseTwo() {
 		return new SetAFMode();
 	}
 
 	/** Main phase. */
-	protected class SetAFMode extends Phase {
-		protected Phase poll(CommMessage mess) throws IOException {
+	protected class SetAFMode extends Phase<CohuPTZProperty> {
+		protected Phase<CohuPTZProperty> poll(
+			CommMessage<CohuPTZProperty> mess)
+			throws IOException
+		{
 			mess.add(new SetAFModeProperty(devReq));
 			doStoreProps(mess);
+			updateOpStatus("cmd sent");
 			return null;
 		}
 	}

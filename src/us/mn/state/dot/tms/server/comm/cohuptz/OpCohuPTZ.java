@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,23 +26,52 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  * Cohu PTZ operation.
  *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
-abstract public class OpCohuPTZ extends OpDevice {
+abstract public class OpCohuPTZ extends OpDevice<CohuPTZProperty> {
 
 	/** Minimum time interval (ms) to enforce between Cohu commands */
 	static protected final int MIN_CMD_INTERVAL_MS = 25;
 
-	CohuPTZPoller poller;
+	/** The PTZ poller instance */
+	private final CohuPTZPoller poller;
+
+	/** Operation description */
+	private final String op_desc;
 
 	/**
 	 * Create the operation.
 	 * @param pl the operation's PriorityLevel
-	 * @param c the CameraImpl instance
-	 * @param c the CohuPTZPoller instance
+	 * @param ci the CameraImpl instance
+	 * @param cp the CohuPTZPoller instance
+	 * @param d the op description
 	 */
-	public OpCohuPTZ(PriorityLevel pl, CameraImpl ci, CohuPTZPoller cp) {
+	public OpCohuPTZ(PriorityLevel pl, CameraImpl ci, CohuPTZPoller cp,
+		String d)
+	{
 		super(pl, ci);
 		poller = cp;
+		op_desc = d;
+		device.setOpStatus("sending cmd");
+	}
+
+	/** Return operation description */
+	@Override
+	public String getOperationDescription() {
+		return (op_desc == null ? "" : op_desc);
+	}
+
+	/**
+	 * Update device op status.
+	 * We bundle the operation description into the status because camera
+	 * ops are generally so short that, as far as I can tell, by the time
+	 * the client gets the SONAR "operation" notification and requests the
+	 * op's description via SONAR, the device has already been released,
+	 * and thus Device.getOperation() returns "None".
+	 */
+	protected void updateOpStatus(String stat) {
+		String s = getOperationDescription() + ": " + stat;
+		device.setOpStatus(s);
 	}
 
 	/**
@@ -61,7 +90,7 @@ abstract public class OpCohuPTZ extends OpDevice {
 	 * transaction with the device (Cohu devices require a short delay
 	 * between commands).
 	 */
-	protected void doStoreProps(CommMessage mess) throws IOException {
+	protected void doStoreProps(CommMessage<CohuPTZProperty> mess) throws IOException {
 		pauseIfNeeded();
 		mess.storeProps();
 		poller.setLastCmdTime(System.currentTimeMillis());

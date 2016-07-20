@@ -35,16 +35,16 @@ public class CameraMarker extends AbstractMarker {
 		float tenth = size / 10;
 		float quarter = size / 4;
 		float third = size / 3;
-		path.moveTo(0, third);
-		path.lineTo(quarter, tenth);
-		path.lineTo(third, tenth);
-		path.lineTo(third, quarter);
-		path.lineTo(size, quarter);
-		path.lineTo(size, -quarter);
-		path.lineTo(third, -quarter);
-		path.lineTo(third, -tenth);
-		path.lineTo(quarter, -tenth);
-		path.lineTo(0, -third);
-		path.closePath();
+		moveTo(0, third);
+		lineTo(quarter, tenth);
+		lineTo(third, tenth);
+		lineTo(third, quarter);
+		lineTo(size, quarter);
+		lineTo(size, -quarter);
+		lineTo(third, -quarter);
+		lineTo(third, -tenth);
+		lineTo(quarter, -tenth);
+		lineTo(0, -third);
+		closePath();
 	}
 }

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009  Minnesota Department of Transportation
+ * Copyright (C) 2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ import junit.framework.TestCase;
 /** 
  * Test cases
  * @author Michael Darter
+ * @author Jacob Barde
  * @created 05/07/09
  */
 public class NumericAlphaComparatorTest extends TestCase {
@@ -67,5 +69,15 @@ public class NumericAlphaComparatorTest extends TestCase {
 		assertTrue(c.compare("abc200", "abc202") < 0);
 		assertTrue(c.compare("abc0200", "abc200") < 0);
 		assertTrue(c.compare("abc200", "abc200a") < 0);
+
+		// float comparisons
+		assertTrue(NumericAlphaComparator.compareFloats(null, null) == 0);
+		assertTrue(NumericAlphaComparator.compareFloats(null, 1.0f) < 0);
+		assertTrue(NumericAlphaComparator.compareFloats(1.0f, null) > 0);
+		assertTrue(NumericAlphaComparator.compareFloats(1.0f, 1.0f) == 0);
+		assertTrue(NumericAlphaComparator.compareFloats(1.0f, 0.999f) > 0);
+		// with custom delta
+		assertTrue(NumericAlphaComparator.compareFloats(1.0f, 0.999f, 0.01f) == 0);
+		assertTrue(NumericAlphaComparator.compareFloats(1.0f, 0.9999999f) == 0);
 	}
 }

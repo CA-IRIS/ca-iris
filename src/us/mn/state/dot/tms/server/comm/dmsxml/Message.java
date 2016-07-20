@@ -27,6 +27,7 @@ import us.mn.state.dot.tms.server.comm.ControllerProperty;
 import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
 import us.mn.state.dot.tms.utils.Emailer;
 import us.mn.state.dot.tms.utils.SString;
+import us.mn.state.dot.tms.utils.STime;
 
 /**
  * DMS XML message. A Message represents the bytes sent and

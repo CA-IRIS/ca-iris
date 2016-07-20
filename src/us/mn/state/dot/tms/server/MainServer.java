@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@ import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.server.aws.AwsJob;
 import us.mn.state.dot.tms.server.event.BaseEvent;
 import us.mn.state.dot.tms.utils.HTTPProxySelector;
 import us.mn.state.dot.tms.utils.I18N;
@@ -41,6 +43,8 @@ import us.mn.state.dot.tms.utils.PropertyLoader;
  * This is the main class to start the IRIS server.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class MainServer {
 
@@ -62,6 +66,10 @@ public class MainServer {
 
 	/** Flush thread for disk writing jobs */
 	static public final Scheduler FLUSH = new Scheduler("flush");
+
+	/** AWS thread for AWS jobs */
+	static private final Scheduler aws_scheduler =
+		new Scheduler("aws");
 
 	/** Sample archive factory */
 	static public final SampleArchiveFactoryImpl a_factory =
@@ -102,6 +110,7 @@ public class MainServer {
 			BaseObjectImpl.loadAll(store, ns);
 			scheduleTimerJobs();
 			scheduleFlushJobs();
+			aws_scheduler.addJob(new AwsJob());
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);
@@ -196,6 +205,7 @@ public class MainServer {
 		TIMER.addJob(new SendSettingsJob(500));
 		TIMER.addJob(new TollZoneJob());
 		TIMER.addJob(new ReaperJob());
+		TIMER.addJob(new CommLinkQuery30SecJob());
 		TIMER.addJob(new MsgFeedQueryJob());
 	}
 
@@ -208,6 +218,7 @@ public class MainServer {
 		FLUSH.addJob(new XmlConfigJob(1000));
 		FLUSH.addJob(new SignMessageXmlJob());
 		FLUSH.addJob(new IncidentXmlJob());
+		FLUSH.addJob(new WeatherSensorXmlJob());
 		FLUSH.addJob(new EventPurgeJob());
 	}
 }

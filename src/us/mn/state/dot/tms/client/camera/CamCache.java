@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +18,7 @@ package us.mn.state.dot.tms.client.camera;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraPreset;
+import us.mn.state.dot.tms.PresetAlias;
 import us.mn.state.dot.tms.Direction;
 import us.mn.state.dot.tms.VideoMonitor;
 import us.mn.state.dot.tms.client.SonarState;
@@ -26,6 +28,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyListModel;
  * Cache for camera-related proxy objects.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class CamCache {
 
@@ -67,6 +70,14 @@ public class CamCache {
 		return preset_model;
 	}
 
+	/** Cache of camera preset alias mappings */
+	private final TypeCache<PresetAlias> aliases;
+
+	/** Get the camera preset alias mapping cache */
+	public TypeCache<PresetAlias> getPresetAliases() {
+		return aliases;
+	}
+
 	/** Cache of video monitor proxies */
 	protected final TypeCache<VideoMonitor> monitors;
 
@@ -92,6 +103,8 @@ public class CamCache {
 		camera_model.initialize();
 		presets = new TypeCache<CameraPreset>(CameraPreset.class,
 			client);
+		aliases = new TypeCache<PresetAlias>(PresetAlias.class,
+			client);
 		preset_model = new ProxyListModel<CameraPreset>(presets) {
 			@Override
 			protected boolean check(CameraPreset cp) {
@@ -113,6 +126,7 @@ public class CamCache {
 			cameras.ignoreAttribute("opStatus");
 		}
 		client.populateReadable(presets);
+		client.populateReadable(aliases);
 		client.populateReadable(monitors);
 	}
 }

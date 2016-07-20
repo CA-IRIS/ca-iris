@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +16,7 @@
 package us.mn.state.dot.tms.server;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.sql.ResultSet;
@@ -26,15 +28,19 @@ import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.WeatherSensor;
+import us.mn.state.dot.tms.WeatherSensorHelper;
 import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.WeatherPoller;
+import us.mn.state.dot.tms.utils.STime;
 
 /**
  * A weather sensor is a device for sampling weather data, such as precipitation
  * rates, visibility and wind speed.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 
@@ -150,6 +156,46 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		}
 	}
 
+	/** Surface temps in C (never null; entries null for missing) */
+	private transient Integer[] surface_temps = new Integer[0];
+
+	/** Get surface temps in C (never null; entries null for missing) */
+	public Integer[] getSurfaceTemps() {
+		return surface_temps;
+	}
+
+	/**
+	 * Set the surface temperatures.
+	 * @param st Surface temperatures in Celsius (never null; entries null
+	 *           for missing)
+	 */
+	public void setSurfaceTempsNotify(Integer[] st) {
+		if (!(surface_temps == st)) {	// reference check only
+			surface_temps = st;
+			notifyAttribute("surfaceTemps");
+		}
+	}
+
+	/** Subsurface temps in C (never null; entries null for missing) */
+	private transient Integer[] subsurface_temps = new Integer[0];
+
+	/** Get subsurface temps in C (never null; entries null for missing) */
+	public Integer[] getSubsurfaceTemps() {
+		return subsurface_temps;
+	}
+
+	/**
+	 * Set the subsurface temperatures.
+	 * @param st Subsurface temperatures in Celsius (never null; entries
+	 *           null for missing)
+	 */
+	public void setSubsurfaceTempsNotify(Integer[] st) {
+		if (!(subsurface_temps == st)) {	// reference check only
+			subsurface_temps = st;
+			notifyAttribute("subsurfaceTemps");
+		}
+	}
+
 	/** Wind speed in KPH (null if missing) */
 	private transient Integer wind_speed;
 
@@ -194,6 +240,42 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		}
 	}
 
+	/** Gust speed in KPH (null if missing) */
+	private transient Integer gust_speed;
+
+	/** Get the gust speed in KPH (null if missing) */
+	public Integer getGustSpeed() {
+		return gust_speed;
+	}
+
+	/** Set the gust speed in KPH */
+	public void setGustSpeedNotify(Integer gs) {
+		if(!integerEquals(gs, gust_speed)) {
+			gust_speed = gs;
+			notifyAttribute("gustSpeed");
+		}
+	}
+
+	/** Average gust direction in degrees (null for missing) */
+	private transient Integer gust_dir;
+
+	/** Get the average gust direction.
+	 * @return Gust direction in degrees (null for missing) */
+	public Integer getGustDir() {
+		return gust_dir;
+	}
+
+	/** Set the gust direction.
+	 * @param gd Gust direction in degrees (null for missing).  This
+	 *           angle is rounded to the nearest 45 degrees. */
+	public void setGustDirNotify(Integer gd) {
+		Integer a = round45(gd);
+		if(!integerEquals(a, gust_dir)) {
+			gust_dir = a;
+			notifyAttribute("gustDir");
+		}
+	}
+
 	/** Cache for precipitation samples */
 	private transient final PeriodicSampleCache cache;
 
@@ -203,18 +285,29 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 	/** Accumulation of precipitation (micrometers) */
 	private transient int accumulation = MISSING_DATA;
 
-	/** Set the accumulation of precipitation (micrometers) */
-	public void updateAccumulation(Integer a, long st) {
+	/**
+	 * Set the accumulation of precipitation (micrometers).
+	 * With upr==true, precipitation rate will also be updated with a
+	 * value calculated from the precipitation value cache.  In general,
+	 * RWIS drivers should either use this approach, or set the
+	 * precipitation rate directly, but not both.
+	 * @param a the accumulation (um)
+	 * @param st timestamp after end after end of sample period
+	 * @param upr update precipitation rate with calculated value?
+	 */
+	public void updateAccumulation(Integer a, long st, boolean upr) {
 		int period = calculatePeriod(st);
 		int value = calculatePrecipValue(a);
 		if(period > 0 && value >= 0) {
 			cache.add(new PeriodicSample(st, period, value));
-			float period_h = 3600f / period;// periods per hour
-			float umph = value * period_h;	// micrometers per hour
-			float mmph = umph / 1000;	// millimeters per hour
-			setPrecipRateNotify(Math.round(mmph));
+			if (upr) {
+				float period_h = 3600f / period;// periods/hr
+				float umph = value * period_h;	// um/hr
+				float mmph = umph / 1000;	// mm/hr
+				setPrecipRateNotify(Math.round(mmph));
+			}
 		}
-		if(value < 0)
+		if ((upr) && (value < 0))
 			setPrecipRateNotify(null);
 		if(period > 0 || value < 0)
 			accumulation = a != null ? a : MISSING_DATA;
@@ -256,8 +349,12 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		return precip_rate;
 	}
 
-	/** Set precipitation rate in mm/hr (null for missing) */
-	private void setPrecipRateNotify(Integer pr) {
+	/**
+	 * Set precipitation rate in mm/hr (null for missing).
+	 * In general, the RWIS driver should either use this,
+	 * or use updateAccumulation with upr==true, but not both.
+	 */
+	public void setPrecipRateNotify(Integer pr) {
 		if(!integerEquals(pr, precip_rate)) {
 			precip_rate = pr;
 			notifyAttribute("precipRate");
@@ -286,7 +383,7 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		}
 	}
 
-	/** Time stamp from the last sample */
+	/** Time stamp of the last sample */
 	private transient long stamp = 0;
 
 	/** Get the time stamp from the last sample.
@@ -300,6 +397,25 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		if(s > 0 && s != stamp) {
 			stamp = s;
 			notifyAttribute("stamp");
+		}
+	}
+
+	/** Observation time of the last sample */
+	private transient long obs_time = MISSING_DATA;
+
+	/**
+	 * Get the observation time of the latest sample
+	 * @return Time as long
+	 */
+	public long getObsTime() {
+		return obs_time;
+	}
+
+	/** Set the observation time for the current sample */
+	public void setObsTimeNotify(long s) {
+		if(s > 0 && s != obs_time) {
+			obs_time = s;
+			notifyAttribute("obsTime");
 		}
 	}
 
@@ -337,4 +453,45 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		cache.purge(before);
 		pt_cache.purge(before);
 	}
+
+	/** Render the object as xml */
+	public void printXmlElement(Writer out) throws IOException {
+		final String ABBR = "WeatherSensor";
+		out.write("<" + ABBR);
+		out.write(XmlWriter.createAttribute("id", getName()));
+		out.write(XmlWriter.createAttribute("status",
+			WeatherSensorHelper.getAllStyles(this)));
+		out.write(XmlWriter.createAttribute("notes", getNotes()));
+		final GeoLoc loc = getGeoLoc();		// Avoid race
+		if(loc != null)
+			out.write(XmlWriter.createAttribute("geoloc",
+				loc.getName()));
+		out.write(XmlWriter.createAttribute("time_stamp",
+			STime.getDateString(getStamp())));
+		out.write(XmlWriter.createAttribute("visibility_m",
+			getVisibility()));
+		out.write(XmlWriter.createAttribute("wind_speed_kph",
+			getWindSpeed()));
+		out.write(XmlWriter.createAttribute("air_temp_c",
+			getAirTemp()));
+		out.write(XmlWriter.createAttribute("wind_dir_avg_degs",
+			getWindDir()));
+		out.write(XmlWriter.createAttribute("precip_rate_mmhr",
+			getPrecipRate()));
+		out.write(XmlWriter.createAttribute("expired_state",
+			WeatherSensorHelper.isSampleExpired(this)));
+		out.write(XmlWriter.createAttribute("high_wind_state",
+			WeatherSensorHelper.isHighWind(this)));
+		out.write(XmlWriter.createAttribute("low_visibility_state",
+			WeatherSensorHelper.isLowVisibility(this)));
+		out.write(XmlWriter.createAttribute("surface_temps",
+			WeatherSensorHelper.getMultiTempsString(
+			surface_temps)));
+		out.write(XmlWriter.createAttribute("subsurface_temps",
+			WeatherSensorHelper.getMultiTempsString(
+			subsurface_temps)));
+		out.write(">\n");
+		out.write("</" + ABBR + ">\n");
+	}
+
 }

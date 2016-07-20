@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ import java.io.Writer;
 import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import us.mn.state.dot.sched.Job;
@@ -26,6 +28,8 @@ import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.CommProtocol;
+import us.mn.state.dot.tms.Controller;
+import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
@@ -38,6 +42,9 @@ import us.mn.state.dot.tms.units.Interval;
  *
  * @see us.mn.state.dot.tms.CommProtocol
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 
@@ -53,7 +60,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, CommLinkImpl.class);
 		store.query("SELECT name, description, uri, protocol, " +
-			"poll_enabled, poll_period, timeout FROM iris." +
+			"poll_enabled, poll_period, timeout, idle_secs FROM iris." +
 			SONAR_TYPE  + ";", new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
@@ -64,7 +71,8 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 					row.getShort(4),	// protocol
 					row.getBoolean(5),	// poll_enabled
 					row.getInt(6),		// poll_period
-					row.getInt(7)		// timeout
+					row.getInt(7),		// timeout
+					row.getInt(8)		// idle_secs
 				));
 			}
 		});
@@ -80,6 +88,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 		map.put("poll_enabled", poll_enabled);
 		map.put("poll_period", poll_period);
 		map.put("timeout", timeout);
+		map.put("idle_secs", idle_secs);
 		return map;
 	}
 
@@ -100,7 +109,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 
 	/** Create a new comm link */
 	public CommLinkImpl(String n, String d, String u, short p, boolean pe,
-		int pp, int t)
+		int pp, int t, int is)
 	{
 		super(n);
 		description = d;
@@ -111,6 +120,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 		poll_enabled = pe;
 		poll_period = pp;
 		timeout = t;
+		idle_secs = is;
 		poller = null;
 		initTransients();
 	}
@@ -322,6 +332,32 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 		return timeout;
 	}
 
+	/** Max allowable idle time in seconds */
+	protected int idle_secs = Integer.MAX_VALUE;
+
+	/** Set the max allowable idle time in seconds */
+	public void setIdleSecs(int is) {
+		testGateArmDisable("idle_secs");
+		idle_secs = is;
+	}
+
+	/** Set the max allowable idle time in seconds */
+	public void doSetIdleSecs(int is) throws TMSException {
+		if (is == idle_secs)
+			return;
+		if (is < 0)
+			throw new ChangeVetoException("Bad idle_secs: " + is);
+		DevicePoller dp = poller;
+		if (dp != null)
+			dp.setIdleSecs(is);
+		store.update(this, "idle_secs", is);
+	}
+
+	/** Get the max allowable idle time in seconds */
+	public int getIdleSecs() {
+		return idle_secs;
+	}
+
 	/** Device poller for communication */
 	private transient DevicePoller poller;
 
@@ -344,6 +380,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 		try {
 			poller = DevicePollerFactory.create(name, protocol,uri);
 			poller.setTimeout(timeout);
+			poller.setIdleSecs(idle_secs);
 		}
 		catch (IOException e) {
 			closePoller();
@@ -406,7 +443,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 
 	/** Pull a controller from the link */
 	public synchronized void pullController(ControllerImpl c) {
-		Integer d = new Integer(c.getDrop());
+		Integer d = (int) c.getDrop();
 		controllers.remove(d);
 	}
 
@@ -419,6 +456,20 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 	public boolean isConnected() {
 		DevicePoller dp = poller;
 		return (dp != null) && dp.isConnected();
+	}
+
+	/** Get the active controllers defined for this communication link */
+	public LinkedList<Controller> getActiveControllers() {
+		LinkedList<Controller> l = new LinkedList<Controller>();
+		synchronized(controllers) {
+			for (Controller c : controllers.values())
+				if (CtrlCondition.fromOrdinal(c.getCondition())
+					== CtrlCondition.ACTIVE)
+				{
+					l.add(c);
+				}
+		}
+		return l;
 	}
 
 	/** Write the comm link as an XML element */

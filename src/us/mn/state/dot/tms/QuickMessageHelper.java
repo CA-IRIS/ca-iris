@@ -55,4 +55,26 @@ public class QuickMessageHelper extends BaseHelper {
 		}
 		return null;
 	}
+
+	/** Is the specified quick message deployed? Equivalence is used
+	 * to determine if the specified and deployed message are equal.
+	 * @param dms DMS to check, may be null.
+	 * @param qmname Name of quick message, may be null.
+	 * @return True if the specifed quick message is equivalent to the
+	 *         deployed message on the specified DMS.  */
+	static public boolean isQuickMsgDeployed(DMS dms, String qmname) {
+		if(dms == null || qmname == null)
+			return false;
+		QuickMessage newqm = lookup(qmname);
+		if(newqm == null)
+			return false;
+		String newms = newqm.getMulti();
+		if(newms == null)
+			return false;
+		SignMessage dsm = dms.getMessageCurrent();
+		if(dsm == null)
+			return false;
+		return new MultiString(dsm.getMulti()).isEquivalent(newms);
+	}
+
 }

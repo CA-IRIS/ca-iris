@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2005-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,21 +25,26 @@ import java.io.Writer;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * A simple class for writing out XML documents
+ * A simple class for writing out XML documents.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 abstract public class XmlWriter {
 
-	/** XML output directory */
+	/** XML output directory. */
 	static public final File XML_OUTPUT_DIRECTORY =
 		new File("/var/www/html/iris_xml/");
 
-	/** XML version and encoding declaration */
+	/** XML version and encoding declaration. */
 	static protected final String XML_DECLARATION =
 		"<?xml version='1.0' encoding='UTF-8'?>\n";
 
-	/** Validate an xml element name */
+	/**
+	 * Validate an xml element name.
+	 * @param e Element name, may not be null.
+	 */
 	static public String validateElementName(String e) {
 		e = e.replace("&", "");
 		e = e.replace("<", "");
@@ -48,7 +54,7 @@ abstract public class XmlWriter {
 		return e;
 	}
 
-	/** Validate an xml element value */
+	/** Validate an xml element value. */
 	static public String validateElementValue(String v) {
 		v = v.replace("&", "&amp;");
 		v = v.replace("<", "&lt;");
@@ -58,7 +64,11 @@ abstract public class XmlWriter {
 		return v;
 	}
 
-	/** Create an XML attribute */
+	/**
+	 * Create an XML attribute.
+	 * @param name Attribute name; may not be null.
+	 * @param value Value of attribute; may be null.
+	 */
 	static public String createAttribute(String name, Object value) {
 		if(value != null) {
 			StringBuilder sb = new StringBuilder(" ");
@@ -71,16 +81,16 @@ abstract public class XmlWriter {
 			return "";
 	}
 
-	/** File to write final XML data */
+	/** File to write final XML data. */
 	protected final File file;
 
-	/** Temporary file to write XML data */
+	/** Temporary file to which to write XML data. */
 	protected final File temp;
 
 	/** Should the XML data be compressed? */
 	protected final boolean gzip;
 
-	/** Create a new XML writer */
+	/** Create a new XML writer. */
 	public XmlWriter(String f, boolean gz) {
 		if(gz)
 			f = f + ".gz";
@@ -89,7 +99,7 @@ abstract public class XmlWriter {
 		gzip = gz;
 	}
 
-	/** Create the underlying output stream */
+	/** Create the underlying output stream. */
 	private OutputStream createOutputStream() throws IOException {
 		OutputStream os = new FileOutputStream(temp);
 		if(gzip)
@@ -98,7 +108,7 @@ abstract public class XmlWriter {
 			return os;
 	}
 
-	/** Write the XML file */
+	/** Write the XML file. */
 	public void write() throws IOException {
 		OutputStream os = createOutputStream();
 		try {
@@ -114,6 +124,7 @@ abstract public class XmlWriter {
 			throw new IOException("Rename failed: " + file);
 	}
 
-	/** Write the XML to a writer */
+	/** Write the XML to a writer. */
 	abstract protected void write(Writer w) throws IOException;
+
 }

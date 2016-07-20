@@ -104,6 +104,9 @@ public enum DeviceRequest {
 	/** CAMERA: auto-iris */
 	CAMERA_IRIS_AUTO,
 
+	/** CAMERA: ptz full stop */
+	CAMERA_PTZ_FULL_STOP,
+
 	/** CAMERA: wiper one-shot */
 	CAMERA_WIPER_ONESHOT;
 

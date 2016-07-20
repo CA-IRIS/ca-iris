@@ -15,6 +15,8 @@
 
 package us.mn.state.dot.tms.client.camera;
 
+import us.mn.state.dot.tms.Camera;
+
 
 /**
  * A stream status listener receives events related to changes in video
@@ -24,11 +26,11 @@ package us.mn.state.dot.tms.client.camera;
  */
 public interface StreamStatusListener {
 
-	/** Streaming has begun. */
-	public void onStreamStarted();
+	/** Streaming has begun with Camera c. */
+	public void onStreamStarted(Camera c);
 
-	/** Streaming has ended. */
-	public void onStreamFinished();
+	/** Streaming has ended with Camera c. */
+	public void onStreamFinished(Camera c);
 
 }
 

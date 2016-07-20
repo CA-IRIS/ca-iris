@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2004-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +15,10 @@
  */
 package us.mn.state.dot.tms.server.comm.ss105;
 
+import java.io.IOException;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.CommLinkHelper;
+import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
 import us.mn.state.dot.tms.server.comm.Messenger;
@@ -26,6 +30,8 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  * serial data communication protocol.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class SS105Poller extends MessagePoller<SS105Property>
 	implements SamplePoller
@@ -36,6 +42,19 @@ public class SS105Poller extends MessagePoller<SS105Property>
 	/** Create a new SS105 poller */
 	public SS105Poller(String n, Messenger m) {
 		super(n, m);
+		CommLinkImpl cli = (CommLinkImpl)CommLinkHelper.lookup(n);
+		if (cli == null) {
+			SS105_LOG.log("Failed to find CommLink.");
+			return;
+		}
+		int to = cli.getTimeout();
+		try {
+			m.setTimeout(to);
+			SS105_LOG.log("Set Messenger timeout to " + to + ".");
+		}
+		catch (IOException e) {
+			SS105_LOG.log("Failed to set Messenger timeout.");
+		}
 	}
 
 	/** Check if a drop address is valid */
@@ -81,4 +100,10 @@ public class SS105Poller extends MessagePoller<SS105Property>
 	protected DebugLog protocolLog() {
 		return SS105_LOG;
 	}
+
+	/** Query the sample poller. */
+	@Override
+	public void queryPoller() {
+	}
+
 }

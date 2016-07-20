@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Calendar;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -27,7 +28,11 @@ import javax.swing.JLabel;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.CameraHelper;
+import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.StreamType;
+import us.mn.state.dot.tms.utils.HttpUtil;
+
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
@@ -35,11 +40,9 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  *
  * @author Douglas Lau
  * @author Timothy Johnson
+ * @author Dan Rossiter
  */
 public class MJPEGStream implements VideoStream {
-
-	/** Default timeout for direct URL Connections */
-	static protected final int TIMEOUT_DIRECT = 5 * 1000;
 
 	/** Label to display video stream */
 	private final JLabel screen = new JLabel();
@@ -51,7 +54,10 @@ public class MJPEGStream implements VideoStream {
 	private final Dimension size;
 
 	/** Input stream to read */
-	private final InputStream stream;
+	private InputStream stream;
+
+	/** Length of image to be read */
+	private int content_len;
 
 	/** Count of rendered frames */
 	private int n_frames = 0;
@@ -61,6 +67,12 @@ public class MJPEGStream implements VideoStream {
 
 	/** Stream error message */
 	private String error_msg = null;
+
+	/** Stream must be mocked from static snapshots */
+	private final boolean is_snapshot;
+
+	/** Anonymous thread to read video stream */
+	private final Job job;
 
 	/** Set the stream error message */
 	protected void setErrorMsg(String e) {
@@ -73,55 +85,106 @@ public class MJPEGStream implements VideoStream {
 		throws IOException
 	{
 		url = new URL(req.getUrl(c));
+		is_snapshot = isSnapshot(c);
 		size = UI.dimension(req.getSize().width, req.getSize().height);
-		stream = createInputStream();
+		if (is_snapshot) {
+			s.addJob(getImmediateSnapshotJob());
+		}
+		job = getStreamJob();
 		s.addJob(job);
 	}
 
+	/** Whether we are "streaming" a static snapshot */
+	private boolean isSnapshot(Camera c) {
+		return CameraHelper.getEncoderType(c) == EncoderType.GENERIC_URL &&
+				"image/jpeg".equals(HttpUtil.getContentType(url));
+	}
+
+	/** Inits content length. Additionally stream if null. */
+	private void initContentLength() throws IOException {
+		if (null == stream)
+			initInputStream();
+		else if (!is_snapshot)
+			content_len = getNonSnapshotImageSize();
+	}
+
+	/** Gets background job to retrieving stream frames */
+	private Job getStreamJob() {
+		int iField = Calendar.MILLISECOND;
+		int i = 1;
+		if (is_snapshot) {
+			iField = Calendar.SECOND;
+			i = 30;
+		}
+
+		return new Job(iField, i) {
+			@Override
+			public void perform() {
+				if(running)
+					readStream();
+			}
+			public boolean isRepeating() {
+				return running;
+			}
+		};
+	}
+
+	/**
+	 * Gets first frame for snapshot "stream"
+	 * FIXME: This shouldn't be necessary, but doesn't seem possible to have a Job
+	 * run immediately, then reoccur at given interval. May be missing something.
+	 **/
+	private Job getImmediateSnapshotJob() {
+		return new Job() {
+			@Override
+			public void perform() {
+				if(running)
+					readStream();
+			}
+		};
+	}
+
 	/** Create an input stream from an HTTP connection */
-	protected InputStream createInputStream() throws IOException {
+	protected InputStream initInputStream() throws IOException {
 		HttpURLConnection c = (HttpURLConnection)url.openConnection();
 		HttpURLConnection.setFollowRedirects(true);
-		c.setConnectTimeout(TIMEOUT_DIRECT);
-		c.setReadTimeout(TIMEOUT_DIRECT);
+		c.setConnectTimeout(HttpUtil.TIMEOUT_DIRECT);
+		c.setReadTimeout(HttpUtil.TIMEOUT_DIRECT);
 		int resp = c.getResponseCode();
 		if (resp != HttpURLConnection.HTTP_OK) {
 			throw new IOException(c.getResponseMessage());
 		}
+		stream = c.getInputStream();
+		content_len = getImageSize(c);
 		return c.getInputStream();
 	}
-
-	/** Anonymous thread to read video stream */
-	private final Job job = new Job(Calendar.MILLISECOND, 1) {
-		public void perform() {
-			if(running)
-				readStream();
-		}
-		public boolean isRepeating() {
-			return running;
-		}
-	};
 
 	/** Read a video stream */
 	private void readStream() {
 		try {
 			byte[] idata = getImage();
 			screen.setIcon(createIcon(idata));
-		}
-		catch(IOException e) {
+		} catch(IOException e) {
 			setErrorMsg(e.getMessage());
 			screen.setIcon(null);
 			running = false;
+		} finally {
+			if (is_snapshot && null != stream) {
+				try {
+					stream.close();
+				} catch (IOException e) {}
+				stream = null;
+			}
 		}
 	}
 
 	/** Get the next image in the mjpeg stream */
 	protected byte[] getImage() throws IOException {
-		int n_size = getImageSize();
-		byte[] image = new byte[n_size];
+		initContentLength();
+		byte[] image = new byte[content_len];
 		int n_bytes = 0;
-		while(n_bytes < n_size) {
-			int r = stream.read(image, n_bytes, n_size - n_bytes);
+		while(n_bytes < content_len) {
+			int r = stream.read(image, n_bytes, content_len - n_bytes);
 			if(r >= 0)
 				n_bytes += r;
 			else
@@ -143,10 +206,19 @@ public class MJPEGStream implements VideoStream {
 	}
 
 	/** Get the length of the next image */
-	private int getImageSize() throws IOException {
-		for(int i = 0; i < 100; i++) {
+	private int getImageSize(URLConnection c) throws IOException {
+		if (is_snapshot) {
+			return c.getContentLength();
+		} else {
+			return getNonSnapshotImageSize();
+		}
+	}
+
+	/** Get the length of the next image in a non-snapshot stream */
+	private int getNonSnapshotImageSize() throws IOException {
+		for (int i = 0; i < 100; i++) {
 			String s = readLine();
-			if(s.toLowerCase().indexOf("content-length") > -1) {
+			if (s.toLowerCase().contains("content-length")) {
 				// throw away an empty line after the
 				// content-length header
 				readLine();
@@ -208,11 +280,13 @@ public class MJPEGStream implements VideoStream {
 	/** Dispose of the video stream */
 	public void dispose() {
 		running = false;
-		try {
-			stream.close();
-		}
-		catch(IOException e) {
-			setErrorMsg(e.getMessage());
+		if (stream != null) {
+			try {
+				stream.close();
+			}
+			catch(IOException e) {
+				setErrorMsg(e.getMessage());
+			}
 		}
 		screen.setIcon(null);
 	}

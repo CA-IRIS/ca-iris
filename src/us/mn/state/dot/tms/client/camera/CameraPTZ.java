@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2014  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +19,10 @@ package us.mn.state.dot.tms.client.camera;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.utils.NumericAlphaComparator;
+
+import javax.swing.event.EventListenerList;
+import java.awt.event.ActionListener;
 
 /**
  * Camera PTZ control.  This is required to ensure that all continous camera
@@ -26,6 +31,8 @@ import us.mn.state.dot.tms.client.Session;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class CameraPTZ {
 
@@ -47,9 +54,39 @@ public class CameraPTZ {
 	/** Is camera control currently enabled? */
 	private boolean controlEnabled = true;
 
+	/** List of listeners for control interaction. */
+	private final EventListenerList actionListenerList;
+
 	/** Create a new camera PTZ control */
 	public CameraPTZ(Session s) {
 		session = s;
+		actionListenerList = new EventListenerList();
+	}
+
+	/** Add listener to be notified when action is performed on camera */
+	public void addActionListener(ActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.add(ActionListener.class, listener);
+		}
+	}
+
+	/** Remove listener to be notified when action is performed on camera */
+	public void removeActionListener(ActionListener listener) {
+		synchronized (actionListenerList) {
+			actionListenerList.remove(ActionListener.class, listener);
+		}
+	}
+
+	/** Notify listeners that action was performed on camera */
+	protected void fireActionPerformed() {
+		Object[] listeners;
+		synchronized (actionListenerList) {
+			listeners = actionListenerList.getListeners(ActionListener.class);
+		}
+
+		for (Object listener : listeners) {
+			((ActionListener)listener).actionPerformed(null);
+		}
 	}
 
 	/** Can a ptz control be made */
@@ -110,9 +147,9 @@ public class CameraPTZ {
 	 * of doSendPtz().
 	 * Observes controlEnabled.
 	 */
-	public void sendPtz(float p, float t, float z) {
+	public synchronized void sendPtz(float p, float t, float z) {
 		if (controlEnabled)
-			doSendPtz(p,t,z);
+			doSendPtz(p, t, z);
 	}
 
 	/**
@@ -121,25 +158,32 @@ public class CameraPTZ {
 	 */
 	private synchronized void doSendPtz(float p, float t, float z) {
 		if (canControlPtz()) {
-			if (p != 0 || t != 0 || z != 0 || ptzMoving()) {
+			if (anyNonZero(p, t, z) || ptzMoving()) {
 				ptz[0] = p;
 				ptz[1] = t;
 				ptz[2] = z;
 				camera.setPtz(ptz);
+				fireActionPerformed();
 			}
 		}
 	}
 
 	/** Was the most recent PTZ update a move? */
-	private boolean ptzMoving() {
-		return ptz[0] != 0 || ptz[1] != 0 || ptz[2] != 0;
+	private synchronized boolean ptzMoving() {
+		return anyNonZero(ptz[0], ptz[1], ptz[2]);
+	}
+
+	private boolean anyNonZero(float p, float t, float z) {
+		return NumericAlphaComparator.compareFloats(p, 0f) != 0
+			|| NumericAlphaComparator.compareFloats(t, 0f) != 0
+			|| NumericAlphaComparator.compareFloats(z, 0f) != 0;
 	}
 
 	/**
 	 * Send a device request to the current camera.
 	 * Observes controlEnabled.
 	 */
-	public void sendRequest(DeviceRequest dr) {
+	public synchronized void sendRequest(DeviceRequest dr) {
 		if (controlEnabled)
 			doSendRequest(dr);
 	}
@@ -152,6 +196,7 @@ public class CameraPTZ {
 		if (canRequestDevice()) {
 			updateFocusAndIris(dr);
 			camera.setDeviceRequest(dr.ordinal());
+			fireActionPerformed();
 		}
 	}
 
@@ -182,7 +227,8 @@ public class CameraPTZ {
 	 * of controlEnabled) and clear the movement state variables.
 	 */
 	public synchronized void clearMovement() {
-		doSendPtz(0, 0, 0);
+		doSendPtz(0f, 0f, 0f);
+		//TODO: doSendRequest(DeviceRequest.CAMERA_PTZ_FULL_STOP);
 		if (focusMoving)
 			doSendRequest(DeviceRequest.CAMERA_FOCUS_STOP);
 		if (irisMoving)
@@ -191,7 +237,7 @@ public class CameraPTZ {
 	}
 
 	/** Ensure states are cleared */
-	private void clearState() {
+	private synchronized void clearState() {
 		ptz[0] = 0f;
 		ptz[1] = 0f;
 		ptz[2] = 0f;
@@ -207,6 +253,7 @@ public class CameraPTZ {
 		if (controlEnabled && canRecallPreset()) {
 			camera.setRecallPreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 
@@ -218,6 +265,7 @@ public class CameraPTZ {
 		if (controlEnabled && canStorePreset()) {
 			camera.setStorePreset(p);
 			clearState();
+			fireActionPerformed();
 		}
 	}
 }

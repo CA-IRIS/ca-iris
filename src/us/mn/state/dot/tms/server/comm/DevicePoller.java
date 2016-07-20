@@ -20,6 +20,7 @@ import java.io.IOException;
  * DevicePoller is the base interface for polling devices (or controllers).
  *
  * @author Douglas Lau
+ * @author Dan Rossiter
  */
 public interface DevicePoller {
 
@@ -37,6 +38,9 @@ public interface DevicePoller {
 
 	/** Set the receive timeout */
 	void setTimeout(int t) throws IOException;
+
+	/** Set the max allowable idle time in seconds */
+	void setIdleSecs(int is);
 
 	/** Destroy the poller */
 	void destroy();

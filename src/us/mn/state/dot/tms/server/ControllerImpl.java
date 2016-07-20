@@ -2,6 +2,8 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2014  Minnesota Department of Transportation
  * Copyright (C) 2011  Berkeley Transportation Systems Inc.
+ * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,8 +53,19 @@ import us.mn.state.dot.tms.server.event.CommEvent;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class ControllerImpl extends BaseObjectImpl implements Controller {
+
+	/** Time stamp of most recent data store */
+	private transient long last_store_time =
+		TimeSteward.currentTimeMillis();
+
+	/** Get last store time */
+	public long getLastStoreTime() {
+		return last_store_time;
+	}
 
 	/** Get comm link impl */
 	static private CommLinkImpl commLinkImpl(CommLink cl) {
@@ -480,6 +493,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	public void storeVolume(long stamp, int period, int start_pin,
 		int[] volume, VehLengthClass vc)
 	{
+		boolean stored = false;
 		HashMap<Integer, DetectorImpl> dets = getDetectors();
 		for(Integer pin: dets.keySet()) {
 			DetectorImpl det = dets.get(pin);
@@ -488,8 +502,11 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 			if(v >= 0) {
 				det.storeVolume(new PeriodicSample(stamp,
 					period, v), vc);
+				stored = true;
 			}
 		}
+		if (stored)
+			last_store_time = TimeSteward.currentTimeMillis();
 	}
 
 	/** Store occupancy sample data.
@@ -501,6 +518,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	public void storeOccupancy(long stamp, int period, int start_pin,
 		int[] scans, int max_scans)
 	{
+		boolean stored = false;
 		HashMap<Integer, DetectorImpl> dets = getDetectors();
 		for(Integer pin: dets.keySet()) {
 			DetectorImpl det = dets.get(pin);
@@ -509,8 +527,11 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 			if(n_scans >= 0) {
 				det.storeOccupancy(new OccupancySample(stamp,
 					period, n_scans, max_scans));
+				stored = true;
 			}
 		}
+		if (stored)
+			last_store_time = TimeSteward.currentTimeMillis();
 	}
 
 	/** Store speed sample data.
@@ -521,6 +542,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	public void storeSpeed(long stamp, int period, int start_pin,
 		int[] speed)
 	{
+		boolean stored = false;
 		HashMap<Integer, DetectorImpl> dets = getDetectors();
 		for(Integer pin: dets.keySet()) {
 			DetectorImpl det = dets.get(pin);
@@ -529,8 +551,11 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 			if(s > 0) {
 				det.storeSpeed(new PeriodicSample(stamp,
 					period, s));
+				stored = true;
 			}
 		}
+		if (stored)
+			last_store_time = TimeSteward.currentTimeMillis();
 	}
 
 	/** Bin 30-second sample data */
@@ -625,6 +650,11 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 			e.printStackTrace();
 		}
 		failTime = ft;
+	}
+
+	/** FIXME: CA-only temporary fix. */
+	public void setFailTimeCA(Long ft) {
+		setFailTime(ft);
 	}
 
 	/** Set the failed status of the controller */

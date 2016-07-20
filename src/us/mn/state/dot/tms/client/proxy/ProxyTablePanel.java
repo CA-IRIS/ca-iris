@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +18,8 @@ package us.mn.state.dot.tms.client.proxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Iterator;
+import javax.swing.DropMode;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -25,17 +28,20 @@ import javax.swing.JTextField;
 import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
+import javax.swing.text.AbstractDocument;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.tms.client.EditModeListener;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IListSelectionAdapter;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.client.widget.ITable;
+import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
  * A proxy table panel is a UI for displaying a table of proxy objects.
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 
@@ -77,8 +83,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final IAction del_proxy = new IAction("device.delete") {
 		protected void doActionPerformed(ActionEvent e) {
 			T proxy = getSelectedProxy();
-			if (proxy != null)
-				proxy.destroy();
+			model.deleteProxy(proxy);
 		}
 	};
 
@@ -95,6 +100,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	private final EditModeListener edit_lsnr = new EditModeListener() {
 		public void editModeChanged() {
 			updateButtonPanel();
+			table.setDragEnabled(model.canUpdate(getExampleProxy()));
 		}
 	};
 
@@ -116,6 +122,7 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		createJobs();
 		updateSortFilter();
 		model.getSession().addEditModeListener(edit_lsnr);
+		initRowDragDrop();
 		initButtonPanel();
 		layoutPanel();
 	}
@@ -231,6 +238,16 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		button_pnl.setLayout(gl);
 	}
 
+	/** Initialize the drag/drop behavior for rows if needed */
+	private void initRowDragDrop() {
+		if (!model.hasManualSort())
+			return;
+
+		table.setDragEnabled(model.canUpdate(getExampleProxy()));
+		table.setDropMode(DropMode.INSERT_ROWS);
+		table.setTransferHandler(new ProxyTableRowTransferHandler(table));
+	}
+
 	/** Add create/delete widgets to the button panel */
 	protected void addCreateDeleteWidgets(GroupLayout.SequentialGroup hg,
 		GroupLayout.ParallelGroup vg)
@@ -264,6 +281,12 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 		     : null;
 	}
 
+	/** Get an example proxy for testing [permissons, etc] */
+	private T getExampleProxy() {
+		Iterator<T> i = model.cache.iterator();
+		return i.hasNext() ? i.next() : null;
+	}
+
 	/** Select a new proxy */
 	protected void selectProxy() {
 		updateButtonPanel();
@@ -294,4 +317,14 @@ public class ProxyTablePanel<T extends SonarObject> extends JPanel {
 	public boolean canRemove(T proxy) {
 		return model.canRemove(proxy);
 	}
+
+	/** Enable/disable conversion of names to uppercase */
+	public void setAddUppercase(boolean en) {
+		AbstractDocument doc = (AbstractDocument)add_txt.getDocument();
+		if (en)
+			doc.setDocumentFilter(new UppercaseDocumentFilter());
+		else
+			doc.setDocumentFilter(null);
+	}
+
 }

@@ -58,7 +58,7 @@ public enum UserProperty {
 	/** Default values for use with unspecified properties */
 	static private final String TAB_LIST_DEF
 		= "incident, dms, camera, lcs, ramp.meter, gate.arm, r_node, "
-		+ "action.plan, comm";
+		+ "action.plan, comm, weather_sensor";
 
 	/** Get the directory to store user properties */
 	static private File getDir() {

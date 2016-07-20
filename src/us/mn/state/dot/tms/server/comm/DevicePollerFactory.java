@@ -2,7 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2011-2015  Minnesota Department of Transportation
  * Copyright (C) 2012  Iteris Inc.
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.server.ModemImpl;
+import us.mn.state.dot.tms.server.comm.axisptz.AxisPTZPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoMessenger;
 import us.mn.state.dot.tms.server.comm.canoga.CanogaPoller;
+import us.mn.state.dot.tms.server.comm.carwis.CaRwisPoller;
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZPoller;
 import us.mn.state.dot.tms.server.comm.dinrelay.DinRelayPoller;
 import us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller;
@@ -40,11 +42,17 @@ import us.mn.state.dot.tms.server.comm.ntcip.NtcipPoller;
 import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
 import us.mn.state.dot.tms.server.comm.pelcod.PelcoDPoller;
+import us.mn.state.dot.tms.server.comm.pems.PemsPoller;
+import us.mn.state.dot.tms.server.comm.rtms.RtmsPoller;
+import us.mn.state.dot.tms.server.comm.sensys.SensysPoller;
 import us.mn.state.dot.tms.server.comm.ss105.SS105Poller;
 import us.mn.state.dot.tms.server.comm.ss125.SS125Poller;
 import us.mn.state.dot.tms.server.comm.ssi.SsiPoller;
 import us.mn.state.dot.tms.server.comm.stc.STCPoller;
+import us.mn.state.dot.tms.server.comm.ttip.TtipDmsPoller;
+import us.mn.state.dot.tms.server.comm.urms.UrmsPoller;
 import us.mn.state.dot.tms.server.comm.viconptz.ViconPTZPoller;
+import us.mn.state.dot.tms.server.comm.wizard.WizardPoller;
 
 /**
  * A factory for creating device poller objects.
@@ -52,6 +60,7 @@ import us.mn.state.dot.tms.server.comm.viconptz.ViconPTZPoller;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class DevicePollerFactory {
 
@@ -120,6 +129,8 @@ public class DevicePollerFactory {
 			return createOrg815Poller();
 		case INFINOVA_D_PTZ:
 			return createInfinovaDPoller();
+		case RTMS:
+			return createRtmsPoller();
 		case RTMS_G4:
 			return createRtmsG4Poller();
 		case SSI:
@@ -130,25 +141,54 @@ public class DevicePollerFactory {
 			return createSTCPoller();
 		case COHU_PTZ:
 			return createCohuPTZPoller();
+		case AXIS_PTZ:
+			return createAxisPTZPoller();
 		case ADDCO:
 			return createAddcoPoller();
 		case TRANSCORE_E6:
 			return createE6Poller();
+		case INFOTEK_WIZARD:
+			return createWizardPoller();
+		case URMS:
+			return createUrmsPoller();
+		case SENSYS:
+			return createSensysPoller();
+		case PEMS:
+			return createPemsPoller();
+		case CA_RWIS:
+			return createCaRwisPoller();
+		case TTIP_DMS:
+			return createTtipDmsPoller();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
 	}
 
 	/** Create a socket messenger */
-	private Messenger createSocketMessenger(String d_uri)
+	/**
+	 * Create a socket messenger.
+	 * For UDP connections, a normal single-host socket will be used.
+	 * @param d_uri The URI
+	 * @param udpMulti For UDP connections, use an "unconnected" socket
+	 *                 that can be used to communicate with more than one
+	 *                 peer.
+	 * @return The Messenger
+	 */
+	private Messenger createSocketMessenger(String d_uri, boolean udpMulti)
 		throws IOException
 	{
 		try {
 			URI u = createURI(d_uri);
 			if ("tcp".equals(u.getScheme()))
 				return createStreamMessenger(u);
-			else if ("udp".equals(u.getScheme()))
-				return createDatagramMessenger(u);
+			else if ("udp".equals(u.getScheme())) {
+				if (udpMulti)
+					return createDatagramMessenger(u,
+						DatagramMessenger.ConnType
+						.RECV_MULT_LOCAL);
+				else
+					return createDatagramMessenger(u);
+			}
 			else if ("modem".equals(u.getScheme()))
 				return createModemMessenger(u);
 			else
@@ -157,6 +197,18 @@ public class DevicePollerFactory {
 		catch (URISyntaxException e) {
 			throw new IOException("INVALID URI");
 		}
+	}
+
+	/**
+	 * Create a socket messenger.
+	 * For UDP connections, a normal "connected" socket will be used.
+	 * @param d_uri The URI
+	 * @return The Messenger
+	 */
+	private Messenger createSocketMessenger(String d_uri)
+		throws IOException
+	{
+		return createSocketMessenger(d_uri, false);
 	}
 
 	/** Create the URI with a default URI scheme */
@@ -181,9 +233,18 @@ public class DevicePollerFactory {
 		return new StreamMessenger(createSocketAddress(u));
 	}
 
-	/** Create a UDP datagram messenger */
+	/** Create a UDP datagram messenger (DEFAULT TYPE) */
 	private Messenger createDatagramMessenger(URI u) throws IOException {
-		return new DatagramMessenger(createSocketAddress(u));
+		return new DatagramMessenger(
+			DatagramMessenger.ConnType.DEFAULT,
+			createSocketAddress(u));
+	}
+
+	/** Create a UDP datagram messenger with the specified connection type */
+	private Messenger createDatagramMessenger(URI u,
+		DatagramMessenger.ConnType ct) throws IOException
+	{
+		return new DatagramMessenger(ct, createSocketAddress(u));
 	}
 
 	/** Create an inet socket address */
@@ -264,7 +325,8 @@ public class DevicePollerFactory {
 
 	/** Create a PelcoD poller */
 	private DevicePoller createPelcoDPoller() throws IOException {
-		return new PelcoDPoller(name, createSocketMessenger(UDP));
+		Messenger sm = createSocketMessenger(UDP);
+		return new PelcoDPoller(name, sm);
 	}
 
 	/** Create a Manchester poller */
@@ -308,6 +370,11 @@ public class DevicePollerFactory {
 		return new SsiPoller(name, createHttpFileMessenger());
 	}
 
+	/** Create an RTMS poller */
+	protected DevicePoller createRtmsPoller() throws IOException {
+		return new RtmsPoller(name, createSocketMessenger(UDP, true));
+	}
+
 	/** Create an RTMS G4 poller */
 	private DevicePoller createRtmsG4Poller() throws IOException {
 		return new G4Poller(name, createSocketMessenger(TCP));
@@ -325,7 +392,13 @@ public class DevicePollerFactory {
 
 	/** Create a Cohu PTZ poller */
 	private DevicePoller createCohuPTZPoller() throws IOException {
-		return new CohuPTZPoller(name, createSocketMessenger(TCP));
+		Messenger sm = createSocketMessenger(TCP);
+		return new CohuPTZPoller(name, sm);
+	}
+
+	/** Create an Axis PTZ poller */
+	private DevicePoller createAxisPTZPoller() throws IOException {
+		return new AxisPTZPoller(name, createSocketMessenger(TCP));
 	}
 
 	/** Create an ADDCO poller */
@@ -344,5 +417,35 @@ public class DevicePollerFactory {
 		catch (URISyntaxException e) {
 			throw new IOException("INVALID URI");
 		}
+	}
+
+	/** Create a Wizard poller */
+	protected DevicePoller createWizardPoller() throws IOException {
+		return new WizardPoller(name, createSocketMessenger(UDP, true));
+	}
+
+	/** Create a URMS poller */
+	protected DevicePoller createUrmsPoller() throws IOException {
+		return new UrmsPoller(name, createSocketMessenger(UDP, true));
+	}
+
+	/** Create a Sensys poller */
+	protected DevicePoller createSensysPoller() throws IOException {
+		return new SensysPoller(name, createSocketMessenger(TCP));
+	}
+
+	/** Create a PeMS poller */
+	protected DevicePoller createPemsPoller() throws IOException {
+		return new PemsPoller(name, createSocketMessenger(UDP));
+	}
+
+	/** Create a CA RWIS poller */
+	private DevicePoller createCaRwisPoller() throws IOException {
+		return new CaRwisPoller(name, createHttpFileMessenger());
+	}
+
+	/** Create a TTIP DMS poller */
+	private DevicePoller createTtipDmsPoller() throws IOException {
+		return new TtipDmsPoller(name);
 	}
 }

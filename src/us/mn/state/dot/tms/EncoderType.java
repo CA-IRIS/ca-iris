@@ -23,6 +23,7 @@ import java.util.LinkedList;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public enum EncoderType {
 
@@ -45,8 +46,8 @@ public enum EncoderType {
 	AXIS_MP4_AXRTSPHTTP("Axis MP4 axrtsphttp", StreamType.MPEG4,
 	                    StreamType.NONE),
 
-	/** Generic MMS (6) */
-	GENERIC_MMS("Generic MMS", StreamType.MMS, StreamType.NONE),
+	/** Generic URL (6) */
+	GENERIC_URL("Generic URL", StreamType.GENERIC, StreamType.NONE),
 
 	/** Axis JPEG (7) */
 	AXIS_JPEG("Axis JPEG", StreamType.NONE, StreamType.MJPEG);
@@ -89,6 +90,16 @@ public enum EncoderType {
 		LinkedList<String> d = new LinkedList<String>();
 		for (EncoderType et: values())
 			d.add(et.description);
-		return d.toArray(new String[0]);
+		return d.toArray(new String[d.size()]);
+	}
+
+	/** Does this EncoderType support indirect streaming? */
+	public boolean supportsIndirect() {
+		return (indirect_stream != StreamType.NONE);
+	}
+
+	/** Does this EncoderType support direct streaming? */
+	public boolean supportsDirect() {
+		return (direct_stream != StreamType.NONE);
 	}
 }

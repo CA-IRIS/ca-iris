@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +21,18 @@ import us.mn.state.dot.sonar.SonarObject;
  * Camera Preset
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public interface CameraPreset extends SonarObject {
 
 	/** SONAR type name */
 	String SONAR_TYPE = "camera_preset";
 
+	/** Minimum allowed preset number */
+	static final int MIN_PRESET = 1;
+
 	/** Maximum allowed preset number */
-	int MAX_PRESET = 12;
+	static final int MAX_PRESET = 12;
 
 	/** Get camera */
 	Camera getCamera();

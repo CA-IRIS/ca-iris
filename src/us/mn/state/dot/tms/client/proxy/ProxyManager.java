@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2015  Minnesota Department of Transportation
- * Copyright (C) 2010  AHMCT, University of California
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
+import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
@@ -45,6 +46,8 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runQueued;
  * proxy into an appropriate style list model.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 abstract public class ProxyManager<T extends SonarObject> {
 
@@ -113,10 +116,13 @@ abstract public class ProxyManager<T extends SonarObject> {
 	private final ProxyMapCache<T> map_cache = new ProxyMapCache<T>();
 
 	/** Map layer for the proxy type */
-	private final ProxyLayer<T> layer;
+	protected final ProxyLayer<T> layer;
 
 	/** Default style */
 	private final ItemStyle def_style;
+
+	/** Style summary */
+	private StyleSummary<T> style_summary;
 
 	/** Create a new proxy manager */
 	protected ProxyManager(Session s, GeoLocManager lm, ItemStyle ds) {
@@ -197,12 +203,23 @@ abstract public class ProxyManager<T extends SonarObject> {
 		}
 	}
 
-	/** Update layer extend */
+	/** Update layer extent */
 	public final void updateExtent() {
 		if (layer != null) {
 			runQueued(new Invokable() {
 				public void invoke() {
 					layer.updateExtent();
+				}
+			});
+		}
+	}
+
+	/** Update theme */
+	public void updateTheme() {
+		if (layer != null) {
+			runQueued(new Invokable() {
+				public void invoke() {
+					layer.updateTheme();
 				}
 			});
 		}
@@ -302,15 +319,19 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return s_model;
 	}
 
-	/** Create a new style summary for this proxy type, with no cell
+	/** Gets the style summary for this proxy type, with no cell
 	 * renderer size buttons. */
-	public StyleSummary<T> createStyleSummary() {
-		return new StyleSummary<T>(this, def_style, false);
+	public StyleSummary<T> getStyleSummary() {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, false);
+		return style_summary;
 	}
 
-	/** Create a new style summary for this proxy type */
-	public StyleSummary<T> createStyleSummary(boolean enableCellSizeBtns) {
-		return new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+	/** Gets the style summary for this proxy type */
+	public StyleSummary<T> getStyleSummary(boolean enableCellSizeBtns) {
+		if (null == style_summary)
+			style_summary = new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+		return style_summary;
 	}
 
 	/** Get the specified style list model */
@@ -372,7 +393,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Create a popup menu for the selected proxy object(s) */
-	private JPopupMenu createPopup() {
+	protected JPopupMenu createPopup() {
 		T proxy = s_model.getSingleSelection();
 		if (proxy != null)
 			return createPopupSingle(proxy);
@@ -401,7 +422,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Iterate through all proxy objects */
-	private MapObject forEach(MapSearcher ms, AffineTransform at) {
+	protected MapObject forEach(MapSearcher ms, AffineTransform at) {
 		shape = getShape(at);
 		synchronized(map_cache) {
 			for(MapGeoLoc loc: map_cache) {
@@ -441,8 +462,10 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Get the description of a proxy */
 	public String getDescription(T proxy) {
-		return proxy.getName() + " - " +
-			GeoLocHelper.getDescription(getGeoLoc(proxy));
+		String pn = proxy.getName();
+		String sn = SiteDataHelper.getSiteName(pn);
+		String desc = GeoLocHelper.getDescription(getGeoLoc(proxy));
+		return ( (sn != null) ? sn : pn) + " - " + desc;
 	}
 
 	/** Check if the corresponding layer is visible.
@@ -461,5 +484,9 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Check if manager has a layer to display */
 	public final boolean hasLayer() {
 		return canRead() && (getZoomThreshold() > 0);
+	}
+
+	protected ProxyLayer<T> getLayer() {
+		return layer;
 	}
 }

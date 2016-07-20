@@ -27,8 +27,7 @@ import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.IrisUserHelper;
 import us.mn.state.dot.tms.MultiString;
-import us.mn.state.dot.tms.PageTimeHelper;
-import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
@@ -174,17 +173,16 @@ class OpQueryMsg extends OpDms {
 		return pix;
 	}
 
-	/** Create the second phase of the operation */
+	/**
+	 *  Create the second phase of the operation
+	 *
+	 *  @see DmsXmlPoller#_sendRequest
+	 */
 	protected Phase phaseTwo() {
 
-		// already have dms configuration
-		if(dmsConfigured())
-			return new PhaseQueryMsg();
-
-		// dms not configured
-		Phase phase2 = new PhaseQueryMsg();
-		Phase phase1 = new PhaseGetConfig(phase2);
-		return phase1;
+		// Note: PhaseGetConfig is executed prior via DmsXmlPoller if
+		// DMS is not configured.
+		return new PhaseQueryMsg();
 	}
 
 	/**
@@ -492,14 +490,15 @@ class OpQueryMsg extends OpDms {
 	 * @see Messenger#handleCommError()
 	 * @see Messenger#shouldReopen()
 	 */
-	private class PhaseQueryMsg extends Phase
-	{
+	private class PhaseQueryMsg extends Phase {
+
 		/** Query current message */
-		protected Phase poll(CommMessage argmess)
-			throws IOException
-		{
+		protected Phase poll(CommMessage argmess) throws IOException {
+
 			// ignore startup operations for DMS on dial-up lines
-			if(m_startup && !m_dms.isPeriodicallyQueriable())
+			if (m_startup && !m_dms.isPeriodicallyQueriable() &&
+				!SystemAttrEnum.DMSXML_QUERY_ALL_ON_STARTUP
+					.getBoolean())
 				return null;
 
 			updateInterStatus("Starting operation", false);
@@ -513,15 +512,15 @@ class OpQueryMsg extends OpDms {
 
 			// build xml request and expected response
 			mess.setName(getOpName());
-			XmlElem xrr = buildXmlElem("StatusReqMsg", 
+			XmlElem xrr = buildXmlElem("StatusReqMsg",
 				"StatusRespMsg");
 
 			// send request and read response
 			mess.add(xrr);
 			sendRead(mess);
-			if(xrr.wasResRead())
-				if(parseResponse(mess, xrr))
-					return this;
+			if (xrr.wasResRead() && parseResponse(mess, xrr))
+				return this;
+
 			return null;
 		}
 	}

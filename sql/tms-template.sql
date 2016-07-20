@@ -262,7 +262,8 @@ CREATE TABLE iris.map_extent (
 	name VARCHAR(20) PRIMARY KEY,
 	lat real NOT NULL,
 	lon real NOT NULL,
-	zoom INTEGER NOT NULL
+	zoom INTEGER NOT NULL,
+	position INTEGER NOT NULL UNIQUE
 );
 
 CREATE TABLE iris.lane_type (
@@ -372,7 +373,8 @@ CREATE TABLE iris.comm_link (
 	protocol smallint NOT NULL REFERENCES iris.comm_protocol(id),
 	poll_enabled BOOLEAN NOT NULL,
 	poll_period INTEGER NOT NULL,
-	timeout integer NOT NULL
+	timeout integer NOT NULL,
+	idle_secs integer NOT NULL
 );
 
 CREATE TABLE iris.modem (
@@ -658,6 +660,21 @@ CREATE TABLE iris.camera_preset (
 CREATE TABLE iris._device_preset (
 	name VARCHAR(10) PRIMARY KEY,
 	preset VARCHAR(10) UNIQUE REFERENCES iris.camera_preset(name)
+);
+
+-- table containing allowed preset alias names
+CREATE TABLE iris.camera_preset_alias_name (
+	id integer PRIMARY KEY,
+	alias VARCHAR(20) NOT NULL
+);
+
+-- table containing current alias:preset# mappings for each camera
+CREATE TABLE iris.camera_preset_alias (
+	name VARCHAR(10) PRIMARY KEY,
+	camera VARCHAR(10) NOT NULL REFERENCES iris._camera,
+	alias INTEGER NOT NULL REFERENCES iris.camera_preset_alias_name,
+	preset_num INTEGER NOT NULL CHECK (preset_num > 0 AND preset_num <= 12),
+	UNIQUE(camera, alias)
 );
 
 CREATE TABLE iris._beacon (
@@ -2096,6 +2113,29 @@ CREATE VIEW incident_view AS
     LEFT JOIN iris.lane_type ln ON i.lane_type = ln.id;
 GRANT SELECT ON incident_view TO PUBLIC;
 
+--- CA-ONLY: SwitchServer state map:
+CREATE SCHEMA video;
+ALTER SCHEMA video OWNER TO tms;
+CREATE TABLE video.decoder_map (
+	did VARCHAR(64) NOT NULL,
+	cid VARCHAR(64) NOT NULL
+	);
+
+--- CA-ONLY: table containing extended site data for geo_loc entities:
+-- ideally, geo_loc would also have "REFERENCES iris.geo_loc(name)", but we're
+-- not doing this right now to avoid needing a cascade delete rule or similar.
+-- This means that entries in this table will persist even when geolocs are
+-- deleted, but that's fine for now.  This whole feature will need to be
+-- redesigned somewhat to merge with MnDOT anyway.
+CREATE TABLE iris.site_data (
+	name VARCHAR(8) PRIMARY KEY,
+--	geo_loc VARCHAR(20) UNIQUE NOT NULL REFERENCES iris.geo_loc(name),	-- not doing this to avoid adding a cascade delete rule
+	geo_loc VARCHAR(20) UNIQUE NOT NULL,
+	county VARCHAR(24),
+	site_name VARCHAR(32) UNIQUE,
+	format VARCHAR(128)
+);
+
 --- Data
 
 COPY iris.direction (id, direction, dir) FROM stdin;
@@ -2167,6 +2207,8 @@ COPY iris.comm_protocol (id, description) FROM stdin;
 30	DR-500
 31	ADDCO
 32	TransCore E6
+33	CA RWIS
+34	TTIP DMS
 \.
 
 COPY iris.cabinet_style (name, dip) FROM stdin;
@@ -2266,20 +2308,32 @@ COPY iris.encoder_type (id, description) FROM stdin;
 3	Infinova MPEG4
 4	Axis MP4 axrtsp
 5	Axis MP4 axrtsphttp
-6	Generic MMS
+6	Generic URL
 7	Axis JPEG
+\.
+
+COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
+0	Home
 \.
 
 COPY iris.system_attribute (name, value) FROM stdin;
 camera_autoplay	true
+camera_direction_override	
 camera_id_blank	
+camera_manager_show_location	true
 camera_num_preset_btns	3
 camera_preset_panel_columns	6
 camera_preset_panel_enable	false
 camera_preset_store_enable	false
+camera_ptz_axis_comport	1
+camera_ptz_axis_reset	
+camera_ptz_axis_wipe	
 camera_ptz_blind	true
 camera_ptz_panel_enable	false
+camera_ptz_return_home	false
+camera_sort	0
 camera_stream_controls_enable	false
+camera_stream_duration_secs	0
 camera_util_panel_enable	false
 camera_wiper_precip_mm_hr	8
 client_units_si	true
@@ -2288,9 +2342,13 @@ database_version	4.26.0
 detector_auto_fail_enable	true
 dialup_poll_period_mins	120
 dms_aws_enable	false
+dms_aws_msg_file_url	http://iris/irisaws.txt
+dms_aws_user_name	IRISAWS
 dms_brightness_enable	true
 dms_comm_loss_minutes	5
 dms_composer_edit_mode	1
+dms_composer_trim	true
+dms_composer_uppercase	false
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
@@ -2298,6 +2356,8 @@ dms_font_selection_enable	false
 dms_form	1
 dms_high_temp_cutoff	60
 dms_lamp_test_timeout_secs	30
+dms_manager_show_location	true
+dms_manager_show_owner	true
 dms_manufacturer_enable	true
 dms_max_lines	3
 dms_message_min_pages	1
@@ -2312,12 +2372,16 @@ dms_pixel_on_limit	1
 dms_pixel_maint_threshold	35
 dms_pixel_status_enable	true
 dms_pixel_test_timeout_secs	30
+dms_preview_instant	false
 dms_querymsg_enable	false
 dms_quickmsg_store_enable	false
+dms_quickmsg_uppercase_names	false
 dms_reset_enable	false
 dms_send_confirmation_enable	false
+dms_sort	0
 dmsxml_modem_op_timeout_secs	305
 dmsxml_op_timeout_secs	65
+dmsxml_query_all_on_startup	false
 dmsxml_reinit_detect	false
 email_sender_server	
 email_smtp_host	
@@ -2329,6 +2393,7 @@ help_trouble_ticket_enable	false
 help_trouble_ticket_url	
 incident_clear_secs	600
 lcs_poll_period_secs	30
+location_format	
 map_extent_name_initial	Home
 map_icon_size_scale_max	30
 map_segment_max_meters	2000
@@ -2339,19 +2404,33 @@ meter_min_red_secs	0.1
 meter_yellow_secs	0.7
 msg_feed_verify	true
 operation_retry_threshold	3
+rtms_read_margin_sec	5
 route_max_legs	8
 route_max_miles	16
+rwis_color_high	FF0000
+rwis_color_low	00FFFF
+rwis_color_mid	FFC800
+rwis_high_air_temp_c	32
+rwis_high_precip_rate_mmh	50
 rwis_high_wind_speed_kph	40
+rwis_high_visibility_distance_m	3000
+rwis_low_air_temp_c	0
+rwis_low_precip_rate_mmh	5
 rwis_low_visibility_distance_m	152
+rwis_low_wind_speed_kph	5
 rwis_obs_age_limit_secs	240
 rwis_max_valid_wind_speed_kph	282
+rwis_sort	0
 sample_archive_enable	true
 speed_limit_min_mph	45
 speed_limit_default_mph	55
 speed_limit_max_mph	75
 tesla_host	
+travel_time_max_legs	8
+travel_time_max_miles	16
 travel_time_min_mph	15
 uptime_log_enable	false
+urms_read_margin_sec	5
 vsa_bottleneck_id_mph	55
 vsa_control_threshold	-1000
 vsa_downstream_miles	0.2
@@ -2362,6 +2441,7 @@ vsa_start_intervals	3
 vsa_start_threshold	-1500
 vsa_stop_threshold	-750
 window_title	IRIS: 
+wizard_read_margin_sec	5
 \.
 
 COPY iris.r_node_type (n_type, name) FROM stdin;
@@ -2408,6 +2488,7 @@ policy_admin	t
 device_admin	t
 system_admin	t
 user_admin	t
+weather_tab	t
 \.
 
 COPY iris.privilege (name, capability, pattern, priv_r, priv_w, priv_c, priv_d) FROM stdin;
@@ -2421,8 +2502,10 @@ PRV_0007	login	map_extent(/.*)?	t	f	f	f
 PRV_0008	login	road(/.*)?	t	f	f	f
 PRV_0009	login	geo_loc(/.*)?	t	f	f	f
 PRV_0010	login	incident_detail(/.*)?	t	f	f	f
+PRV_001H	login	site_data(/.*)?	t	f	f	f
 PRV_0011	camera_tab	camera(/.*)?	t	f	f	f
 PRV_001A	camera_tab	camera_preset(/.*)?	t	f	f	f
+PRV_001B	camera_tab	camera_preset_alias(/.*)?	t	f	f	f
 PRV_0012	camera_tab	controller(/.*)?	t	f	f	f
 PRV_0013	camera_tab	video_monitor(/.*)?	t	f	f	f
 PRV_0014	incident_tab	incident(/.*)?	t	f	f	f
@@ -2519,6 +2602,7 @@ PRV_0099	device_admin	alarm/.*	f	t	t	t
 PRV_0100	device_admin	cabinet/.*	f	t	t	t
 PRV_0101	device_admin	camera/.*	f	t	t	t
 PRV_010A	device_admin	camera_preset/.*	f	t	t	t
+PRV_010B	device_admin	camera_preset_alias/.*	f	t	t	t
 PRV_0102	device_admin	comm_link/.*	f	t	t	t
 PRV_0103	device_admin	controller/.*	f	t	t	t
 PRV_0104	device_admin	detector/.*	f	t	t	t
@@ -2542,6 +2626,7 @@ PRV_011A	device_admin	tag_reader(/.*)?	t	f	f	f
 PRV_011B	device_admin	tag_reader/.*	f	t	t	t
 PRV_0133	device_admin	gate_arm/.*	f	t	t	t
 PRV_0135	device_admin	gate_arm_array/.*	f	t	t	t
+PRV_013A	device_admin	site_data/.*	f	t	t	t
 PRV_0120	system_admin	cabinet_style/.*	f	t	t	t
 PRV_0121	system_admin	font/.*	f	t	t	t
 PRV_0122	system_admin	glyph/.*	f	t	t	t
@@ -2556,6 +2641,7 @@ PRV_0130	user_admin	connection/.*	f	f	f	t
 PRV_0131	gate_arm_control	gate_arm_array/.*/armStateNext	f	t	f	f
 PRV_0132	gate_arm_control	gate_arm_array/.*/ownerNext	f	t	f	f
 PRV_0136	gate_arm_control	gate_arm_array/.*/deviceRequest	f	t	f	f
+PRV_0140	weather_tab	weather_sensor(/.*)?	t	f	f	f
 \.
 
 COPY iris.role (name, enabled) FROM stdin;
@@ -2586,6 +2672,7 @@ administrator	plan_control
 administrator	plan_tab
 administrator	system_admin
 administrator	user_admin
+administrator	weather_tab
 operator	login
 operator	incident_tab
 operator	incident_control
@@ -2600,6 +2687,7 @@ operator	meter_control
 operator	plan_control
 operator	plan_tab
 operator	detection
+operator	weather_tab
 \.
 
 COPY iris.i_user (name, full_name, password, dn, role, enabled) FROM stdin;

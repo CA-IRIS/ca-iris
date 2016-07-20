@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package us.mn.state.dot.tms.server.comm.dmsxml;
+package us.mn.state.dot.tms.utils;
 
 import java.util.Calendar;
 import java.util.Date;

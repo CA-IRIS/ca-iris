@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2014  Minnesota Department of Transportation
- * Copyright (C) 2010  AHMCT, University of California
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,17 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DmsSignGroup;
 import us.mn.state.dot.tms.DmsSignGroupHelper;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroup;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
+import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
  * The quick message combobox is a widget which allows the user to select
@@ -41,8 +45,12 @@ import us.mn.state.dot.tms.utils.NumericAlphaComparator;
  * @see DMSDispatcher, QuickMessage
  * @author Michael Darter
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class QuickMessageCBox extends JComboBox {
+
+	/** Prototype sign text */
+	static private final String PROTOTYPE_TEXT = "123456789012";
 
 	/** Given a QuickMessage or String, return the cooresponding quick 
 	 * message name or an empty string if none exists. */
@@ -76,6 +84,9 @@ public class QuickMessageCBox extends JComboBox {
 	public QuickMessageCBox(DMSDispatcher d) {
 		setModel(model);
 		dispatcher = d;
+		// Use a prototype display value so that the UI doesn't become
+		// unusable when quick messages with long names are used.
+		setPrototypeDisplayValue(PROTOTYPE_TEXT);
 		setEditable(true);
 		focus_listener = new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
@@ -93,6 +104,13 @@ public class QuickMessageCBox extends JComboBox {
 			}
 		};
 		addActionListener(action_listener);
+
+		JTextField jtf = (JTextField)(getEditor()
+			.getEditorComponent());
+		if (SystemAttrEnum.DMS_QUICKMSG_UPPERCASE_NAMES.getBoolean())
+			((AbstractDocument)jtf.getDocument())
+				.setDocumentFilter(
+				new UppercaseDocumentFilter());
 	}
 
 	/** Handle editor focus lost */

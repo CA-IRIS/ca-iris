@@ -35,10 +35,10 @@ public class IncidentMarker extends AbstractMarker {
 		float quarter = size / 4;
 		float x = 0;
 		float y = 0;
-		path.moveTo(x, y);
-		path.lineTo(x += half, y);
-		path.lineTo(x -= quarter, y += size);
-		path.lineTo(x -= quarter, y -= size);
-		path.closePath();
+		moveTo(x, y);
+		lineTo(x += half, y);
+		lineTo(x -= quarter, y += size);
+		lineTo(x -= quarter, y -= size);
+		closePath();
 	}
 }

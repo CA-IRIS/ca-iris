@@ -37,7 +37,7 @@ public class CameraTab extends MapTab<Camera> {
 	public CameraTab(Session session, CameraManager man) {
 		super(man);
 		dispatcher = new CameraDispatcher(session, man);
-		summary = man.createStyleSummary();
+		summary = man.getStyleSummary();
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
 	}
@@ -62,4 +62,8 @@ public class CameraTab extends MapTab<Camera> {
 	public String getTabId() {
 		return "camera";
 	}
+
+	/** get the camera dispatcher, ultimately used to query VideoWallManager */
+	protected CameraDispatcher getDispatcher() { return dispatcher; }
+
 }

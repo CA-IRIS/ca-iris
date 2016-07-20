@@ -61,6 +61,9 @@ public class ProxyLayer<T extends SonarObject> extends Layer {
 		fireLayerChanged(LayerChange.status);
 	}
 
+	/** Update the layer theme */
+	public void updateTheme() {fireLayerChanged(LayerChange.theme);}
+
 	/** Update the layer extent */
 	public void updateExtent() {
 		IWorker<Rectangle2D> worker = new IWorker<Rectangle2D>() {

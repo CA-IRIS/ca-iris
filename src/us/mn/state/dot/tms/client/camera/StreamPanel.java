@@ -34,6 +34,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.Timer;
 import javax.swing.border.BevelBorder;
 import us.mn.state.dot.sched.Job;
@@ -53,6 +54,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * @author Timothy Johnson
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class StreamPanel extends JPanel {
 
@@ -85,6 +87,9 @@ public class StreamPanel extends JPanel {
 	private JButton stop_button;
 	private JButton play_button;
 	private JButton playext_button;
+
+	/** Progress bar for duration */
+	private final JProgressBar progress = new JProgressBar();
 
 	/** JLabel for displaying the stream details (codec, size, framerate) */
 	private final JLabel status_lbl = new JLabel();
@@ -124,6 +129,9 @@ public class StreamPanel extends JPanel {
 	/** Most recent streaming state.  State variable for event FSM. */
 	private boolean stream_state = false;
 
+	/** Current stream start time (epoch) */
+	private long start_time = 0;
+
 	/** Create a mouse PTZ */
 	static private MousePTZ createMousePTZ(CameraPTZ cam_ptz, Dimension sz,
 		JPanel screen_pnl)
@@ -152,6 +160,15 @@ public class StreamPanel extends JPanel {
 		boolean ctrl, boolean auto)
 	{
 		super(new GridBagLayout());
+		if (cam_ptz != null) {
+			cam_ptz.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					resetStreamTimeout();
+				}
+			});
+		}
+
 		video_req = req;
 		external_viewer = (s == null) ? null
 			: UserProperty.getExternalVideoViewer(s.getProperties());
@@ -162,6 +179,9 @@ public class StreamPanel extends JPanel {
 		mouse_ptz = createMousePTZ(cam_ptz, sz, screen_pnl);
 		status_pnl = createStatusPanel(vsz);
 		control_pnl = createControlPanel(vsz);
+		progress.setMinimum(0);
+		if (req.getDuration() == 0)
+			progress.setVisible(false);
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
@@ -200,6 +220,7 @@ public class StreamPanel extends JPanel {
 	private JPanel createStatusPanel(VideoRequest.Size vsz) {
 		JPanel p = new JPanel(new BorderLayout());
 		p.add(status_lbl, BorderLayout.WEST);
+		p.add(progress, BorderLayout.EAST);
 		p.setPreferredSize(UI.dimension(vsz.width, HEIGHT_STATUS_PNL));
 		p.setMinimumSize(UI.dimension(vsz.width, HEIGHT_STATUS_PNL));
 		return p;
@@ -304,9 +325,16 @@ public class StreamPanel extends JPanel {
 	private void updateStatus() {
 		STREAMER.addJob(new Job() {
 			public void perform() {
+				long now = System.currentTimeMillis();
+				int len = (int)((now - start_time) / 1000L);
+				int dur = video_req.getDuration();
 				VideoStream vs = stream;
-				if(vs != null && vs.isPlaying())
+				if ((vs != null) && vs.isPlaying()
+					&& ((dur == 0) || (len < dur)))
+				{
+					progress.setValue(len);
 					setStatusText(vs.getStatus());
+				}
 				else
 					clearStream();
 			}
@@ -342,6 +370,14 @@ public class StreamPanel extends JPanel {
 			JComponent screen = stream.getComponent();
 			screen.setPreferredSize(screen_pnl.getPreferredSize());
 			screen_pnl.add(screen);
+			resetStreamTimeout();
+			int dur = video_req.getDuration();
+			if (dur > 0) {
+				progress.setMaximum(dur);
+				progress.setVisible(true);
+			}
+			else
+				progress.setVisible(false);
 			timer.start();
 			handleStateChange();
 		}
@@ -350,14 +386,18 @@ public class StreamPanel extends JPanel {
 		}
 	}
 
+	/** Reset the stream start time to now */
+	protected void resetStreamTimeout() {
+		if (stream != null)
+			start_time = System.currentTimeMillis();
+	}
+
 	/** Create a new video stream */
 	private VideoStream createStream(Camera c) throws IOException {
-		switch (video_req.getStreamType(c)) {
-		case MJPEG:
+		if (video_req.hasMJPEG(c))
 			return new MJPEGStream(STREAMER, video_req, c);
-		default:
+		else
 			throw new IOException("Unable to stream");
-		}
 	}
 
 	/** Clear the video stream */
@@ -370,6 +410,7 @@ public class StreamPanel extends JPanel {
 			vs.dispose();
 			stream = null;
 		}
+		progress.setValue(0);
 		setStatusText(null);
 		handleStateChange();
 	}
@@ -405,9 +446,9 @@ public class StreamPanel extends JPanel {
 		updateButtonState();
 		for (StreamStatusListener ssl : ssl_set) {
 			if (stream_state)
-				ssl.onStreamStarted();
+				ssl.onStreamStarted(camera);
 			else
-				ssl.onStreamFinished();
+				ssl.onStreamFinished(camera);
 		}
 	}
 

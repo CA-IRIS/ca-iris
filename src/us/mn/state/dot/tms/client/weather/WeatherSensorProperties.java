@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2013-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +28,6 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.comm.ControllerForm;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
-import us.mn.state.dot.tms.client.roads.LocationPanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel.Stretch;
 import us.mn.state.dot.tms.utils.I18N;
@@ -40,7 +40,7 @@ import us.mn.state.dot.tms.utils.I18N;
 public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 
 	/** Location panel */
-	private final LocationPanel loc_pnl;
+	private final PropLocation loc_pnl;
 
 	/** Notes text area */
 	private final JTextArea notes_txt = new JTextArea(3, 24);
@@ -55,13 +55,13 @@ public class WeatherSensorProperties extends SonarObjectForm<WeatherSensor> {
 	/** Create a new weather sensor properties form */
 	public WeatherSensorProperties(Session s, WeatherSensor ws) {
 		super(I18N.get("weather_sensor") + ": ", s, ws);
-		loc_pnl = new LocationPanel(s);
+		loc_pnl = new PropLocation(s, ws);
 	}
 
 	/** Get the SONAR type cache */
 	@Override
 	protected TypeCache<WeatherSensor> getTypeCache() {
-		return state.getWeatherSensors();
+		return state.getWeatherSensorsCache().getWeatherSensors();
 	}
 
 	/** Initialize the widgets on the form */

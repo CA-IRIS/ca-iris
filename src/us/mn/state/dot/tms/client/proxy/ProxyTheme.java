@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2014  Minnesota Department of Transportation
+ * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * Theme for SONAR proxy objects on map
  *
  * @author Douglas Lau
+ * @author Michael Darter
  */
 public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 
@@ -46,6 +48,9 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 	/** Outline for stroking locked traffic devices */
 	static public final Outline OUTLINE_LOCKED = Outline.createSolid(
 		Color.RED, 2);
+
+	/** Color for rendering crazy data state */
+	static public final Color COLOR_CRAZY = new Color(192, 0, 240);
 
 	/** Color to display inactive devices */
 	static public final Color COLOR_INACTIVE = new Color(0, 0, 0, 32);
@@ -68,6 +73,9 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 
 	/** Color to display scheduled devices */
 	static public final Color COLOR_SCHEDULED = new Color(240, 128, 0);
+
+	/** Color definition for AWS controlled style */
+	static public final Color COLOR_AWS_DEPLOYED = Color.RED;
 
 	/** Size of legend icons */
 	static private final int lsize = UI.scaled(22);

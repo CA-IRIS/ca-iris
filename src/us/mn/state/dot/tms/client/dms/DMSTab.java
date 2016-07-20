@@ -37,7 +37,7 @@ public class DMSTab extends MapTab<DMS> {
  	public DMSTab(Session session, DMSManager man) {
 		super(man);
 		dispatcher = new DMSDispatcher(session, man);
-		summary = man.createStyleSummary(true);
+		summary = man.getStyleSummary(true);
 		add(dispatcher, BorderLayout.NORTH);
 		add(summary, BorderLayout.CENTER);
 	}

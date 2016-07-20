@@ -56,8 +56,8 @@ abstract public class OpDevice<T extends ControllerProperty>
 
 		/** Perform the acquire device phase */
 		protected Phase<T> poll(CommMessage<T> mess)
-			throws DeviceContentionException
-		{
+			throws DeviceContentionException {
+
 			OpDevice owner = device.acquire(OpDevice.this);
 			if(owner != OpDevice.this)
 				throw new DeviceContentionException(owner);

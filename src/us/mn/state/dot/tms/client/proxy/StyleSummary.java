@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2004-2015  Minnesota Department of Transportation
- * Copyright (C) 2010 AHMCT, University of California, Davis
+ * Copyright (C) 2010       AHMCT, University of California, Davis
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +16,6 @@
  */
 package us.mn.state.dot.tms.client.proxy;
 
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -23,21 +23,24 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ListCellRenderer;
 import javax.swing.border.TitledBorder;
+
 import us.mn.state.dot.map.Symbol;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.ProxyListener;
@@ -52,6 +55,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Dan Rossiter
  */
 public class StyleSummary<T extends SonarObject> extends JPanel {
 
@@ -78,11 +82,18 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 	private final DefaultListSelectionModel dummy_model =
 		new DefaultListSelectionModel();
 
+	/** The listeners of this style summary */
+	private final ArrayList<ActionListener> lsnrs =
+		new ArrayList<ActionListener>();
+
 	/** Selected style list model */
 	private StyleListModel<T> model;
 
 	/** Proxy list */
 	private final ProxyJList<T> p_list;
+
+	/** The current style */
+	private String style;
 
 	/** Style status counter */
 	private final ProxyListener<T> counter = new ProxyListener<T>() {
@@ -105,6 +116,23 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		public void proxyChanged(T proxy, String attrib) {
 			if(manager.isStyleAttrib(attrib))
 				updateCounts();
+		}
+	};
+
+	/** Field for user to type filter text */
+	private final JTextField filter_text_field = new JTextField();
+
+	/** Key listener for filter text field */
+	private final KeyListener filter_key_listener = new KeyListener() {
+		@Override
+		public void keyTyped(KeyEvent e) { }
+
+		@Override
+		public void keyPressed(KeyEvent e) { }
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			model.setFilter(createNewFilter());
 		}
 	};
 
@@ -186,15 +214,26 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 			bag.gridwidth = 1;
 			bag.gridheight = 1;
 			bag.insets = new Insets(8, 2, 8, 2);
-			bag.gridy = n_rows + 1;
+			bag.gridy = n_rows + 2;
 			add(createCellSizePanel(), bag);
 		}
 
-		// add listbox
+		// add filter text field
+		filter_text_field.addKeyListener(filter_key_listener);
 		bag.gridx = (enableCellSizeBtns ? 1 : 0);
 		bag.gridwidth = GridBagConstraints.REMAINDER;
 		bag.insets = new Insets(8, 0, 0, 0);
 		bag.gridy = n_rows + 1;
+		bag.weightx = 1;
+		bag.weighty = 0;
+		bag.fill = GridBagConstraints.BOTH;
+		add(filter_text_field, bag);
+
+		// add listbox
+		bag.gridx = (enableCellSizeBtns ? 1 : 0);
+		bag.gridwidth = GridBagConstraints.REMAINDER;
+		bag.insets = new Insets(0, 0, 0, 0);
+		bag.gridy = n_rows + 2;
 		bag.weightx = 1;
 		bag.weighty = 1;
 		bag.fill = GridBagConstraints.BOTH;
@@ -306,8 +345,14 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		}
 	}
 
+	/** Get the current style */
+	public ItemStyle getStyle() {
+		return ItemStyle.lookupStyle(style);
+	}
+
 	/** Button click action */
 	private void setStyleAction(String style) {
+		this.style = style;
 		String t = I18N.get(manager.getSonarType()) + " " +
 			I18N.get("device.status") + ": " + style;
 		border.setTitle(t);
@@ -320,13 +365,53 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		p_list.setSelectionModel(dummy_model);
 		p_list.setModel(model);
 		p_list.setSelectionModel(model.getSelectionModel());
-		if(mdl != null)
+
+		// wipes out text field
+//		filter_text_field.setText("");
+		if(mdl != null) {
+			model.setFilter(mdl.getFilter());
 			mdl.dispose();
+		}
+		fireSelectionChanged();
+	}
+
+	private ProxyListModel.Filter createNewFilter() {
+		return new ProxyListModel.Filter<T>() {
+			@Override
+			public boolean accept(T element) {
+				String description = manager.getDescription(element);
+				String txt = filter_text_field.getText();
+				if (txt == null)
+					txt = "";
+				return description != null && description.toLowerCase().contains(txt.toLowerCase());
+			}
+		};
+	}
+	/** Add a proxy selection listener to the model */
+	public void addSelectionListener(ActionListener l) {
+		lsnrs.add(l);
+	}
+
+	/** Remove a proxy selection listener from the model */
+	public void removeSelectionListener(ActionListener l) {
+		lsnrs.remove(l);
+	}
+
+	/** Fire a selection changed event to all listeners */
+	private void fireSelectionChanged() {
+		for (ActionListener l : lsnrs) {
+			l.actionPerformed(new ActionEvent(
+				this,
+				ActionEvent.ACTION_PERFORMED,
+				style));
+		}
 	}
 
 	/** Dispose of the widget */
 	public void dispose() {
+		lsnrs.clear();
 		manager.getCache().removeProxyListener(counter);
+		filter_text_field.removeKeyListener(filter_key_listener);
 		removeAll();
 	}
 }

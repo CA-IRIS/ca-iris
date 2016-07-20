@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2008-2012  Minnesota Department of Transportation
+ * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +15,15 @@
  */
 package us.mn.state.dot.tms;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
  * Helper class for detectors.
  *
  * @author Douglas Lau
+ * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DetectorHelper extends BaseHelper {
 
@@ -69,4 +73,39 @@ public class DetectorHelper extends BaseHelper {
 	static public boolean isActive(Detector det) {
 		return ControllerHelper.isActive(det.getController());
 	}
+
+	/**
+	 * Return all the detectors for the specified controller.
+	 * @param c Controller (may be null)
+	 */
+	static public Detector[] getDetectors(Controller c) {
+		final String cname = c.getName();
+		final ArrayList<Detector> dets = new ArrayList<Detector>();
+		Iterator<Detector> it = iterator();
+		while(it.hasNext()) {
+			Detector det = it.next();
+			Controller dc = det.getController();
+			if (dc != null) {
+				String cn = dc.getName();
+				if(cn != null && cn.equals(cname))
+					dets.add(det);
+			}
+		}
+		return dets.toArray(new Detector[dets.size()]);
+	}
+
+	/**
+	 * Return a detector's associated r_node station id.
+	 * @param d Detector (may be null)
+	 * @return The r_node's station ID, or null if not found.
+	 */
+	static public String getStationId(Detector d) {
+		if(d == null)
+			return null;
+		R_Node rn = d.getR_Node();
+		if(rn != null)
+			return rn.getStationID();
+		return null;
+	}
+
 }

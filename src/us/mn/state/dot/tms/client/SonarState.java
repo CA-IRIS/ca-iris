@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +50,7 @@ import us.mn.state.dot.tms.MeterAction;
 import us.mn.state.dot.tms.PlanPhase;
 import us.mn.state.dot.tms.RampMeter;
 import us.mn.state.dot.tms.Road;
+import us.mn.state.dot.tms.SiteData;
 import us.mn.state.dot.tms.SystemAttribute;
 import us.mn.state.dot.tms.TagReader;
 import us.mn.state.dot.tms.TimeAction;
@@ -60,11 +62,13 @@ import us.mn.state.dot.tms.client.detector.DetCache;
 import us.mn.state.dot.tms.client.dms.DmsCache;
 import us.mn.state.dot.tms.client.lcs.LcsCache;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
+import us.mn.state.dot.tms.client.weather.WeatherSensorCache;
 
 /**
  * Holds the state of the SONAR client
  *
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class SonarState extends Client {
 
@@ -254,12 +258,11 @@ public class SonarState extends Client {
 	}
 
 	/** Cache of weather sensors */
-	private final TypeCache<WeatherSensor> weather_sensors =
-		new TypeCache<WeatherSensor>(WeatherSensor.class, this);
+	private final WeatherSensorCache weather_sensors_cache;
 
 	/** Get the weather sensor cache */
-	public TypeCache<WeatherSensor> getWeatherSensors() {
-		return weather_sensors;
+	public WeatherSensorCache getWeatherSensorsCache() {
+		return weather_sensors_cache;
 	}
 
 	/** Cache of tag readers */
@@ -421,6 +424,15 @@ public class SonarState extends Client {
 		return meter_actions;
 	}
 
+	/** Cache of site data proxies */
+	private final TypeCache<SiteData> site_data =
+		new TypeCache<SiteData>(SiteData.class, this);
+
+	/** Get the site data type cache */
+	public TypeCache<SiteData> getSiteData() {
+		return site_data;
+	}
+
 	/** Create a new Sonar state */
 	public SonarState(Properties props, ExceptionHandler h)
 		throws IOException, ConfigurationError, NoSuchFieldException,
@@ -435,6 +447,7 @@ public class SonarState extends Client {
 		det_cache = new DetCache(this);
 		dms_cache = new DmsCache(this);
 		lcs_cache = new LcsCache(this);
+		weather_sensors_cache = new WeatherSensorCache(this);
 		gate_arm_array_model = new ProxyListModel<GateArmArray>(
 			gate_arm_arrays);
 		gate_arm_array_model.initialize();
@@ -500,6 +513,8 @@ public class SonarState extends Client {
 		populate(inc_details);
 		populate(roads);
 		populate(geo_locs);
+		// Populate site_data early
+		populateReadable(site_data);
 		con_cache.populate(this);
 		det_cache.populate(this);
 		cam_cache.populate(this);
@@ -520,11 +535,7 @@ public class SonarState extends Client {
 		populateReadable(lane_markings);
 		if(canRead(LaneMarking.SONAR_TYPE))
 			lane_markings.ignoreAttribute("operation");
-		populateReadable(weather_sensors);
-		if(canRead(WeatherSensor.SONAR_TYPE)) {
-			weather_sensors.ignoreAttribute("operation");
-			weather_sensors.ignoreAttribute("stamp");
-		}
+		weather_sensors_cache.populate(this);
 		populateReadable(tag_readers);
 		if (canRead(TagReader.SONAR_TYPE))
 			tag_readers.ignoreAttribute("operation");

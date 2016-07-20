@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010  AHMCT, University of California
+ * Copyright (C) 2010-2015  AHMCT, University of California
  * Copyright (C) 2012-2013  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
@@ -15,22 +15,23 @@
  */
 package us.mn.state.dot.tms.server.comm.ssi;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.server.WeatherSensorImpl;
 import us.mn.state.dot.tms.server.comm.ParsingException;
 import us.mn.state.dot.tms.units.Distance;
-import static us.mn.state.dot.tms.units.Distance.Units.FEET;
+import us.mn.state.dot.tms.units.Speed;
+import us.mn.state.dot.tms.units.Temperature;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
 import static us.mn.state.dot.tms.units.Distance.Units.METERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MICROMETERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MILLIMETERS;
-import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.KPH;
-import static us.mn.state.dot.tms.units.Speed.Units.MPH;
-import us.mn.state.dot.tms.units.Temperature;
 import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
 
 /**
@@ -38,6 +39,7 @@ import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
  *
  * @author Michael Darter
  * @author Douglas Lau
+ * @author Travis Swanston
  */
 public class RwisRec {
 
@@ -49,13 +51,16 @@ public class RwisRec {
 	/** Parse the fields of a line */
 	static private String[] parseFields(String line) {
 		String[] fs = line.split(",");
-		for(int i = 0; i < fs.length; i++)
+		for (int i = 0; i < fs.length; i++)
 			fs[i] = fs[i].trim();
 		return fs;
 	}
 
-	/** Get field as long which is a time.
-	 * @return Time or null on error. */
+	/**
+	 * Get field as long which is a time.
+	 *
+	 * @return Time or null on error.
+	 */
 	static private Long parseDateTime(String field) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(
@@ -64,18 +69,20 @@ public class RwisRec {
 			sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 			Date pd = sdf.parse(field);
 			return pd.getTime();
-		}
-		catch(ParseException e) {
+		} catch (ParseException e) {
 			return null;
 		}
 	}
 
-	/** Parse temperature.
+	/**
+	 * Parse temperature.
+	 *
 	 * @param field Temp as 1/100 degree Celsius.
-	 * @return Parsed temperature. */
+	 * @return Parsed temperature.
+	 */
 	static private Temperature parseTemp(String field) {
 		Double t = parseDouble(field);
-		if(t != null)
+		if (t != null)
 			return new Temperature(t / 100);
 		else
 			return null;
@@ -85,40 +92,50 @@ public class RwisRec {
 	static private Integer parseInt(String field) {
 		try {
 			return Integer.parseInt(field);
-		}
-		catch(NumberFormatException ex) {
+		} catch (NumberFormatException ex) {
+			return null;
+		} catch (NullPointerException ex) {
 			return null;
 		}
 	}
 
-	/** Parse speed.
-	 * @param field Speed in MPH.
-	 * @return Parsed speed. */
-	static private Speed parseMph(String field) {
-		Integer mph = parseInt(field);
-		if(mph != null)
-			return new Speed(mph, MPH);
+	/**
+	 * Parse speed.
+	 *
+	 * @param field Speed in KPH.
+	 * @return Parsed speed.
+	 */
+	static private Speed parseKph(String field) {
+		Integer kph = parseInt(field);
+		if (kph != null)
+			return new Speed(kph, KPH);
 		else
 			return null;
 	}
 
-	/** Parse distance.
-	 * @param field Distance in feet.
-	 * @return Parsed distance. */
-	static private Distance parseFt(String field) {
-		Integer ft = parseInt(field);
-		if(ft != null)
-			return new Distance(ft, FEET);
+	/**
+	 * Parse distance.
+	 *
+	 * @param field Distance in meters.
+	 * @return Parsed distance.
+	 */
+	static private Distance parseM(String field) {
+		Integer m = parseInt(field);
+		if (m != null)
+			return new Distance(m, METERS);
 		else
 			return null;
 	}
 
-	/** Parse distance.
+	/**
+	 * Parse distance.
+	 *
 	 * @param field Distance in mm.
-	 * @return Parsed distance. */
+	 * @return Parsed distance.
+	 */
 	static private Distance parseMm(String field) {
 		Integer mm = parseInt(field);
-		if(mm != null)
+		if (mm != null)
 			return new Distance(mm, MILLIMETERS);
 		else
 			return null;
@@ -128,8 +145,9 @@ public class RwisRec {
 	static private Double parseDouble(String field) {
 		try {
 			return Double.parseDouble(field);
-		}
-		catch(NumberFormatException ex) {
+		} catch (NumberFormatException ex) {
+			return null;
+		} catch (NullPointerException ex) {
 			return null;
 		}
 	}
@@ -160,10 +178,10 @@ public class RwisRec {
 	/** Relative humidity (%) (Rh) */
 	private final Integer rel_humidity;
 
-	/** Average wind speed in MPH (SpdAvg) */
+	/** Average wind speed in KPH (SpdAvg) */
 	private final Speed wind_speed_avg;
 
-	/** Gust wind speed in MPH (SpdGust) */
+	/** Gust wind speed in KPH (SpdGust) */
 	private final Speed wind_speed_gust;
 
 	/** Minimum wind direction in degrees (DirMin) */
@@ -193,8 +211,10 @@ public class RwisRec {
 	/** Visibility (Visibility) */
 	private final Distance visibility;
 
-	/** Create a new RWIS record by parsing text that contains an ssi
+	/**
+	 * Create a new RWIS record by parsing text that contains an ssi
 	 * record into fields.
+	 *
 	 * @param line A single text line (record).  The fields are: Siteid,
 	 *             DtTm, AirTemp, Dewpoint, Rh, SpdAvg, SpdGust, DirMin,
 	 *             DirAvg, DirMax, Pressure, PcIntens, PcType, PcRate,
@@ -212,8 +232,8 @@ public class RwisRec {
 		air_temp = parseTemp(header.getField(fs, "AirTemp"));
 		dew_point = parseTemp(header.getField(fs, "Dewpoint"));
 		rel_humidity = parseInt(header.getField(fs, "Rh"));
-		wind_speed_avg = parseMph(header.getField(fs, "SpdAvg"));
-		wind_speed_gust = parseMph(header.getField(fs, "SpdGust"));
+		wind_speed_avg = parseKph(header.getField(fs, "SpdAvg"));
+		wind_speed_gust = parseKph(header.getField(fs, "SpdGust"));
 		wind_dir_min = parseInt(header.getField(fs, "DirMin"));
 		wind_dir_avg = parseInt(header.getField(fs, "DirAvg"));
 		wind_dir_max = parseInt(header.getField(fs, "DirMax"));
@@ -222,7 +242,7 @@ public class RwisRec {
 		precip_type = header.getField(fs, "PcType");
 		precip_rate = parseInt(header.getField(fs, "PcRate"));
 		precip_accum = parseMm(header.getField(fs, "PcAccum"));
-		visibility = parseFt(header.getField(fs, "Visibility"));
+		visibility = parseM(header.getField(fs, "Visibility"));
 	}
 
 	/** To string */
@@ -262,15 +282,18 @@ public class RwisRec {
 		updateAirTemp(ws);
 		updateWindSpeed(ws);
 		updateWindDir(ws);
-		updateAccumulation(ws);
+		updateGustSpeed(ws);
+		updateAccumulation(ws, false);
+		updatePrecipRate(ws);
 		updateVisibility(ws);
+		updateObsTime(ws);
 		ws.setStampNotify(create_time);
 		SsiPoller.log("stored rec=" + this);
 	}
 
 	/** Update the air temp */
 	private void updateAirTemp(WeatherSensorImpl ws) {
-		if(air_temp != null)
+		if (air_temp != null)
 			ws.setAirTempNotify(air_temp.round(CELSIUS));
 		else
 			ws.setAirTempNotify(null);
@@ -278,7 +301,7 @@ public class RwisRec {
 
 	/** Update the wind speed */
 	private void updateWindSpeed(WeatherSensorImpl ws) {
-		if(wind_speed_avg != null)
+		if (wind_speed_avg != null)
 			ws.setWindSpeedNotify(wind_speed_avg.round(KPH));
 		else
 			ws.setWindSpeedNotify(null);
@@ -289,20 +312,47 @@ public class RwisRec {
 		ws.setWindDirNotify(wind_dir_avg);
 	}
 
-	/** Update the weather sensor precip accumulation */
-	private void updateAccumulation(WeatherSensorImpl ws) {
-		if(precip_accum != null && precip_accum.value >= 0) {
+	/** Update the gust speed */
+	private void updateGustSpeed(WeatherSensorImpl ws) {
+		if (wind_speed_gust != null)
+			ws.setGustSpeedNotify(wind_speed_gust.round(KPH));
+		else
+			ws.setGustSpeedNotify(null);
+	}
+
+	/**
+	 * Update the weather sensor precipitation accumulation.
+	 *
+	 * @param ws  the WeatherSensorImpl
+	 * @param upr update precipitation rate with calculated value?
+	 */
+	private void updateAccumulation(WeatherSensorImpl ws, boolean upr) {
+		if (precip_accum != null && precip_accum.value >= 0) {
 			ws.updateAccumulation(precip_accum.round(MICROMETERS),
-				create_time);
+				create_time, upr);
 		} else
-			ws.updateAccumulation(null, create_time);
+			ws.updateAccumulation(null, create_time, upr);
+	}
+
+	/** Update the precipitation rate */
+	private void updatePrecipRate(WeatherSensorImpl ws) {
+		ws.setPrecipRateNotify(precip_rate);
 	}
 
 	/** Update the weather sensor visibility */
 	private void updateVisibility(WeatherSensorImpl ws) {
-		if(visibility != null && visibility.value >= 0)
+		if (visibility != null && visibility.value >= 0)
 			ws.setVisibilityNotify(visibility.round(METERS));
 		else
 			ws.setVisibilityNotify(null);
 	}
+
+	/** Update the observation time */
+	private void updateObsTime(WeatherSensorImpl ws) {
+		if (obs_time != null)
+			ws.setObsTimeNotify(obs_time.longValue());
+		else
+			ws.setObsTimeNotify(MISSING_DATA);
+	}
+
 }

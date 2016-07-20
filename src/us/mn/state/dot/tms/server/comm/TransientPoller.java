@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2012-2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +21,17 @@ package us.mn.state.dot.tms.server.comm;
  * of transient PTZ commands only).
  *
  * @author Douglas Lau
+ * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class TransientPoller<T extends ControllerProperty>
-	extends MessagePoller<T>
-{
-	/** Create a new transient poller */
+	extends MessagePoller<T> {
+
+	/**
+	 * Create a new transient poller with specified connection mode.
+	 * @param name CommLink name
+	 * @param m the Messenger
+	 */
 	protected TransientPoller(String name, Messenger m) {
 		super(name, m);
 	}
@@ -32,12 +39,25 @@ abstract public class TransientPoller<T extends ControllerProperty>
 	/** Add an operation to the transient poller */
 	@Override
 	protected void addOperation(final Operation<T> op) {
+		/*
+		 * FIXME Cohu now uses MessagePoller
+		 * California has documented that in networks that are slower,
+		 * where queued operations can build up, that valid operations
+		 * are removed from the queue that results in unwanted behavior
+		 * within PTZ cameras, such as camera spinning. This has been
+		 * seen in Cohu cameras. Contention handling may also contribute
+		 * in concert with the logic below to cause this behavior.
+		 * Additionally, equality testing of operations may contribute
+		 * to this (as it did in Axis). Further investigation is
+		 * required.
+		 */
 		queue.forEach(new OperationHandler<T>() {
 			public void handle(PriorityLevel prio, Operation<T> o) {
 				if(o.equals(op))
 					o.setSucceeded();
 			}
 		});
+
 		super.addOperation(op);
 	}
 }

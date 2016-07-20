@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2007-2014  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import us.mn.state.dot.tms.server.comm.TransientPoller;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class PelcoDPoller extends TransientPoller<PelcoDProperty>
 	implements CameraPoller
@@ -38,8 +39,22 @@ public class PelcoDPoller extends TransientPoller<PelcoDProperty>
 	/** Highest allowed address for Pelco D protocol */
 	static public final int ADDRESS_MAX = 254;
 
-	/** Create a new Pelco poller */
+	/**
+	 * Create a new Pelco D poller.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 */
 	public PelcoDPoller(String n, Messenger m) {
+		super(n, m);
+	}
+
+	/**
+	 * Create a new Pelco D poller with auto connection mode.
+	 * @param n CommLink name
+	 * @param m the Messenger
+	 * @param idle max idle time (sec)
+	 */
+	public PelcoDPoller(String n, Messenger m, int idle) {
 		super(n, m);
 	}
 

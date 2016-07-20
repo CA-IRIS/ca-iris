@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2013  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015 AHMCT, University of California, Davis
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@ import static us.mn.state.dot.tms.units.Interval.Units.MILLISECONDS;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Travis Swanston
  */
 public class DMSPanelPager {
 
@@ -135,6 +137,12 @@ public class DMSPanelPager {
 			return false;
 	}
 
+	/** Reset the page timer. */
+	private void pageTimerReset() {
+		isBlanking = false;
+		phase_ms = 0;
+	}
+
 	/** Get page-on time for current page */
 	private int currentPageOnMs() {
 		Interval on_int = PageTimeHelper.validateOnInterval(
@@ -160,4 +168,20 @@ public class DMSPanelPager {
 			page = 0;
 		pixel_pnl.setGraphic(rasters[page]);
 	}
+
+	/**
+	 * Display the given page of the message, resetting the phase
+	 * timer.  If the given page is invalid, do nothing.
+	 * @param p The desired page number
+	 * @return true if given page p is valid, else false
+	 */
+	protected boolean showPage(int p) {
+		if ((p < 0) || (p >= n_pages))
+			return false;
+		page = p;
+		pageTimerReset();
+		pixel_pnl.setGraphic(rasters[page]);
+		return true;
+	}
+
 }
