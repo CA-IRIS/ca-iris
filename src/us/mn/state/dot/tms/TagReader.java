@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2015  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,4 +27,16 @@ public interface TagReader extends Device {
 
 	/** Get the device location */
 	GeoLoc getGeoLoc();
+
+	/** Set the toll zone */
+	void setTollZone(TollZone tz);
+
+	/** Get the toll zone */
+	TollZone getTollZone();
+
+	/** Set the DMSs assigned to the tag reader */
+	void setSigns(DMS[] ds);
+
+	/** Get the DMSs assigned to the tag reader */
+	DMS[] getSigns();
 }

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2014  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@ import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.ListModel;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Font;
 import us.mn.state.dot.tms.FontHelper;
 import us.mn.state.dot.tms.Glyph;
 import us.mn.state.dot.tms.Graphic;
 import us.mn.state.dot.tms.InvalidMessageException;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.RasterBuilder;
 import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.client.Session;
@@ -37,6 +37,7 @@ import us.mn.state.dot.tms.client.widget.AbstractForm;
 import us.mn.state.dot.tms.client.widget.IListSelectionAdapter;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * A form for displaying and editing DMS fonts
@@ -117,7 +118,7 @@ public class FontForm extends AbstractForm {
 		true);
 
 	/** Glyph list */
-	private final JList glist = new JList();
+	private final JList<Integer> glist = new JList<Integer>();
 
 	/** Glyph list cell renderer */
 	private final GlyphCellRenderer renderer = new GlyphCellRenderer();
@@ -226,11 +227,11 @@ public class FontForm extends AbstractForm {
 	}
 
 	/** Create a list model containing font code points */
-	private DefaultListModel createCodePointModel() {
-		DefaultListModel model = new DefaultListModel();
+	private ListModel<Integer> createCodePointModel() {
+		DefaultListModel<Integer> mdl = new DefaultListModel<Integer>();
 		for (int i = 32; i < 127; i++)
-			model.addElement(i);
-		return model;
+			mdl.addElement(i);
+		return mdl;
 	}
 
 	/** Lookup the glyphs in the selected font */

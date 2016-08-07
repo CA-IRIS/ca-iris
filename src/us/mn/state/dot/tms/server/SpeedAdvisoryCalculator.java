@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010-2013  Minnesota Department of Transportation
+ * Copyright (C) 2010-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,9 @@ package us.mn.state.dot.tms.server;
 
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.MultiParser;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.utils.MultiBuilder;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Speed Advisory Calculator
@@ -47,7 +46,7 @@ public class SpeedAdvisoryCalculator {
 	}
 
 	/** Location for advisory */
-	protected final GeoLoc loc;
+	private final GeoLoc loc;
 
 	/** Create a new speed advisory calculator */
 	public SpeedAdvisoryCalculator(GeoLoc l) {
@@ -57,22 +56,23 @@ public class SpeedAdvisoryCalculator {
 	/** Replace speed advisory tags in a MULTI string */
 	public String replaceSpeedAdvisory(String multi) {
 		MultiCallback cb = new MultiCallback();
-		MultiParser.parse(multi, cb);
-		if(cb.valid)
+		new MultiString(multi).parse(cb);
+		if (cb.valid)
 			return cb.toString();
 		else
 			return null;
 	}
 
-	/** MultiString for replacing speed advisory tags */
-	protected class MultiCallback extends MultiString {
+	/** MultiBuilder for replacing speed advisory tags */
+	protected class MultiCallback extends MultiBuilder {
 
 		protected boolean valid = true;
 
 		/** Add a variable speed advisory */
+		@Override
 		public void addSpeedAdvisory() {
 			Integer a = calculateSpeedAdvisory();
-			if(a != null)
+			if (a != null)
 				addSpan(String.valueOf(a));
 			else
 				valid = false;
@@ -81,40 +81,32 @@ public class SpeedAdvisoryCalculator {
 
 	/** Calculate the speed advisory */
 	private Integer calculateSpeedAdvisory() {
-		String c = GeoLocHelper.getCorridorName(loc);
-		if(c != null)
-			return calculateSpeedAdvisory(c);
-		else
-			return null;
+		Corridor c = BaseObjectImpl.corridors.getCorridor(loc);
+		return (c != null) ? calculateSpeedAdvisory(c) : null;
 	}
 
 	/** Calculate the speed advisory */
-	private Integer calculateSpeedAdvisory(String c) {
-		Corridor cor = BaseObjectImpl.corridors.getCorridor(c);
-		if(cor != null) {
-			Float m = cor.calculateMilePoint(loc);
-			if(VSA_LOG.isOpen())
-				VSA_LOG.log(loc.getName() + ", mp: " + m);
-			if(m != null)
-				return calculateSpeedAdvisory(cor, m);
-		}
-		return null;
+	private Integer calculateSpeedAdvisory(Corridor cor) {
+		Float m = cor.calculateMilePoint(loc);
+		if (VSA_LOG.isOpen())
+			VSA_LOG.log(loc.getName() + ", mp: " + m);
+		return (m != null) ? calculateSpeedAdvisory(cor, m) : null;
 	}
 
 	/** Calculate the speed advisory */
 	private Integer calculateSpeedAdvisory(Corridor cor, float m) {
 		VSStationFinder vss_finder = new VSStationFinder(m);
 		cor.findStation(vss_finder);
-		if(VSA_LOG.isOpen())
+		if (VSA_LOG.isOpen())
 			vss_finder.debug(VSA_LOG);
-		if(vss_finder.foundVSS()) {
+		if (vss_finder.foundVSS()) {
 			Integer lim = vss_finder.getSpeedLimit();
-			if(lim != null) {
+			if (lim != null) {
 				Float a = vss_finder.calculateSpeedAdvisory();
-				if(a != null) {
+				if (a != null) {
 					a = Math.max(a, getMinDisplay());
 					int sa = round5Mph(a);
-					if(sa < lim && sa <= getMaxDisplay())
+					if (sa < lim && sa <= getMaxDisplay())
 						return sa;
 					else
 						return null;

@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +34,7 @@ import us.mn.state.dot.tms.client.widget.ITableModel;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 abstract public class ProxyTableModel<T extends SonarObject>
 	extends AbstractTableModel implements ITableModel
@@ -166,7 +168,7 @@ abstract public class ProxyTableModel<T extends SonarObject>
 	/** Get the class of the specified column */
 	@Override
 	public Class getColumnClass(int col) {
-		ProxyColumn pc = getProxyColumn(col);
+		ProxyColumn<T> pc = getProxyColumn(col);
 		if (pc != null)
 			return pc.getColumnClass();
 		else
@@ -178,7 +180,7 @@ abstract public class ProxyTableModel<T extends SonarObject>
 	public Object getValueAt(int row, int col) {
 		T proxy = getRowProxy(row);
 		if (proxy != null) {
-			ProxyColumn pc = getProxyColumn(col);
+			ProxyColumn<T> pc = getProxyColumn(col);
 			if (pc != null)
 				return pc.getValueAt(proxy);
 		}
@@ -194,14 +196,14 @@ abstract public class ProxyTableModel<T extends SonarObject>
 	/** Check if the specified cell is editable */
 	@Override
 	public boolean isCellEditable(int row, int col) {
-		ProxyColumn pc = getProxyColumn(col);
-		return pc != null && pc.isEditable(getRowProxy(row));
+		ProxyColumn<T> pc = getProxyColumn(col);
+		return (pc != null) && pc.isEditable(getRowProxy(row));
 	}
 
 	/** Set the value at the specified cell */
 	@Override
 	public void setValueAt(Object value, int row, int col) {
-		ProxyColumn pc = getProxyColumn(col);
+		ProxyColumn<T> pc = getProxyColumn(col);
 		if (pc != null)
 			pc.setValueAt(getRowProxy(row), value);
 	}

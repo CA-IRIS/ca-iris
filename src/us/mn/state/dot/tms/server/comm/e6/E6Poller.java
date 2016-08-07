@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2015  Minnesota Department of Transportation
+ * Copyright (C) 2015-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,9 @@ import us.mn.state.dot.tms.server.comm.TagReaderPoller;
  *
  * @author Douglas Lau
  */
-public class E6Poller extends MessagePoller implements TagReaderPoller {
-
+public class E6Poller extends MessagePoller<E6Property>
+	implements TagReaderPoller
+{
 	/** Tag response */
 	static private final Command TAG_RESPONSE = new Command(
 		CommandGroup.MODE);
@@ -161,8 +162,13 @@ public class E6Poller extends MessagePoller implements TagReaderPoller {
 			if (reader != null)
 				tt.logRead(reader);
 			if (E6_LOG.isOpen())
-				E6_LOG.log(tt.toString());
+				E6_LOG.log(readerId() + ": " + tt.toString());
 		}
+	}
+
+	/** Get the reader ID */
+	private String readerId() {
+		return (reader != null) ? reader.getName() : "reader unknown";
 	}
 
 	/** Send a store packet */

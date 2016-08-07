@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2005-2015  Minnesota Department of Transportation
+ * Copyright (C) 2005-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -98,40 +98,36 @@ public class CameraDispatcher extends JPanel {
 
 	/** Selection listener */
 	private final ProxySelectionListener sel_listener =
-		new ProxySelectionListener() {
-			public void selectionChanged() {
-				selectCamera(sel_model.getSingleSelection());
-			}
-		};
+		new ProxySelectionListener()
+	{
+		public void selectionChanged() {
+			selectCamera(sel_model.getSingleSelection());
+		}
+	};
 
 	/** Cache of Camera proxy objects */
 	private final TypeCache<Camera> cache;
 
 	/** Proxy listener */
 	private final ProxyListener<Camera> proxy_listener =
-		new ProxyListener<Camera>() {
-			public void proxyAdded(Camera proxy) {
+		new ProxyListener<Camera>()
+	{
+		public void proxyAdded(Camera proxy) {}
+		public void enumerationComplete() {}
+		public void proxyRemoved(Camera proxy) {}
+		public void proxyChanged(Camera proxy, String a) {
+			if (proxy != selected)
+				return;
+			if ((a == null) || ("opStatus".equals(a))) {
+				final String stat = proxy.getOpStatus();
+				runSwing(new Runnable() {
+					public void run() {
+						updateOpStatus(stat);
+					}
+				});
 			}
-
-			public void enumerationComplete() {
-			}
-
-			public void proxyRemoved(Camera proxy) {
-			}
-
-			public void proxyChanged(Camera proxy, String a) {
-				if (proxy != selected)
-					return;
-				if ((a == null) || ("opStatus".equals(a))) {
-					final String stat = proxy.getOpStatus();
-					runSwing(new Runnable() {
-						public void run() {
-							updateOpStatus(stat);
-						}
-					});
-				}
-			}
-		};
+		}
+	};
 
 	/** Stream status listener */
 	private final StreamStatusListener ss_listener;
@@ -176,7 +172,7 @@ public class CameraDispatcher extends JPanel {
 	private final VideoWallManager vw_manager;
 
 	/** Current decoder map */
-	Map<String, String> decmap = new HashMap<String, String>();
+	Map<String, String> decmap = new HashMap<>();
 
 	/** Inhibit decoder actions */
 	private boolean inhibit_decoder_actions = false;
@@ -193,8 +189,6 @@ public class CameraDispatcher extends JPanel {
 			updateCamControls();
 		}
 	}
-
-	;
 
 	/** Decoder map update timer */
 	private final Timer decmap_timer = new Timer(DECMAP_UPDATE_PERIOD_MS,
@@ -281,12 +275,14 @@ public class CameraDispatcher extends JPanel {
 		});
 		p.add(vwBtn, gbc);
 
-		gbc.gridx = 0;
-		gbc.gridy = 2;
-		p.add(new ILabel("device.op.status"), gbc);
-		gbc.gridx = 1;
-		gbc.gridwidth = 3;
-		p.add(op_status_lbl, gbc);
+		if (SystemAttrEnum.DEVICE_OP_STATUS_ENABLE.getBoolean()) {
+			gbc.gridx = 0;
+			gbc.gridy = 2;
+			p.add(new ILabel("device.op.status"), gbc);
+			gbc.gridx = 1;
+			gbc.gridwidth = 3;
+			p.add(op_status_lbl, gbc);
+		}
 
 		return p;
 	}
@@ -303,7 +299,7 @@ public class CameraDispatcher extends JPanel {
 
 	/** Create the StreamStatusListener */
 	private StreamStatusListener createStreamStatusListener() {
-		StreamStatusListener ssl = new StreamStatusListener() {
+		return new StreamStatusListener() {
 			@Override
 			public void onStreamStarted(Camera c) {
 				updateCamControls();
@@ -315,20 +311,18 @@ public class CameraDispatcher extends JPanel {
 				updateCamControls();
 			}
 		};
-		return ssl;
 	}
 
 	/**
 	 * Update the Op Status field.  The resulting field will contain the
 	 * status string and a current timestamp.
-	 *
 	 * @param stat the status string
 	 */
 	private void updateOpStatus(String stat) {
 		String s = "";
 		if ((stat != null) && (!(stat.equals(""))))
-			s += stat + ", "
-				+ TimeSteward.currentDateTimeString(true);
+			s += stat + ", " + TimeSteward
+				.currentDateTimeString(true);
 		op_status_lbl.setText(s);
 	}
 
@@ -336,11 +330,11 @@ public class CameraDispatcher extends JPanel {
 	 * Update the enable/disable status of the camera controls.
 	 * The criteria used to determine what is enabled/disabled include:
 	 * <ul>
-	 * <li> if a camera is currently selected
-	 * <li> if the camera has a controller
-	 * <li> if the user has any camera control permissions
-	 * <li> the value of the CAMERA_PTZ_BLIND system attribute
-	 * <li> if a stream is currently active
+	 *   <li> if a camera is currently selected
+	 *   <li> if the camera has a controller
+	 *   <li> if the user has any camera control permissions
+	 *   <li> the value of the CAMERA_PTZ_BLIND system attribute
+	 *   <li> if a stream is currently active
 	 * </ul>
 	 * <p>
 	 * Note: if the selected camera's EncoderType requires an external
@@ -362,6 +356,7 @@ public class CameraDispatcher extends JPanel {
 		);
 		int numConns = vw_manager.getNumConns(selected.getName());
 		boolean streaming = (numConns > 0);
+//		boolean streaming = stream_pnl.isStreaming(); //FIXME CA-MN-MERGE needed?non-CA
 		boolean extOnly = !video_req.hasMJPEG(selected);
 		boolean blindOk = SystemAttrEnum.CAMERA_PTZ_BLIND.getBoolean();
 		boolean enable = (hasCtrl && hasPerms &&
@@ -396,7 +391,7 @@ public class CameraDispatcher extends JPanel {
 		int numConns = vw_manager.getNumConns(c.getName());
 		// were we the last connection to this camera?
 		if (numConns == 0)
-			c.setRecallPreset(p.intValue());
+			c.setRecallPreset(p);
 	}
 
 	/**
@@ -412,10 +407,10 @@ public class CameraDispatcher extends JPanel {
 	}
 
 	/** Create the video output selection combo box */
-	private JComboBox createOutputCombo() {
-		JComboBox box = new JComboBox();
+	private JComboBox<VideoMonitor> createOutputCombo() {
+		JComboBox<VideoMonitor> box = new JComboBox<>();
 		FilteredMonitorModel m = new FilteredMonitorModel(session);
-		box.setModel(new IComboBoxModel(m));
+		box.setModel(new IComboBoxModel<>(m));
 		if (m.getSize() > 1)
 			box.setSelectedIndex(1);
 		return box;
@@ -425,7 +420,7 @@ public class CameraDispatcher extends JPanel {
 	private JComboBox createOutputComboCA() {
 		JComboBox box = new JComboBox();
 
-		ArrayList<String> keys = new ArrayList<String>();
+		ArrayList<String> keys = new ArrayList<>();
 		for (String k : decmap.keySet())
 			keys.add(k);
 		Collections.sort(keys);

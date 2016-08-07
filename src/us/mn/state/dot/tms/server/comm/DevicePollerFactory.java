@@ -1,8 +1,9 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2011-2015  Minnesota Department of Transportation
- * Copyright (C) 2012  Iteris Inc.
+ * Copyright (C) 2011-2016  Minnesota Department of Transportation
+ * Copyright (C) 2012       Iteris Inc.
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +29,14 @@ import us.mn.state.dot.tms.server.comm.addco.AddcoPoller;
 import us.mn.state.dot.tms.server.comm.addco.AddcoMessenger;
 import us.mn.state.dot.tms.server.comm.canoga.CanogaPoller;
 import us.mn.state.dot.tms.server.comm.carwis.CaRwisPoller;
+import us.mn.state.dot.tms.server.comm.cbw.CBWPoller;
 import us.mn.state.dot.tms.server.comm.cohuptz.CohuPTZPoller;
 import us.mn.state.dot.tms.server.comm.dinrelay.DinRelayPoller;
 import us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller;
+import us.mn.state.dot.tms.server.comm.dr500.DR500Poller;
 import us.mn.state.dot.tms.server.comm.e6.E6Poller;
 import us.mn.state.dot.tms.server.comm.g4.G4Poller;
+import us.mn.state.dot.tms.server.comm.incfeed.IncFeedPoller;
 import us.mn.state.dot.tms.server.comm.infinova.InfinovaMessenger;
 import us.mn.state.dot.tms.server.comm.manchester.ManchesterPoller;
 import us.mn.state.dot.tms.server.comm.mndot.MndotPoller;
@@ -143,10 +147,16 @@ public class DevicePollerFactory {
 			return createCohuPTZPoller();
 		case AXIS_PTZ:
 			return createAxisPTZPoller();
+		case DR_500:
+			return createDR500Poller();
 		case ADDCO:
 			return createAddcoPoller();
 		case TRANSCORE_E6:
 			return createE6Poller();
+		case CBW:
+			return createCBWPoller();
+		case INC_FEED:
+			return createIncFeedPoller();
 		case INFOTEK_WIZARD:
 			return createWizardPoller();
 		case URMS:
@@ -164,7 +174,6 @@ public class DevicePollerFactory {
 		}
 	}
 
-	/** Create a socket messenger */
 	/**
 	 * Create a socket messenger.
 	 * For UDP connections, a normal single-host socket will be used.
@@ -187,7 +196,7 @@ public class DevicePollerFactory {
 						DatagramMessenger.ConnType
 						.RECV_MULT_LOCAL);
 				else
-					return createDatagramMessenger(u);
+				return createDatagramMessenger(u);
 			}
 			else if ("modem".equals(u.getScheme()))
 				return createModemMessenger(u);
@@ -325,8 +334,7 @@ public class DevicePollerFactory {
 
 	/** Create a PelcoD poller */
 	private DevicePoller createPelcoDPoller() throws IOException {
-		Messenger sm = createSocketMessenger(UDP);
-		return new PelcoDPoller(name, sm);
+		return new PelcoDPoller(name, createSocketMessenger(UDP));
 	}
 
 	/** Create a Manchester poller */
@@ -342,6 +350,11 @@ public class DevicePollerFactory {
 	/** Create a MSG FEED poller */
 	private DevicePoller createMsgFeedPoller() throws IOException {
 		return new MsgFeedPoller(name, createHttpFileMessenger());
+	}
+
+	/** Create a incident feed poller */
+	private DevicePoller createIncFeedPoller() throws IOException {
+		return new IncFeedPoller(name, createHttpFileMessenger());
 	}
 
 	/** Create a Pelco video switch poller */
@@ -385,6 +398,11 @@ public class DevicePollerFactory {
 		return new DinRelayPoller(name, createHttpFileMessenger());
 	}
 
+	/** Create a new Control By Web poller */
+	private DevicePoller createCBWPoller() throws IOException {
+		return new CBWPoller(name, createHttpFileMessenger());
+	}
+
 	/** Create a STC poller */
 	private DevicePoller createSTCPoller() throws IOException {
 		return new STCPoller(name, createSocketMessenger(TCP));
@@ -399,6 +417,11 @@ public class DevicePollerFactory {
 	/** Create an Axis PTZ poller */
 	private DevicePoller createAxisPTZPoller() throws IOException {
 		return new AxisPTZPoller(name, createSocketMessenger(TCP));
+	}
+
+	/** Create a DR-500 poller */
+	private DevicePoller createDR500Poller() throws IOException {
+		return new DR500Poller(name, createSocketMessenger(TCP));
 	}
 
 	/** Create an ADDCO poller */

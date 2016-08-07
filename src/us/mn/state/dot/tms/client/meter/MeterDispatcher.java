@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,8 +94,8 @@ public class MeterDispatcher extends IPanel implements ProxyView<RampMeter> {
 	private final JButton grow_btn = new JButton();
 
 	/** Reason the meter was locked */
-	private final JComboBox lock_cbx = new JComboBox(
-		RampMeterLock.getDescriptions());
+	private final JComboBox<RampMeterLock> lock_cbx = new JComboBox
+		<RampMeterLock>(RampMeterLock.values());
 
 	/** Metering on radio button */
 	private final JRadioButton on_btn = new JRadioButton(
@@ -241,7 +241,7 @@ public class MeterDispatcher extends IPanel implements ProxyView<RampMeter> {
 	/** Get the current meter lock */
 	private int getMLock(RampMeter rm) {
 		Integer ml = rm.getMLock();
-		return ml != null ? ml : 0;
+		return (ml != null) ? ml : RampMeterLock.OFF.ordinal();
 	}
 
 	/** Clear the proxy view */

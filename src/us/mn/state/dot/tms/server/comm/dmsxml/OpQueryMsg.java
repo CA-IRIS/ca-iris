@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2008-2014  AHMCT, University of California
  * Copyright (C) 2012 Iteris Inc.
  *
@@ -26,17 +26,19 @@ import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.IrisUserHelper;
-import us.mn.state.dot.tms.MultiString;
+import static us.mn.state.dot.tms.SignMsgSource.external;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
 import us.mn.state.dot.tms.units.Interval;
 import static us.mn.state.dot.tms.units.Interval.Units.DECISECONDS;
 import static us.mn.state.dot.tms.units.Interval.Units.MILLISECONDS;
 import us.mn.state.dot.tms.utils.HexString;
-import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
+import us.mn.state.dot.tms.utils.MultiBuilder;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Operation to query the current message on a DMS.
@@ -53,14 +55,14 @@ class OpQueryMsg extends OpDms {
 	/** Indicates if this operation is the startup operation */
 	private boolean m_startup;
 
-	/** Constructor. 
+	/** Constructor.
 	 *  @param d DMS.
 	 *  @param u User originating the request or null for IRIS.
 	 *  @param req Device request.
-	 *  @param startup True to indicate this is the device startup 
+	 *  @param startup True to indicate this is the device startup
 	 *	   request, which is ignored for DMS on dial-up lines. */
-	OpQueryMsg(DMSImpl d, User u, DeviceRequest req, 
-		boolean startup) 
+	OpQueryMsg(DMSImpl d, User u, DeviceRequest req,
+		boolean startup)
 	{
 		super(PriorityLevel.DEVICE_DATA, d, "Retrieving message", u);
 		m_req = req;
@@ -76,7 +78,7 @@ class OpQueryMsg extends OpDms {
 	 * @return Duration in minutes; null indicates no expiration.
 	 * @throws IllegalArgumentException if invalid args.
 	 */
-	private static Integer calcMsgDuration(boolean useont, 
+	private static Integer calcMsgDuration(boolean useont,
 		boolean useofft, Calendar ontime, Calendar offtime)
 	{
 		if(!useont) {
@@ -103,43 +105,43 @@ class OpQueryMsg extends OpDms {
 
 	/** Create message MULTI string using a bitmap.
 	 * A MULTI string must be created because the SensorServer can
-	 * return a bitmap and no message text. IRIS requires both a 
+	 * return a bitmap and no message text. IRIS requires both a
 	 * bitmap and message text.
 	 * @param pages Bitmap containing pages.
 	 * @param pgOnTime DMS page on time.
-	 * @return If bitmap is not blank, a MULTI indicating it is an 
+	 * @return If bitmap is not blank, a MULTI indicating it is an
 	 *         other system message. If bitmap is blank, then an
 	 *         empty MULTI is returned. */
 	private static String createMultiUsingBitmap(
 		BitmapGraphic[] pages, Interval pgOnTime)
 	{
 		if(areBitmapsBlank(pages))
-			return ""; 
+			return "";
 
-		MultiString multi = new MultiString();
+		MultiBuilder multi = new MultiBuilder();
 
 		// pg on-time read from controller
 		multi.setPageTimes(pgOnTime.round(DECISECONDS), null);
 
-		// default text if no bitmap, see comments in 
+		// default text if no bitmap, see comments in
 		// method for why this is a hack.
-		for(int i = 0; i < pages.length; i++) {
+		for (int i = 0; i < pages.length; i++) {
+			if (i > 0)
+				multi.addPage();
 			multi.addSpan(DMSHelper.NOTXT_L1);
 			multi.addLine(null);
 			multi.addSpan(DMSHelper.NOTXT_L2);
 			multi.addLine(null);
 			multi.addSpan(DMSHelper.NOTXT_L3);
 			multi.addLine(null);
-			if(i + 1 < pages.length)
-				multi.addPage();
 		}
 		return multi.toString();
 	}
 
 	/** Check if an array of bitmaps is blank */
 	private static boolean areBitmapsBlank(BitmapGraphic[] pages) {
-		for(int i = 0; i < pages.length; i++)
-			if(pages[i].getLitCount() > 0)
+		for (BitmapGraphic page : pages)
+			if (page.getLitCount() > 0)
 				return false;
 		return true;
 	}
@@ -153,8 +155,8 @@ class OpQueryMsg extends OpDms {
 	 * @param argbitmap Bitmap of all pages
 	 * @param pg Page number to extract
 	 * @return BitmapGraphic of requested page */
-	private static BitmapGraphic extractBitmap(byte[] argbitmap, 
-		int pg) 
+	private static BitmapGraphic extractBitmap(byte[] argbitmap,
+		int pg)
 	{
 		byte[] pix = extractPage(argbitmap, pg);
 		BitmapGraphic bm = new BitmapGraphic(BM_WIDTH, BM_HEIGHT);
@@ -182,7 +184,7 @@ class OpQueryMsg extends OpDms {
 
 		// Note: PhaseGetConfig is executed prior via DmsXmlPoller if
 		// DMS is not configured.
-		return new PhaseQueryMsg();
+			return new PhaseQueryMsg();
 	}
 
 	/**
@@ -194,7 +196,7 @@ class OpQueryMsg extends OpDms {
 	 * @param pgOnTime DMS page on time.
 	 * @param apri DMS message activation priority.
 	 * @param rpri DMS message runtime priority.
-	 * @return A SignMessage that contains the text of the message and 
+	 * @return A SignMessage that contains the text of the message and
 	 *         a rendered bitmap. */
 	private SignMessageImpl createSignMessageWithBitmap(String sbitmap,
 		Integer duration, Interval pgOnTime, DMSMessagePriority apri,
@@ -240,21 +242,22 @@ class OpQueryMsg extends OpDms {
 		if(rpri == DMSMessagePriority.INVALID)
 			rpri = DMSMessagePriority.OTHER_SYSTEM;
 
-		return (SignMessageImpl)m_dms.createMessage(multi, false, pages, 
-			apri, rpri, duration);
+		return (SignMessageImpl) m_dms.createMsgRendered(multi, false,
+			pages, apri, rpri, duration);
 	}
 
-	/** Return a MULTI with an updated page on-time with 
-	 *  the value read from controller.
-	 *  @param pt Page on time, used to update returned MultiString. 
+	/** Return a MULTI with an updated page on-time with the value read
+	 * from controller.
+	 * @param multi MULTI string.
+	 * @param pt Page on time, used to update returned MultiString.
 	 *  @return MULTI string containing updated page on time. */
 	private String updatePageOnTime(String multi, Interval pt) {
-		int npgs = new MultiString(multi).getNumPages();
+		MultiString m = new MultiString(multi);
+		int npgs = m.getNumPages();
 		// if one page, use page on-time of zero.
 		if (npgs <= 1)
 			pt = new Interval(0);
-		String ret = MultiString.replacePageTime(
-			multi, pt.round(DECISECONDS), null);
+		String ret = m.replacePageTime(pt.round(DECISECONDS), null);
 		LOG.log("OpQueryMsg.updatePageOnTime(): " +
 			"updated multi w/ page display time: " + ret);
 		return ret;
@@ -336,13 +339,13 @@ class OpQueryMsg extends OpDms {
 				// activation priority
 				apri = DMSMessagePriority.fromOrdinal(
 					xrr.getResInt("ActPriority"));
-				apri = (apri == DMSMessagePriority.INVALID ? 
+				apri = (apri == DMSMessagePriority.INVALID ?
 					DMSMessagePriority.OPERATOR : apri);
 
 				// runtime priority
 				rpri = DMSMessagePriority.fromOrdinal(
 					xrr.getResInt("RunPriority"));
-				rpri = (rpri == DMSMessagePriority.INVALID ? 
+				rpri = (rpri == DMSMessagePriority.INVALID ?
 					DMSMessagePriority.BLANK : rpri);
 
 				// owner
@@ -370,15 +373,15 @@ class OpQueryMsg extends OpDms {
 
 				LOG.log(
 					"OpQueryMsg() parsed msg values: " +
-					"IsValid:" + valid + 
-					", MsgTextAvailable:" + txtavail + 
-					", MsgText:" + msgtext + 
-					", ActPriority:"  + apri + 
-					", RunPriority:"  + rpri + 
-					", Owner:"  + owner + 
-					", OnTime:"  + ont.getTime() + 
-					", OffTime:" + offt.getTime() + 
-					", pgOnTime:" + pgOnTime + 
+					"IsValid:" + valid +
+					", MsgTextAvailable:" + txtavail +
+					", MsgText:" + msgtext +
+					", ActPriority:"  + apri +
+					", RunPriority:"  + rpri +
+					", Owner:"  + owner +
+					", OnTime:"  + ont.getTime() +
+					", OffTime:" + offt.getTime() +
+					", pgOnTime:" + pgOnTime +
 					", bitmap:" + bitmap);
 			}
 		} catch (IllegalArgumentException ex) {
@@ -389,7 +392,7 @@ class OpQueryMsg extends OpDms {
 			handleCommError(EventType.PARSING_ERROR,errmsg);
 		}
 
-		// update 
+		// update
 		complete(mess);
 
 		// user who created the message retrieved from the DMS
@@ -404,10 +407,10 @@ class OpQueryMsg extends OpDms {
 			// get user name via owner
 			if(owner != null) {
 				irisUser = IrisUserHelper.lookup(owner);
-				String iuser = (irisUser == null ? 
+				String iuser = (irisUser == null ?
 					"null" : irisUser.getName());
-				LOG.log("OpQueryMsg: owner read from " + 
-					"sensorserver=" + owner + 
+				LOG.log("OpQueryMsg: owner read from " +
+					"sensorserver=" + owner +
 					", Iris user lookup=" + iuser);
 			}
 
@@ -428,15 +431,15 @@ class OpQueryMsg extends OpDms {
 
 			// have text
 			if(txtavail) {
-				// update page on-time in MULTI with value  
-				// read from controller, which comes from 
-				// the DisplayTimeMS XML field, not the 
+				// update page on-time in MULTI with value
+				// read from controller, which comes from
+				// the DisplayTimeMS XML field, not the
 				// MULTI string.
 				msgtext = updatePageOnTime(msgtext, pgOnTime);
 				SignMessageImpl sm = (SignMessageImpl)
-					m_dms.createMessage(msgtext, false,
-					apri, rpri, duramins);
-				if(sm != null)
+					m_dms.createMsg(msgtext, false, apri,
+					rpri, external, duramins);
+				if (sm != null)
 					m_dms.setMessageCurrent(sm, irisUser);
 
 			// don't have text
@@ -445,19 +448,19 @@ class OpQueryMsg extends OpDms {
 				SignMessageImpl sm = null;
 				if(usebitmap) {
 					sm = createSignMessageWithBitmap(
-						bitmap, duramins, pgOnTime, 
+						bitmap, duramins, pgOnTime,
 						apri, rpri);
 					if(sm != null) {
-						m_dms.setMessageCurrent(sm, 
+						m_dms.setMessageCurrent(sm,
 							irisUser);
 					}
 				}
 				if(sm == null) {
 					sm = (SignMessageImpl)m_dms.
-						createMessage("", false, apri,
-						rpri, null);
-					if(sm != null) {
-						m_dms.setMessageCurrent(sm, 
+						createMsg("", false, apri, rpri,
+						external, null);
+					if (sm != null) {
+						m_dms.setMessageCurrent(sm,
 							irisUser);
 					}
 				}
@@ -519,7 +522,7 @@ class OpQueryMsg extends OpDms {
 			mess.add(xrr);
 			sendRead(mess);
 			if (xrr.wasResRead() && parseResponse(mess, xrr))
-				return this;
+					return this;
 
 			return null;
 		}

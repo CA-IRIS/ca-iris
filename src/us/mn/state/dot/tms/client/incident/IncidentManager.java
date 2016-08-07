@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  */
 package us.mn.state.dot.tms.client.incident;
 
-import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 import javax.swing.ListCellRenderer;
 import us.mn.state.dot.geokit.Position;
+import us.mn.state.dot.map.Style;
 import us.mn.state.dot.map.Symbol;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CorridorBase;
@@ -39,7 +39,6 @@ import us.mn.state.dot.tms.client.proxy.MapAction;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
-import us.mn.state.dot.tms.client.proxy.StyleSummary;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -71,7 +70,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 	/** Get the incident cache */
 	@Override
 	public TypeCache<Incident> getCache() {
-		return session.getSonarState().getIncidents();
+		return session.getSonarState().getIncCache().getIncidents();
 	}
 
 	/** Create an incident map tab */
@@ -82,7 +81,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 
 	/** Create a list cell renderer */
 	@Override
-	public ListCellRenderer createCellRenderer() {
+	public ListCellRenderer<Incident> createCellRenderer() {
 		return new IncidentCellRenderer(this);
 	}
 
@@ -95,14 +94,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 	/** Create a theme for incidents */
 	@Override
 	protected IncidentTheme createTheme() {
-		IncidentTheme theme = new IncidentTheme(this);
-		theme.addStyle(ItemStyle.CLEARED, new Color(128, 255, 128));
-		theme.addStyle(ItemStyle.CRASH, new Color(255, 128, 128));
-		theme.addStyle(ItemStyle.STALL, new Color(255, 128, 255));
-		theme.addStyle(ItemStyle.ROADWORK, new Color(255, 208, 128));
-		theme.addStyle(ItemStyle.HAZARD, new Color(255, 255, 128));
-		theme.addStyle(ItemStyle.ALL);
-		return theme;
+		return new IncidentTheme(this);
 	}
 
 	/** Create a popup menu for a single incident selection */
@@ -112,8 +104,8 @@ public class IncidentManager extends ProxyManager<Incident> {
 		JPopupMenu p = new JPopupMenu();
 		p.add(makeMenuLabel(getDescription(proxy)));
 		p.addSeparator();
-		p.add(new MapAction(desktop.client, proxy, proxy.getLat(),
-			proxy.getLon()));
+		p.add(new MapAction<Incident>(desktop.client, proxy,
+			proxy.getLat(), proxy.getLon()));
 		p.addSeparator();
 		// FIXME: add menu item to clear incident
 		return p;
@@ -134,7 +126,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 	@Override
 	public MapGeoLoc findGeoLoc(Incident proxy) {
 		String name = proxy.getName();
-		if(locations.containsKey(name))
+		if (locations.containsKey(name))
 			return locations.get(name);
 		IncidentGeoLoc loc = new IncidentGeoLoc(proxy,
 			getGeoLoc(proxy));
@@ -154,9 +146,9 @@ public class IncidentManager extends ProxyManager<Incident> {
 	protected IncidentLoc getGeoLoc(Incident proxy) {
 		IncidentLoc loc = new IncidentLoc(proxy);
 		CorridorBase cb = lookupCorridor(loc);
-		if(cb != null) {
+		if (cb != null) {
 			R_Node rnd = cb.findNearest(loc);
-			if(rnd != null)
+			if (rnd != null)
 				return new IncidentLoc(proxy, rnd.getGeoLoc());
 		}
 		return loc;
@@ -170,11 +162,11 @@ public class IncidentManager extends ProxyManager<Incident> {
 	/** Get lane configuration at an incident */
 	public LaneConfiguration laneConfiguration(Incident inc) {
 		LaneType lt = LaneType.fromOrdinal(inc.getLaneType());
-		if(lt.isRamp())
+		if (lt.isRamp())
 			return rampLaneConfiguration(inc);
 		IncidentLoc loc = new IncidentLoc(inc);
 		CorridorBase cb = lookupCorridor(loc);
-		if(cb != null)
+		if (cb != null)
 			return cb.laneConfiguration(getWgs84Position(inc));
 		else
 			return new LaneConfiguration(0, 0);
@@ -196,16 +188,16 @@ public class IncidentManager extends ProxyManager<Incident> {
 	/** Check if a given attribute affects a proxy style */
 	@Override
 	public boolean isStyleAttrib(String a) {
-		return "cleared".equals(a);
+		return "cleared".equals(a) || "confirmed".equals(a);
 	}
 
 	/** Check the style of the specified proxy */
 	@Override
 	public boolean checkStyle(ItemStyle is, Incident proxy) {
 		EventType et = getEventType(proxy);
-		if(et == null)
+		if (et == null)
 			return false;
-		switch(is) {
+		switch (is) {
 		case CRASH:
 			return et == EventType.INCIDENT_CRASH;
 		case STALL:
@@ -216,6 +208,8 @@ public class IncidentManager extends ProxyManager<Incident> {
 			return et == EventType.INCIDENT_HAZARD;
 		case CLEARED:
 			return proxy.getCleared();
+		case UNCONFIRMED:
+			return !proxy.getConfirmed();
 		case ALL:
 			return true;
 		default:
@@ -229,27 +223,9 @@ public class IncidentManager extends ProxyManager<Incident> {
 			Integer iet = proxy.getEventType();
 			return iet != null ? EventType.fromId(iet) : null;
 		}
-		catch(NullPointerException e) {
+		catch (NullPointerException e) {
 			// FIXME: there is a sonar bug which throws NPE when
 			//        an incident proxy object is deleted
-			return null;
-		}
-	}
-
-	/** Get the style for an event type */
-	static private String getStyle(EventType et) {
-		if(et == null)
-			return null;
-		switch(et) {
-		case INCIDENT_CRASH:
-			return ItemStyle.CRASH.toString();
-		case INCIDENT_STALL:
-			return ItemStyle.STALL.toString();
-		case INCIDENT_ROADWORK:
-			return ItemStyle.ROADWORK.toString();
-		case INCIDENT_HAZARD:
-			return ItemStyle.HAZARD.toString();
-		default:
 			return null;
 		}
 	}
@@ -258,7 +234,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 	@Override
 	public String getDescription(Incident inc) {
 		String td = getTypeDesc(inc);
-		if(td.length() > 0) {
+		if (td.length() > 0) {
 			String loc = getGeoLoc(inc).getDescription();
 			return td + " -- " + loc;
 		} else
@@ -267,17 +243,17 @@ public class IncidentManager extends ProxyManager<Incident> {
 
 	/** Get the incident type description */
 	public String getTypeDesc(Incident inc) {
-		String sty = getStyle(getEventType(inc));
-		if(sty != null) {
+		Style sty = getTheme().getStyle(inc);
+		if (sty != null) {
 			LaneType lt = LaneType.fromOrdinal(inc.getLaneType());
-			return getTypeDesc(sty, getLaneType(lt));
+			return getTypeDesc(sty.getLabel(), getLaneType(lt));
 		} else
 			return "";
 	}
 
 	/** Get the lane type description */
 	private String getLaneType(LaneType lt) {
-		switch(lt) {
+		switch (lt) {
 		case MAINLINE:
 		case EXIT:
 		case MERGE:
@@ -293,7 +269,7 @@ public class IncidentManager extends ProxyManager<Incident> {
 	 * @param ltd Lane type description (may be null).
 	 * @return Description of incident type. */
 	private String getTypeDesc(String sty, String ltd) {
-		if(ltd != null)
+		if (ltd != null)
 			return sty + " " + I18N.get("incident.on") + " " + ltd;
 		else
 			return sty;
@@ -301,18 +277,18 @@ public class IncidentManager extends ProxyManager<Incident> {
 
 	/** Get the symbol for an incident */
 	public Symbol getSymbol(Incident inc) {
-		String sty = getStyle(getEventType(inc));
-		if(sty != null)
-			return getTheme().getSymbol(sty);
+		Style sty = getTheme().getStyle(inc);
+		if (sty != null)
+			return getTheme().getSymbol(sty.getLabel());
 		else
 			return null;
 	}
 
 	/** Get the icon for an incident */
 	public Icon getIcon(Incident inc) {
-		if(inc != null) {
+		if (inc != null) {
 			Symbol sym = getSymbol(inc);
-			if(sym != null)
+			if (sym != null)
 				return sym.getLegend();
 		}
 		String st = ItemStyle.CLEARED.toString();

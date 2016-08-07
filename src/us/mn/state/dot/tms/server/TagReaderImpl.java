@@ -17,14 +17,18 @@ package us.mn.state.dot.tms.server;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import java.sql.ResultSet;
 import us.mn.state.dot.sonar.SonarException;
+import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.DeviceRequest;
+import us.mn.state.dot.tms.DMS;
+import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.TagReader;
 import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.TollZone;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.TagReaderPoller;
 import us.mn.state.dot.tms.server.event.TagReadEvent;
@@ -37,11 +41,17 @@ import us.mn.state.dot.tms.server.event.TagReadEvent;
  */
 public class TagReaderImpl extends DeviceImpl implements TagReader {
 
+	/** Tag Reader / DMS table mapping */
+	static private TableMapping mapping;
+
 	/** Load all the tag readers */
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, TagReaderImpl.class);
-		store.query("SELECT name, geo_loc, controller, pin, notes " +
-			"FROM iris." + SONAR_TYPE + ";", new ResultFactory()
+		mapping = new TableMapping(store, "iris", SONAR_TYPE,
+			"dms");
+		store.query("SELECT name, geo_loc, controller, pin, notes, " +
+			"toll_zone FROM iris." + SONAR_TYPE + ";",
+			new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
 				namespace.addObject(new TagReaderImpl(
@@ -49,7 +59,8 @@ public class TagReaderImpl extends DeviceImpl implements TagReader {
 					row.getString(2),	// geo_loc
 					row.getString(3),	// controller
 					row.getInt(4),		// pin
-					row.getString(5)	// notes
+					row.getString(5),	// notes
+					row.getString(6)	// toll_zone
 				));
 			}
 		});
@@ -64,6 +75,7 @@ public class TagReaderImpl extends DeviceImpl implements TagReader {
 		map.put("controller", controller);
 		map.put("pin", pin);
 		map.put("notes", notes);
+		map.put("toll_zone", toll_zone);
 		return map;
 	}
 
@@ -89,16 +101,32 @@ public class TagReaderImpl extends DeviceImpl implements TagReader {
 
 	/** Create a tag reader */
 	protected TagReaderImpl(String n, GeoLocImpl l, ControllerImpl c,
-		int p, String nt)
+		int p, String nt, TollZone tz) throws TMSException
 	{
 		super(n, c, p, nt);
 		geo_loc = l;
+		toll_zone = tz;
+		dmss = lookupDMSMapping();
 		initTransients();
 	}
 
 	/** Create a tag reader */
-	protected TagReaderImpl(String n, String l, String c, int p, String nt){
-		this(n, lookupGeoLoc(l), lookupController(c), p, nt);
+	protected TagReaderImpl(String n, String l, String c, int p, String nt,
+		String tz) throws TMSException
+	{
+		this(n, lookupGeoLoc(l), lookupController(c), p, nt,
+		     lookupTollZone(tz));
+	}
+
+	/** Lookup mapping of DMS */
+	private DMSImpl[] lookupDMSMapping() throws TMSException {
+		TreeSet<DMSImpl> d_set = new TreeSet<DMSImpl>();
+		for (String o: mapping.lookup(SONAR_TYPE, this)) {
+			DMS dms = DMSHelper.lookup(o);
+			if (dms instanceof DMSImpl)
+				d_set.add((DMSImpl) dms);
+		}
+		return d_set.toArray(new DMSImpl[0]);
 	}
 
 	/** Destroy an object */
@@ -115,6 +143,67 @@ public class TagReaderImpl extends DeviceImpl implements TagReader {
 	@Override
 	public GeoLoc getGeoLoc() {
 		return geo_loc;
+	}
+
+	/** Toll zone */
+	private TollZone toll_zone;
+
+	/** Set the toll zone */
+	@Override
+	public void setTollZone(TollZone tz) {
+		toll_zone = tz;
+	}
+
+	/** Set the toll zone */
+	public void doSetTollZone(TollZone tz) throws TMSException {
+		if (tz != toll_zone) {
+			store.update(this, "toll_zone", tz);
+			setTollZone(tz);
+		}
+	}
+
+	/** Get the toll zone */
+	@Override
+	public TollZone getTollZone() {
+		return toll_zone;
+	}
+
+	/** DMSs for the tag reader */
+	private DMSImpl[] dmss = new DMSImpl[0];
+
+	/** Set the DMSs assigned to the tag reader */
+	@Override
+	public void setSigns(DMS[] ds) {
+		dmss = makeDMSArray(ds);
+	}
+
+	/** Make an ordered array of DMSs */
+	private DMSImpl[] makeDMSArray(DMS[] ds) {
+		TreeSet<DMSImpl> d_set = new TreeSet<DMSImpl>();
+		for (DMS d: ds) {
+			if (d instanceof DMSImpl)
+				d_set.add((DMSImpl) d);
+		}
+		return d_set.toArray(new DMSImpl[0]);
+	}
+
+	/** Set the DMSs assigned to the tag reader */
+	public void doSetSigns(DMS[] ds) throws TMSException {
+		TreeSet<Storable> d_set = new TreeSet<Storable>();
+		for (DMS d: ds) {
+			if (d instanceof DMSImpl)
+				d_set.add((DMSImpl) d);
+			else
+				throw new ChangeVetoException("Invalid DMS");
+		}
+		mapping.update(SONAR_TYPE, this, d_set);
+		setSigns(ds);
+	}
+
+	/** Get the DMSs assigned to the tag reader */
+	@Override
+	public DMS[] getSigns() {
+		return dmss;
 	}
 
 	/** Request a device operation */
@@ -141,29 +230,14 @@ public class TagReaderImpl extends DeviceImpl implements TagReader {
 	/** Log a tag (transponder) read event.
 	 * @param stamp Timestamp of read event.
 	 * @param tt Tag Type.
+	 * @param agency Agency ID.
 	 * @param tid Tag (transponder) ID.
 	 * @param hov HOV switch flag. */
-	public void logRead(long stamp, TagType tt, int tid, boolean hov) {
+	public void logRead(long stamp, TagType tt, Integer agency, int tid,
+		boolean hov)
+	{
 		TagReadEvent ev = new TagReadEvent(EventType.TAG_READ,
-			new Date(stamp), tt.ordinal(), tid, name, lookupZone(),
-			lookupTollway(), hov);
-		try {
-			ev.doStore();
-		}
-		catch (TMSException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/** Lookup the toll zone for the reader */
-	private String lookupZone() {
-		// FIXME
-		return null;
-	}
-
-	/** Lookup the tollway */
-	private String lookupTollway() {
-		// FIXME: filter out CD road name
-		return GeoLocHelper.getCorridorID(geo_loc);
+			new Date(stamp), tt.ordinal(), agency, tid, name, hov);
+		logEvent(ev);
 	}
 }

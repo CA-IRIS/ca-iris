@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2012-2014  Minnesota Department of Transportation
+ * Copyright (C) 2012-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,18 +36,19 @@ public enum ItemStyle {
 	FAILED,
 	INACTIVE,
 	NO_CONTROLLER,
+	HIDDEN,
 	/* Incident styles */
 	CLEARED,
 	CRASH,
 	STALL,
 	ROADWORK,
 	HAZARD,
+	UNCONFIRMED,
 	/* DMS styles */
 	SCHEDULED,
 	TRAVEL_TIME,
 	AWS_CONTROLLED,
 	AWS_DEPLOYED,
-	LCS,
 	/* Camera styles */
 	PLAYLIST,
 	UNPUBLISHED,
@@ -61,9 +62,6 @@ public enum ItemStyle {
 	CLOSED,
 	OPEN,
 	MOVING,
-	/* R_Node styles */
-	GPS,
-	NO_LOC,
 	/* Plan styles */
 	DMS,
 	BEACON,
@@ -81,6 +79,7 @@ public enum ItemStyle {
 	WIND_SPEED;
 
 	/** Get a string representation of the item style */
+	@Override
 	public String toString() {
 		return I18N.get("item.style." +
 			name().toLowerCase().replace('_', '.'));

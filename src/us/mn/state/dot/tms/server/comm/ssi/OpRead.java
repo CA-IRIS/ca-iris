@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010  AHMCT, University of California
- * Copyright (C) 2012-2014  Minnesota Department of Transportation
+ * Copyright (C) 2012-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
  * @author Michael Darter
  * @author Douglas Lau
  */
-public class OpRead extends OpDevice {
+public class OpRead extends OpDevice<SsiProperty> {
 
 	/** Weather sensor to read */
 	private final WeatherSensorImpl sensor;
@@ -49,15 +49,17 @@ public class OpRead extends OpDevice {
 
 	/** Create the second phase of the operation */
 	@Override
-	protected Phase phaseTwo() {
+	protected Phase<SsiProperty> phaseTwo() {
 		return new PhaseCheck();
 	}
 
 	/** Phase to check records mapping */
-	private class PhaseCheck extends Phase {
-		protected Phase poll(CommMessage mess) {
+	private class PhaseCheck extends Phase<SsiProperty> {
+		protected Phase<SsiProperty> poll(
+			CommMessage<SsiProperty> mess)
+		{
 			RwisRec rec = records.get(site_id);
-			if(rec == null || rec.isExpired()) {
+			if (rec == null || rec.isExpired()) {
 				// Add a null mapping for site_id
 				records.put(site_id, null);
 				return new PhaseRead();
@@ -67,8 +69,10 @@ public class OpRead extends OpDevice {
 	}
 
 	/** Phase to read the file */
-	private class PhaseRead extends Phase {
-		protected Phase poll(CommMessage mess) throws IOException {
+	private class PhaseRead extends Phase<SsiProperty> {
+		protected Phase<SsiProperty> poll(
+			CommMessage<SsiProperty> mess) throws IOException
+		{
 			mess.add(new SsiProperty(records));
 			mess.queryProps();
 			return new PhaseUpdate();
@@ -76,10 +80,12 @@ public class OpRead extends OpDevice {
 	}
 
 	/** Phase to update the sensor */
-	private class PhaseUpdate extends Phase {
-		protected Phase poll(CommMessage mess) throws IOException {
+	private class PhaseUpdate extends Phase<SsiProperty> {
+		protected Phase<SsiProperty> poll(
+			CommMessage<SsiProperty> mess) throws IOException
+		{
 			RwisRec rec = records.get(site_id);
-			if(rec == null || rec.isExpired()) {
+			if (rec == null || rec.isExpired()) {
 				rec = new RwisRec(site_id, new RwisHeader());
 				records.put(site_id, rec);
 			}

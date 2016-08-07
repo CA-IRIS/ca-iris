@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010-2015  Minnesota Department of Transportation
+ * Copyright (C) 2010-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,8 +78,8 @@ public class DetectorPanel extends IPanel implements ProxyView<Detector> {
 	};
 
 	/** Lane type combobox */
-	private final JComboBox type_cbx =
-		new JComboBox(LaneType.getDescriptions());
+	private final JComboBox<LaneType> type_cbx =
+		new JComboBox<LaneType>(LaneType.values());
 
 	/**
 	 * Spinner for lane number

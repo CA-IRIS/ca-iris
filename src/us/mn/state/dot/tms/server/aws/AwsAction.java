@@ -20,12 +20,13 @@ import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.IrisUserHelper;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.SignMsgSource;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.server.DMSImpl;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * An AWS action, which contains all the data necessary to place
@@ -190,9 +191,13 @@ public class AwsAction {
 		AwsJob.logfinest("d=" + di + ", creating sign message " +
 			"with actp=" + act_priority + ", runp=" + run_priority +
 			", multi=" + multi);
-		SignMessage sm = di.createMessage(multi.toString(),
+		//FIXME CA-MN-MERGE check on this, aws => external?
+//		SignMessage sm = di.createMessage(multi.toString(),
+//			false, act_priority, run_priority,
+//			getSignMessageDuration());
+		SignMessage sm = di.createMsg(multi.toString(),
 			false, act_priority, run_priority,
-			getSignMessageDuration());
+			SignMsgSource.external, getSignMessageDuration());
 		return sm;
 	}
 
@@ -353,7 +358,7 @@ public class AwsAction {
 			return false;
 		String dmulti = getDeployedMulti(di);
 		AwsJob.logfinest("d=" + di + ", deployed msg=" + dmulti);
-		boolean eq = newmulti.isEquivalent(dmulti);
+		boolean eq = newmulti.equals(dmulti);
 		AwsJob.logfinest("d=" + di + ", new equals deployed=" + eq);
 		return eq;
 	}

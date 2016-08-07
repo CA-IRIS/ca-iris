@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2004-2014  Minnesota Department of Transportation
+ * Copyright (C) 2004-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
  *
  * @author Douglas Lau
  */
-public class StationImpl implements Station {
+public class StationImpl implements Station, VehicleSampler {
 
 	/** Breakdown speed (should be system attribute?) */
 	static private final int VSA_BREAKDOWN_SPEED_MPH = 25;
@@ -182,13 +182,9 @@ public class StationImpl implements Station {
 	}
 
 	/** Get a string representation of the station */
+	@Override
 	public String toString() {
 		return name;
-	}
-
-	/** Does this node have the specified detector? */
-	public boolean hasDetector(DetectorImpl det) {
-		return r_node.hasDetector(det);
 	}
 
 	/** Is this station active? */
@@ -201,7 +197,7 @@ public class StationImpl implements Station {
 	}
 
 	/** Current average station volume */
-	private float volume = MISSING_DATA;
+	private int volume = MISSING_DATA;
 
 	/** Current average station occupancy */
 	private float occupancy = MISSING_DATA;
@@ -209,7 +205,14 @@ public class StationImpl implements Station {
 	/** Current average station flow */
 	private int flow = MISSING_DATA;
 
+	/** Get the current vehicle count */
+	@Override
+	public int getCount() {
+		return volume;
+	}
+
 	/** Get the average station flow */
+	@Override
 	public int getFlow() {
 		return flow;
 	}
@@ -218,6 +221,7 @@ public class StationImpl implements Station {
 	private float density = MISSING_DATA;
 
 	/** Get the average station density */
+	@Override
 	public float getDensity() {
 		return density;
 	}
@@ -226,6 +230,7 @@ public class StationImpl implements Station {
 	private float speed = MISSING_DATA;
 
 	/** Get the average station speed */
+	@Override
 	public float getSpeed() {
 		return speed;
 	}
@@ -380,7 +385,7 @@ public class StationImpl implements Station {
 					low = Math.min(f, low);
 			}
 		}
-		volume = average(t_volume, n_volume);
+		volume = Math.round(average(t_volume, n_volume));
 		occupancy = average(t_occ, n_occ);
 		flow = Math.round(average(t_flow, n_flow));
 		density = average(t_density, n_density);

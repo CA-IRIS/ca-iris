@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,36 +16,28 @@
 package us.mn.state.dot.tms.client.dms;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Shape;
-import java.awt.Dimension;
 import java.awt.geom.AffineTransform;
 import java.util.Collection;
 import java.util.HashMap;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ListCellRenderer;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.MultiString;
-import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.CellRendererSize;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
-import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
 import us.mn.state.dot.tms.client.proxy.ProxyJList;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
-import us.mn.state.dot.tms.client.proxy.StyleSummary;
 import us.mn.state.dot.tms.client.proxy.TeslaAction;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 import us.mn.state.dot.tms.utils.I18N;
@@ -65,9 +57,8 @@ public class DMSManager extends ProxyManager<DMS> {
 	/** Color definition for AWS controlled style */
 	static private final Color COLOR_HELIOTROPE = new Color(1, 0.5f,0.9f);
 
-	/** Mapping of DMS names to cell renderers */
-	private final HashMap<String, DmsCellRenderer> renderers =
-		new HashMap<String, DmsCellRenderer>();
+	/** Mapping of DMS to page one rasters */
+	private final HashMap<DMS, RasterGraphic> rasters = new HashMap<>();
 
 	/** Action to blank the selected DMS */
 	private BlankDmsAction blankAction;
@@ -112,7 +103,7 @@ public class DMSManager extends ProxyManager<DMS> {
 	protected ProxyTheme<DMS> createTheme() {
 		// NOTE: the ordering of themes controls which color is used
 		//       to render the sign icon on the map
-		ProxyTheme<DMS> theme = new ProxyTheme<DMS>(this, MARKER);
+		ProxyTheme<DMS> theme = new ProxyTheme<>(this, MARKER);
 		theme.addStyle(ItemStyle.AVAILABLE, ProxyTheme.COLOR_AVAILABLE);
 		theme.addStyle(ItemStyle.DEPLOYED, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.SCHEDULED, ProxyTheme.COLOR_SCHEDULED);
@@ -134,69 +125,53 @@ public class DMSManager extends ProxyManager<DMS> {
 
 	/** Create a list cell renderer */
 	@Override
-	public ListCellRenderer createCellRenderer() {
-		return new ListCellRenderer() {
-			public Component getListCellRendererComponent(
-				JList list, Object value, int index,
-				boolean isSelected, boolean cellHasFocus)
-			{
-				DmsCellRenderer r = lookupRenderer(value);
-				if (r != null) {
-					return r.getListCellRendererComponent(
-						list, value, index, isSelected,
-						cellHasFocus);
-				} else
-					return new JLabel();
+	public ListCellRenderer<DMS> createCellRenderer() {
+		return new DmsCellRenderer(getCellSize()) {
+			@Override protected RasterGraphic getPageOne(DMS dms) {
+				return rasters.get(dms);
 			}
 		};
-	}
-
-	/** Lookup a DMS cell renderer */
-	private DmsCellRenderer lookupRenderer(Object value) {
-		if (value instanceof DMS) {
-			DMS dms = (DMS)value;
-			return renderers.get(dms.getName());
-		} else
-			return null;
 	}
 
 	/** Add a proxy to the manager */
 	@Override
 	protected void proxyAddedSwing(DMS dms) {
-		updateCellRenderer(dms);
+		updateRaster(dms);
 		super.proxyAddedSwing(dms);
 	}
 
-	/** Update one DMS cell renderer */
-	private void updateCellRenderer(DMS dms) {
-		DmsCellRenderer r = new DmsCellRenderer(dms, getCellSize());
-		r.initialize();
-		renderers.put(dms.getName(), r);
+	/** Update one DMS raster */
+	private void updateRaster(DMS dms) {
+		rasters.put(dms, DMSHelper.getPageOne(dms));
 	}
 
-	/** Enumeraton complete */
+	/** Enumeration complete */
 	@Override
 	protected void enumerationCompleteSwing(Collection<DMS> proxies) {
 		super.enumerationCompleteSwing(proxies);
 		for (DMS dms : proxies)
-			updateCellRenderer(dms);
+			updateRaster(dms);
 	}
 
 	/** Check if an attribute change is interesting */
 	@Override
 	protected boolean checkAttributeChange(String a) {
 		return super.checkAttributeChange(a)
-		    || "messageCurrent".equals(a)
-		    || "ownerCurrent".equals(a);
+		    || "messageCurrent".equals(a);
 	}
 
 	/** Called when a proxy attribute has changed */
 	@Override
 	protected void proxyChangedSwing(DMS dms, String a) {
-		DmsCellRenderer r = lookupRenderer(dms);
-		if (r != null)
-			r.updateAttr(a);
+		if ("messageCurrent".equals(a))
+			updateRaster(dms);
 		super.proxyChangedSwing(dms, a);
+	}
+
+	/** Check if a DMS style is visible */
+	@Override
+	protected boolean isStyleVisible(DMS dms) {
+		return !DMSHelper.isHidden(dms);
 	}
 
 	/** Create a proxy JList */
@@ -206,14 +181,6 @@ public class DMSManager extends ProxyManager<DMS> {
 		list.setLayoutOrientation(JList.VERTICAL_WRAP);
 		list.setVisibleRowCount(0);
 		return list;
-	}
-
-	/** Set the current cell size */
-	@Override
-	public void setCellSize(CellRendererSize size) {
-		super.setCellSize(size);
-		for (DmsCellRenderer r: renderers.values())
-			updateCellRenderer(r.dms);
 	}
 
 	/** Create a properties form for the specified proxy */
@@ -229,13 +196,13 @@ public class DMSManager extends ProxyManager<DMS> {
 		JPopupMenu p = new JPopupMenu();
 		p.add(makeMenuLabel(getDescription(dms)));
 		p.addSeparator();
-		p.add(new MapAction(desktop.client, dms, dms.getGeoLoc()));
+		p.add(new MapAction<>(desktop.client, dms, dms.getGeoLoc()));
 		p.addSeparator();
-		if(blankAction != null)
+		if (blankAction != null)
 			p.add(blankAction);
-		if(TeslaAction.isConfigured())
-			p.add(new TeslaAction<DMS>(dms));
-		p.add(new PropertiesAction<DMS>(this, dms));
+		if (TeslaAction.isConfigured())
+			p.add(new TeslaAction<>(dms));
+		p.add(new PropertiesAction<>(this, dms));
 		return p;
 	}
 
@@ -246,18 +213,9 @@ public class DMSManager extends ProxyManager<DMS> {
 		p.add(new JLabel(I18N.get("dms.title") + ": " +
 			n_selected));
 		p.addSeparator();
-		if(blankAction != null)
+		if (blankAction != null)
 			p.add(blankAction);
 		return p;
-	}
-
-	/** Find the map geo location for a DMS */
-	@Override
-	public MapGeoLoc findGeoLoc(DMS proxy) {
-		if(ItemStyle.LCS.checkBit(proxy.getStyles()))
-			return null;
-		else
-			return super.findGeoLoc(proxy);
 	}
 
 	/** Find the map geo location for a proxy */
@@ -270,8 +228,8 @@ public class DMSManager extends ProxyManager<DMS> {
 	@Override
 	public boolean checkStyle(ItemStyle is, DMS proxy) {
 		long styles = proxy.getStyles();
-		for(ItemStyle s: ItemStyle.toStyles(styles)) {
-			if(s == is)
+		for (ItemStyle s: ItemStyle.toStyles(styles)) {
+			if (s == is)
 				return true;
 		}
 		return false;

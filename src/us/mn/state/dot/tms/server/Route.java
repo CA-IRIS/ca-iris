@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.server;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.LaneType;
@@ -118,12 +119,12 @@ public class Route implements Comparable<Route> {
 		dlog.log(name + ": " + m);
 	}
 
-	/** Get a set of detectors on route */
-	public DetectorSet getDetectorSet(LaneType lt) {
-		DetectorSet ds = new DetectorSet();
+	/** Get a set of vehicle samplers on route */
+	public SamplerSet getSamplerSet(LaneType lt) {
+		ArrayList<VehicleSampler> vs = new ArrayList<VehicleSampler>();
 		for (CorridorTrip trip: trips)
-			trip.lookupDetectors(ds, lt);
-		return ds;
+			vs.addAll(trip.lookupSamplers(lt));
+		return new SamplerSet(vs);
 	}
 
 	/** Compare to another route (for sorting) */

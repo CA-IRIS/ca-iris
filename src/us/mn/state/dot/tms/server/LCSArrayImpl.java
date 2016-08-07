@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,10 +204,9 @@ public class LCSArrayImpl extends DeviceImpl implements LCSArray {
 
 	/** Set the next indications owner */
 	public synchronized void setOwnerNext(User o) {
-		if(ownerNext != null && o != null) {
-			System.err.println("LCSArrayImpl.setOwnerNext: " +
-				getName() + ", " + ownerNext.getName() +
-				" vs. " + o.getName());
+		if (ownerNext != null && o != null) {
+			logError("OWNER CONFLICT: " + ownerNext.getName() +
+			         " vs. " + o.getName());
 			ownerNext = null;
 		} else
 			ownerNext = o;
@@ -304,20 +303,12 @@ public class LCSArrayImpl extends DeviceImpl implements LCSArray {
 	protected void logIndications(Integer[] ind, User o) {
 		EventType et = EventType.LCS_DEPLOYED;
 		String text = createLogText(ind);
-		if(areAllDark(ind)) {
+		if (areAllDark(ind)) {
 			et = EventType.LCS_CLEARED;
 			text = null;
 		}
-		String owner = null;
-		if(o != null)
-			owner = o.getName();
-		SignStatusEvent ev = new SignStatusEvent(et, name, text, owner);
-		try {
-			ev.doStore();
-		}
-		catch(TMSException e) {
-			e.printStackTrace();
-		}
+		String owner = (o != null) ? o.getName() : null;
+		logEvent(new SignStatusEvent(et, name, text, owner));
 	}
 
 	/** Create a message to log LCS sign status event */
@@ -554,8 +545,7 @@ public class LCSArrayImpl extends DeviceImpl implements LCSArray {
 	/** Test if LCS array is available */
 	private boolean isAvailable() {
 		return !isLocked() &&
-		        isActive() &&
-		       !isFailed() &&
+		        isOnline() &&
 		       !isDeployed() &&
 		       !needsMaintenance();
 	}

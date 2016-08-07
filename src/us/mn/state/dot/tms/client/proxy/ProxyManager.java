@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2010-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -77,6 +77,11 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return SystemAttrEnum.MAP_ICON_SIZE_SCALE_MAX.getFloat();
 	}
 
+	/** Check if the location is set */
+	static private boolean isLocationSet(MapGeoLoc loc) {
+		return loc != null && !GeoLocHelper.isNull(loc.getGeoLoc());
+	}
+
 	/** User session */
 	protected final Session session;
 
@@ -107,16 +112,21 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Selection model */
 	protected final ProxySelectionModel<T> s_model =
-		new ProxySelectionModel<T>();
+		new ProxySelectionModel<>();
 
 	/** Theme for drawing objects on a map layer */
 	private final ProxyTheme<T> theme;
 
 	/** Cache of MapObject to proxy */
-	private final ProxyMapCache<T> map_cache = new ProxyMapCache<T>();
+	private final ProxyMapCache<T> map_cache = new ProxyMapCache<>();
 
 	/** Map layer for the proxy type */
 	protected final ProxyLayer<T> layer;
+
+	/** Get the map layer */
+	public ProxyLayer<T> getLayer() {
+		return layer;
+	}
 
 	/** Default style */
 	private final ItemStyle def_style;
@@ -152,8 +162,8 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Create a layer for this proxy type */
-	protected ProxyLayer<T> createLayer() {
-		return new ProxyLayer<T>(this);
+	private ProxyLayer<T> createLayer() {
+		return new ProxyLayer<>(this);
 	}
 
 	/** Add a proxy to the manager */
@@ -258,13 +268,13 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Create a list cell renderer */
-	public ListCellRenderer createCellRenderer() {
-		return new ProxyCellRenderer<T>(this);
+	public ListCellRenderer<T> createCellRenderer() {
+		return new ProxyCellRenderer<>(this);
 	}
 
 	/** Create a proxy JList */
 	public ProxyJList<T> createList() {
-		return new ProxyJList<T>(this);
+		return new ProxyJList<>(this);
 	}
 
 	/** Create a theme for this type of proxy */
@@ -281,9 +291,12 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return shape;
 	}
 
-	/** Set the current marker shape */
-	public final void setShape(Shape s) {
-		shape = s;
+	/** Set the shape scale */
+	public void setShapeScale(float scale) {
+		float sc = adjustScale(scale);
+		AffineTransform at = new AffineTransform();
+		at.setToScale(sc, sc);
+		shape = getShape(at);
 	}
 
 	/** Current cell renderer size */
@@ -310,7 +323,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Create layer state for a map bean */
-	public final LayerState createState(MapBean mb) {
+	public LayerState createState(MapBean mb) {
 		return layer.createState(mb);
 	}
 
@@ -319,18 +332,30 @@ abstract public class ProxyManager<T extends SonarObject> {
 		return s_model;
 	}
 
+	//FIXME CA-MN-MERGE getStyleSummary is better, here for later comparison
+	/** Create a new style summary for this proxy type, with no cell
+	 * renderer size buttons. */
+	public StyleSummary<T> createStyleSummary() {
+		return new StyleSummary<>(this, def_style, false);
+	}
+
+	/** Create a new style summary for this proxy type */
+	public StyleSummary<T> createStyleSummary(boolean enableCellSizeBtns) {
+		return new StyleSummary<>(this, def_style, enableCellSizeBtns);
+	}
+
 	/** Gets the style summary for this proxy type, with no cell
 	 * renderer size buttons. */
 	public StyleSummary<T> getStyleSummary() {
 		if (null == style_summary)
-			style_summary = new StyleSummary<T>(this, def_style, false);
+			style_summary = new StyleSummary<>(this, def_style, false);
 		return style_summary;
 	}
 
 	/** Gets the style summary for this proxy type */
 	public StyleSummary<T> getStyleSummary(boolean enableCellSizeBtns) {
 		if (null == style_summary)
-			style_summary = new StyleSummary<T>(this, def_style, enableCellSizeBtns);
+			style_summary = new StyleSummary<>(this, def_style, enableCellSizeBtns);
 		return style_summary;
 	}
 
@@ -351,7 +376,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Create a style list model for the given symbol */
 	protected StyleListModel<T> createStyleListModel(Symbol s) {
-		return new StyleListModel<T>(this, s.getLabel());
+		return new StyleListModel<>(this, s.getLabel());
 	}
 
 	/** Check if a given attribute affects a proxy style */
@@ -374,7 +399,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Show the properties form for the specified proxy */
 	public final void showPropertiesForm(T proxy) {
 		SonarObjectForm<T> form = createPropertiesForm(proxy);
-		if(form != null)
+		if (form != null)
 			session.getDesktop().show(form);
 	}
 
@@ -386,14 +411,14 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Show the popup menu for the selected proxy or proxies */
 	public void showPopupMenu(MouseEvent e) {
 		JPopupMenu popup = createPopup();
-		if(popup != null) {
+		if (popup != null) {
 			popup.setInvoker(e.getComponent());
 			popup.show(e.getComponent(), e.getX(), e.getY());
 		}
 	}
 
 	/** Create a popup menu for the selected proxy object(s) */
-	protected JPopupMenu createPopup() {
+	private JPopupMenu createPopup() {
 		T proxy = s_model.getSingleSelection();
 		if (proxy != null)
 			return createPopupSingle(proxy);
@@ -414,36 +439,37 @@ abstract public class ProxyManager<T extends SonarObject> {
 	}
 
 	/** Iterate through all proxy objects */
-	public MapObject forEach(MapSearcher ms, float scale) {
-		float sc = adjustScale(scale);
-		AffineTransform at = new AffineTransform();
-		at.setToScale(sc, sc);
-		return forEach(ms, at);
-	}
-
-	/** Iterate through all proxy objects */
-	protected MapObject forEach(MapSearcher ms, AffineTransform at) {
-		shape = getShape(at);
-		synchronized(map_cache) {
-			for(MapGeoLoc loc: map_cache) {
-				if(isLocationSet(loc)) {
-					if(ms.next(loc))
-						return loc;
-				}
+	public MapObject forEach(MapSearcher s) {
+		synchronized (map_cache) {
+			for (MapGeoLoc loc: map_cache) {
+				if (isVisible(loc) && s.next(loc))
+					return loc;
 			}
 		}
 		return null;
 	}
 
-	/** Check if the location is set */
-	static private boolean isLocationSet(MapGeoLoc loc) {
-		return loc != null && !GeoLocHelper.isNull(loc.getGeoLoc());
+	/** Check if a MapGeoLoc is visible */
+	private boolean isVisible(MapGeoLoc loc) {
+		return isLocationSet(loc) && isStyleVisible(loc);
+		}
+
+	/** Check if a MapGeoLoc style is visible */
+	private boolean isStyleVisible(MapGeoLoc loc) {
+		T proxy = findProxy(loc);
+		return (proxy != null) &&
+		       (isStyleVisible(proxy) || s_model.isSelected(proxy));
+	}
+
+	/** Check if a proxy style is visible */
+	protected boolean isStyleVisible(T proxy) {
+		return true;
 	}
 
 	/** Find the map geo location for a proxy */
 	public MapGeoLoc findGeoLoc(T proxy) {
 		GeoLoc loc = getGeoLoc(proxy);
-		if(loc != null)
+		if (loc != null)
 			return loc_manager.findMapGeoLoc(loc);
 		else
 			return null;
@@ -454,7 +480,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Find a proxy matching the given map object */
 	public T findProxy(MapObject mo) {
-		if(mo instanceof MapGeoLoc)
+		if (mo instanceof MapGeoLoc)
 			return map_cache.lookup((MapGeoLoc)mo);
 		else
 			return null;
@@ -484,9 +510,5 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Check if manager has a layer to display */
 	public final boolean hasLayer() {
 		return canRead() && (getZoomThreshold() > 0);
-	}
-
-	protected ProxyLayer<T> getLayer() {
-		return layer;
 	}
 }

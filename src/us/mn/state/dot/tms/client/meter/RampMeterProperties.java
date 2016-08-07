@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,8 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	};
 
 	/** Camera preset combo box */
-	private final JComboBox preset_cbx = new JComboBox();
+	private final JComboBox<CameraPreset> preset_cbx =
+		new JComboBox<CameraPreset>();
 
 	/** Camera preset combo box model */
 	private final IComboBoxModel<CameraPreset> preset_mdl;
@@ -105,8 +106,8 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	};
 
 	/** Meter type combo box component */
-	private final JComboBox meter_type_cbx = new JComboBox(
-		RampMeterType.getDescriptions());
+	private final JComboBox<RampMeterType> meter_type_cbx = new JComboBox
+		<RampMeterType>(RampMeterType.values());
 
 	/** Field for Storage length (feet) */
 	private final JTextField storage_txt = new JTextField(6);
@@ -130,8 +131,8 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	};
 
 	/** Combo box for metering algorithm */
-	private final JComboBox algorithm_cbx = new JComboBox(
-		MeterAlgorithm.getDescriptions());
+	private final JComboBox<MeterAlgorithm> algorithm_cbx = new JComboBox
+		<MeterAlgorithm>(MeterAlgorithm.values());
 
 	/** Field for AM target rate */
 	private final JTextField am_target_txt = new JTextField(6);
@@ -151,7 +152,7 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	};
 
 	/** Advance warning beacon combo box */
-	private final JComboBox beacon_cbx = new JComboBox();
+	private final JComboBox<Beacon> beacon_cbx = new JComboBox<Beacon>();
 
 	/** Advance warning beacon combo box model */
 	private final IComboBoxModel<Beacon> beacon_mdl;
@@ -166,8 +167,8 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	private final JLabel queue_lbl = new JLabel();
 
 	/** Meter lock combo box component */
-	private final JComboBox lock_cbx = new JComboBox(
-		RampMeterLock.getDescriptions());
+	private final JComboBox<RampMeterLock> lock_cbx = new JComboBox
+		<RampMeterLock>(RampMeterLock.values());
 
 	/** Lock meter action */
 	private final LockMeterAction lock_action;
@@ -387,6 +388,6 @@ public class RampMeterProperties extends SonarObjectForm<RampMeter> {
 	/** Get meter lock index */
 	private int getMLock() {
 		Integer ml = proxy.getMLock();
-		return (ml != null) ? ml : 0;
+		return (ml != null) ? ml : RampMeterLock.OFF.ordinal();
 	}
 }

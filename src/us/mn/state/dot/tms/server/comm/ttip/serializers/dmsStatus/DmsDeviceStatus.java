@@ -172,7 +172,9 @@ public class DmsDeviceStatus {
             multi = p1;
         else
             multi = "";
-
-        return dms.createMessage(multi, false, DMSMessagePriority.OTHER_SYSTEM);
+        //FIXME CA-MN-MERGE fixing for new implementation
+//        return dms.createMessage(multi, false, DMSMessagePriority.OTHER_SYSTEM);
+        return dms.createMsg(multi, false, DMSMessagePriority.OTHER_SYSTEM,
+                             DMSMessagePriority.OTHER_SYSTEM, null, null);
     }
 }

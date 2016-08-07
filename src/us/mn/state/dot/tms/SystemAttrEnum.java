@@ -1,8 +1,9 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2012       Iteris Inc.
  * Copyright (C) 2014-2015  AHMCT, University of California
- * Copyright (C) 2012  Iteris Inc.
+ * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Michael Darter
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public enum SystemAttrEnum {
 	CAMERA_AUTOPLAY(true, Change.RESTART_CLIENT),
@@ -54,12 +56,15 @@ public enum SystemAttrEnum {
 	COMM_EVENT_PURGE_DAYS(14, 0, 1000),
 	DATABASE_VERSION(String.class, Change.RESTART_SERVER),
 	DETECTOR_AUTO_FAIL_ENABLE(true),
+	DEVICE_OP_STATUS_ENABLE(false, Change.RESTART_CLIENT),
 	DIALUP_POLL_PERIOD_MINS(60, 2, 1440),
-	DMS_AWS_ENABLE(false),					// TODO: unknown Change.XXX
-	DMS_AWS_MSG_FILE_URL("http://iris/iris_aws.txt"),	// TODO: "
-	DMS_AWS_USER_NAME("IRISAWS"),				// TODO: "
+	DICT_ALLOWED_SCHEME(0, 0, 2),
+	DICT_BANNED_SCHEME(0, 0, 2),
+	DMS_AWS_ENABLE(false),
+	DMS_AWS_MSG_FILE_URL("http://iris/iris_aws.txt"),
+	DMS_AWS_USER_NAME("IRISAWS"),
 	DMS_BRIGHTNESS_ENABLE(true, Change.RESTART_CLIENT),
-	DMS_COMM_LOSS_MINUTES(5, 1, 60),
+	DMS_COMM_LOSS_MINUTES(5, 0, 65535),
 	DMS_COMPOSER_EDIT_MODE(1, 0, 2, Change.RESTART_CLIENT),
 	DMS_COMPOSER_TRIM(true),
 	DMS_COMPOSER_UPPERCASE(false, Change.RESTART_CLIENT),
@@ -76,7 +81,6 @@ public enum SystemAttrEnum {
 	DMS_MAX_LINES(3, 1, 12, Change.RESTART_CLIENT),
 	DMS_MESSAGE_MIN_PAGES(1, 1, DMS_MESSAGE_MAX_PAGES,
 		Change.RESTART_CLIENT),
-	DMS_OP_STATUS_ENABLE(false, Change.RESTART_CLIENT),
 	DMS_PAGE_OFF_DEFAULT_SECS(0f, 0f, 60f),
 	DMS_PAGE_ON_DEFAULT_SECS(2f, 0f, 60f),
 	DMS_PAGE_ON_MAX_SECS(10.0f, 0f, 100f, Change.RESTART_CLIENT),
@@ -144,6 +148,8 @@ public enum SystemAttrEnum {
 	SPEED_LIMIT_MAX_MPH(75, 0, 100),
 	SYSTEM_PROTECTED_USER_ROLE("administrator"),
 	TESLA_HOST(String.class),
+	TOLL_MIN_PRICE(0.25f, 0f, 100f),
+	TOLL_MAX_PRICE(8f, 1f, 100f),
 	TRAVEL_TIME_MAX_LEGS(8, 1, 20),
 	TRAVEL_TIME_MAX_MILES(16, 1, 30),
 	TRAVEL_TIME_MIN_MPH(15, 1, 50),
@@ -283,7 +289,7 @@ public enum SystemAttrEnum {
 		change_action = ca;
 		assert isValidBoolean() || isValidFloat() ||
 		       isValidInteger() || isValidString() ||
-			   isValidColor();
+		       isValidColor();
 	}
 
 	/** Get a description of the system attribute enum. */

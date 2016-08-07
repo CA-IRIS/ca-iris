@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  * Copyright (C) 2012  Iteris Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -126,32 +126,44 @@ public enum CommProtocol {
 	/** TransCore E6 tag reader (32) */
 	TRANSCORE_E6("TransCore E6"),
 
-	/** CA RWIS (33) */
+	/** Control By Web (33) */
+	CBW("CBW"),
+
+	/** Incident feed (34) */
+	INC_FEED("Incident Feed"),
+
+	/** CA RWIS (35) */
 	CA_RWIS("CA RWIS"),
 
-	/** TTIP DMS (34) */
+	/** TTIP DMS (36) */
 	TTIP_DMS("TTIP DMS");
 
 	/** Create a new comm protocol value */
-	private CommProtocol(String d) {
+	CommProtocol(String d) {
 		description = d;
 	}
 
 	/** Protocol description */
 	public final String description;
 
+	/** Get the string representation */
+	@Override
+	public String toString() {
+		return description;
+	}
+
 	/** Get a comm protocol from an ordinal value */
 	static public CommProtocol fromOrdinal(short o) {
-		for (CommProtocol cp: values()) {
-			if (cp.ordinal() == o)
-				return cp;
-		}
+		if (o >= 0 && o < values().length)
+			return values()[o];
+		else
 		return null;
 	}
 
+	//FIXME CA-MN-MERGE needed?
 	/** Get an array of comm protocol descriptions */
 	static public String[] getDescriptions() {
-		LinkedList<String> d = new LinkedList<String>();
+		LinkedList<String> d = new LinkedList<>();
 		for (CommProtocol cp: values())
 			d.add(cp.description);
 		return d.toArray(new String[d.size()]);

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010  Minnesota Department of Transportation
+ * Copyright (C) 2010-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,19 @@
  */
 package us.mn.state.dot.tms.client.incident;
 
-import java.awt.Component;
-import javax.swing.JList;
-import javax.swing.DefaultListCellRenderer;
 import us.mn.state.dot.tms.IncidentDetail;
+import us.mn.state.dot.tms.client.widget.IListCellRenderer;
 
 /**
  * Cell renderer used for incident detail.
  *
  * @author Douglas Lau
  */
-public class IncidentDetailRenderer extends DefaultListCellRenderer {
+public class IncidentDetailRenderer extends IListCellRenderer<IncidentDetail> {
 
-	/** Configure the renderer component for incident detail */
-	public Component getListCellRendererComponent(JList list,
-		Object value, int index, boolean isSelected,
-		boolean cellHasFocus)
-	{
-		String v = "";
-		if(value instanceof IncidentDetail) {
-			IncidentDetail dtl = (IncidentDetail)value;
-			v = dtl.getDescription();
-		}
-		return super.getListCellRendererComponent(list, v, index,
-			isSelected, cellHasFocus);
+	/** Convert value to a string */
+	@Override
+	protected String valueToString(IncidentDetail value) {
+		return value.getDescription();
 	}
 }

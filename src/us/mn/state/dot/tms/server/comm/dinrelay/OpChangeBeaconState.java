@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2014  Minnesota Department of Transportation
+ * Copyright (C) 2014-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,8 +60,8 @@ public class OpChangeBeaconState extends OpDevice<DinRelayProperty> {
 	protected class ChangeBeacon extends Phase<DinRelayProperty> {
 
 		/** Change the beacon state */
-		protected Phase<DinRelayProperty> poll(CommMessage mess)
-			throws IOException
+		protected Phase<DinRelayProperty> poll(
+			CommMessage<DinRelayProperty> mess) throws IOException
 		{
 			int p = beacon.getPin();
 			if (p < 1 && p > 8) {

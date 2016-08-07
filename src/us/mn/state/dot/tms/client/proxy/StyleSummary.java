@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2004-2015  Minnesota Department of Transportation
- * Copyright (C) 2010       AHMCT, University of California, Davis
+ * Copyright (C) 2004-2016  Minnesota Department of Transportation
+ * Copyright (C) 2010 AHMCT, University of California, Davis
  * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.ListCellRenderer;
 import javax.swing.border.TitledBorder;
 
 import us.mn.state.dot.map.Symbol;
@@ -73,7 +72,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 
 	/** Mapping of style names to widgets */
 	private final HashMap<String, StyleWidgets> widgets =
-		new HashMap<String, StyleWidgets>();
+		new HashMap<>();
 
 	/** Titled border */
 	private final TitledBorder border;
@@ -84,7 +83,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 
 	/** The listeners of this style summary */
 	private final ArrayList<ActionListener> lsnrs =
-		new ArrayList<ActionListener>();
+		new ArrayList<>();
 
 	/** Selected style list model */
 	private StyleListModel<T> model;
@@ -169,14 +168,13 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 	{
 		super(new GridBagLayout());
 		manager = man;
-		ListCellRenderer renderer = manager.createCellRenderer();
 		border = BorderFactory.createTitledBorder("");
 		setBorder(border);
 		GridBagConstraints bag = new GridBagConstraints();
 		ProxyTheme<T> theme = manager.getTheme();
 		List<Symbol> symbols = theme.getSymbols();
 		p_list = manager.createList();
-		p_list.setCellRenderer(renderer);
+		p_list.setCellRenderer(manager.createCellRenderer());
 		JScrollPane sp = new JScrollPane(p_list);
 		final int n_rows = (symbols.size() - 1) / STYLE_COLS + 1;
 		// grid is filled top to bottom, left to right
@@ -331,8 +329,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 	/** The cell renderer has changed sizes, update cell renderers. */
 	private void updateRenderer(CellRendererSize size) {
 		manager.setCellSize(size);
-		ListCellRenderer renderer = manager.createCellRenderer();
-		p_list.setCellRenderer(renderer);
+		p_list.setCellRenderer(manager.createCellRenderer());
 	}
 
 	/** Set the selected style, results in action + button selection
@@ -368,10 +365,10 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 
 		// wipes out text field
 //		filter_text_field.setText("");
-		if(mdl != null) {
+		if (mdl != null) {
 			model.setFilter(mdl.getFilter());
 			mdl.dispose();
-		}
+	}
 		fireSelectionChanged();
 	}
 

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2012  Minnesota Department of Transportation
+ * Copyright (C) 2009-2015  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.Outline;
 import us.mn.state.dot.map.Style;
 import us.mn.state.dot.map.StyledTheme;
+import us.mn.state.dot.map.Symbol;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -58,6 +60,10 @@ abstract public class SegmentTheme extends StyledTheme {
 	static protected final Style DEFAULT_STYLE = new Style(I18N.get(
 		"detector.no.data"), OUTLINE, GRAY);
 
+	/** R_node style theme */
+	static private final Style R_NODE_STYLE = new Style(I18N.get("r_node"),
+		OUTLINE, new Color(255, 96, 128, 128));
+
 	/** Size of legend icons */
 	static private final int lsize = UI.scaled(22);
 
@@ -65,40 +71,45 @@ abstract public class SegmentTheme extends StyledTheme {
 	protected SegmentTheme(String name) {
 		super(name, new Rectangle(0, 0, 200, 200), lsize);
 		addStyle(DEFAULT_STYLE);
+		addStyle(R_NODE_STYLE);
 	}
 
 	/** Draw the specified map object */
+	@Override
 	public void draw(Graphics2D g, MapObject mo, float scale) {
-		// don't apply transform
+		/* These map objects will always be MapSegment,
+		 * so don't apply a transform */
 		getSymbol(mo).draw(g, mo.getShape(), mo.getOutlineShape(),
 			scale);
 	}
 
 	/** Draw a selected map object */
+	@Override
 	public void drawSelected(Graphics2D g, MapObject mo, float scale) {
-		Shape shape = mo.getShape();
-		Outline outline = Outline.createDashed(Color.WHITE, 2);
-		g.setColor(outline.color);
-		g.setStroke(outline.getStroke(scale));
-		g.draw(shape);
-		outline = Outline.createSolid(Color.WHITE, 4);
-		Shape ellipse = createEllipse(shape);
-		g.setStroke(outline.getStroke(scale));
-		g.draw(ellipse);
+		/* Selected map object will always be the r_node */
+		AffineTransform t = g.getTransform();
+		super.draw(g, mo, scale);
+		g.setTransform(t);
+		super.drawSelected(g, mo, scale);
 	}
 
 	/** Get the style to draw a given map object */
+	@Override
 	public Style getStyle(MapObject mo) {
-		MapSegment ms = (MapSegment)mo;
-		return getStyle(ms);
+		if (mo instanceof MapSegment) {
+			MapSegment ms = (MapSegment)mo;
+			return getSegmentStyle(ms);
+		} else
+			return R_NODE_STYLE;
 	}
 
 	/** Get the style to draw a given segment */
-	abstract protected Style getStyle(MapSegment ms);
+	abstract protected Style getSegmentStyle(MapSegment ms);
 
 	/** Get the tooltip text for a given segment */
+	@Override
 	public String getTip(MapObject mo) {
-		if(mo instanceof MapSegment)
+		if (mo instanceof MapSegment)
 			return ((MapSegment)mo).getTip();
 		else
 			return null;

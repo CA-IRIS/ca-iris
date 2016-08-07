@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2015  Minnesota Department of Transportation
+ * Copyright (C) 2015-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ import java.util.Date;
 import us.mn.state.dot.tms.server.TagReaderImpl;
 import us.mn.state.dot.tms.server.TagType;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.server.comm.CRC;
 import us.mn.state.dot.tms.server.comm.ParsingException;
 
 /**
@@ -26,6 +27,9 @@ import us.mn.state.dot.tms.server.comm.ParsingException;
  * @author Douglas Lau
  */
 public class TagTransaction extends E6Property {
+
+	/** SeGo Page 0 CRC */
+	static private final CRC PAGE0_CRC = new CRC(12, 0x80F, 0x000, false);
 
 	/** SeGo region code for MN */
 	static private final int REGION_MN = 0x0A;
@@ -37,7 +41,7 @@ public class TagTransaction extends E6Property {
 	public enum TransactionType {
 		SeGo_streamlined_read	(0x3021, 28),
 		read_verify_page	(0x3022, 20),
-		seen_frame_count	(0x3043, 13),
+		seen_frame_count	(0x3043, 6),
 		ASTM_read		(0x5014, 17);
 		private TransactionType(int c, int l) {
 			code = c;
@@ -83,6 +87,12 @@ public class TagTransaction extends E6Property {
 		return null;
 	}
 
+	/** Check if the data length is valid for the transaction type */
+	private boolean isLengthValid() {
+		TransactionType tt = getTransactionType();
+		return (tt != null) && (data.length == tt.len);
+	}
+
 	/** Get the date/time stamp */
 	public Long getStamp() {
 		if (isValidSeGoRead())
@@ -116,6 +126,14 @@ public class TagTransaction extends E6Property {
 		return null;
 	}
 
+	/** Get the agency ID */
+	public Integer getAgency() {
+		if (isValidSeGoRead())
+			return parseSeGoAgency();
+		else
+			return null;
+	}
+
 	/** Get the transponder ID */
 	public Integer getId() {
 		if (isValidSeGoRead())
@@ -129,18 +147,50 @@ public class TagTransaction extends E6Property {
 	private boolean isValidSeGoRead() {
 		TransactionType tt = getTransactionType();
 		if (tt == TransactionType.SeGo_streamlined_read) {
-			// FIXME: check CRC
-			return (data.length == tt.len);
-		}
-		return false;
+			return isLengthValid()
+			    && isSeGoMnPass()
+			    && isValidMnPassCRC();
+		} else
+			return false;
+	}
+
+	/** Is it a SeGo MnPass tag? */
+	private boolean isSeGoMnPass() {
+		/* Non-MnPass tags have E022 at start of page 0 */
+		return data[2] != 0xE0;
+	}
+
+	/** Check if SeGo page 0 CRC is valid.  NOTE: length must be valid */
+	private boolean isValidMnPassCRC() {
+		byte[] page0 = new byte[7];
+		page0[0] = getShiftedData(2);
+		page0[1] = getShiftedData(3);
+		page0[2] = getShiftedData(4);
+		page0[3] = getShiftedData(5);
+		page0[4] = getShiftedData(6);
+		page0[5] = getShiftedData(7);
+		page0[6] = (byte) (data[8] << 4);
+		return PAGE0_CRC.calculate(page0) == getSeGoCRC12();
+	}
+
+	/** Get data shifted by 4 bits (for CRC) */
+	private byte getShiftedData(int o) {
+		return (byte) ((data[o] << 4) | ((data[o + 1] >> 4) & 0x0F));
+	}
+
+	/** Get SeGo CRC-12 from data packet */
+	private int getSeGoCRC12() {
+		return ((data[2] & 0xF0) << 4) | (data[9] & 0xFF);
+	}
+
+	/** Parse a SeGo agency */
+	private Integer parseSeGoAgency() {
+		return parse16(data, 4);
 	}
 
 	/** Parse a SeGo ID */
 	private Integer parseSeGoId() {
-		if (parse8(data, 4) != REGION_MN)
-			return null;
-		if (parse8(data, 5) != AGENCY_MNDOT)
-			return null;
+		/* Note: byte 5 is agency, but we mask it off here */
 		return parse32(data, 5) & 0xFFFFFF;
 	}
 
@@ -149,7 +199,7 @@ public class TagTransaction extends E6Property {
 		TransactionType tt = getTransactionType();
 		if (tt == TransactionType.ASTM_read) {
 			// FIXME: check CRC
-			return (data.length == tt.len);
+			return isLengthValid();
 		}
 		return false;
 	}
@@ -178,10 +228,20 @@ public class TagTransaction extends E6Property {
 		if (isValidRead()) {
 			Long stamp = getStamp();
 			TagType typ = getTagType();
+			Integer agency = getAgency();
 			Integer tid = getId();
 			Boolean hov = getHOV();
 			if (stamp != null && typ != null && tid != null)
-				tr.logRead(stamp, typ, tid, hov);
+				tr.logRead(stamp, typ, agency, tid, hov);
+		}
+	}
+
+	/** Parse a tag type in a seen frame count transaction */
+	private TagType parseSeenTagType() {
+		switch (data[2]) {
+		case 1: return TagType.SeGo;
+		case 3: return TagType.ASTM;
+		default: return null;
 		}
 	}
 
@@ -189,8 +249,29 @@ public class TagTransaction extends E6Property {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+		TransactionType tt = getTransactionType();
 		sb.append("tag transaction: ");
-		sb.append(getTransactionType());
+		sb.append(tt);
+		if (!isLengthValid()) {
+			sb.append(" INVALID LENGTH: ");
+			sb.append(data.length);
+			return sb.toString();
+		}
+		if (tt == TransactionType.SeGo_streamlined_read) {
+			if (isSeGoMnPass() && !isValidMnPassCRC()) {
+				sb.append(" INVALID CRC: ");
+				sb.append(getSeGoCRC12());
+			}
+		}
+		if (tt == TransactionType.seen_frame_count) {
+			TagType tag = parseSeenTagType();
+			if (tag != null) {
+				sb.append(' ');
+				sb.append(tag);
+				sb.append(": ");
+				sb.append(parse16(data, 3));
+			}
+		}
 		Long stamp = getStamp();
 		if (stamp != null) {
 			sb.append(' ');

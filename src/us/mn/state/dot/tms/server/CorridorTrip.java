@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.server;
 
+import java.util.ArrayList;
 import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.units.Distance;
@@ -63,15 +64,18 @@ public class CorridorTrip {
 		return new Distance(d, Distance.Units.MILES);
 	}
 
-	/** Lookup detectors on a corridor trip */
-	public void lookupDetectors(final DetectorSet ds, final LaneType lt) {
+	/** Lookup samplers on a corridor trip */
+	public ArrayList<VehicleSampler> lookupSamplers(final LaneType lt) {
+		final ArrayList<VehicleSampler> samplers =
+			new ArrayList<VehicleSampler>();
 		corridor.findStation(new Corridor.StationFinder() {
 			public boolean check(Float m, StationImpl s) {
 				if (isWithinTrip(m))
-					ds.addDetectors(lookupDetectors(s), lt);
+					samplers.addAll(lookupSamplers(s, lt));
 				return false;
 			}
 		});
+		return samplers;
 	}
 
 	/** Check if a milepoint is within the trip */
@@ -79,14 +83,38 @@ public class CorridorTrip {
 		return m > origin && m <= destination;
 	}
 
-	/** Lookup the detectors for one station */
-	private DetectorSet lookupDetectors(StationImpl s) {
+	/** Lookup the samplers for one station and lane type */
+	private ArrayList<VehicleSampler> lookupSamplers(StationImpl s,
+		final LaneType lt)
+	{
+		SamplerSet ss = lookupSamplers(s);
+		ArrayList<VehicleSampler> dets = ss.filter(
+			new SamplerSet.Filter()
+		{
+			public boolean check(VehicleSampler vs) {
+				if (vs instanceof DetectorImpl) {
+					DetectorImpl d = (DetectorImpl) vs;
+					return lt.ordinal() == d.getLaneType();
+				} else
+					return false;
+			}
+		});
+		// Create sampler set combining all detectors in station.
+		// This is needed to average densities over multiple HOT lanes.
+		ArrayList<VehicleSampler> arr = new ArrayList<VehicleSampler>();
+		if (dets.size() > 0)
+			arr.add(new SamplerSet(dets));
+		return arr;
+	}
+
+	/** Lookup the samplers for one station */
+	private SamplerSet lookupSamplers(StationImpl s) {
 		R_Node n = s.getR_Node();
 		if (n instanceof R_NodeImpl) {
 			R_NodeImpl rn = (R_NodeImpl)n;
-			return rn.getDetectorSet();
+			return rn.getSamplerSet();
 		} else
-			return new DetectorSet();
+			return new SamplerSet();
 	}
 
 	/** Get a string representation of the trip */

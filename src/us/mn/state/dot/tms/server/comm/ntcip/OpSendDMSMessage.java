@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@ import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.Graphic;
 import us.mn.state.dot.tms.GraphicHelper;
-import us.mn.state.dot.tms.MultiSyntaxError;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
+import us.mn.state.dot.tms.SignMsgSource;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -42,6 +42,7 @@ import us.mn.state.dot.tms.server.comm.snmp.GenError;
 import us.mn.state.dot.tms.server.comm.snmp.NoSuchName;
 import us.mn.state.dot.tms.server.comm.snmp.SNMP;
 import us.mn.state.dot.tms.utils.Base64;
+import us.mn.state.dot.tms.utils.MultiSyntaxError;
 
 /**
  * Operation to send a message to a DMS and activate it.
@@ -185,6 +186,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class ActivateBlankMsg extends Phase {
 
 		/** Activate a blank message */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			MessageActivationCode act = new MessageActivationCode(
 				dmsActivateMessage.node);
@@ -218,6 +220,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class MsgModifyReq extends Phase {
 
 		/** Set message status to modify request */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsMessageStatus> status = makeStatus(
 				DmsMessageMemoryType.changeable, msg_num);
@@ -245,6 +248,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class ChkMsgModifying extends Phase {
 
 		/** Query the message status */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsControlMode> mode = new ASN1Enum<
 				DmsControlMode>(DmsControlMode.class,
@@ -257,8 +261,8 @@ public class OpSendDMSMessage extends OpDMS {
 			logQuery(mode);
 			logQuery(status);
 			if (mode.getEnum() != DmsControlMode.central) {
-				// Some Ledstar signs will return GEN error
-				// when modifying a message in 'local' mode.
+				// If we modify a message when the sign is in
+				// 'local' mode, we will get a GEN error.
 				// It's better if we don't even try.
 				setErrorStatus(mode.toString());
 				return null;
@@ -276,6 +280,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class ModifyMsg extends Phase {
 
 		/** Modify the message */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1String ms = new ASN1String(dmsMessageMultiString
 				.node,DmsMessageMemoryType.changeable.ordinal(),
@@ -310,6 +315,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class MsgValidateReq extends Phase {
 
 		/** Set message status to validate request */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsMessageStatus> status = makeStatus(
 				DmsMessageMemoryType.changeable, msg_num);
@@ -330,6 +336,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class ChkMsgValid extends Phase {
 
 		/** Query the message validity */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsMessageStatus> status = makeStatus(
 				DmsMessageMemoryType.changeable, msg_num);
@@ -366,6 +373,7 @@ public class OpSendDMSMessage extends OpDMS {
 		}
 
 		/** Query a validate message error */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsValidateMessageError> error = new ASN1Enum<
 				DmsValidateMessageError>(
@@ -395,6 +403,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class ActivateMsg extends Phase {
 
 		/** Activate the message */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			MessageActivationCode act = new MessageActivationCode(
 				dmsActivateMessage.node);
@@ -428,6 +437,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class QueryActivateMsgErr extends Phase {
 
 		/** Query an activate message error */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsActivateMsgError> error = new ASN1Enum<
 				DmsActivateMsgError>(DmsActivateMsgError.class,
@@ -464,6 +474,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class QueryMultiSyntaxErr extends Phase {
 
 		/** Query a MULTI syntax error */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<MultiSyntaxError> m_err = new ASN1Enum<
 				MultiSyntaxError>(MultiSyntaxError.class,
@@ -507,6 +518,7 @@ public class OpSendDMSMessage extends OpDMS {
 		}
 
 		/** Query an other MULTI error */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			mess.add(o_err);
 			try {
@@ -542,6 +554,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class QueryLedstarActivateErr extends Phase {
 
 		/** Query a Ledstar activate message error */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Flags<LedActivateMsgError> error = new ASN1Flags<
 				LedActivateMsgError>(LedActivateMsgError.class,
@@ -564,6 +577,7 @@ public class OpSendDMSMessage extends OpDMS {
 	protected class SetLossMsgs extends Phase {
 
 		/** Set the comm and power loss messages */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			// NOTE: setting dmsMessageTimeRemaining should not
 			//       be necessary.  I don't really know why it's
@@ -588,7 +602,8 @@ public class OpSendDMSMessage extends OpDMS {
 
 	/** Check if the message is scheduled and has indefinite duration */
 	private boolean isScheduledIndefinite() {
-		return message.getScheduled() && message.getDuration() == null;
+		return SignMsgSource.isScheduled(message.getSource()) &&
+		       message.getDuration() == null;
 	}
 
 	/** Set the comm loss and power recovery msgs */
@@ -622,6 +637,7 @@ public class OpSendDMSMessage extends OpDMS {
 	private class QueryGraphicsConfig extends Phase {
 
 		/** Query the graphics configuration */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			mess.add(color_scheme);
 			mess.add(max_graphics);
@@ -743,6 +759,7 @@ public class OpSendDMSMessage extends OpDMS {
 		}
 
 		/** Query the graphic number for one graphic */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			if (g_num < 1) {
 				setErrorStatus("Bad graphic #: " + g_num);
@@ -788,6 +805,7 @@ public class OpSendDMSMessage extends OpDMS {
 			row = r;
 			status = s;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer gid = dmsGraphicID.makeInt(row);
 			mess.add(gid);
@@ -817,6 +835,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsGraphicStatus> status = makeGStatus(row);
 			status.setEnum(DmsGraphicStatus.notUsedReq);
@@ -835,6 +854,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsGraphicStatus> status = makeGStatus(row);
 			status.setEnum(DmsGraphicStatus.modifyReq);
@@ -853,6 +873,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsGraphicStatus> status = makeGStatus(row);
 			mess.add(status);
@@ -874,6 +895,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer number = dmsGraphicNumber.makeInt(row);
 			ASN1String name = new ASN1String(dmsGraphicName.node,
@@ -933,6 +955,7 @@ public class OpSendDMSMessage extends OpDMS {
 		}
 
 		/** Send a graphic block */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1OctetString block_bitmap = new ASN1OctetString(
 				dmsGraphicBlockBitmap.node, row, block);
@@ -968,6 +991,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsGraphicStatus> status = makeGStatus(row);
 			status.setEnum(DmsGraphicStatus.readyForUseReq);
@@ -993,6 +1017,7 @@ public class OpSendDMSMessage extends OpDMS {
 		}
 
 		/** Verify the graphic status is ready for use */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<DmsGraphicStatus> status = makeGStatus(row);
 			mess.add(status);
@@ -1017,6 +1042,7 @@ public class OpSendDMSMessage extends OpDMS {
 			graphic = g;
 			row = r;
 		}
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer gid = dmsGraphicID.makeInt(row);
 			mess.add(gid);

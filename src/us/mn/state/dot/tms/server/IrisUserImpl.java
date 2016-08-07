@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2012  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import us.mn.state.dot.sonar.Role;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.sonar.server.ServerNamespace;
 import us.mn.state.dot.sonar.server.UserImpl;
+import static us.mn.state.dot.tms.utils.SString.*;
 
 /**
  * IRIS user
@@ -33,7 +34,7 @@ import us.mn.state.dot.sonar.server.UserImpl;
 public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** SQL connection to database */
-	static protected SQLConnection store;
+	static private SQLConnection store;
 
 	/** Lookup all the users */
 	static public void lookup(SQLConnection c, final ServerNamespace ns)
@@ -57,6 +58,7 @@ public class IrisUserImpl extends UserImpl implements Storable {
 	}
 
 	/** Get a mapping of the columns */
+	@Override
 	public Map<String, Object> getColumns() {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("name", name);
@@ -74,6 +76,7 @@ public class IrisUserImpl extends UserImpl implements Storable {
 	}
 
 	/** Get the database table name */
+	@Override
 	public String getTable() {
 		return "iris.i_user";
 	}
@@ -110,16 +113,19 @@ public class IrisUserImpl extends UserImpl implements Storable {
 	}
 
 	/** Get the primary key name */
+	@Override
 	public String getKeyName() {
 		return "name";
 	}
 
 	/** Get the primary key */
+	@Override
 	public String getKey() {
 		return name;
 	}
 
 	/** Get a string representation of the object */
+	@Override
 	public String toString() {
 		return name;
 	}
@@ -131,10 +137,10 @@ public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** Set the full (display) name */
 	public void doSetFullName(String n) throws TMSException {
-		if(n.equals(fullName))
-			return;
-		store.update(this, "full_name", n);
-		super.setFullName(n);
+		if (!n.equals(fullName)) {
+			store.update(this, "full_name", n);
+			super.setFullName(n);
+		}
 	}
 
 	/** Set the password */
@@ -150,16 +156,20 @@ public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** Check a password */
 	private void checkPassword(String pwd) throws ChangeVetoException {
-		if(pwd.length() < 6) {
+		if (pwd.length() < 8) {
 			throw new ChangeVetoException(
-				"Password must be at least 6 characters");
+				"Must be at least 8 characters");
 		}
-		if(name.equalsIgnoreCase(pwd)) {
-			throw new ChangeVetoException(
-				"Password must be different than user name");
-		}
-		if("password".equalsIgnoreCase(pwd))
-			throw new ChangeVetoException("Not funny. Try again.");
+		String lpwd = pwd.toLowerCase();
+		String c = longestCommonSubstring(name.toLowerCase(), lpwd);
+		if (c.length() > 4)
+			throw new ChangeVetoException("Based on user name");
+		if (longestCommonSubstring("password", lpwd).length() > 4)
+			throw new ChangeVetoException("Invalid password");
+		if (!containsDigit(pwd))
+			throw new ChangeVetoException("Must contain digit");
+		if (!containsLetter(pwd))
+			throw new ChangeVetoException("Must contain letter");
 	}
 
 	/** Get the password */
@@ -169,25 +179,25 @@ public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** Set the LDAP distinguished name */
 	public void doSetDn(String d) throws TMSException {
-		if(d.equals(dn))
-			return;
-		store.update(this, "dn", d);
-		super.setDn(d);
+		if (!d.equals(dn)) {
+			store.update(this, "dn", d);
+			super.setDn(d);
+		}
 	}
 
 	/** Set the role assigned to the user */
 	public void doSetRole(Role r) throws TMSException {
-		if(r == role)
-			return;
-		store.update(this, "role", r);
-		super.setRole(r);
+		if (r != role) {
+			store.update(this, "role", r);
+			super.setRole(r);
+		}
 	}
 
 	/** Set the enabled flag */
 	public void doSetEnabled(boolean e) throws TMSException {
-		if(e == enabled)
-			return;
-		store.update(this, "enabled", e);
-		super.setEnabled(e);
+		if (e != enabled) {
+			store.update(this, "enabled", e);
+			super.setEnabled(e);
+		}
 	}
 }

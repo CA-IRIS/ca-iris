@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2014  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2014       AHMCT, University of California
+ * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +16,10 @@
  */
 package us.mn.state.dot.tms.client;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapModel;
 import us.mn.state.dot.map.TileLayer;
@@ -43,8 +41,8 @@ import us.mn.state.dot.tms.client.meter.MeterManager;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.roads.R_NodeManager;
-import us.mn.state.dot.tms.client.roads.SegmentLayer;
 import us.mn.state.dot.tms.client.schedule.PlanManager;
+import us.mn.state.dot.tms.client.toll.TagReaderManager;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
 import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
@@ -55,6 +53,7 @@ import us.mn.state.dot.tms.client.widget.SmartDesktop;
  * @author Douglas Lau
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class Session {
 
@@ -143,12 +142,9 @@ public class Session {
 	private final WeatherSensorManager weather_manager;
 
 	/** Mapping of all tabs */
-	private final HashMap<String, MapTab> all_tabs =
-		new HashMap<String, MapTab>();
+	private final HashMap<String, MapTab> all_tabs = new HashMap<>();
 
-	/** Segment layer */
-	private final SegmentLayer seg_layer;
-
+	/** Heatmap layer */
 	private final HeatmapLayer heatmapLayer;
 
 	/** Tile layer */
@@ -156,22 +152,24 @@ public class Session {
 
 	/** Listeners for edit mode changes */
 	private final LinkedList<EditModeListener> listeners =
-		new LinkedList<EditModeListener>();
+		new LinkedList<>();
 
 	/** Create a new session */
-	public Session(SonarState st, SmartDesktop d, Properties p) {
+	public Session(SonarState st, SmartDesktop d, Properties p)
+		throws Exception
+	{
 		state = st;
 		user = state.getUser();
 		namespace = state.getNamespace();
 		desktop = d;
 		props = p;
 		loc_manager = new GeoLocManager(this);
-		r_node_manager = new R_NodeManager(this, loc_manager);
+		r_node_manager = new R_NodeManager(this, loc_manager, p);
 		cam_manager = new CameraManager(this, loc_manager);
 		dms_manager = new DMSManager(this, loc_manager);
 		lcs_array_manager = new LCSArrayManager(this, loc_manager);
 		weather_manager = new WeatherSensorManager(this, loc_manager);
-		managers = new LinkedList<ProxyManager<? extends SonarObject>>();
+		managers = new LinkedList<>();
 		managers.add(r_node_manager);
 		managers.add(new ControllerManager(this, loc_manager));
 		managers.add(cam_manager);
@@ -182,10 +180,10 @@ public class Session {
 		managers.add(new LCSIManager(this, loc_manager));
 		managers.add(new LaneMarkingManager(this,loc_manager));
 		managers.add(new BeaconManager(this, loc_manager));
+		managers.add(new TagReaderManager(this, loc_manager));
 		managers.add(weather_manager);
 		managers.add(new IncidentManager(this, loc_manager));
 		managers.add(new PlanManager(this, loc_manager));
-		seg_layer = r_node_manager.getSegmentLayer();
 		heatmapLayer = weather_manager.getHeatmapLayer();
 		tile_layer = createTileLayer(props.getProperty("map.tile.url"));
 	}
@@ -199,12 +197,9 @@ public class Session {
 	}
 
 	/** Initialize the session */
-	public void initialize() throws IOException, SAXException,
-		ParserConfigurationException
-	{
+	public void initialize() throws Exception {
 		initializeManagers();
 		createTabs();
-		seg_layer.start(props);
 		if (tile_layer != null)
 			tile_layer.initialize();
 	}
@@ -231,7 +226,7 @@ public class Session {
 
 	/** Get a list of tabs in the order specified by properties */
 	public List<MapTab> getTabs() {
-		LinkedList<MapTab> tabs = new LinkedList<MapTab>();
+		LinkedList<MapTab> tabs = new LinkedList<>();
 		for (String t : UserProperty.getTabList(props)) {
 			MapTab tab = all_tabs.get(t);
 			if (tab != null)
@@ -245,8 +240,7 @@ public class Session {
 		return all_tabs.get(tid);
 	}
 
-	/**
-	 * Create the layer states.  The map bean and model must be separate
+	/** Create the layer states.  The map bean and model must be seperate
 	 * parameters so that the model can be built before calling setModel
 	 * on the map bean.
 	 * @param mb Map bean to render the layer states.
@@ -255,7 +249,6 @@ public class Session {
 		if (tile_layer != null)
 			mm.addLayer(tile_layer.createState(mb));
 		mm.addLayer(heatmapLayer.createState(mb));
-		mm.addLayer(seg_layer.createState(mb));
 		for (ProxyManager<? extends SonarObject> man: managers) {
 			if (man.hasLayer())
 				mm.addLayer(man.createState(mb));

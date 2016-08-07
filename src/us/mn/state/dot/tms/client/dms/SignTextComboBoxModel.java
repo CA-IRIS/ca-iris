@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2014  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@ import java.util.TreeSet;
 import javax.swing.AbstractListModel;
 import javax.swing.ComboBoxModel;
 import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.MultiParser;
 import us.mn.state.dot.tms.SignText;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Model for a sign text line combo box.
@@ -30,8 +30,8 @@ import us.mn.state.dot.tms.SystemAttrEnum;
  * @author Michael Darter
  * @author Travis Swanston
  */
-public class SignTextComboBoxModel extends AbstractListModel
-	implements ComboBoxModel
+public class SignTextComboBoxModel extends AbstractListModel<SignText>
+	implements ComboBoxModel<SignText>
 {
 	/** Rank for on-the-fly created sign messages */
 	static private final short ON_THE_FLY_RANK = 99;
@@ -56,7 +56,7 @@ public class SignTextComboBoxModel extends AbstractListModel
 
 	/** Get the element at the specified index */
 	@Override
-	public Object getElementAt(int index) {
+	public SignText getElementAt(int index) {
 		int i = 0;
 		for (SignText t: items) {
 			if (i == index)
@@ -89,12 +89,9 @@ public class SignTextComboBoxModel extends AbstractListModel
 
 	/**
 	 * Set the selected item. This method is called by the combobox when:
-	 * <ul>
-	 *   <li> focus leaves the combobox with a String arg when editable.
-	 *   <li> a combobox item is clicked on via the mouse.
-	 *   <li> a combobox item is moved to via the cursor keys.
-	 *   <li> entry/edit keystrokes (if dms_preview_instant sysattr true)
-	 * </ul>
+	 * 	-the focus leaves the combobox with a String arg when editable.
+	 *      -a combobox item is clicked on via the mouse.
+	 *      -a combobox item is moved to via the cursor keys.
 	 */
 	@Override
 	public void setSelectedItem(Object s) {
@@ -110,7 +107,7 @@ public class SignTextComboBoxModel extends AbstractListModel
 
 	/** Get or create a sign text for the given string */
 	private SignText getSignText(String s) {
-		String m = MultiParser.normalize(s);
+		String m = new MultiString(s.trim()).normalize();
 		if (m.length() == 0)
 			return BLANK_SIGN_TEXT;
 		SignText st = lookupMessage(m);

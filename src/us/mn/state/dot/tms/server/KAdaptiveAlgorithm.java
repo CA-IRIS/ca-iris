@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2001-2015  Minnesota Department of Transportation
+ * Copyright (C) 2001-2016  Minnesota Department of Transportation
  * Copyright (C) 2011-2012  University of Minnesota Duluth (NATSRL)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,10 +21,8 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.LaneType;
-import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.R_NodeType;
 import us.mn.state.dot.tms.RampMeterQueue;
-import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.units.Interval;
 import static us.mn.state.dot.tms.units.Interval.HOUR;
 import static us.mn.state.dot.tms.server.Constants.FEET_PER_MILE;
@@ -249,9 +247,9 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 	private Node createNodes() {
 		Node first = null;
 		Node prev = null;
-		Iterator<R_Node> itr = corridor.iterator();
+		Iterator<R_NodeImpl> itr = corridor.iterator();
 		while (itr.hasNext()) {
-			R_NodeImpl rnode = (R_NodeImpl) itr.next();
+			R_NodeImpl rnode = itr.next();
 			Node n = createNode(rnode, prev);
 			if (n != null)
 				prev = n;
@@ -614,20 +612,20 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 		/** Station node association */
 		private final StationNode s_node;
 
-		/** Queue detector set */
-		private final DetectorSet queue = new DetectorSet();
+		/** Queue sampler set */
+		private final SamplerSet queue;
 
-		/** Passage detector set */
-		private final DetectorSet passage = new DetectorSet();
+		/** Passage sampler set */
+		private final SamplerSet passage;
 
-		/** Merge detector set */
-		private final DetectorSet merge = new DetectorSet();
+		/** Merge sampler set */
+		private final SamplerSet merge;
 
-		/** Bypass detector set */
-		private final DetectorSet bypass = new DetectorSet();
+		/** Bypass sampler set */
+		private final SamplerSet bypass;
 
-		/** Green count detector set */
-		private final DetectorSet green = new DetectorSet();
+		/** Green count sampler set */
+		private final SamplerSet green;
 
 		/** Metering phase */
 		private MeteringPhase phase = MeteringPhase.not_started;
@@ -698,12 +696,12 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 		public MeterState(RampMeterImpl mtr, EntranceNode en) {
 			meter = mtr;
 			node = en;
-			DetectorSet ds = meter.getDetectorSet();
-			queue.addDetectors(ds, LaneType.QUEUE);
-			passage.addDetectors(ds, LaneType.PASSAGE);
-			merge.addDetectors(ds, LaneType.MERGE);
-			bypass.addDetectors(ds, LaneType.BYPASS);
-			green.addDetectors(ds, LaneType.GREEN);
+			SamplerSet ss = meter.getSamplerSet();
+			queue = new SamplerSet(ss.filter(LaneType.QUEUE));
+			passage = new SamplerSet(ss.filter(LaneType.PASSAGE));
+			merge = new SamplerSet(ss.filter(LaneType.MERGE));
+			bypass = new SamplerSet(ss.filter(LaneType.BYPASS));
+			green = new SamplerSet(ss.filter(LaneType.GREEN));
 			s_node = getAssociatedStation();
 		}
 
@@ -803,7 +801,7 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 				passage_accum += passage_vol;
 			else
 				passage_good = false;
-			int green_vol = green.getVolume();
+			int green_vol = green.getCount();
 			if (green_vol > 0)
 				green_accum += green_vol;
 		}
@@ -811,12 +809,12 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 		/** Calculate passage count (vehicles).
 		 * @return Passage vehicle count */
 		private int calculatePassageCount() {
-			int vol = passage.getVolume();
+			int vol = passage.getCount();
 			if (vol >= 0)
 				return vol;
-			vol = merge.getVolume();
+			vol = merge.getCount();
 			if (vol >= 0) {
-				int b = bypass.getVolume();
+				int b = bypass.getCount();
 				if (b > 0) {
 					vol -= b;
 					if (vol < 0)
@@ -844,7 +842,7 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 
 		/** Get queue demand volume for the current period */
 		private float queueDemandVolume() {
-			float vol = queue.getVolume();
+			float vol = queue.getCount();
 			if (vol >= 0)
 				return vol;
 			else {
@@ -1454,12 +1452,7 @@ public class KAdaptiveAlgorithm implements MeterAlgorithmState {
 				demand_adj, estimateWaitSecs(),
 				limit_control.ordinal(), min_rate, release_rate,
 				max_rate, dns, seg_den);
-			try {
-				ev.doStore();
-			}
-			catch(TMSException e) {
-				e.printStackTrace();
-			};
+			BaseObjectImpl.logEvent(ev);
 		}
 	}
 }

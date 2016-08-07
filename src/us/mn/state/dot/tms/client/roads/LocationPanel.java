@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2005-2015  Minnesota Department of Transportation
+ * Copyright (C) 2005-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyView;
 import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IComboBoxModel;
+import us.mn.state.dot.tms.client.widget.IListCellRenderer;
 import us.mn.state.dot.tms.client.widget.IPanel;
 
 /**
@@ -104,7 +105,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	}
 
 	/** Roadway combobox */
-	private final JComboBox roadway_cbx = new JComboBox();
+	private final JComboBox<Road> roadway_cbx = new JComboBox<>();
 
 	/** Roadway model */
 	private final IComboBoxModel<Road> roadway_mdl;
@@ -120,13 +121,13 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	};
 
 	/** Roadway direction combo box */
-	private final JComboBox road_dir_cbx = new JComboBox(
-		Direction.getDescriptions());
+	private final JComboBox<Direction> road_dir_cbx =
+		new JComboBox<>(Direction.values());
 
 	/** Roadway direction action */
 	private final LAction road_dir_act = new LAction("location.direction") {
 		protected void do_perform(GeoLoc l) {
-			l.setRoadDir((short)road_dir_cbx.getSelectedIndex());
+			l.setRoadDir((short) road_dir_cbx.getSelectedIndex());
 		}
 		protected void do_update(GeoLoc l) {
 			road_dir_cbx.setSelectedIndex(l.getRoadDir());
@@ -134,13 +135,13 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	};
 
 	/** Cross street modifier combobox */
-	private final JComboBox cross_mod_cbx = new JComboBox(
-		LocModifier.values());
+	private final JComboBox<LocModifier> cross_mod_cbx =
+		new JComboBox<LocModifier>(LocModifier.values());
 
 	/** Cross street modifier action */
 	private final LAction cross_mod_act = new LAction("location.cross.mod"){
 		protected void do_perform(GeoLoc l) {
-			short m = (short)cross_mod_cbx.getSelectedIndex();
+			short m = (short) cross_mod_cbx.getSelectedIndex();
 			l.setCrossMod(m);
 		}
 		protected void do_update(GeoLoc l) {
@@ -149,7 +150,7 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	};
 
 	/** Cross street combobox */
-	private final JComboBox cross_cbx = new JComboBox();
+	private final JComboBox<Road> cross_cbx = new JComboBox<Road>();
 
 	/** Cross street model */
 	private final IComboBoxModel<Road> cross_mdl;
@@ -165,13 +166,13 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 	};
 
 	/** Cross street direction combobox */
-	private final JComboBox cross_dir_cbx = new JComboBox(
-		Direction.getAbbreviations());
+	private final JComboBox<Direction> cross_dir_cbx =
+		new JComboBox<>(Direction.values());
 
 	/** Cross street direction action */
 	private final LAction cross_dir_act = new LAction("location.cross.dir"){
 		protected void do_perform(GeoLoc l) {
-			short d = (short)cross_dir_cbx.getSelectedIndex();
+			short d = (short) cross_dir_cbx.getSelectedIndex();
 			l.setCrossDir(d);
 		}
 		protected void do_update(GeoLoc l) {
@@ -217,9 +218,9 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		sd_panel = new SiteDataPanel(session);
 		sd_panel.initialize();
 		TypeCache<GeoLoc> cache = state.getGeoLocs();
-		watcher = new ProxyWatcher<GeoLoc>(cache, this, false);
-		roadway_mdl = new IComboBoxModel<Road>(state.getRoadModel());
-		cross_mdl = new IComboBoxModel<Road>(state.getRoadModel());
+		watcher = new ProxyWatcher<>(cache, this, false);
+		roadway_mdl = new IComboBoxModel<>(state.getRoadModel());
+		cross_mdl = new IComboBoxModel<>(state.getRoadModel());
 	}
 
 	/** Initialize the location panel */
@@ -233,6 +234,12 @@ public class LocationPanel extends IPanel implements ProxyView<GeoLoc> {
 		cross_cbx.setModel(cross_mdl);
 		cross_cbx.setAction(cross_act);
 		cross_dir_cbx.setAction(cross_dir_act);
+		cross_dir_cbx.setRenderer(new IListCellRenderer<Direction>() {
+			@Override
+			protected String valueToString(Direction value) {
+				return value.abbrev;
+			}
+		});
 		add("location.roadway");
 		add(roadway_cbx);
 		add(road_dir_cbx, Stretch.LAST);

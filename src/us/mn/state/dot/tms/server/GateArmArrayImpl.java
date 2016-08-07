@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2013-2015  Minnesota Department of Transportation
+ * Copyright (C) 2013-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.Road;
+import static us.mn.state.dot.tms.SignMsgSource.gate_arm;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.GateArmSystem.checkEnabled;
 import static us.mn.state.dot.tms.server.GateArmSystem.sendEmailAlert;
@@ -111,7 +112,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 		GeoLocImpl g = new GeoLocImpl(name);
 		g.notifyCreate();
 		geo_loc = g;
-		GateArmSystem.disable(n + ": create array");
+		GateArmSystem.disable(n, "create array");
 	}
 
 	/** Create a gate arm array */
@@ -149,7 +150,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	public void doDestroy() throws TMSException {
 		super.doDestroy();
 		geo_loc.notifyRemove();
-		GateArmSystem.disable(name + ": destroy array");
+		GateArmSystem.disable(name, "destroy array");
 	}
 
 	/** Set the controller of the device */
@@ -179,7 +180,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the prerequisite gate arm array */
 	@Override
 	public void setPrereq(String pr) {
-		GateArmSystem.disable(name + ": prereq");
+		GateArmSystem.disable(name, "prereq");
 		prereq = pr;
 	}
 
@@ -208,7 +209,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the verification camera */
 	@Override
 	public void setCamera(Camera c) {
-		GateArmSystem.disable(name + ": camera");
+		GateArmSystem.disable(name, "camera");
 		camera = c;
 	}
 
@@ -232,7 +233,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the approach camera */
 	@Override
 	public void setApproach(Camera c) {
-		GateArmSystem.disable(name + ": approach");
+		GateArmSystem.disable(name, "approach");
 		approach = c;
 	}
 
@@ -256,7 +257,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the DMS for warning */
 	@Override
 	public void setDms(DMS d) {
-		GateArmSystem.disable(name + ": dms");
+		GateArmSystem.disable(name, "dms");
 		dms = d;
 	}
 
@@ -280,7 +281,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the OPEN quick message */
 	@Override
 	public void setOpenMsg(QuickMessage om) {
-		GateArmSystem.disable(name + ": openMsg");
+		GateArmSystem.disable(name, "openMsg");
 		open_msg = om;
 	}
 
@@ -304,7 +305,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	/** Set the CLOSED quick message */
 	@Override
 	public void setClosedMsg(QuickMessage cm) {
-		GateArmSystem.disable(name + ": closedMsg");
+		GateArmSystem.disable(name, "closedMsg");
 		closed_msg = cm;
 	}
 
@@ -366,9 +367,8 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	@Override
 	public synchronized void setOwnerNext(User o) {
 		if (ownerNext != null && o != null) {
-			System.err.println("GateArmArrayImpl.setOwnerNext: " +
-				getName() + ", " + ownerNext.getName() +
-				" vs. " + o.getName());
+			logError("OWNER CONFLICT: " + ownerNext.getName() +
+			         " vs. " + o.getName());
 			ownerNext = null;
 		} else
 			ownerNext = o;
@@ -384,17 +384,26 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	}
 
 	/** Set the arm state (request change) */
-	public void doSetArmStateNext(int gas) throws TMSException {
-		User o_next = ownerNext;	// Avoid race
-		// ownerNext is only valid for one message, clear it
-		ownerNext = null;
-		if (o_next == null)
-			throw new ChangeVetoException("MUST SET OWNER FIRST");
+	public synchronized void doSetArmStateNext(int gas) throws TMSException{
+		try {
+			if (ownerNext != null)
+				doSetArmStateNext(gas, ownerNext);
+			else
+				throw new ChangeVetoException("OWNER CONFLICT");
+		}
+		finally {
+			// ownerNext is only valid for one message, clear it
+			ownerNext = null;
+		}
+	}
+
+	/** Set the arm state (request change) */
+	private void doSetArmStateNext(int gas, User o) throws TMSException {
 		final GateArmState cs = arm_state;
 		GateArmState rs = validateStateReq(
 			GateArmState.fromOrdinal(gas), cs);
 		if ((rs != cs) && checkEnabled())
-			requestArmState(rs, o_next);
+			requestArmState(rs, ownerNext);
 	}
 
 	/** Validate a new requested gate arm state.
@@ -469,7 +478,7 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 	private void updateDmsMessage(DMSImpl d) {
 		QuickMessage qm = isMsgOpen() ? getOpenMsg() : getClosedMsg();
 		if (qm != null)
-			d.sendMessage(qm.getMulti(), false, PSA, PSA, false);
+			d.deployMsg(qm.getMulti(), false, PSA, PSA, gate_arm);
 	}
 
 	/** Test if message should be open */
@@ -737,11 +746,6 @@ public class GateArmArrayImpl extends DeviceImpl implements GateArmArray {
 				return true;
 		}
 		return false;
-	}
-
-	/** Test if gate arm is online (active and not failed) */
-	private boolean isOnline() {
-		return isActive() && !isFailed();
 	}
 
 	/** Test if gate arm is closed */

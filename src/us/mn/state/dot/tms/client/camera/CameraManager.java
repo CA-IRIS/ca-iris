@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  * Copyright (C) 2016       Southwest Research Institute
  *
@@ -74,9 +74,9 @@ public class CameraManager extends ProxyManager<Camera> {
 	private Boolean isOverrideDirection = null;
 
 	/** Set of cameras in the playlist */
-	private final Set<Camera> playlist = new HashSet<Camera>();
+	private final Set<Camera> playlist = new HashSet<>();
 
-	private final Set<Camera> in_use = new HashSet<Camera>();
+	private final Set<Camera> in_use = new HashSet<>();
 
 	/** Scheduler that runs refresh job */
 	static private final Scheduler REFRESH
@@ -99,6 +99,8 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Create a new camera manager */
 	public CameraManager(Session s, GeoLocManager lm) {
 		super(s, lm, ItemStyle.ALL);
+		//FIXME CA-MN-MERGE something new from MnDOT?
+		s_model.setAllowMultiple(true);
 	}
 
 	/**
@@ -283,8 +285,8 @@ public class CameraManager extends ProxyManager<Camera> {
 		if (cams_used == null)
 			return;
 
-		Set<Camera> new_in_use = new HashSet<Camera>();
-		Set<Camera> changed_cams = new HashSet<Camera>();
+		Set<Camera> new_in_use = new HashSet<>();
+		Set<Camera> changed_cams = new HashSet<>();
 
 		for (String c : cams_used) {
 			Camera cam = getCache().lookupObject(c);
@@ -316,7 +318,7 @@ public class CameraManager extends ProxyManager<Camera> {
 		JPopupMenu p = new JPopupMenu();
 		p.add(makeMenuLabel(getDescription(c)));
 		p.addSeparator();
-		p.add(new MapAction(desktop.client, c, c.getGeoLoc()));
+		p.add(new MapAction<>(desktop.client, c, c.getGeoLoc()));
 		p.addSeparator();
 		p.add(new PublishAction(s_model));
 		p.add(new UnpublishAction(s_model));
@@ -327,8 +329,8 @@ public class CameraManager extends ProxyManager<Camera> {
 			p.add(new AddPlaylistAction(this, s_model));
 		p.addSeparator();
 		if (TeslaAction.isConfigured())
-			p.add(new TeslaAction<Camera>(c));
-		p.add(new PropertiesAction<Camera>(this, c));
+			p.add(new TeslaAction<>(c));
+		p.add(new PropertiesAction<>(this, c));
 		return p;
 	}
 

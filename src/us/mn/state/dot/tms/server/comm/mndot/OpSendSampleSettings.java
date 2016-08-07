@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 package us.mn.state.dot.tms.server.comm.mndot;
 
 import java.io.IOException;
-import us.mn.state.dot.tms.Cabinet;
-import us.mn.state.dot.tms.CabinetStyle;
 import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DetectorImpl;
@@ -45,48 +43,13 @@ public class OpSendSampleSettings extends Op170 {
 	protected class SynchronizeClock extends Phase<MndotProperty> {
 
 		/** Synchronize the clock */
-		protected Phase<MndotProperty> poll(CommMessage mess)
-			throws IOException
+		protected Phase<MndotProperty> poll(
+			CommMessage<MndotProperty> mess) throws IOException
 		{
 			mess.add(new SynchronizeProperty());
 			mess.storeProps();
-			return new CheckCabinetType();
-		}
-	}
-
-	/** Phase to check the cabinet type */
-	protected class CheckCabinetType extends Phase<MndotProperty> {
-
-		/** Check the cabinet type */
-		protected Phase<MndotProperty> poll(CommMessage mess)
-			throws IOException
-		{
-			byte[] data = new byte[1];
-			MemoryProperty cab_mem = new MemoryProperty(
-				Address.CABINET_TYPE, data);
-			mess.add(cab_mem);
-			mess.queryProps();
-			checkCabinetStyle(data[0]);
 			return new QueryPromVersion();
 		}
-	}
-
-	/** Check the dip switch settings against the selected cabinet style */
-	private void checkCabinetStyle(int dips) {
-		Integer d = lookupDips();
-		if (d != null && d != dips)
-			setMaintStatus("CABINET STYLE " + dips);
-	}
-
-	/** Lookup the correct dip switch setting to the controller */
-	private Integer lookupDips() {
-		Cabinet cab = controller.getCabinet();
-		if (cab != null) {
-			CabinetStyle style = cab.getStyle();
-			if (style != null)
-				return style.getDip();
-		}
-		return null;
 	}
 
 	/** Set the controller firmware version */
@@ -106,8 +69,8 @@ public class OpSendSampleSettings extends Op170 {
 	protected class QueryPromVersion extends Phase<MndotProperty> {
 
 		/** Query the prom version */
-		protected Phase<MndotProperty> poll(CommMessage mess)
-			throws IOException
+		protected Phase<MndotProperty> poll(
+			CommMessage<MndotProperty> mess) throws IOException
 		{
 			byte[] data = new byte[2];
 			MemoryProperty ver_mem = new MemoryProperty(
@@ -123,8 +86,8 @@ public class OpSendSampleSettings extends Op170 {
 	protected class QueueBitmap extends Phase<MndotProperty> {
 
 		/** Set the queue detector bitmap */
-		protected Phase<MndotProperty> poll(CommMessage mess)
-			throws IOException
+		protected Phase<MndotProperty> poll(
+			CommMessage<MndotProperty> mess) throws IOException
 		{
 			byte[] data = getQueueBitmap();
 			MemoryProperty queue_mem = new MemoryProperty(

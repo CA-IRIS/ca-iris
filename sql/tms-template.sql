@@ -222,6 +222,12 @@ CREATE TRIGGER font_ck_trig
 	BEFORE INSERT OR UPDATE ON iris.font
 	FOR EACH ROW EXECUTE PROCEDURE iris.font_ck();
 
+CREATE TABLE iris.word (
+	name VARCHAR(24) PRIMARY KEY,
+	abbr VARCHAR(12),
+	allowed BOOLEAN DEFAULT false NOT NULL
+);
+
 CREATE TABLE iris.video_monitor (
 	name VARCHAR(12) PRIMARY KEY,
 	description VARCHAR(32) NOT NULL,
@@ -347,12 +353,14 @@ ALTER TABLE iris.r_node ADD CONSTRAINT active_ck
 CREATE TABLE iris.toll_zone (
 	name VARCHAR(20) PRIMARY KEY,
 	start_id VARCHAR(10) REFERENCES iris.r_node(station_id),
-	end_id VARCHAR(10) REFERENCES iris.r_node(station_id)
+	end_id VARCHAR(10) REFERENCES iris.r_node(station_id),
+	tollway VARCHAR(16)
 );
 
 CREATE TABLE iris.sign_group (
 	name VARCHAR(16) PRIMARY KEY,
-	local BOOLEAN NOT NULL
+	local BOOLEAN NOT NULL,
+	hidden BOOLEAN NOT NULL
 );
 
 CREATE TABLE iris.quick_message (
@@ -381,12 +389,12 @@ CREATE TABLE iris.modem (
 	name VARCHAR(20) PRIMARY KEY,
 	uri VARCHAR(64) NOT NULL,
 	config VARCHAR(64) NOT NULL,
-	timeout integer NOT NULL
+	timeout INTEGER NOT NULL
 );
 
 CREATE TABLE iris.cabinet_style (
 	name VARCHAR(20) PRIMARY KEY,
-	dip integer
+	dip INTEGER
 );
 
 CREATE TABLE iris.cabinet (
@@ -417,7 +425,7 @@ CREATE UNIQUE INDEX ctrl_link_drop_idx ON iris.controller
 CREATE TABLE iris._device_io (
 	name VARCHAR(10) PRIMARY KEY,
 	controller VARCHAR(20) REFERENCES iris.controller(name),
-	pin integer NOT NULL
+	pin INTEGER NOT NULL
 );
 
 CREATE UNIQUE INDEX _device_io_ctrl_pin ON iris._device_io
@@ -681,14 +689,16 @@ CREATE TABLE iris._beacon (
 	name VARCHAR(10) PRIMARY KEY,
 	geo_loc VARCHAR(20) REFERENCES iris.geo_loc(name),
 	notes text NOT NULL,
-	message text NOT NULL
+	message text NOT NULL,
+	verify_pin INTEGER -- FIXME: make unique on _device_io_ctrl_pin
 );
 
 ALTER TABLE iris._beacon ADD CONSTRAINT _beacon_fkey
 	FOREIGN KEY (name) REFERENCES iris._device_io(name) ON DELETE CASCADE;
 
 CREATE VIEW iris.beacon AS
-	SELECT b.name, geo_loc, controller, pin, notes, message, preset
+	SELECT b.name, geo_loc, controller, pin, notes, message, verify_pin,
+	       preset
 	FROM iris._beacon b
 	JOIN iris._device_io d ON b.name = d.name
 	JOIN iris._device_preset p ON b.name = p.name;
@@ -700,8 +710,9 @@ BEGIN
 	    VALUES (NEW.name, NEW.controller, NEW.pin);
 	INSERT INTO iris._device_preset (name, preset)
 	    VALUES (NEW.name, NEW.preset);
-	INSERT INTO iris._beacon (name, geo_loc, notes, message)
-	    VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.message);
+	INSERT INTO iris._beacon (name, geo_loc, notes, message, verify_pin)
+	    VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.message,
+	            NEW.verify_pin);
 	RETURN NEW;
 END;
 $beacon_insert$ LANGUAGE plpgsql;
@@ -723,7 +734,8 @@ BEGIN
 	UPDATE iris._beacon
 	   SET geo_loc = NEW.geo_loc,
 	       notes = NEW.notes,
-	       message = NEW.message
+	       message = NEW.message,
+	       verify_pin = NEW.verify_pin
 	 WHERE name = OLD.name;
 	RETURN NEW;
 END;
@@ -1069,14 +1081,15 @@ CREATE TRIGGER weather_sensor_delete_trig
 CREATE TABLE iris._tag_reader (
 	name VARCHAR(10) PRIMARY KEY,
 	geo_loc VARCHAR(20) REFERENCES iris.geo_loc(name),
-	notes VARCHAR(64) NOT NULL
+	notes VARCHAR(64) NOT NULL,
+	toll_zone VARCHAR(20) REFERENCES iris.toll_zone(name)
 );
 
 ALTER TABLE iris._tag_reader ADD CONSTRAINT _tag_reader_fkey
 	FOREIGN KEY (name) REFERENCES iris._device_io(name) ON DELETE CASCADE;
 
 CREATE VIEW iris.tag_reader AS SELECT
-	t.name, geo_loc, controller, pin, notes
+	t.name, geo_loc, controller, pin, notes, toll_zone
 	FROM iris._tag_reader t JOIN iris._device_io d ON t.name = d.name;
 
 CREATE FUNCTION iris.tag_reader_insert() RETURNS TRIGGER AS
@@ -1084,8 +1097,8 @@ CREATE FUNCTION iris.tag_reader_insert() RETURNS TRIGGER AS
 BEGIN
 	INSERT INTO iris._device_io (name, controller, pin)
 	     VALUES (NEW.name, NEW.controller, NEW.pin);
-	INSERT INTO iris._tag_reader (name, geo_loc, notes)
-	     VALUES (NEW.name, NEW.geo_loc, NEW.notes);
+	INSERT INTO iris._tag_reader (name, geo_loc, notes, toll_zone)
+	     VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.toll_zone);
 	RETURN NEW;
 END;
 $tag_reader_insert$ LANGUAGE plpgsql;
@@ -1103,7 +1116,8 @@ BEGIN
 	 WHERE name = OLD.name;
 	UPDATE iris._tag_reader
 	   SET geo_loc = NEW.geo_loc,
-	       notes = NEW.notes
+	       notes = NEW.notes,
+	       toll_zone = NEW.toll_zone
 	 WHERE name = OLD.name;
 	RETURN NEW;
 END;
@@ -1128,6 +1142,11 @@ $tag_reader_delete$ LANGUAGE plpgsql;
 CREATE TRIGGER tag_reader_delete_trig
     INSTEAD OF DELETE ON iris.tag_reader
     FOR EACH ROW EXECUTE PROCEDURE iris.tag_reader_delete();
+
+CREATE TABLE iris.tag_reader_dms (
+	tag_reader VARCHAR(10) NOT NULL REFERENCES iris._tag_reader,
+	dms VARCHAR(10) NOT NULL REFERENCES iris._dms
+);
 
 CREATE TABLE iris.lcs_lock (
 	id INTEGER PRIMARY KEY,
@@ -1382,7 +1401,7 @@ CREATE TRIGGER gate_arm_update_trig
     FOR EACH ROW EXECUTE PROCEDURE iris.gate_arm_update();
 
 CREATE TABLE iris.dms_sign_group (
-	name VARCHAR(24) PRIMARY KEY,
+	name VARCHAR(28) PRIMARY KEY,
 	dms VARCHAR(10) NOT NULL REFERENCES iris._dms,
 	sign_group VARCHAR(16) NOT NULL REFERENCES iris.sign_group
 );
@@ -1399,12 +1418,13 @@ CREATE TABLE iris.sign_text (
 
 CREATE TABLE iris.sign_message (
 	name VARCHAR(20) PRIMARY KEY,
+	incident VARCHAR(16),
 	multi VARCHAR(512) NOT NULL,
 	beacon_enabled BOOLEAN NOT NULL,
 	bitmaps text NOT NULL,
 	a_priority INTEGER NOT NULL,
 	r_priority INTEGER NOT NULL,
-	scheduled BOOLEAN NOT NULL,
+	source INTEGER NOT NULL,
 	duration INTEGER
 );
 
@@ -1487,7 +1507,7 @@ CREATE TABLE iris.meter_action (
 CREATE SEQUENCE event.event_id_seq;
 
 CREATE TABLE event.event_description (
-	event_desc_id integer PRIMARY KEY,
+	event_desc_id INTEGER PRIMARY KEY,
 	description text NOT NULL
 );
 
@@ -1634,25 +1654,66 @@ CREATE TABLE event.tag_read_event (
 	event_desc_id INTEGER NOT NULL
 		REFERENCES event.event_description(event_desc_id),
 	tag_type INTEGER NOT NULL REFERENCES event.tag_type,
+	agency INTEGER,
 	tag_id INTEGER NOT NULL,
 	tag_reader VARCHAR(10) NOT NULL,
-	toll_zone VARCHAR(20) REFERENCES iris.toll_zone
-		ON DELETE SET NULL,
-	tollway VARCHAR(16) NOT NULL,
 	hov BOOLEAN NOT NULL,
 	trip_id INTEGER
 );
 
+CREATE INDEX ON event.tag_read_event(tag_id);
+
 CREATE VIEW tag_read_event_view AS
 	SELECT event_id, event_date, event_description.description,
-	       tag_type.description AS tag_type, tag_id, tag_reader, toll_zone,
-	       tollway, hov, trip_id
+	       tag_type.description AS tag_type, agency, tag_id, tag_reader,
+	       toll_zone, tollway, hov, trip_id
 	FROM event.tag_read_event
 	JOIN event.event_description
 	ON   tag_read_event.event_desc_id = event_description.event_desc_id
 	JOIN event.tag_type
-	ON   tag_read_event.tag_type = tag_type.id;
+	ON   tag_read_event.tag_type = tag_type.id
+	JOIN iris.tag_reader
+	ON   tag_read_event.tag_reader = tag_reader.name
+	LEFT JOIN iris.toll_zone
+	ON        tag_reader.toll_zone = toll_zone.name;
 GRANT SELECT ON tag_read_event_view TO PUBLIC;
+
+-- Allow trip_id column to be updated by roles which have been granted
+-- update permission on tag_read_event_view
+CREATE FUNCTION event.tag_read_event_view_update() RETURNS TRIGGER AS
+	$tag_read_event_view_update$
+BEGIN
+	UPDATE event.tag_read_event
+	   SET trip_id = NEW.trip_id
+	 WHERE event_id = OLD.event_id;
+	RETURN NEW;
+END;
+$tag_read_event_view_update$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tag_read_event_view_update_trig
+    INSTEAD OF UPDATE ON tag_read_event_view
+    FOR EACH ROW EXECUTE PROCEDURE event.tag_read_event_view_update();
+
+CREATE TABLE event.price_message_event (
+	event_id SERIAL PRIMARY KEY,
+	event_date timestamp WITH time zone NOT NULL,
+	event_desc_id INTEGER NOT NULL
+		REFERENCES event.event_description(event_desc_id),
+	device_id VARCHAR(20) NOT NULL,
+	toll_zone VARCHAR(20) NOT NULL,
+	price NUMERIC(4,2) NOT NULL
+);
+
+CREATE INDEX ON event.price_message_event(event_date);
+CREATE INDEX ON event.price_message_event(device_id);
+
+CREATE VIEW price_message_event_view AS
+	SELECT event_id, event_date, event_description.description,
+	       device_id, toll_zone, price
+	FROM event.price_message_event
+	JOIN event.event_description
+	ON price_message_event.event_desc_id = event_description.event_desc_id;
+GRANT SELECT ON price_message_event_view TO PUBLIC;
 
 CREATE TABLE event.incident_detail (
 	name VARCHAR(8) PRIMARY KEY,
@@ -1674,7 +1735,8 @@ CREATE TABLE event.incident (
 	lon double precision NOT NULL,
 	camera VARCHAR(10),
 	impact VARCHAR(20) NOT NULL,
-	cleared BOOLEAN NOT NULL
+	cleared BOOLEAN NOT NULL,
+	confirmed BOOLEAN NOT NULL
 );
 
 CREATE TABLE event.incident_update (
@@ -1682,14 +1744,16 @@ CREATE TABLE event.incident_update (
 	incident VARCHAR(16) NOT NULL REFERENCES event.incident(name),
 	event_date timestamp WITH time zone NOT NULL,
 	impact VARCHAR(20) NOT NULL,
-	cleared BOOLEAN NOT NULL
+	cleared BOOLEAN NOT NULL,
+	confirmed BOOLEAN NOT NULL
 );
 
 CREATE FUNCTION event.incident_update_trig() RETURNS TRIGGER AS
 $incident_update_trig$
 BEGIN
-    INSERT INTO event.incident_update (incident, event_date, impact, cleared)
-        VALUES (NEW.name, now(), NEW.impact, NEW.cleared);
+    INSERT INTO event.incident_update
+               (incident, event_date, impact, cleared, confirmed)
+        VALUES (NEW.name, now(), NEW.impact, NEW.cleared, NEW.confirmed);
     RETURN NEW;
 END;
 $incident_update_trig$ LANGUAGE plpgsql;
@@ -1697,6 +1761,77 @@ $incident_update_trig$ LANGUAGE plpgsql;
 CREATE TRIGGER incident_update_trigger
 	AFTER INSERT OR UPDATE ON event.incident
 	FOR EACH ROW EXECUTE PROCEDURE event.incident_update_trig();
+
+CREATE TABLE iris.inc_descriptor (
+	name VARCHAR(10) PRIMARY KEY,
+	sign_group VARCHAR(16) NOT NULL REFERENCES iris.sign_group,
+	event_desc_id INTEGER NOT NULL
+		REFERENCES event.event_description(event_desc_id),
+	lane_type SMALLINT NOT NULL REFERENCES iris.lane_type(id),
+	detail VARCHAR(8) REFERENCES event.incident_detail(name),
+	cleared BOOLEAN NOT NULL,
+	multi VARCHAR(64) NOT NULL
+);
+
+CREATE FUNCTION iris.inc_descriptor_ck() RETURNS TRIGGER AS
+	$inc_descriptor_ck$
+BEGIN
+	-- Only incident event IDs are allowed
+	IF NEW.event_desc_id < 21 OR NEW.event_desc_id > 24 THEN
+		RAISE EXCEPTION 'invalid incident event_desc_id';
+	END IF;
+	-- Only mainline, cd road, merge and exit lane types are allowed
+	IF NEW.lane_type != 1 AND NEW.lane_type != 3 AND
+	   NEW.lane_type != 5 AND NEW.lane_type != 7 THEN
+		RAISE EXCEPTION 'invalid incident lane_type';
+	END IF;
+	RETURN NEW;
+END;
+$inc_descriptor_ck$ LANGUAGE plpgsql;
+
+CREATE TRIGGER inc_descriptor_ck_trig
+	BEFORE INSERT OR UPDATE ON iris.inc_descriptor
+	FOR EACH ROW EXECUTE PROCEDURE iris.inc_descriptor_ck();
+
+CREATE TABLE iris.inc_range (
+	id INTEGER PRIMARY KEY,
+	description VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE iris.inc_locator (
+	name VARCHAR(10) PRIMARY KEY,
+	sign_group VARCHAR(16) NOT NULL REFERENCES iris.sign_group,
+	range INTEGER NOT NULL REFERENCES iris.inc_range(id),
+	branched BOOLEAN NOT NULL,
+	pickable BOOLEAN NOT NULL,
+	multi VARCHAR(64) NOT NULL
+);
+
+CREATE TABLE iris.inc_advice (
+	name VARCHAR(10) PRIMARY KEY,
+	sign_group VARCHAR(16) NOT NULL REFERENCES iris.sign_group,
+	range INTEGER NOT NULL REFERENCES iris.inc_range(id),
+	lane_type SMALLINT NOT NULL REFERENCES iris.lane_type(id),
+	impact VARCHAR(20) NOT NULL,
+	cleared BOOLEAN NOT NULL,
+	multi VARCHAR(64) NOT NULL
+);
+
+CREATE FUNCTION iris.inc_advice_ck() RETURNS TRIGGER AS
+	$inc_advice_ck$
+BEGIN
+	-- Only mainline, cd road, merge and exit lane types are allowed
+	IF NEW.lane_type != 1 AND NEW.lane_type != 3 AND
+	   NEW.lane_type != 5 AND NEW.lane_type != 7 THEN
+		RAISE EXCEPTION 'invalid incident lane_type';
+	END IF;
+	RETURN NEW;
+END;
+$inc_advice_ck$ LANGUAGE plpgsql;
+
+CREATE TRIGGER inc_advice_ck_trig
+	BEFORE INSERT OR UPDATE ON iris.inc_advice
+	FOR EACH ROW EXECUTE PROCEDURE iris.inc_advice_ck();
 
 --- Views
 
@@ -1710,6 +1845,12 @@ CREATE VIEW time_action_view AS
 	SELECT name, action_plan, day_plan, sched_date, time_of_day, phase
 	FROM iris.time_action;
 GRANT SELECT ON time_action_view TO PUBLIC;
+
+CREATE VIEW dms_action_view AS
+	SELECT name, action_plan, sign_group, phase, quick_message,
+	       beacon_enabled, a_priority, r_priority
+	FROM iris.dms_action;
+GRANT SELECT ON dms_action_view TO PUBLIC;
 
 CREATE VIEW meter_action_view AS
 	SELECT ramp_meter, ta.phase, time_of_day, day_plan, sched_date
@@ -1762,13 +1903,13 @@ CREATE VIEW roadway_station_view AS
 GRANT SELECT ON roadway_station_view TO PUBLIC;
 
 CREATE VIEW toll_zone_view AS
-	SELECT name, start_id, end_id
+	SELECT name, start_id, end_id, tollway
 	FROM iris.toll_zone;
 GRANT SELECT ON toll_zone_view TO PUBLIC;
 
 CREATE VIEW controller_view AS
 	SELECT c.name, drop_id, comm_link, cabinet,
-	       cnd.description AS condition, notes, cab.geo_loc
+	       cnd.description AS condition, notes, cab.geo_loc, fail_time
 	FROM iris.controller c
 	LEFT JOIN iris.cabinet cab ON c.cabinet = cab.name
 	LEFT JOIN iris.condition cnd ON c.condition = cnd.id;
@@ -1848,7 +1989,8 @@ CREATE VIEW beacon_view AS
 	SELECT b.name, b.notes, b.message, p.camera, p.preset_num, b.geo_loc,
 	       l.roadway, l.road_dir, l.cross_mod, l.cross_street, l.cross_dir,
 	       l.lat, l.lon,
-	       b.controller, b.pin, ctr.comm_link, ctr.drop_id, ctr.condition
+	       b.controller, b.pin, b.verify_pin, ctr.comm_link, ctr.drop_id,
+	       ctr.condition
 	FROM iris.beacon b
 	LEFT JOIN iris.camera_preset p ON b.preset = p.name
 	LEFT JOIN geo_loc_view l ON b.geo_loc = l.name
@@ -1874,13 +2016,18 @@ CREATE VIEW weather_sensor_view AS
 GRANT SELECT ON weather_sensor_view TO PUBLIC;
 
 CREATE VIEW tag_reader_view AS
-	SELECT t.name, t.notes, t.geo_loc, l.roadway, l.road_dir, l.cross_mod,
-	       l.cross_street, l.cross_dir, l.lat, l.lon,
+	SELECT t.name, t.notes, t.toll_zone, t.geo_loc, l.roadway, l.road_dir,
+	       l.cross_mod, l.cross_street, l.cross_dir, l.lat, l.lon,
 	       t.controller, t.pin, ctr.comm_link, ctr.drop_id, ctr.condition
 	FROM iris.tag_reader t
 	LEFT JOIN geo_loc_view l ON t.geo_loc = l.name
 	LEFT JOIN controller_view ctr ON t.controller = ctr.name;
 GRANT SELECT ON tag_reader_view TO PUBLIC;
+
+CREATE VIEW tag_reader_dms_view AS
+	SELECT tag_reader, dms
+	FROM iris.tag_reader_dms;
+GRANT SELECT ON tag_reader_dms_view TO PUBLIC;
 
 CREATE VIEW gate_arm_array_view AS
 	SELECT ga.name, ga.notes, ga.geo_loc, l.roadway, l.road_dir,
@@ -2104,7 +2251,7 @@ GRANT SELECT ON gate_arm_event_view TO PUBLIC;
 
 CREATE VIEW incident_view AS
     SELECT iu.event_id, name, iu.event_date, ed.description, road,
-           d.direction, iu.impact, iu.cleared, camera,
+           d.direction, iu.impact, iu.cleared, iu.confirmed, camera,
            ln.description AS lane_type, detail, replaces, lat, lon
     FROM event.incident i
     JOIN event.incident_update iu ON i.name = iu.incident
@@ -2207,24 +2354,13 @@ COPY iris.comm_protocol (id, description) FROM stdin;
 30	DR-500
 31	ADDCO
 32	TransCore E6
-33	CA RWIS
-34	TTIP DMS
+33	Control By Web
+34	Incident Feed
+35	CA RWIS
+36	TTIP DMS
 \.
 
 COPY iris.cabinet_style (name, dip) FROM stdin;
-336	0
-334Z	1
-334D	2
-334Z-94	3
-Drum	4
-334DZ	5
-334	6
-334Z-99	7
-S334Z	9
-Prehistoric	10
-334Z-00	11
-334Z-05	13
-334ZP	15
 \.
 
 COPY iris.condition (id, description) FROM stdin;
@@ -2338,9 +2474,12 @@ camera_util_panel_enable	false
 camera_wiper_precip_mm_hr	8
 client_units_si	true
 comm_event_purge_days	14
-database_version	4.26.0
+database_version	4.35.0
 detector_auto_fail_enable	true
+device_op_status_enable	false
 dialup_poll_period_mins	120
+dict_allowed_scheme	0
+dict_banned_scheme	0
 dms_aws_enable	false
 dms_aws_msg_file_url	http://iris/irisaws.txt
 dms_aws_user_name	IRISAWS
@@ -2361,7 +2500,6 @@ dms_manager_show_owner	true
 dms_manufacturer_enable	true
 dms_max_lines	3
 dms_message_min_pages	1
-dms_op_status_enable	false
 dms_page_off_default_secs	0.0
 dms_page_on_default_secs	2.0
 dms_page_on_max_secs	10.0
@@ -2426,6 +2564,8 @@ speed_limit_min_mph	45
 speed_limit_default_mph	55
 speed_limit_max_mph	75
 tesla_host	
+toll_min_price	0.25
+toll_max_price	8
 travel_time_max_legs	8
 travel_time_max_miles	16
 travel_time_min_mph	15
@@ -2501,13 +2641,13 @@ PRV_0006	login	system_attribute(/.*)?	t	f	f	f
 PRV_0007	login	map_extent(/.*)?	t	f	f	f
 PRV_0008	login	road(/.*)?	t	f	f	f
 PRV_0009	login	geo_loc(/.*)?	t	f	f	f
-PRV_0010	login	incident_detail(/.*)?	t	f	f	f
 PRV_001H	login	site_data(/.*)?	t	f	f	f
 PRV_0011	camera_tab	camera(/.*)?	t	f	f	f
 PRV_001A	camera_tab	camera_preset(/.*)?	t	f	f	f
 PRV_001B	camera_tab	camera_preset_alias(/.*)?	t	f	f	f
 PRV_0012	camera_tab	controller(/.*)?	t	f	f	f
 PRV_0013	camera_tab	video_monitor(/.*)?	t	f	f	f
+PRV_0010	incident_tab	incident_detail(/.*)?	t	f	f	f
 PRV_0014	incident_tab	incident(/.*)?	t	f	f	f
 PRV_0015	dms_tab	cabinet(/.*)?	t	f	f	f
 PRV_0016	dms_tab	controller(/.*)?	t	f	f	f
@@ -2521,6 +2661,7 @@ PRV_0023	dms_tab	sign_group(/.*)?	t	f	f	f
 PRV_0024	dms_tab	sign_message(/.*)?	t	f	f	f
 PRV_0025	dms_tab	sign_text(/.*)?	t	f	f	f
 PRV_0026	dms_tab	beacon(/.*)?	t	f	f	f
+prv_dic2	dms_tab	word(/.*)?	t	f	f	f
 PRV_0027	lcs_tab	cabinet(/.*)?	t	f	f	f
 PRV_0028	lcs_tab	controller(/.*)?	t	f	f	f
 PRV_0029	lcs_tab	dms(/.*)?	t	f	f	f
@@ -2553,6 +2694,9 @@ PRV_0053	dms_control	dms/.*/ownerNext	f	t	f	f
 PRV_0054	dms_control	sign_message/.*	f	t	t	f
 PRV_0055	dms_control	beacon/.*/flashing	f	t	f	f
 PRV_0056	incident_control	incident/.*	f	t	t	t
+prv_inc1	incident_control	inc_descriptor(/.*)?	t	f	f	f
+prv_inc2	incident_control	inc_locator(/.*)?	t	f	f	f
+prv_inc3	incident_control	inc_advice(/.*)?	t	f	f	f
 PRV_0057	lcs_control	lcs_array/.*/indicationsNext	f	t	f	f
 PRV_0058	lcs_control	lcs_array/.*/ownerNext	f	t	f	f
 PRV_0059	lcs_control	lcs_array/.*/lcsLock	f	t	f	f
@@ -2584,6 +2728,9 @@ PRV_0083	policy_admin	dms_sign_group/.*	f	t	t	t
 PRV_0084	policy_admin	holiday(/.*)?	t	f	f	f
 PRV_0085	policy_admin	holiday/.*	f	t	t	t
 PRV_0086	policy_admin	incident_detail/.*	f	t	t	t
+prv_inc4	policy_admin	inc_descriptor/.*	f	t	t	t
+prv_inc5	policy_admin	inc_locator/.*	f	t	t	t
+prv_inc6	policy_admin	inc_advice/.*	f	t	t	t
 PRV_0138	policy_admin	beacon_action(/.*)?	t	f	f	f
 PRV_0139	policy_admin	beacon_action/.*	f	t	t	t
 PRV_0087	policy_admin	lane_action(/.*)?	t	f	f	f
@@ -2598,6 +2745,7 @@ PRV_0095	policy_admin	sign_group/.*	f	t	t	t
 PRV_0096	policy_admin	sign_text/.*	f	t	t	t
 PRV_0097	policy_admin	time_action(/.*)?	t	f	f	f
 PRV_0098	policy_admin	time_action/.*	f	t	t	t
+prv_dic1	policy_admin	word(/.*)?	t	t	t	t
 PRV_0099	device_admin	alarm/.*	f	t	t	t
 PRV_0100	device_admin	cabinet/.*	f	t	t	t
 PRV_0101	device_admin	camera/.*	f	t	t	t
@@ -2694,6 +2842,12 @@ COPY iris.i_user (name, full_name, password, dn, role, enabled) FROM stdin;
 admin	IRIS Administrator	+vAwDtk/0KGx9k+kIoKFgWWbd3Ku8e/FOHoZoHB65PAuNEiN2muHVavP0fztOi4=		administrator	t
 \.
 
+COPY iris.inc_range (id, description) FROM stdin;
+0	near
+1	middle
+2	far
+\.
+
 COPY event.event_description (event_desc_id, description) FROM stdin;
 1	Alarm TRIGGERED
 2	Alarm CLEARED
@@ -2737,6 +2891,8 @@ COPY event.event_description (event_desc_id, description) FROM stdin;
 501	Beacon ON
 502	Beacon OFF
 601	Tag Read
+651	Price DEPLOYED
+652	Price VERIFIED
 \.
 
 COPY event.incident_detail (name, description) FROM stdin;
@@ -2755,6 +2911,7 @@ rollover	Rollover
 sgnl_out	Traffic Lights Out
 snow_rmv	Snow Removal
 spill	Spilled Load
+test	Test Incident
 veh_fire	Vehicle Fire
 \.
 

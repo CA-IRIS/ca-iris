@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2013  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import us.mn.state.dot.geokit.SphericalMercatorPosition;
+import us.mn.state.dot.tms.GeoLoc;
+import us.mn.state.dot.tms.GeoLocHelper;
+import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.R_NodeHelper;
 import us.mn.state.dot.tms.units.Distance;
+import static us.mn.state.dot.tms.units.Distance.Units.MILES;
 
 /**
  * This is a class to manage roadway network corridors.
@@ -31,6 +36,9 @@ import us.mn.state.dot.tms.units.Distance;
  * @author Douglas Lau
  */
 public class CorridorManager {
+
+	/** Maximum distance to snap */
+	static private final Distance MAX_DIST = new Distance(1, MILES);
 
 	/** Map to hold all corridors */
 	protected final Map<String, Corridor> corridors =
@@ -40,26 +48,29 @@ public class CorridorManager {
 	public synchronized void createCorridors() {
 		corridors.clear();
 		Iterator<R_Node> it = R_NodeHelper.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			R_Node r_node = it.next();
-			findDownstreamLinks((R_NodeImpl)r_node);
-			addCorridorNode(r_node);
+			if (r_node instanceof R_NodeImpl) {
+				R_NodeImpl n = (R_NodeImpl) r_node;
+				findDownstreamLinks(n);
+				addCorridorNode(n);
+			}
 		}
-		for(Corridor c: corridors.values())
+		for (Corridor c: corridors.values())
 			c.arrangeNodes();
 	}
 
 	/** Add an r_node to the proper corridor */
-	private void addCorridorNode(R_Node r_node) {
+	private void addCorridorNode(R_NodeImpl r_node) {
 		String cid = R_NodeHelper.getCorridorName(r_node);
-		if(cid != null)
+		if (cid != null)
 			addCorridorNode(cid, r_node);
 	}
 
 	/** Add an r_node to the specified corridor */
-	private void addCorridorNode(String cid, R_Node r_node) {
+	private void addCorridorNode(String cid, R_NodeImpl r_node) {
 		Corridor c = corridors.get(cid);
-		if(c == null) {
+		if (c == null) {
 			c = new Corridor(r_node.getGeoLoc());
 			corridors.put(cid, c);
 		}
@@ -141,5 +152,28 @@ public class CorridorManager {
 	public synchronized void findBottlenecks() {
 		for(Corridor c: corridors.values())
 			c.findBottlenecks();
+	}
+
+	/** Lookup the corridor for a location */
+	public Corridor getCorridor(GeoLoc loc) {
+		String c = GeoLocHelper.getCorridorName(loc);
+		return (c != null) ? getCorridor(c) : null;
+	}
+
+	/** Create a GeoLoc snapped to nearest r_node segment.
+	 * NOTE: copied from client/roads/R_NodeManager. */
+	public synchronized GeoLoc snapGeoLoc(SphericalMercatorPosition smp,
+		LaneType lt)
+	{
+		GeoLoc loc = null;
+		Distance dist = MAX_DIST;
+		for (Corridor c: corridors.values()) {
+			Corridor.GeoLocDist ld = c.snapGeoLoc(smp, lt, dist);
+			if (ld != null && ld.dist.m() < dist.m()) {
+				loc = ld.loc;
+				dist = ld.dist;
+			}
+		}
+		return loc;
 	}
 }

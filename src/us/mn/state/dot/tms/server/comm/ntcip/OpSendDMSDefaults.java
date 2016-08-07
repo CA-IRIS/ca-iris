@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@ package us.mn.state.dot.tms.server.comm.ntcip;
 
 import java.io.IOException;
 import us.mn.state.dot.tms.DMS;
+import static us.mn.state.dot.tms.DmsColor.AMBER;
 import us.mn.state.dot.tms.DMSType;
-import us.mn.state.dot.tms.Multi.JustificationLine;
-import us.mn.state.dot.tms.Multi.JustificationPage;
 import static us.mn.state.dot.tms.SystemAttrEnum.*;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
+import us.mn.state.dot.tms.server.comm.ControllerException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.*;
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.*;
@@ -31,9 +31,12 @@ import us.mn.state.dot.tms.server.comm.ntcip.mibskyline.*;
 import static us.mn.state.dot.tms.server.comm.ntcip.mibskyline.MIB.*;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Enum;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Integer;
+import us.mn.state.dot.tms.server.comm.snmp.ASN1OctetString;
 import us.mn.state.dot.tms.server.comm.snmp.BadValue;
 import us.mn.state.dot.tms.server.comm.snmp.NoSuchName;
 import us.mn.state.dot.tms.server.comm.snmp.SNMP;
+import us.mn.state.dot.tms.utils.Multi.JustificationLine;
+import us.mn.state.dot.tms.utils.Multi.JustificationPage;
 
 /**
  * Operation to send default parameters to a DMS.
@@ -57,6 +60,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class SetCommPowerLoss extends Phase {
 
 		/** Set the comm loss action */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer power_time =dmsShortPowerLossTime.makeInt();
 			ASN1Integer comm_time = dmsTimeCommLoss.makeInt();
@@ -82,6 +86,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class PixelService extends Phase {
 
 		/** Set the pixel service schedule */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer dur = vmsPixelServiceDuration.makeInt();
 			ASN1Integer freq = vmsPixelServiceFrequency.makeInt();
@@ -104,6 +109,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class MessageDefaults extends Phase {
 
 		/** Set the message defaults */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Enum<JustificationLine> line = new ASN1Enum<
 				JustificationLine>(JustificationLine.class,
@@ -128,6 +134,35 @@ public class OpSendDMSDefaults extends OpDMS {
 			logStore(on_time);
 			logStore(off_time);
 			mess.storeProps();
+			return new MessageDefaultsV2();
+		}
+	}
+
+	/** Phase to set the V2 message defaults */
+	protected class MessageDefaultsV2 extends Phase {
+
+		/** Set the message defaults */
+		@SuppressWarnings("unchecked")
+		protected Phase poll(CommMessage mess) throws IOException {
+			ASN1OctetString background = new ASN1OctetString(
+				defaultBackgroundRGB.node);
+			ASN1OctetString foreground = new ASN1OctetString(
+				defaultForegroundRGB.node);
+			background.setOctetString(new byte[] { 0, 0, 0 });
+			foreground.setOctetString(new byte[] { (byte) AMBER.red,
+				(byte) AMBER.green, (byte) AMBER.blue });
+			mess.add(background);
+			mess.add(foreground);
+			logStore(background);
+			logStore(foreground);
+			try {
+				mess.storeProps();
+			}
+			catch (ControllerException e) {
+				// NoSuchName: not a v2 sign
+				// GenError: unsupported color
+				// BadValue: who knows?
+			}
 			return new LedstarDefaults();
 		}
 	}
@@ -136,6 +171,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class LedstarDefaults extends Phase {
 
 		/** Set Ledstar-specific object defaults */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer temp = ledHighTempCutoff.makeInt();
 			ASN1Integer override = ledSignErrorOverride.makeInt();
@@ -167,6 +203,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class SkylineDefaults extends Phase {
 
 		/** Set Skyline-specific object defaults */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1Integer temp = dmsTempCritical.makeInt();
 			ASN1Integer day_night = dynBrightDayNight.makeInt();
@@ -203,6 +240,7 @@ public class OpSendDMSDefaults extends OpDMS {
 	protected class AddcoDefaults extends Phase {
 
 		/** Set ADDCO-specific object defaults */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			// ADDCO brick signs have these dimensions
 			String make = dms.getMake();

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2010-2015 AHMCT, University of California
  * Copyright (C) 2012  Iteris Inc.
  *
@@ -20,14 +20,13 @@ import java.io.IOException;
 import java.io.Writer;
 import java.sql.ResultSet;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import us.mn.state.dot.geokit.Position;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.BitmapGraphic;
@@ -37,25 +36,24 @@ import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.DmsAction;
+import us.mn.state.dot.tms.DmsSignGroupHelper;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
-import static us.mn.state.dot.tms.DMSMessagePriority.AWS;
-import static us.mn.state.dot.tms.DMSMessagePriority.TRAVEL_TIME;
+import static us.mn.state.dot.tms.DMSMessagePriority.*;
 import us.mn.state.dot.tms.DMSType;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.Font;
 import us.mn.state.dot.tms.FontHelper;
-import us.mn.state.dot.tms.GateArmArrayHelper;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.InvalidMessageException;
 import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.LCSHelper;
-import us.mn.state.dot.tms.MultiString;
-import us.mn.state.dot.tms.RasterBuilder;
+import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
+import us.mn.state.dot.tms.SignMsgSource;
+import static us.mn.state.dot.tms.SignMsgSource.*;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.MainServer.FLUSH;
@@ -64,9 +62,11 @@ import us.mn.state.dot.tms.server.aws.AwsActionHistory;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.DMSPoller;
 import us.mn.state.dot.tms.server.event.BrightnessSample;
+import us.mn.state.dot.tms.server.event.PriceMessageEvent;
 import us.mn.state.dot.tms.server.event.SignStatusEvent;
 import us.mn.state.dot.tms.utils.Base64;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SString;
 
 /**
@@ -75,10 +75,7 @@ import us.mn.state.dot.tms.utils.SString;
  * @author Douglas Lau
  * @author Michael Darter
  */
-public class DMSImpl extends DeviceImpl implements DMS {
-
-	/** DMS debug log */
-	static private final DebugLog DMS_LOG = new DebugLog("dms");
+public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 
 	/** DMS schedule debug log */
 	static private final DebugLog SCHED_LOG = new DebugLog("sched");
@@ -115,6 +112,18 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		});
 	}
 
+	/** Update all DMS item styles */
+	static void updateAllStyles() {
+		Iterator<DMS> it = DMSHelper.iterator();
+		while (it.hasNext()) {
+			DMS d = it.next();
+			if (d instanceof DMSImpl) {
+				DMSImpl dms = (DMSImpl) d;
+				dms.updateStyles();
+			}
+		}
+	}
+
 	/** Get a mapping of the columns */
 	public Map<String, Object> getColumns() {
 		HashMap<String, Object> map = new HashMap<String, Object>();
@@ -141,6 +150,15 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		return SONAR_TYPE;
 	}
 
+	/** Compare to another holiday */
+	@Override
+	public int compareTo(DMSImpl o) {
+		return name.compareTo(o.name);
+	}
+
+	/** Tolling formatter */
+	private final TollingFormatter toll_formatter;
+
 	/** MULTI message formatter */
 	private final MultiFormatter formatter;
 
@@ -150,7 +168,8 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		GeoLocImpl g = new GeoLocImpl(name);
 		g.notifyCreate();
 		geo_loc = g;
-		formatter = new MultiFormatter(this);
+		toll_formatter = new TollingFormatter(n, g);
+		formatter = new MultiFormatter(this, toll_formatter);
 	}
 
 	/** Create a dynamic message sign */
@@ -165,7 +184,8 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		awsAllowed = aa;
 		awsControlled = ac;
 		default_font = df;
-		formatter = new MultiFormatter(this);
+		toll_formatter = new TollingFormatter(n, loc);
+		formatter = new MultiFormatter(this, toll_formatter);
 		initTransients();
 	}
 
@@ -180,15 +200,15 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	}
 
 	/** Create a blank message for the sign */
-	public SignMessage createBlankMessage() {
-		return createBlankMessage(DMSMessagePriority.OVERRIDE);
+	public SignMessage createMsgBlank() {
+		return createMsgBlank(OVERRIDE);
 	}
 
 	/** Create a blank message for the sign */
-	private SignMessage createBlankMessage(DMSMessagePriority ap) {
-		String bitmaps = Base64.encode(new byte[0]);
-		return createMessage("", false, bitmaps, ap,
-			DMSMessagePriority.BLANK, false, null);
+	public SignMessage createMsgBlank(DMSMessagePriority ap) {
+		String bmaps = Base64.encode(new byte[0]);
+		return findOrCreateMsg("", false, bmaps, ap, BLANK, operator,
+			null);
 	}
 
 	/** Destroy an object */
@@ -906,9 +926,8 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	@Override
 	public synchronized void setOwnerNext(User o) {
 		if (ownerNext != null && o != null) {
-			System.err.println("DMSImpl.setOwnerNext: " + getName()+
-				", " + ownerNext.getName() + " vs. " +
-				o.getName());
+			logError("OWNER CONFLICT: " + ownerNext.getName() +
+			         " vs. " + o.getName());
 			ownerNext = null;
 		} else
 			ownerNext = o;
@@ -936,13 +955,19 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	/** Set the next sign message.  This is called by SONAR when the
 	 * messageNext attribute is set.  The ownerNext attribute should have
 	 * been set by the client prior to setting this attribute. */
-	public void doSetMessageNext(SignMessage sm) throws TMSException {
-		User o_next = ownerNext;	// Avoid race
-		// ownerNext is only valid for one message, clear it
-		ownerNext = null;
-		if (o_next == null)
-			throw new ChangeVetoException("MUST SET OWNER FIRST");
-		doSetMessageNext(sm, o_next);
+	public synchronized void doSetMessageNext(SignMessage sm)
+		throws TMSException
+	{
+		try {
+			if (ownerNext != null)
+				doSetMessageNext(sm, ownerNext);
+			else
+				throw new ChangeVetoException("OWNER CONFLICT");
+		}
+		finally {
+			// ownerNext is only valid for one message, clear it
+			ownerNext = null;
+		}
 	}
 
 	/** Set the next sign message and owner */
@@ -973,7 +998,7 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		// FIXME: there should be a better way to clear cached routes
 		//        in travel time estimator
 		int ap = smn.getActivationPriority();
-		if (ap == DMSMessagePriority.OVERRIDE.ordinal())
+		if (ap == OVERRIDE.ordinal())
 			formatter.clear();
 		p.sendMessage(this, smn, o);
 	}
@@ -1028,33 +1053,40 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		}
 	}
 
-	/** Validate the message bitmaps */
+	/** Validate message bitmaps.
+	 * @param bmaps Base64-encoded bitmaps.
+	 * @param multi Message MULTI string.
+	 * @throws IOException, ChangeVetoException. */
 	private void validateBitmaps(String bmaps, MultiString multi)
 		throws IOException, ChangeVetoException
 	{
-		byte[] bitmaps = Base64.decode(bmaps);
-		BitmapGraphic bitmap = createBlankBitmap();
-		int blen = bitmap.length();
+		byte[] b_data = Base64.decode(bmaps);
+		BitmapGraphic bg = createBlankBitmap();
+		int blen = bg.length();
 		if (blen == 0)
 			throw new ChangeVetoException("Invalid sign size");
-		if (bitmaps.length % blen != 0)
+		if (b_data.length % blen != 0)
 			throw new ChangeVetoException("Invalid bitmap length");
 		if (!multi.isBlank()) {
 			String[] pixels = pixelStatus;	// Avoid races
 			if (pixels != null && pixels.length == 2)
-				validateBitmaps(bitmaps, pixels, bitmap);
+				validateBitmaps(b_data, pixels, bg);
 		}
 	}
 
-	/** Validate the message bitmaps */
-	private void validateBitmaps(byte[] bitmaps, String[] pixels,
-		BitmapGraphic bitmap) throws IOException, ChangeVetoException
+	/** Validate the message bitmaps.
+	 * @param b_data Decoded bitmap data.
+	 * @param pixels Pixel status bitmaps (stuck off and stuck on).
+	 * @param bg Temporary bitmap graphic.
+	 * @throws IOException, ChangeVetoException. */
+	private void validateBitmaps(byte[] b_data, String[] pixels,
+		BitmapGraphic bg) throws IOException, ChangeVetoException
 	{
-		int blen = bitmap.length();
+		int blen = bg.length();
 		int off_limit = SystemAttrEnum.DMS_PIXEL_OFF_LIMIT.getInt();
 		int on_limit = SystemAttrEnum.DMS_PIXEL_ON_LIMIT.getInt();
-		BitmapGraphic stuckOff = bitmap.createBlankCopy();
-		BitmapGraphic stuckOn = bitmap.createBlankCopy();
+		BitmapGraphic stuckOff = bg.createBlankCopy();
+		BitmapGraphic stuckOn = bg.createBlankCopy();
 		byte[] b_off = Base64.decode(pixels[STUCK_OFF_BITMAP]);
 		byte[] b_on = Base64.decode(pixels[STUCK_ON_BITMAP]);
 		// Don't validate if the sign dimensions have changed
@@ -1062,21 +1094,21 @@ public class DMSImpl extends DeviceImpl implements DMS {
 			return;
 		stuckOff.setPixelData(b_off);
 		stuckOn.setPixelData(b_on);
-		int n_pages = bitmaps.length / blen;
-		byte[] b = new byte[blen];
+		int n_pages = b_data.length / blen;
+		byte[] bd = new byte[blen];
 		for (int p = 0; p < n_pages; p++) {
-			System.arraycopy(bitmaps, p * blen, b, 0, blen);
-			bitmap.setPixelData(b);
-			bitmap.union(stuckOff);
-			int n_lit = bitmap.getLitCount();
+			System.arraycopy(b_data, p * blen, bd, 0, blen);
+			bg.setPixelData(bd);
+			bg.union(stuckOff);
+			int n_lit = bg.getLitCount();
 			if (n_lit > off_limit) {
 				throw new ChangeVetoException(
 					"Too many stuck off pixels: " + n_lit);
 			}
-			bitmap.setPixelData(b);
-			bitmap.outline();
-			bitmap.union(stuckOn);
-			n_lit = bitmap.getLitCount();
+			bg.setPixelData(bd);
+			bg.outline();
+			bg.union(stuckOn);
+			n_lit = bg.getLitCount();
 			if (n_lit > on_limit) {
 				throw new ChangeVetoException(
 					"Too many stuck on pixels: " + n_lit);
@@ -1100,51 +1132,60 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	 * @param sm SignMessage being activated.
 	 * @return true If priority is high enough to deploy. */
 	public boolean shouldActivate(SignMessage sm) {
-		if (sm != null) {
+		return (sm != null)
+		      ? shouldActivate(sm, sm.getSource())
+		      : false;
+	}
+
+	/** Check if a message should be activated based on priority.
+	 * @param sm SignMessage being activated.
+	 * @param src Message source.
+	 * @return true If priority is high enough to deploy. */
+	private boolean shouldActivate(SignMessage sm, int src) {
+		assert sm != null;
 			DMSMessagePriority ap = DMSMessagePriority.fromOrdinal(
 			       sm.getActivationPriority());
-			return shouldActivate(ap, sm.getScheduled()) &&
+		return shouldActivate(ap, src) &&
 			       SignMessageHelper.lookup(sm.getName()) == sm;
-		} else
-			return false;
 	}
 
 	/** Test if a message should be activated.
 	 * @param ap Activation priority.
-	 * @param sched Scheduled flag.
+	 * @param src Message source.
 	 * @return True if message should be activated; false otherwise. */
-	private boolean shouldActivate(DMSMessagePriority ap, boolean sched) {
-		return shouldActivate(messageCurrent, ap, sched) &&
-		       shouldActivate(messageNext, ap, sched);
+	private boolean shouldActivate(DMSMessagePriority ap, int src) {
+		return shouldActivate(messageCurrent, ap, src) &&
+		       shouldActivate(messageNext, ap, src);
 	}
 
 	/** Test if a sign message should be activated.
 	 * @param existing Message existing on DMS.
 	 * @param ap Activation priority.
-	 * @param sched Scheduled flag.
+	 * @param src Message source.
 	 * @return True if message should be activated; false otherwise. */
 	static private boolean shouldActivate(SignMessage existing,
-		DMSMessagePriority ap, boolean sched)
+		DMSMessagePriority ap, int src)
 	{
 		if (existing == null)
 			return true;
-		if (existing.getScheduled() && sched)
+		if (SignMsgSource.isScheduled(existing.getSource()) &&
+		    SignMsgSource.isScheduled(src))
 			return true;
 		return ap.ordinal() >= existing.getRunTimePriority();
 	}
 
-	/** Send a sign message created by IRIS server.
+	/** Deploy (create and send) a sign message.
 	 * @param m MULTI string.
 	 * @param be Beacon enabled.
 	 * @param ap Activation priority.
 	 * @param rp Run-time priority.
-	 * @param sch Scheduled flag. */
-	public void sendMessage(String m, boolean be, DMSMessagePriority ap,
-		DMSMessagePriority rp, boolean sch)
+	 * @param src Message source. */
+	public void deployMsg(String m, boolean be, DMSMessagePriority ap,
+		DMSMessagePriority rp, SignMsgSource src)
 	{
 		if (getMessageCurrent().getMulti().equals(m))
 			return;
-		SignMessage sm = createMessage(m, be, ap, rp, sch, null);
+		SignMessage sm = createMsg(m, be, ap, rp, src, null);
 		try {
 			if (!isMessageCurrentEquivalent(sm))
 				doSetMessageNext(sm, null);
@@ -1155,14 +1196,14 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	}
 
 	/** Current message (Shall not be null) */
-	private transient SignMessage messageCurrent = createBlankMessage();
+	private transient SignMessage messageCurrent = createMsgBlank();
 
-	/**
-	 * Set the current message.
-	 * @param sm Sign message
-	 * @param o User associated with sign message
-	 */
+	/** Set the current message.
+	 * @param sm Sign message.
+	 * @param o Sign message owner, or null. */
 	public void setMessageCurrent(SignMessage sm, User o) {
+		if (sm.getSource() == tolling.ordinal())
+			logPriceMessages(EventType.PRICE_VERIFIED);
 		if (!isMessageCurrentEquivalent(sm)) {
 			logMessage(sm, o);
 			setDeployTime();
@@ -1197,11 +1238,9 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		return ownerCurrent;
 	}
 
-	/**
-	 * Log a message.
-	 * @param sm Sign message
-	 * @param o User associated with sign message
-	 */
+	/** Log a message.
+	 * @param sm Sign message.
+	 * @param o Sign message owner, or null. */
 	private void logMessage(SignMessage sm, User o) {
 		EventType et = EventType.DMS_DEPLOYED;
 		String text = sm.getMulti();
@@ -1215,13 +1254,18 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		logEvent(new SignStatusEvent(et, name, text, owner));
 	}
 
-	/** Log a sign status event */
-	private void logEvent(final SignStatusEvent ev) {
-		FLUSH.addJob(new Job() {
-			public void perform() throws TMSException {
-				ev.doStore();
+	/** Log price (tolling) messages.
+	 * @param et Event type. */
+	private void logPriceMessages(EventType et) {
+		HashMap<String, Float> p = prices;
+		if (p != null) {
+			for (Map.Entry<String, Float> ent: p.entrySet()) {
+				String tz = ent.getKey();
+				Float price = ent.getValue();
+				logEvent(new PriceMessageEvent(et, name, tz,
+				                               price));
 			}
-		});
+		}
 	}
 
 	/** Message deploy time */
@@ -1349,21 +1393,23 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		void feedback(EventType et, int photo, int output);
 	}
 
-	/** Create a message for the sign.
+	/** Create a pre-rendered message for the sign (ADDCO, DMSXML).
 	 * @param m MULTI string for message.
 	 * @param be Beacon enabled flag.
-	 * @param p Activation priority.
+	 * @param pages Pre-rendered graphics for all pages.
+	 * @param ap Activation priority.
+	 * @param rp Run-time priority.
+	 * @param d Duration in minutes; null means indefinite.
 	 * @return New sign message, or null on error. */
-	public SignMessage createMessage(String m, boolean be,
-		DMSMessagePriority ap)
+	public SignMessage createMsgRendered(String m, boolean be,
+		BitmapGraphic[] pages, DMSMessagePriority ap,
+		DMSMessagePriority rp, Integer d)
 	{
-		MultiString ms = new MultiString(m);
-		if (ms.isBlank())
-			return createBlankMessage(ap);
-		else {
-			return createMessage(m, be, ap,
-				DMSMessagePriority.OPERATOR, null);
-		}
+		String bmaps = encodeAdjustedBitmaps(pages);
+		if (bmaps != null)
+			return findOrCreateMsg(m, be, bmaps, ap, rp,external,d);
+		else
+			return null;
 	}
 
 	/** Create a message for the sign.
@@ -1371,31 +1417,28 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	 * @param be Beacon enabled flag.
 	 * @param ap Activation priority.
 	 * @param rp Run-time priority.
+	 * @param src Message source.
 	 * @param d Duration in minutes; null means indefinite.
 	 * @return New sign message, or null on error. */
-	public SignMessage createMessage(String m, boolean be,
-		DMSMessagePriority ap, DMSMessagePriority rp, Integer d)
-	{
-		boolean sch = DMSMessagePriority.isScheduled(rp);
-		return createMessage(m, be, ap, rp, sch, d);
-	}
-
-	/** Create a message for the sign.
-	 * @param m MULTI string for message.
-	 * @param be Beacon enabled flag.
-	 * @param ap Activation priority.
-	 * @param rp Run-time priority.
-	 * @param sch Scheduled flag.
-	 * @param d Duration in minutes; null means indefinite.
-	 * @return New sign message, or null on error. */
-	private SignMessage createMessage(String m, boolean be,
-		DMSMessagePriority ap, DMSMessagePriority rp, boolean sch,
+	public SignMessage createMsg(String m, boolean be,
+		DMSMessagePriority ap, DMSMessagePriority rp, SignMsgSource src,
 		Integer d)
 	{
+		String bmaps = renderBitmaps(m);
+		if (bmaps != null)
+			return findOrCreateMsg(m, be, bmaps, ap, rp, src, d);
+		else
+			return null;
+	}
+
+	/** Render bitmaps for all pages of a message.
+	 * @param m MULTI string for message.
+	 * @return Base64-encoded bitmaps, or null on error. */
+	private String renderBitmaps(String m) {
 		try {
 			BitmapGraphic[] pages = DMSHelper.createBitmaps(this,m);
 			if (pages != null)
-				return createMessageB(m, be, pages,ap,rp,sch,d);
+				return encodeBitmaps(pages);
 		}
 		catch (InvalidMessageException e) {
 			logError("invalid msg: " + e.getMessage());
@@ -1403,65 +1446,12 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		return null;
 	}
 
-	/** Create a message for the sign.
-	 * @param m MULTI string for message.
-	 * @param be Beacon enabled flag.
-	 * @param pages Pre-rendered graphics for all pages.
-	 * @param ap Activation priority.
-	 * @param rp Run-time priority.
-	 * @param d Duration in minutes; null means indefinite.
-	 * @return New sign message, or null on error. */
-	public SignMessage createMessage(String m, boolean be,
-		BitmapGraphic[] pages, DMSMessagePriority ap,
-		DMSMessagePriority rp, Integer d)
-	{
-		boolean sch = DMSMessagePriority.isScheduled(rp);
-		return createMessage(m, be, pages, ap, rp, sch, d);
-	}
-
-	/** Create a message for the sign.
-	 * @param m MULTI string for message.
-	 * @param be Beacon enabled flag.
-	 * @param pages Pre-rendered graphics for all pages.
-	 * @return New sign message, or null on error. */
-	public SignMessage createMessage(String m, boolean be,
-		BitmapGraphic[] pages)
-	{
-		BitmapGraphic[] bmaps = copyBitmaps(pages);
-		if (bmaps != null) {
-			String ebm = encodeBitmaps(bmaps);
-			SignMessage esm = SignMessageHelper.find(m, be, ebm);
-			if (esm != null)
-				return esm;
-			else {
-				DMSMessagePriority p =
-					DMSMessagePriority.OTHER_SYSTEM;
-				boolean sch = DMSMessagePriority.isScheduled(p);
-				return createMessageC(m, be, ebm, p, p, sch,
-					null);
-			}
-		} else
-			return null;
-	}
-
-	/** Create a message for the sign.
-	 * @param m MULTI string for message.
-	 * @param be Beacon enabled flag.
-	 * @param pages Pre-rendered graphics for all pages.
-	 * @param ap Activation priority.
-	 * @param rp Run-time priority.
-	 * @param sch Scheduled flag.
-	 * @param d Duration in minutes; null means indefinite.
-	 * @return New sign message, or null on error. */
-	private SignMessage createMessage(String m, boolean be,
-		BitmapGraphic[] pages, DMSMessagePriority ap,
-		DMSMessagePriority rp, boolean sch, Integer d)
-	{
-		BitmapGraphic[] bmaps = copyBitmaps(pages);
-		if (bmaps != null)
-			return createMessageB(m, be, bmaps, ap, rp, sch, d);
-		else
-			return null;
+	/** Encode bitmaps to Base64 after adjusting dimensions.
+	 * @param pages Bitmap graphics for all pages.
+	 * @return Base64-encoded bitmaps, or null on error. */
+	private String encodeAdjustedBitmaps(BitmapGraphic[] pages) {
+		BitmapGraphic[] p = copyBitmaps(pages);
+		return (p != null) ? encodeBitmaps(p) : null;
 	}
 
 	/** Copy an array of bitmaps into the DMS dimensions.
@@ -1474,75 +1464,62 @@ public class DMSImpl extends DeviceImpl implements DMS {
 			return null;
 		if (h == null || h < 1)
 			return null;
-		BitmapGraphic[] bmaps = new BitmapGraphic[pages.length];
-		for (int i = 0; i < bmaps.length; i++) {
-			bmaps[i] = new BitmapGraphic(w, h);
-			bmaps[i].copy(pages[i]);
+		BitmapGraphic[] p = new BitmapGraphic[pages.length];
+		for (int i = 0; i < p.length; i++) {
+			p[i] = new BitmapGraphic(w, h);
+			p[i].copy(pages[i]);
 		}
-		return bmaps;
+		return p;
 	}
 
-	/** Encode bitmap data */
+	/** Encode bitmaps to Base64.
+	 * @param pages Bitmap graphics for all pages.
+	 * @return Base64-encoded bitmaps. */
 	private String encodeBitmaps(BitmapGraphic[] pages) {
 		int blen = pages[0].length();
-		byte[] bitmap = new byte[pages.length * blen];
+		byte[] b_data = new byte[pages.length * blen];
 		for (int i = 0; i < pages.length; i++) {
 			byte[] page = pages[i].getPixelData();
-			System.arraycopy(page, 0, bitmap, i * blen, blen);
-		}
-		return Base64.encode(bitmap);
+			System.arraycopy(page, 0, b_data, i * blen, blen);
+	}
+		return Base64.encode(b_data);
 	}
 
-	/** Create a new message (B version).
+	/** Find or create a sign message.
 	 * @param m MULTI string for message.
 	 * @param be Beacon enabled flag.
-	 * @param pages Pre-rendered graphics for all pages.
+	 * @param bmaps Message bitmaps (Base64).
 	 * @param ap Activation priority.
 	 * @param rp Run-time priority.
-	 * @param sch Scheduled flag.
+	 * @param src Message source.
 	 * @param d Duration in minutes; null means indefinite.
 	 * @return New sign message, or null on error. */
-	private SignMessage createMessageB(String m, boolean be,
-		BitmapGraphic[] pages, DMSMessagePriority ap,
-		DMSMessagePriority rp, boolean sch, Integer d)
-	{
-		return createMessage(m, be, encodeBitmaps(pages), ap, rp,sch,d);
-	}
-
-	/** Create a new sign message.
-	 * @param m MULTI string for message.
-	 * @param be Beacon enabled flag.
-	 * @param b Message bitmaps (Base64).
-	 * @param ap Activation priority.
-	 * @param rp Run-time priority.
-	 * @param sch Scheduled flag.
-	 * @param d Duration in minutes; null means indefinite.
-	 * @return New sign message, or null on error. */
-	private SignMessage createMessage(String m, boolean be, String b,
-		DMSMessagePriority ap, DMSMessagePriority rp, boolean sch,
+	private SignMessage findOrCreateMsg(String m, boolean be, String bmaps,
+		DMSMessagePriority ap, DMSMessagePriority rp, SignMsgSource src,
 		Integer d)
 	{
-		SignMessage esm = SignMessageHelper.find(m, b, ap, rp, sch, d);
+		SignMessage esm = SignMessageHelper.find(m, bmaps, ap,rp,src,d);
 		if (esm != null)
 			return esm;
 		else
-			return createMessageC(m, be, b, ap, rp, sch, d);
+			return createMsgNotify(m, be, bmaps, ap, rp, src, d);
 	}
 
-	/** Create a new sign message (C version).
+	/** Create a new sign message and notify clients.
 	 * @param m MULTI string for message.
 	 * @param be Beacon enabled flag.
-	 * @param b Message bitmaps (Base64).
+	 * @param bmaps Message bitmaps (Base64).
 	 * @param ap Activation priority.
 	 * @param rp Run-time priority.
-	 * @param s Scheduled flag.
+	 * @param src Message source.
 	 * @param d Duration in minutes; null means indefinite.
 	 * @return New sign message, or null on error. */
-	private SignMessage createMessageC(String m, boolean be, String b,
-		DMSMessagePriority ap, DMSMessagePriority rp, boolean s,
+	private SignMessage createMsgNotify(String m, boolean be, String bmaps,
+		DMSMessagePriority ap, DMSMessagePriority rp, SignMsgSource src,
 		Integer d)
 	{
-		SignMessageImpl sm = new SignMessageImpl(m, be, b, ap, rp, s,d);
+		SignMessageImpl sm = new SignMessageImpl(m, be, bmaps, ap, rp,
+			src, d);
 		try {
 			sm.notifyCreate();
 			return sm;
@@ -1552,16 +1529,16 @@ public class DMSImpl extends DeviceImpl implements DMS {
 			// processor does not store the sign message within 30
 			// seconds.  It *shouldn't* happen, but there may be
 			// a rare bug which triggers it.
-			logError("createMessageC: " + e.getMessage());
+			logError("createMsgNotify: " + e.getMessage());
 			return null;
 		}
 	}
 
-	/** Flag for current scheduled message.  This is used to guarantee that
+	/** Current scheduled action.  This is used to guarantee that
 	 * performAction is called at least once between each call to
 	 * updateScheduledMessage.  If not, then the scheduled message is
 	 * cleared. */
-	private transient boolean is_scheduled;
+	private transient DmsAction sched_action;
 
 	/** Current scheduled message */
 	private transient SignMessage messageSched = null;
@@ -1582,11 +1559,13 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		}
 	}
 
-	/** Check if a DMS action is deployable */
+	/** Check if a DMS action is deployable.
+	 * @param da DMS action.
+	 * @return true if action is deployable. */
 	public boolean isDeployable(DmsAction da) {
 		if (hasError())
 			return false;
-		SignMessage sm = createMessage(da);
+		SignMessage sm = createMsgSched(da);
 		try {
 			return sm == validateMessage(sm);
 		}
@@ -1595,19 +1574,21 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		}
 	}
 
-	/** Perform a DMS action */
+	/** Perform a DMS action.
+	 * @param ds DMS action. */
 	public void performAction(DmsAction da) {
-		SignMessage sm = createMessage(da);
+		SignMessage sm = createMsgSched(da);
 		if (sm != null) {
 			if (shouldReplaceScheduled(sm)) {
 				setMessageSched(sm);
-				is_scheduled = true;
+				sched_action = da;
 			}
 		}
 	}
 
-	/** Test if the given sign message should replace the current
-	 * scheduled message. */
+	/** Test if a message should replace the current scheduled message.
+	 * @param sm SignMessage to test.
+	 * @return true if scheduled message should be replaced. */
 	private boolean shouldReplaceScheduled(SignMessage sm) {
 		SignMessage s = messageSched;	// Avoid NPE
 		return s == null ||
@@ -1615,10 +1596,10 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		       sm.getRunTimePriority() >= s.getRunTimePriority();
 	}
 
-	/** Create a message for the sign.
+	/** Create a scheduled message.
 	 * @param da DMS action
 	 * @return New sign message, or null on error */
-	private SignMessage createMessage(DmsAction da) {
+	private SignMessage createMsgSched(DmsAction da) {
 		String m = formatter.createMulti(da);
 		if (m != null) {
 			boolean be = da.getBeaconEnabled();
@@ -1626,16 +1607,39 @@ public class DMSImpl extends DeviceImpl implements DMS {
 				da.getActivationPriority());
 			DMSMessagePriority rp = DMSMessagePriority.fromOrdinal(
 				da.getRunTimePriority());
+			SignMsgSource src = formatter.isTolling(da)
+			                  ? tolling
+			                  : schedule;
 			Integer d = getDuration(da);
-			return createMessage(m, be, ap, rp, true, d);
+			return createMsg(m, be, ap, rp, src, d);
 		} else
 			return null;
 	}
 
-	/** Get the duration of a DMS action. */
+	/** Tolling prices */
+	private transient HashMap<String, Float> prices;
+
+	/** Set tolling prices */
+	private void setPrices(DmsAction da) {
+		prices = (da != null) ? calculatePrices(da) : null;
+	}
+
+	/** Calculate prices for a tolling message */
+	private HashMap<String, Float> calculatePrices(DmsAction da) {
+		QuickMessage qm = da.getQuickMessage();
+		if (qm != null)
+			return toll_formatter.calculatePrices(qm.getMulti());
+		else
+			return null;
+	}
+
+	/** Get the duration of a DMS action.
+	 * @param da DMS action.
+	 * @return Duration (minutes), or null for indefinite. */
 	private Integer getDuration(DmsAction da) {
-		return da.getActionPlan().getSticky() ? null :
-			getUnstickyDuration();
+		return da.getActionPlan().getSticky()
+		     ? null
+		     : getUnstickyDuration();
 	}
 
 	/** Get the duration of an unsticky action */
@@ -1643,12 +1647,6 @@ public class DMSImpl extends DeviceImpl implements DMS {
 		/** FIXME: this should be twice the polling period for the
 		 *         sign.  Modem signs should have a longer duration. */
 		return 1;
-	}
-
-	/** Log a DMS message */
-	private void logError(String msg) {
-		if (DMS_LOG.isOpen())
-			DMS_LOG.log(getName() + ": " + msg);
 	}
 
 	/** Log a schedule message */
@@ -1659,28 +1657,41 @@ public class DMSImpl extends DeviceImpl implements DMS {
 
 	/** Update the scheduled message on the sign */
 	public void updateScheduledMessage() {
-		if (!is_scheduled) {
+		if (sched_action == null) {
 			logSched("no message scheduled");
 			setMessageSched(createBlankScheduledMessage());
 		}
+		setPrices(sched_action);
 		SignMessage sm = messageSched;
-		if (shouldActivate(sm)) {
+		if (sm != null)
+			updateScheduledMessage(sm);
+		sched_action = null;
+	}
+
+	/** Update the scheduled message on the sign */
+	private void updateScheduledMessage(SignMessage sm) {
+		// NOTE: use schedule for source even for blank messages
+		if (shouldActivate(sm, schedule.ordinal())) {
 			try {
 				logSched("set message to " + sm.getMulti());
+				if (sm.getSource() == tolling.ordinal())
+				    logPriceMessages(EventType.PRICE_DEPLOYED);
 				doSetMessageNext(sm, null);
 			}
 			catch (TMSException e) {
 				logSched(e.getMessage());
 			}
-		} else if (sm != null)
-			logSched("sched msg not sent " + sm.getMulti());
-		is_scheduled = false;
+		} else if (SCHED_LOG.isOpen()) {
+			logSched("sched msg " + sm.getName() + " not sent " +
+				sm.getMulti() + ", curr: " + messageCurrent +
+			        ", next: " + messageNext);
+		}
 	}
 
 	/** Create a blank scheduled message */
 	private SignMessage createBlankScheduledMessage() {
 		if (isCurrentScheduled())
-			return createBlankMessage();
+			return createMsgBlank();
 		else
 			return null;
 	}
@@ -1689,25 +1700,10 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	private boolean isCurrentScheduled() {
 		// If either the current or next message is not scheduled,
 		// then we won't consider the message scheduled
-		SignMessage cur = messageCurrent;
-		SignMessage nxt = messageNext;
-		return (cur == null || cur.getScheduled()) &&
-		       (nxt == null || nxt.getScheduled());
-	}
-
-	/** Test if DMS is part of an LCS array */
-	private boolean isLCS() {
-		return LCSHelper.lookup(name) != null;
-	}
-
-	/** Test if DMS is associated with a gate arm array */
-	private boolean isForGateArm() {
-		return GateArmArrayHelper.checkDMS(this);
-	}
-
-	/** Test if DMS is online (active and not failed) */
-	public boolean isOnline() {
-		return isActive() && !isFailed();
+		SignMessage c = messageCurrent;
+		SignMessage n = messageNext;
+		return (c == null || SignMsgSource.isScheduled(c.getSource()))
+		    && (n == null || SignMsgSource.isScheduled(n.getSource()));
 	}
 
 	/** Test if DMS is available */
@@ -1722,7 +1718,8 @@ public class DMSImpl extends DeviceImpl implements DMS {
 
 	/** Test if the current message is "scheduled" */
 	private boolean isMsgScheduled() {
-		return getMessageCurrent().getScheduled();
+		return SignMsgSource.isScheduled(
+			getMessageCurrent().getSource());
 	}
 
 	/** Test if the current message has beacon enabled */
@@ -1792,19 +1789,19 @@ public class DMSImpl extends DeviceImpl implements DMS {
 	/** Update the DMS styles */
 	@Override
 	public void updateStyles() {
+		boolean hidden = DmsSignGroupHelper.isHidden(this);
 		long s = ItemStyle.ALL.bit();
 		if (getController() == null)
 			s |= ItemStyle.NO_CONTROLLER.bit();
-		if (isLCS())
-			s |= ItemStyle.LCS.bit();
+		if (!isActive())
+			s |= ItemStyle.INACTIVE.bit();
+		if (hidden)
+			s |= ItemStyle.HIDDEN.bit();
 		else {
 			if (needsMaintenance())
 				s |= ItemStyle.MAINTENANCE.bit();
 			if (isActive() && isFailed())
 				s |= ItemStyle.FAILED.bit();
-			if (!isActive())
-				s |= ItemStyle.INACTIVE.bit();
-			if (!isForGateArm()) {
 				if (isAvailable())
 					s |= ItemStyle.AVAILABLE.bit();
 				if (isUserDeployed())
@@ -1818,7 +1815,6 @@ public class DMSImpl extends DeviceImpl implements DMS {
 				if (isAwsControlled())
 					s |= ItemStyle.AWS_CONTROLLED.bit();
 			}
-		}
 		setStyles(s);
 	}
 

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.server;
 
+import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.Controller;
@@ -32,6 +33,15 @@ import us.mn.state.dot.tms.server.comm.OpDevice;
 abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	ControllerIO
 {
+	/** Device debug log */
+	static private final DebugLog DEVICE_LOG = new DebugLog("device");
+
+	/** Log a device message */
+	protected void logError(String msg) {
+		if (DEVICE_LOG.isOpen())
+			DEVICE_LOG.log(getName() + ": " + msg);
+	}
+
 	/** Create a new device */
 	protected DeviceImpl(String n) throws TMSException, SonarException {
 		super(n);
@@ -64,16 +74,23 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	/** Get the failure status */
 	public boolean isFailed() {
 		ControllerImpl c = controller;	// Avoid race
-		if (c == null)
-			return true;
-		else
-			return c.isFailed();
+		return (c == null) || c.isFailed();
+	}
+
+	/** Test if device is online (active and not failed) */
+	public boolean isOnline() {
+		return isActive() && !isFailed();
 	}
 
 	/** Check if the controller has an error */
 	public boolean hasError() {
+		return isFailed() || hasStatusError();
+	}
+
+	/** Check if the controller has a status error */
+	private boolean hasStatusError() {
 		ControllerImpl c = controller;	// Avoid race
-		return c == null || isFailed() || !c.getStatus().isEmpty();
+		return (c == null) || !c.getStatus().isEmpty();
 	}
 
 	/** Get the device poller */
@@ -101,26 +118,45 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	}
 
 	/** Set the controller of the device */
+	@Override
 	public void setController(Controller c) {
-		controller = (ControllerImpl)c;
+		controller = (ControllerImpl) c;
 	}
 
 	/** Set the controller of the device */
 	public void doSetController(Controller c) throws TMSException {
 		if (c == controller)
 			return;
+		if (c == null || c instanceof ControllerImpl)
+			doSetControllerImpl((ControllerImpl) c);
+		else
+			throw new ChangeVetoException("Invalid controller");
+	}
+
+	/** Set the controller of the device */
+	protected void doSetControllerImpl(ControllerImpl c)
+		throws TMSException
+	{
 		if (c != null && controller != null)
 			throw new ChangeVetoException("Device has controller");
-		if (c != null && !(c instanceof ControllerImpl))
-			throw new ChangeVetoException("Invalid controller");
 		if (pin < 1 || pin > Controller.ALL_PINS)
 			throw new ChangeVetoException("Invalid pin: " + pin);
+		if (c != null)
+			checkControllerPin(pin);
 		store.update(this, "controller", c);
-		updateControllerPin(controller, pin, (ControllerImpl)c, pin);
+		updateControllerPin(controller, pin, c, pin);
 		setController(c);
 	}
 
+	/** Check the controller pin */
+	protected void checkControllerPin(int p) throws TMSException {
+		ControllerImpl c = controller;
+		if (c != null && c.getIO(p) != null)
+			throw new ChangeVetoException("Unavailable pin: " + p);
+	}
+
 	/** Get the controller to which this device is assigned */
+	@Override
 	public Controller getController() {
 		return controller;
 	}
@@ -129,6 +165,7 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	protected int pin = 0;
 
 	/** Set the controller I/O pin number */
+	@Override
 	public void setPin(int p) {
 		pin = p;
 	}
@@ -145,6 +182,7 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	}
 
 	/** Get the controller I/O pin number */
+	@Override
 	public int getPin() {
 		return pin;
 	}
@@ -217,10 +255,7 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	@Override
 	public String getOperation() {
 		OpDevice o = owner;
-		if (o == null)
-			return "None";
-		else
-			return o.getOperationDescription();
+		return (o != null) ? o.getOperationDescription() : "None";
 	}
 
 	/** Device operation status. This is updated during the course of an
@@ -258,18 +293,12 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 	/** Check if the device is connected to a modem comm link */
 	protected boolean hasModemCommLink() {
 		ControllerImpl c = controller;
-		if (c != null)
-			return c.hasModemCommLink();
-		else
-			return false;
+		return (c != null) && c.hasModemCommLink();
 	}
 
 	/** Check if the device is on a "connected" comm link */
 	protected boolean isConnected() {
 		ControllerImpl c = controller;
-		if (c != null)
-			return c.isConnected();
-		else
-			return false;
+		return (c != null) && c.isConnected();
 	}
 }

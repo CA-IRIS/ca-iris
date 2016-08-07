@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2009-2010  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@ package us.mn.state.dot.tms;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SString;
 
 /**
@@ -35,18 +36,13 @@ public class DMSHelper extends BaseHelper {
 
 	/** Lookup the DMS with the specified name */
 	static public DMS lookup(String name) {
-		return (DMS)namespace.lookupObject(DMS.SONAR_TYPE, name);
+		return (DMS) namespace.lookupObject(DMS.SONAR_TYPE, name);
 	}
 
 	/** Get a DMS iterator */
 	static public Iterator<DMS> iterator() {
 		return new IteratorWrapper<DMS>(namespace.iterator(
 			DMS.SONAR_TYPE));
-	}
-
-	/** Test if a DMS is active */
-	static public boolean isActive(DMS proxy) {
-		return !ItemStyle.INACTIVE.checkBit(proxy.getStyles());
 	}
 
 	/** Get the maintenance status of a DMS */
@@ -63,7 +59,7 @@ public class DMSHelper extends BaseHelper {
 	static public String getCriticalError(DMS proxy) {
 		Integer h = proxy.getFaceHeight();
 		Integer w = proxy.getFaceWidth();
-		if(h == null || w == null || h <= 0 || w <= 0)
+		if (h == null || w == null || h <= 0 || w <= 0)
 			return "Invalid dimensions";
 		else
 			return getStatus(proxy);
@@ -74,20 +70,31 @@ public class DMSHelper extends BaseHelper {
 		return ControllerHelper.getStatus(proxy.getController());
 	}
 
+	/** Test if a DMS is active */
+	static public boolean isActive(DMS proxy) {
+		return !ItemStyle.INACTIVE.checkBit(proxy.getStyles());
+	}
+
 	/** Test if a DMS is failed */
 	static public boolean isFailed(DMS proxy) {
 		return ItemStyle.FAILED.checkBit(proxy.getStyles());
 	}
 
+	/** Test if a DMS is hidden */
+	static public boolean isHidden(DMS proxy) {
+		return ItemStyle.HIDDEN.checkBit(proxy.getStyles());
+	}
+
 	/** Get a string that contains all active DMS styles,
 	 *  separated by commas. */
 	static public String getAllStyles(DMS proxy) {
-		StringBuilder s = new StringBuilder();
-		for(ItemStyle style: ItemStyle.toStyles(proxy.getStyles())) {
-			s.append(style.toString());
-			s.append(", ");
+		StringBuilder sb = new StringBuilder();
+		for (ItemStyle style: ItemStyle.toStyles(proxy.getStyles())) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(style.toString());
 		}
-		return SString.removeTail(s.toString(), ", ");
+		return sb.toString();
 	}
 
 	/** Lookup the camera preset for a DMS */
@@ -97,9 +104,9 @@ public class DMSHelper extends BaseHelper {
 
 	/** Get the DMS roadway direction from the geo location as a String */
 	static public String getRoadDir(DMS proxy) {
-		if(proxy != null) {
+		if (proxy != null) {
 			GeoLoc loc = proxy.getGeoLoc();
-			if(loc != null) {
+			if (loc != null) {
 				short rd = loc.getRoadDir();
 				return Direction.fromOrdinal(rd).abbrev;
 			}
@@ -110,9 +117,9 @@ public class DMSHelper extends BaseHelper {
 	/** Get the MULTI string currently on the specified dms.
 	 * @param dms DMS to lookup. */
 	static public String getMultiString(DMS dms) {
-		if(dms != null) {
+		if (dms != null) {
 			SignMessage sm = dms.getMessageCurrent();
-			if(sm != null)
+			if (sm != null)
 				return sm.getMulti();
 		}
 		return "";
@@ -120,9 +127,9 @@ public class DMSHelper extends BaseHelper {
 
 	/** Get the default font number for a DMS */
 	static public int getDefaultFontNumber(DMS dms) {
-		if(dms != null) {
+		if (dms != null) {
 			Font f = dms.getDefaultFont();
-			if(f != null)
+			if (f != null)
 				return f.getNumber();
 		}
 		return FontHelper.DEFAULT_FONT_NUM;
@@ -132,9 +139,9 @@ public class DMSHelper extends BaseHelper {
 	 * @param dms DMS to check.
 	 * @return Number of text lines on the DMS. */
 	static public int getLineCount(DMS dms) {
-		if(dms != null) {
+		if (dms != null) {
 			RasterBuilder rb = createRasterBuilder(dms);
-			if(rb != null)
+			if (rb != null)
 				return rb.getLineCount();
 		}
 		return SystemAttrEnum.DMS_MAX_LINES.getInt();
@@ -149,7 +156,7 @@ public class DMSHelper extends BaseHelper {
 		Integer cw = dms.getCharWidthPixels();
 		Integer ch = dms.getCharHeightPixels();
 		int df = getDefaultFontNumber(dms);
-		if(w != null && h != null && cw != null && ch != null)
+		if (w != null && h != null && cw != null && ch != null)
 			return new RasterBuilder(w, h, cw, ch, df);
 		else
 			return null;
@@ -162,18 +169,18 @@ public class DMSHelper extends BaseHelper {
 	 * @return Text of message on the DMS. */
 	static public String buildMsgLine(DMS dms) {
 		SignMessage sm = dms.getMessageCurrent();
-		if(sm != null) {
+		if (sm != null) {
 			String multi = sm.getMulti();
-			if(multi != null)
+			if (multi != null)
 				return new MultiString(multi).asText();
 		}
 		return "";
 	}
 
 	/** Messages lines that flag no DMS message text available */
-	public final static String NOTXT_L1 = "_OTHER_";
-	public final static String NOTXT_L2 = "_SYSTEM_";
-	public final static String NOTXT_L3 = "_MESSAGE_";
+	static public final String NOTXT_L1 = "_OTHER_";
+	static public final String NOTXT_L2 = "_SYSTEM_";
+	static public final String NOTXT_L3 = "_MESSAGE_";
 
 	/** Filter the specified multi. If certain keywords are present then
 	 * a blank multi is returned. The keywords indicate no text is
@@ -184,9 +191,7 @@ public class DMSHelper extends BaseHelper {
 		String s = ms.toString();
 		boolean ignore = s.contains(NOTXT_L1) && s.contains(NOTXT_L2)
 			&& s.contains(NOTXT_L3);
-		if(ignore)
-			ms = new MultiString();
-		return ms;
+		return (ignore) ? new MultiString("") : ms;
 	}
 
 	/**
@@ -197,7 +202,7 @@ public class DMSHelper extends BaseHelper {
 	 * DMS protocols.
 	 */
 	static public boolean ignoreLineFilter(String line) {
-		if(line == null)
+		if (line == null)
 			return false;
 		return SString.enclosedBy(line, "_");
 	}
@@ -206,7 +211,7 @@ public class DMSHelper extends BaseHelper {
 	 * @param DMS with the graphic.
 	 * @return Array of bitmaps, one for each page, or null on error. */
 	static public BitmapGraphic[] getBitmaps(DMS dms) {
-		if(dms != null) {
+		if (dms != null) {
 			SignMessage sm = dms.getMessageCurrent();
 			return SignMessageHelper.getBitmaps(sm, dms);
 		} else
@@ -217,7 +222,7 @@ public class DMSHelper extends BaseHelper {
 	static public BitmapGraphic createBitmapGraphic(DMS dms) {
 		Integer wp = dms.getWidthPixels();
 		Integer hp = dms.getHeightPixels();
-		if(wp != null && hp != null)
+		if (wp != null && hp != null)
 			return new BitmapGraphic(wp, hp);
 		else
 			return null;
@@ -238,14 +243,41 @@ public class DMSHelper extends BaseHelper {
 			return null;
 	}
 
+	/** Create pixmap graphics for a DMS.
+	 * @param dms The sign.
+	 * @param ms Message MULTI string.
+	 * @return Array of bitmap graphics for the sign, or null.
+	 * @throws InvalidMessageException if MULTI string is invalid. */
+	static public RasterGraphic[] createPixmaps(DMS dms, MultiString ms)
+		throws InvalidMessageException
+	{
+		RasterBuilder rb = createRasterBuilder(dms);
+		if (rb != null)
+			return rb.createPixmaps(ms);
+		else
+			return null;
+	}
+
+	/** Get the current raster graphic for page one of the specified DMS.
+	 * @param dms The sign.
+	 * @return RasterGraphic for page one, or null on error.
+	 */
+	static public RasterGraphic getPageOne(DMS dms) {
+		RasterGraphic[] rasters = getRasters(dms);
+		if (rasters != null && rasters.length > 0)
+			return rasters[0];
+		else
+			return null;
+	}
+
 	/** Get the current raster graphics for all pages of the specified DMS.
 	 * @param dms Sign in question.
 	 * @return RasterGraphic array, one for each page, or null on error.
 	 */
 	static public RasterGraphic[] getRasters(DMS dms) {
-		if(dms != null) {
+		if (dms != null) {
 			SignMessage sm = dms.getMessageCurrent();
-			if(sm != null)
+			if (sm != null)
 				return getRasters(dms, sm);
 		}
 		return null;
@@ -259,12 +291,12 @@ public class DMSHelper extends BaseHelper {
 	static private RasterGraphic[] getRasters(DMS dms, SignMessage sm) {
 		BitmapGraphic[] bitmaps =
 			SignMessageHelper.getBitmaps(sm, dms);
-		if(bitmaps == null)
+		if (bitmaps == null)
 			return null;
 		RasterGraphic[] rasters = createRasters(dms, sm);
-		if(rasters == null)
+		if (rasters == null)
 			return null;
-		if(graphicsMatch(rasters, bitmaps) || bitmaps.length == 0)
+		if (graphicsMatch(rasters, bitmaps) || bitmaps.length == 0)
 			return rasters;
 		else
 			return bitmaps;
@@ -276,7 +308,7 @@ public class DMSHelper extends BaseHelper {
 	 */
 	static private RasterGraphic[] createRasters(DMS dms, SignMessage sm) {
 		RasterBuilder rb = createRasterBuilder(dms);
-		if(rb != null)
+		if (rb != null)
 			return createRasters(rb, sm.getMulti());
 		else
 			return null;
@@ -291,7 +323,7 @@ public class DMSHelper extends BaseHelper {
 		try {
 			return rb.createPixmaps(new MultiString(multi));
 		}
-		catch(InvalidMessageException e) {
+		catch (InvalidMessageException e) {
 			return null;
 		}
 	}
@@ -300,9 +332,9 @@ public class DMSHelper extends BaseHelper {
 	static private boolean graphicsMatch(RasterGraphic[] rg,
 		BitmapGraphic[] bm)
 	{
-		if(rg.length != bm.length)
+		if (rg.length != bm.length)
 			return false;
-		for(int i = 0; i < rg.length; i++) {
+		for (int i = 0; i < rg.length; i++) {
 			RasterGraphic r = rg[i];
 			BitmapGraphic b = bm[i];
 			BitmapGraphic test = b.createBlankCopy();
@@ -310,10 +342,10 @@ public class DMSHelper extends BaseHelper {
 			try {
 				test.difference(r);
 			}
-			catch(IndexOutOfBoundsException e) {
+			catch (IndexOutOfBoundsException e) {
 				return false;
 			}
-			if(test.getLitCount() > 0)
+			if (test.getLitCount() > 0)
 				return false;
 		}
 		return true;
@@ -346,7 +378,7 @@ public class DMSHelper extends BaseHelper {
 
 	/** Get an unsorted list of all dms */
 	static public List<DMS> getAll() {
-		final List<DMS> list = new LinkedList<DMS>();
+		final List<DMS> list = new LinkedList<>();
 		Iterator<DMS> it = iterator();
 		while(it.hasNext()) {
 			list.add(it.next());

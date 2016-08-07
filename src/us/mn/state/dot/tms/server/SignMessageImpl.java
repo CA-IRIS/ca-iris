@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,15 @@ package us.mn.state.dot.tms.server;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
+import us.mn.state.dot.tms.Incident;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
+import us.mn.state.dot.tms.SignMsgSource;
 import us.mn.state.dot.tms.TMSException;
 import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 
@@ -36,21 +39,21 @@ import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 
 	/** Last allocated system message ID */
-	static protected int last_id = 0;
+	static private int last_id = 0;
 
 	/** Create a unique sign message name */
-	static protected synchronized String createUniqueName() {
+	static private synchronized String createUniqueName() {
 		String n = createNextName();
-		while(namespace.lookupObject(SONAR_TYPE, n) != null)
+		while (namespace.lookupObject(SONAR_TYPE, n) != null)
 			n = createNextName();
 		return n;
 	}
 
 	/** Create the next system message name */
-	static protected String createNextName() {
+	static private String createNextName() {
 		last_id++;
 		// Check if the ID has rolled over to negative numbers
-		if(last_id < 0)
+		if (last_id < 0)
 			last_id = 0;
 		return "system_" + last_id;
 	}
@@ -58,45 +61,40 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 	/** Load all the sign messages */
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, SignMessageImpl.class);
-		store.query("SELECT name, multi, beacon_enabled, bitmaps, " +
-			"a_priority, r_priority, scheduled, duration FROM " +
-			"iris.sign_message;", new ResultFactory()
+		store.query("SELECT name, incident, multi, beacon_enabled, " +
+			"bitmaps, a_priority, r_priority, source, duration " +
+			"FROM iris." + SONAR_TYPE + ";", new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
-				namespace.addObject(new SignMessageImpl(
-					row.getString(1),	// name
-					row.getString(2),	// multi
-					row.getBoolean(3),	//beacon_enabled
-					row.getString(4),	// bitmaps
-					row.getInt(5),		// a_priority
-					row.getInt(6),		// r_priority
-					row.getBoolean(7),	// scheduled
-					(Integer)row.getObject(8) // duration
-				));
+				namespace.addObject(new SignMessageImpl(row));
 			}
 		});
 	}
 
 	/** Get a mapping of the columns */
+	@Override
 	public Map<String, Object> getColumns() {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("name", name);
+		map.put("incident", incident);
 		map.put("multi", multi);
 		map.put("beacon_enabled", beacon_enabled);
 		map.put("bitmaps", bitmaps);
 		map.put("a_priority", activationPriority);
 		map.put("r_priority", runTimePriority);
-		map.put("scheduled", scheduled);
+		map.put("source", source);
 		map.put("duration", duration);
 		return map;
 	}
 
 	/** Get the database table name */
+	@Override
 	public String getTable() {
 		return "iris." + SONAR_TYPE;
 	}
 
 	/** Get the SONAR type name */
+	@Override
 	public String getTypeName() {
 		return SONAR_TYPE;
 	}
@@ -107,22 +105,37 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 	}
 
 	/** Create a sign message */
-	protected SignMessageImpl(String n, String m, boolean be, String b,
-		int ap, int rp, boolean s, Integer d)
+	private SignMessageImpl(ResultSet row) throws SQLException {
+		this(row.getString(1),		// name
+		     row.getString(2),		// incident
+		     row.getString(3),		// multi
+		     row.getBoolean(4),		// beacon_enabled
+		     row.getString(5),		// bitmaps
+		     row.getInt(6),		// a_priority
+		     row.getInt(7),		// r_priority
+		     row.getInt(8),		// source
+		     (Integer) row.getObject(9) // duration
+		);
+	}
+
+	/** Create a sign message */
+	private SignMessageImpl(String n, String inc, String m, boolean be,
+		String b, int ap, int rp, int s, Integer d)
 	{
 		super(n);
+		incident = lookupIncident(inc);
 		multi = m;
 		beacon_enabled = be;
 		bitmaps = b;
 		activationPriority = ap;
 		runTimePriority = rp;
-		scheduled = s;
+		source = s;
 		duration = d;		
 	}
 
 	/** Create a new sign message (by IRIS) */
 	public SignMessageImpl(String m, boolean be, String b,
-		DMSMessagePriority ap, DMSMessagePriority rp, boolean s,
+		DMSMessagePriority ap, DMSMessagePriority rp, SignMsgSource s,
 		Integer d)
 	{
 		super(createUniqueName());
@@ -131,16 +144,26 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 		bitmaps = b;
 		activationPriority = ap.ordinal();
 		runTimePriority = rp.ordinal();
-		scheduled = s;
+		source = s.ordinal();
 		duration = d;
 	}
 
+	/** Associated incident */
+	private Incident incident;
+
+	/** Get the associated incident */
+	@Override
+	public Incident getIncident() {
+		return incident;
+	}
+
 	/** Message MULTI string, contains message text for all pages */
-	protected String multi;
+	private String multi;
 
 	/** Get the message MULTI string.
 	 * @return Message text in MULTI markup.
-	 * @see us.mn.state.dot.tms.MultiString */
+	 * @see us.mn.state.dot.tms.utils.MultiString */
+	@Override
 	public String getMulti() {
 		return multi;
 	}
@@ -155,49 +178,55 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 	}
 
 	/** Bitmap data for each page (Base64-encoded) */
-	protected String bitmaps;
+	private String bitmaps;
 
 	/** Get the bitmaps for all pages of the message.
 	 * @return Base64-encoded bitmap data.
 	 * @see us.mn.state.dot.tms.utils.Base64 */
+	@Override
 	public String getBitmaps() {
 		return bitmaps;
 	}
 
 	/** Message activation priority */
-	protected int activationPriority;
+	private int activationPriority;
 
 	/** Get the activation priority.
 	 * @return Priority ranging from 1 (low) to 255 (high).
 	 * @see us.mn.state.dot.tms.DMSMessagePriority */
+	@Override
 	public int getActivationPriority() {
 		return activationPriority;
 	}
 
 	/** Run-time priority */
-	protected int runTimePriority;
+	private int runTimePriority;
 
 	/** Get the run-time priority.
 	 * @return Run-time priority ranging from 1 (low) to 255 (high).
 	 * @see us.mn.state.dot.tms.DMSMessagePriority */
+	@Override
 	public int getRunTimePriority() {
 		return runTimePriority;
 	}
 
-	/** Scheduled flag */
-	protected boolean scheduled;
+	/** Sign message source */
+	private int source;
 
-	/** Get the scheduled flag.
-	 * @return True if the message was scheduled. */
-	public boolean getScheduled() {
-		return scheduled;
+	/** Get the sign message source value.
+	 * @return Sign message source.
+	 * @see us.mn.state.dot.tms.SignMsgSource */
+	@Override
+	public int getSource() {
+		return source;
 	}
 
 	/** Duration of this message (minutes) */
-	protected Integer duration;
+	private Integer duration;
 
 	/** Get the message duration.
 	 * @return Duration in minutes; null means indefinite. */
+	@Override
 	public Integer getDuration() {
 		return duration;
 	}
@@ -209,8 +238,9 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 		w.write(createAttribute("status", DMSHelper.getAllStyles(dms)));
 		w.write(createAttribute("run_priority", runTimePriority));
 		w.write(createAttribute("act_priority", activationPriority));
-		w.write(createAttribute("scheduled", getScheduled()));
+		w.write(createAttribute("source", getSource()));
 		w.write(createAttribute("duration", getDuration()));
+		w.write(createAttribute("incident", getIncident()));
 		w.write(createAttribute("multi", multi));
 		w.write(createAttribute("bitmaps", getBitmaps()));
 		w.write(createAttribute("deploy_time", dms.getDeployTime()));

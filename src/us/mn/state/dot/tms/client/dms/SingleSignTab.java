@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  * Copyright (C) 2010-2014 AHMCT, University of California, Davis
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,8 +20,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
-import java.util.Calendar;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -33,22 +31,16 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CameraPreset;
-import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.MultiString;
-import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SystemAttrEnum;
-import us.mn.state.dot.tms.SystemAttributeHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.camera.CameraPresetAction;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
-import us.mn.state.dot.tms.client.widget.IPanel.Stretch;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
-import us.mn.state.dot.tms.units.Interval;
 import us.mn.state.dot.tms.utils.I18N;
 
 /**
@@ -183,11 +175,11 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		add(status_lbl, Stretch.LAST);
 		add("device.operation");
 		add(operation_lbl, Stretch.LAST);
-		if(SystemAttrEnum.DMS_OP_STATUS_ENABLE.getBoolean()) {
+		if (SystemAttrEnum.DEVICE_OP_STATUS_ENABLE.getBoolean()) {
 			add("device.op.status");
 			add(op_status_lbl, Stretch.LAST);
 		}
-		if(SystemAttributeHelper.awsEnabled()) {
+		if(SystemAttrEnum.DMS_AWS_ENABLE.getBoolean()) {
 			aws_control_chk.setHorizontalTextPosition(
 				SwingConstants.LEFT);
 			add(aws_control_chk, Stretch.LEFT);
@@ -413,6 +405,12 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 
 	/** Update the preview panel */
 	private void updatePreviewPanel(DMS dms) {
+//		DMSPanelPager p = createPreviewPager();
+//		if(p != null && dms != null) {
+//			preview_pnl.setDimensions(dms);
+//			setPager(p);
+
+		//FIXME CA-MN-MERGE keep this. stops the flickering?
 		RasterGraphic[] rg;
 		if(dms != null && (rg = dispatcher.getPixmaps()) != null) {
 			String ms = dispatcher.getMessage();
@@ -422,6 +420,16 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 			setPager(null);
 			preview_pnl.clear();
 		}
+	}
+
+	/** Create a preview panel pager */
+	private DMSPanelPager createPreviewPager() {
+		RasterGraphic[] rg = dispatcher.getPixmaps();
+		if(rg != null) {
+			String ms = dispatcher.getMessage();
+			return new DMSPanelPager(preview_pnl, rg, ms);
+		} else
+			return null;
 	}
 
 	/** Set the DMS panel pager */

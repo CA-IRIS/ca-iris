@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2015  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2010  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,9 @@ package us.mn.state.dot.tms;
 
 import java.io.IOException;
 import java.util.Iterator;
+import static us.mn.state.dot.tms.SignMsgSource.*;
 import us.mn.state.dot.tms.utils.Base64;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Helper for dealing with sign messages.
@@ -47,9 +49,16 @@ public class SignMessageHelper extends BaseHelper {
 			SignMessage.SONAR_TYPE));
 	}
 
-	/** Find a sign message with matching attributes */
+	/** Find a sign message with matching attributes.
+	 * @param multi MULTI string.
+	 * @param bitmaps Bitmaps for all pages.
+	 * @param ap Activation priority.
+	 * @param rp Run-time priority.
+	 * @param src Message source.
+	 * @param d Duration (null for indefinite).
+	 * @return Matching sign message, or null if not found. */
 	static public SignMessage find(String multi, String bitmaps,
-		DMSMessagePriority ap, DMSMessagePriority rp, boolean s,
+		DMSMessagePriority ap, DMSMessagePriority rp, SignMsgSource src,
 		Integer d)
 	{
 		int api = ap.ordinal();
@@ -61,28 +70,21 @@ public class SignMessageHelper extends BaseHelper {
 			    bitmaps.equals(sm.getBitmaps()) &&
 			    api == sm.getActivationPriority() &&
 			    rpi == sm.getRunTimePriority() &&
-			    s == sm.getScheduled() &&
+			    checkSource(src, sm) &&
 			    integerEquals(d, sm.getDuration()))
 				return sm;
 		}
 		return null;
 	}
 
-	/** Find a sign message with matching attributes.
-	 * @param multi MULTI string.
-	 * @param be Beacon enabled flag.
-	 * @param bitmaps Bitmaps for all pages. */
-	static public SignMessage find(String multi, boolean be, String bitmaps)
-	{
-		Iterator<SignMessage> it = iterator();
-		while (it.hasNext()) {
-			SignMessage sm = it.next();
-			if (multi.equals(sm.getMulti()) &&
-			    be == sm.getBeaconEnabled() &&
-			    bitmaps.equals(sm.getBitmaps()))
-				return sm;
-		}
-		return null;
+	/** Check sign message source.
+	 * @param src Message source.
+	 * @param sm Sign message to check.
+	 * @return true if source matches. */
+	static private boolean checkSource(SignMsgSource src, SignMessage sm) {
+		SignMsgSource sms = SignMsgSource.fromOrdinal(sm.getSource());
+		return (src == sms) ||
+		       (src == schedule) && (sms == tolling);
 	}
 
 	/** Compare two (possibly-null) integers for equality */
@@ -149,19 +151,19 @@ public class SignMessageHelper extends BaseHelper {
 	}
 
 	/** Check if a sign message is blank */
-	static public boolean isBlank(SignMessage m) {
-		return isMultiBlank(m) && isBitmapBlank(m);
+	static public boolean isBlank(SignMessage sm) {
+		return (sm == null) || (isMultiBlank(sm) && isBitmapBlank(sm));
 	}
 
 	/** Check if the MULTI string is blank */
-	static public boolean isMultiBlank(SignMessage m) {
-		String ms = m.getMulti();
+	static private boolean isMultiBlank(SignMessage sm) {
+		String ms = sm.getMulti();
 		return ms == null || new MultiString(ms).isBlank();
 	}
 
 	/** Check if the bitmap is blank */
-	static public boolean isBitmapBlank(SignMessage m) {
-		byte[] bmaps = decodeBitmaps(m);
+	static private boolean isBitmapBlank(SignMessage sm) {
+		byte[] bmaps = decodeBitmaps(sm);
 		if (bmaps != null) {
 			for (byte b: bmaps) {
 				if (b != 0)

@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +16,16 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Calendar;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Calendar;
 
 /**
  * MessagePoller is an abstract class which represents a communication channel 
@@ -33,6 +34,7 @@ import java.util.Calendar;
  * @author Douglas Lau
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 abstract public class MessagePoller<T extends ControllerProperty>
 	implements DevicePoller
@@ -59,12 +61,12 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	static private final ThreadGroup GROUP = new ThreadGroup("Poller");
 
 	/** Thread state */
-	static private enum ThreadState {
+	private enum ThreadState {
 		NOT_STARTED,
 		STARTING,
 		RUNNING,
 		CLOSING,
-		STOPPED;
+		STOPPED
 	}
 
 	/** Write a message to the polling log */
@@ -77,7 +79,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	private final Thread thread;
 
 	/** Operation queue */
-	protected final OperationQueue<T> queue = new OperationQueue<T>();
+	protected final OperationQueue<T> queue = new OperationQueue<>();
 
 	/** Messenger for poll/response streams */
 	protected final Messenger messenger;
@@ -252,14 +254,18 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			setThreadState(ThreadState.RUNNING);
 			performOperations();
 			setThreadState(ThreadState.CLOSING);
-		} catch (HangUpException e) {
+		}
+		catch (HangUpException e) {
 			setStatus(exceptionMessage(e));
 			hung_up = true;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			setStatus(exceptionMessage(e));
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			e.printStackTrace();
-		} finally {
+		}
+		finally {
 			ensureClosed();
 			drainQueue();
 			CLOSER.removeJob(closer_job);
@@ -286,7 +292,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			messenger_open = true;
 		}
 		plog("messenger opened.");
-	}
+		}
 
 	/** Close messenger connection if present */
 	private void ensureClosed() {
@@ -384,7 +390,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		try {
 			synchronized (messenger) {
 				o.poll(createMessage(o));
-			}
+		}
 
 		} catch (DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
@@ -412,8 +418,8 @@ abstract public class MessagePoller<T extends ControllerProperty>
 					exceptionMessage(e));
 				((OpController<T>) o).setFailed();
 				((OpController<T>) o).setMaintStatus(
-					exceptionMessage(e));
-			}
+				exceptionMessage(e));
+		}
 		} catch (SocketTimeoutException e) {
 			plog("ERROR: SocketTimeoutException.");
 			o.handleCommError(EventType.POLL_TIMEOUT_ERROR,
@@ -428,13 +434,15 @@ abstract public class MessagePoller<T extends ControllerProperty>
 
 	/** Handle device contention.  Another operation has the device lock.
 	 * Ensure that we don't have a priority inversion problem. */
+	@SuppressWarnings("unchecked")
 	private void handleContention(Operation<T> op,
-		DeviceContentionException e) {
-		Operation<T> oc = e.operation;
-		PRIO_LOG.log("Contention with " + op + " (" + op.getPriority()
-			.ordinal()
-			+ ").  Impeded by " + oc + " (" + oc.getPriority()
-			.ordinal() + ").");
+		DeviceContentionException e)
+	{
+		handleContention(op, e.operation);
+	}
+
+	/** Handle device contention */
+	private void handleContention(Operation<T> op, Operation<T> oc) {
 		if (oc.getPriority().ordinal() > op.getPriority().ordinal()) {
 			if (PRIO_LOG.isOpen()) {
 				PRIO_LOG.log("BUMPING " + oc + " from " +
@@ -505,8 +513,9 @@ abstract public class MessagePoller<T extends ControllerProperty>
 	 * @return New comm message.
 	 */
 	protected CommMessage<T> createCommMessage(OpController<T> o)
-		throws IOException {
-		return new CommMessageImpl<T>(messenger, o, protocolLog());
+		throws IOException
+	{
+		return new CommMessageImpl<>(messenger, o, protocolLog());
 	}
 
 	/**

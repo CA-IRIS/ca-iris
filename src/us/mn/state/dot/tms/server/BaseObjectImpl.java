@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2007-2015  Minnesota Department of Transportation
+ * Copyright (C) 2007-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,11 +17,14 @@ package us.mn.state.dot.tms.server;
 
 import java.text.NumberFormat;
 import java.util.Date;
+import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.server.Server;
 import us.mn.state.dot.sonar.server.ServerNamespace;
 import us.mn.state.dot.tms.TMSException;
+import static us.mn.state.dot.tms.server.MainServer.FLUSH;
+import us.mn.state.dot.tms.server.event.BaseEvent;
 
 /**
  * Base object class for storable SONAR objects.
@@ -61,14 +64,15 @@ abstract public class BaseObjectImpl implements Storable, SonarObject {
 		CabinetImpl.loadAll();
 		ControllerImpl.loadAll();
 		R_NodeImpl.loadAll();
-		TollZoneImpl.loadAll();
+		/* NOTE: must happen after r_nodes are loaded */
+		corridors.createCorridors();
 		AlarmImpl.loadAll();
 		DetectorImpl.loadAll();
+		TollZoneImpl.loadAll();
 		CameraImpl.loadAll();
 		CameraPresetImpl.loadAll();
 		BeaconImpl.loadAll();
 		WeatherSensorImpl.loadAll();
-		TagReaderImpl.loadAll();
 		RampMeterImpl.loadAll();
 		SignMessageImpl.loadAll();
 		DMSImpl.loadAll();
@@ -78,12 +82,16 @@ abstract public class BaseObjectImpl implements Storable, SonarObject {
 		SignTextImpl.loadAll();
 		GateArmArrayImpl.loadAll();
 		GateArmImpl.loadAll();
+		TagReaderImpl.loadAll();
 		LaneMarkingImpl.loadAll();
 		LCSArrayImpl.loadAll();
 		LCSImpl.loadAll();
 		LCSIndicationImpl.loadAll();
 		LaneUseMultiImpl.loadAll();
 		IncidentImpl.loadAll();
+		IncDescriptorImpl.loadAll();
+		IncLocatorImpl.loadAll();
+		IncAdviceImpl.loadAll();
 		HolidayImpl.loadAll();
 		DayPlanImpl.loadAll();
 		PlanPhaseImpl.loadAll();
@@ -93,102 +101,113 @@ abstract public class BaseObjectImpl implements Storable, SonarObject {
 		BeaconActionImpl.loadAll();
 		LaneActionImpl.loadAll();
 		MeterActionImpl.loadAll();
+		WordImpl.loadAll();
+		DMSImpl.updateAllStyles();
 		PresetAliasImpl.loadAll();
 		SiteDataImpl.loadAll();
 	}
 
 	/** Get the time as a time stamp */
 	static protected Date asTimestamp(Long ts) {
-		if(ts != null)
-			return new Date(ts);
-		else
-			return null;
+		return (ts != null) ? new Date(ts) : null;
 	}
 
 	/** Get time as milliseconds since epoch */
 	static protected Long stampMillis(Date ts) {
-		if(ts != null)
-			return ts.getTime();
-		else
-			return null;
+		return (ts != null) ? ts.getTime() : null;
 	}
 
 	/** Compare two (possibly-null) integers for equality */
 	static protected boolean integerEquals(Integer i0, Integer i1) {
-		if(i0 == null)
-			return i1 == null;
-		else
-			return i0.equals(i1);
+		return (i0 == null) ? i1 == null : i0.equals(i1);
 	}
 
 	/** Compare two (possibly-null) strings for equality */
 	static protected boolean stringEquals(String s0, String s1) {
-		if(s0 == null)
-			return s1 == null;
-		else
-			return s0.equals(s1);
+		return (s0 == null) ? s1 == null : s0.equals(s1);
 	}
 
 	/** Lookup a sonar object */
 	static private SonarObject lookupObject(String st, String name) {
-		if (namespace != null)
-			return namespace.lookupObject(st, name);
-		else
-			return null;
+		return (namespace != null)
+			? namespace.lookupObject(st, name) : null;
+	}
+
+	/** Lookup a road */
+	static protected RoadImpl lookupRoad(String name) {
+		SonarObject so = lookupObject(RoadImpl.SONAR_TYPE, name);
+		return (so instanceof RoadImpl) ? (RoadImpl) so : null;
 	}
 
 	/** Lookup a geo location */
 	static protected GeoLocImpl lookupGeoLoc(String name) {
 		SonarObject so = lookupObject(GeoLocImpl.SONAR_TYPE, name);
-		if (so instanceof GeoLocImpl)
-			return (GeoLocImpl)so;
-		else
-			return null;
+		return (so instanceof GeoLocImpl) ? (GeoLocImpl) so : null;
 	}
 
 	/** Lookup a cabinet */
 	static protected CabinetImpl lookupCabinet(String name) {
 		SonarObject so = lookupObject(CabinetImpl.SONAR_TYPE, name);
-		if (so instanceof CabinetImpl)
-			return (CabinetImpl)so;
-		else
-			return null;
+		return (so instanceof CabinetImpl) ? (CabinetImpl) so : null;
 	}
 
 	/** Lookup a comm link */
 	static protected CommLinkImpl lookupCommLink(String name) {
 		SonarObject so = lookupObject(CommLinkImpl.SONAR_TYPE, name);
-		if (so instanceof CommLinkImpl)
-			return (CommLinkImpl)so;
-		else
-			return null;
+		return (so instanceof CommLinkImpl) ? (CommLinkImpl) so : null;
 	}
 
 	/** Lookup a controller */
 	static protected ControllerImpl lookupController(String name) {
 		SonarObject so = lookupObject(ControllerImpl.SONAR_TYPE, name);
-		if (so instanceof ControllerImpl)
-			return (ControllerImpl)so;
-		else
-			return null;
+		return (so instanceof ControllerImpl)
+			? (ControllerImpl)so : null;
+	}
+
+	/** Lookup a toll zone */
+	static protected TollZoneImpl lookupTollZone(String name) {
+		SonarObject so = lookupObject(TollZoneImpl.SONAR_TYPE, name);
+		return (so instanceof TollZoneImpl) ? (TollZoneImpl) so : null;
 	}
 
 	/** Lookup a beacon */
 	static protected BeaconImpl lookupBeacon(String name) {
 		SonarObject so = lookupObject(BeaconImpl.SONAR_TYPE, name);
-		if (so instanceof BeaconImpl)
-			return (BeaconImpl)so;
-		else
-			return null;
+		return (so instanceof BeaconImpl) ? (BeaconImpl) so : null;
+	}
+
+	/** Lookup a camera */
+	static protected CameraImpl lookupCamera(String name) {
+		SonarObject so = lookupObject(CameraImpl.SONAR_TYPE, name);
+		return (so instanceof CameraImpl) ? (CameraImpl) so : null;
 	}
 
 	/** Lookup a camera preset */
 	static protected CameraPresetImpl lookupPreset(String name) {
 		SonarObject so = lookupObject(CameraPresetImpl.SONAR_TYPE,name);
-		if (so instanceof CameraPresetImpl)
-			return (CameraPresetImpl)so;
-		else
-			return null;
+		return (so instanceof CameraPresetImpl)
+			? (CameraPresetImpl) so : null;
+	}
+
+	/** Lookup a sign group */
+	static protected SignGroupImpl lookupSignGroup(String name) {
+		SonarObject so = lookupObject(SignGroupImpl.SONAR_TYPE, name);
+		return (so instanceof SignGroupImpl) ? (SignGroupImpl)so : null;
+	}
+
+	/** Lookup an incident detail */
+	static protected IncidentDetailImpl lookupIncDetail(String name) {
+		SonarObject so = lookupObject(IncidentDetailImpl.SONAR_TYPE,
+			name);
+		return (so instanceof IncidentDetailImpl)
+		      ? (IncidentDetailImpl) so
+		      : null;
+	}
+
+	/** Lookup an incident */
+	static protected IncidentImpl lookupIncident(String name) {
+		SonarObject so = lookupObject(IncidentImpl.SONAR_TYPE, name);
+		return (so instanceof IncidentImpl) ? (IncidentImpl) so : null;
 	}
 
 	/** Get the primary key name */
@@ -216,13 +235,24 @@ abstract public class BaseObjectImpl implements Storable, SonarObject {
 	}
 
 	/** Get a string representation of the object */
+	@Override
 	public final String toString() {
 		return name;
 	}
 
 	/** Calculate a hash code */
+	@Override
 	public int hashCode() {
 		return name.hashCode();
+	}
+
+	/** Test if the object equals another */
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof BaseObjectImpl)
+			return name.equals(((BaseObjectImpl) o).name);
+		else
+			return false;
 	}
 
 	/** Store an object */
@@ -281,5 +311,14 @@ abstract public class BaseObjectImpl implements Storable, SonarObject {
 		NumberFormat nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(5);
 		return nf.format(value);
+	}
+
+	/** Log an event */
+	static public void logEvent(final BaseEvent ev) {
+		FLUSH.addJob(new Job() {
+			public void perform() throws TMSException {
+				ev.doStore();
+			}
+		});
 	}
 }

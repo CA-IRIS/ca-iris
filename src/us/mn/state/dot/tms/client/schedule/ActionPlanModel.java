@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				return ap.getDescription();
 			}
 			public boolean isEditable(ActionPlan ap) {
-				return canUpdate(ap);
+				return canUpdate(ap, "description");
 			}
 			public void setValueAt(ActionPlan ap, Object value) {
 				String v = value.toString().trim();
@@ -63,7 +63,7 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				return ap.getSyncActions();
 			}
 			public boolean isEditable(ActionPlan ap) {
-				return canUpdate(ap);
+				return canUpdate(ap, "sync_actions");
 			}
 			public void setValueAt(ActionPlan ap, Object value) {
 				if (value instanceof Boolean)
@@ -77,7 +77,7 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				return ap.getSticky();
 			}
 			public boolean isEditable(ActionPlan ap) {
-				return canUpdate(ap);
+				return canUpdate(ap, "sticky");
 			}
 			public void setValueAt(ActionPlan ap, Object value) {
 				if (value instanceof Boolean)
@@ -91,7 +91,7 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				return ap.getActive();
 			}
 			public boolean isEditable(ActionPlan ap) {
-				return canUpdate(ap);
+				return canUpdate(ap, "active");
 			}
 			public void setValueAt(ActionPlan ap, Object value) {
 				if (value instanceof Boolean)
@@ -105,7 +105,7 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				return ap.getDefaultPhase();
 			}
 			public boolean isEditable(ActionPlan ap) {
-				return canUpdate(ap);
+				return canUpdate(ap, "default_phase");
 			}
 			public void setValueAt(ActionPlan ap, Object value) {
 				if (value instanceof PlanPhase) {
@@ -114,8 +114,10 @@ public class ActionPlanModel extends ProxyTableModel<ActionPlan> {
 				}
 			}
 			protected TableCellEditor createCellEditor() {
-				JComboBox cbx = new JComboBox();
-				cbx.setModel(new IComboBoxModel(phase_mdl));
+				JComboBox<PlanPhase> cbx = new JComboBox
+					<PlanPhase>();
+				cbx.setModel(new IComboBoxModel<PlanPhase>(
+					phase_mdl));
 				return new DefaultCellEditor(cbx);
 			}
 		});

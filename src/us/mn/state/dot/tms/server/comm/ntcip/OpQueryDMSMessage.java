@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@ package us.mn.state.dot.tms.server.comm.ntcip;
 import java.io.IOException;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.SignMsgSource;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -67,7 +68,7 @@ public class OpQueryDMSMessage extends OpDMS {
 		/* The sign is blank.  If IRIS thinks there is a message on it,
 		 * that's wrong and needs to be updated. */
 		if (!dms.isMsgBlank())
-			setCurrentMessage(dms.createBlankMessage());
+			setCurrentMessage(dms.createMsgBlank());
 		return null;
 	}
 
@@ -85,8 +86,10 @@ public class OpQueryDMSMessage extends OpDMS {
 			0);
 		if (crc != source.getCrc())
 			return new QueryCurrentMessage();
-		else
+		else {
+			setCurrentMessage(sm);
 			return null;
+		}
 	}
 
 	/** Process an invalid message source from the sign controller */
@@ -104,6 +107,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	protected class QueryMessageSource extends Phase {
 
 		/** Query the current message source */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			mess.add(source);
 			mess.queryProps();
@@ -116,6 +120,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	protected class QueryCurrentMessage extends Phase {
 
 		/** Query the current message */
+		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1String ms = new ASN1String(dmsMessageMultiString
 				.node, DmsMessageMemoryType.currentBuffer
@@ -144,8 +149,12 @@ public class OpQueryDMSMessage extends OpDMS {
 			logQuery(time);
 			if (status.getEnum() == DmsMessageStatus.valid) {
 				Integer d = parseDuration(time.getInteger());
+				DMSMessagePriority rp = prior.getEnum();
+				/* If it's null, IRIS didn't send it ... */
+				if (rp == null)
+					rp = DMSMessagePriority.OTHER_SYSTEM;
 				setCurrentMessage(ms.getValue(),
-					beacon.getInteger(), prior.getEnum(),d);
+					beacon.getInteger(), rp, d);
 			} else {
 				logError("INVALID STATUS");
 				setErrorStatus(status.toString());
@@ -158,7 +167,10 @@ public class OpQueryDMSMessage extends OpDMS {
 	private void setCurrentMessage(String multi, int be,
 		DMSMessagePriority p, Integer duration)
 	{
-		setCurrentMessage(dms.createMessage(multi, (be == 1), p, p,
+		SignMsgSource src = DMSMessagePriority.isScheduled(p)
+		                  ? SignMsgSource.schedule
+		                  : SignMsgSource.external;
+		setCurrentMessage(dms.createMsg(multi, (be == 1), p, p, src,
 			duration));
 	}
 

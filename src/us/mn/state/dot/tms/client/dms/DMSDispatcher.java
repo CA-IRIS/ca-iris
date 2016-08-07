@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2010-2015 AHMCT, University of California, Davis
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,16 +28,17 @@ import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.InvalidMessageException;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.RasterBuilder;
 import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.WordHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
 import us.mn.state.dot.tms.utils.Base64;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * The DMSDispatcher is a GUI component for creating and deploying DMS messages.
@@ -151,9 +152,10 @@ public class DMSDispatcher extends JPanel {
 
 	/** Send the currently selected message */
 	public void sendSelectedMessage() {
-		if (shouldSendMessage())
+		if (shouldSendMessage()) {
 			sendMessage();
-		removeInvalidSelections();
+			removeInvalidSelections(); //FIXME CA-MN-MERGE originally outside of if statement
+		}
 	}
 
 	/** Remove all invalid selected DMS */
@@ -161,13 +163,48 @@ public class DMSDispatcher extends JPanel {
 		sel_model.setSelected(getValidSelected());
 	}
 
-	/** If enabled, prompt the user with a send confirmation.
+	/** Determine if the message should be sent, which is a function
+ 	 * of spell checking options and send confirmation options.
 	 * @return True to send the message else false to cancel. */
 	private boolean shouldSendMessage() {
-		if(SystemAttrEnum.DMS_SEND_CONFIRMATION_ENABLE.getBoolean())
+		if (WordHelper.spellCheckEnabled())
+			if (!checkWords(message))
+				return false;
+		if (SystemAttrEnum.DMS_SEND_CONFIRMATION_ENABLE.getBoolean())
 			return showConfirmDialog();
 		else
 			return true;
+	}
+
+	/** Check all the words in the specified MULT string.
+	 * @param multi Multi string to spell check.
+	 * @return True to send the sign message else false to cancel. */
+	private static boolean checkWords(String multi) {
+		String msg = WordHelper.spellCheck(multi);
+		String amsg = WordHelper.abbreviationCheck(multi);
+		if(msg.isEmpty() && amsg.isEmpty()) {
+			return true;
+		} else if (msg.isEmpty()) {
+			Object[] options = {"Send", "Cancel"};
+			int sel = JOptionPane.showOptionDialog(null, msg + amsg, 
+				"Spell Check", JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.QUESTION_MESSAGE, null, 
+				options, options[1]);
+			return (sel == JOptionPane.OK_OPTION);
+		} if (WordHelper.spellCheckEnforced()) {
+			JOptionPane.showMessageDialog(null, msg + amsg, 
+				"Spell Check", JOptionPane.ERROR_MESSAGE);
+			return false;
+		} else if (WordHelper.spellCheckRecommend()) {
+			Object[] options = {"Send", "Cancel"};
+			int sel = JOptionPane.showOptionDialog(null, msg + amsg, 
+				"Spell Check", JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.QUESTION_MESSAGE, null, 
+				options, options[1]);
+			return (sel == JOptionPane.OK_OPTION);
+		} else {
+			return false;
+		}
 	}
 
 	/** Show a message confirmation dialog.
@@ -287,12 +324,12 @@ public class DMSDispatcher extends JPanel {
 	/** Create bitmap graphics for a MULTI string */
 	private String createBitmaps(String multi) {
 		RasterBuilder b = builder;
-		if(b != null) {
+		if (b != null) {
 			MultiString ms = new MultiString(multi);
 			try {
 				return encodeBitmaps(b.createBitmaps(ms));
 			}
-			catch(InvalidMessageException e) {
+			catch (InvalidMessageException e) {
 				// Message is not valid
 			}
 		}
@@ -323,6 +360,7 @@ public class DMSDispatcher extends JPanel {
 	private void doSelectionChanged() {
 		if (!areBuilderAndComposerValid()) {
 			builder = null;
+			//FIXME CA-MN-MERGE why is this in a loop?
 			for (DMS s: sel_model.getSelected()) {
 				createBuilder(s);
 				break;
@@ -441,15 +479,15 @@ public class DMSDispatcher extends JPanel {
 	/** Get raster graphic array for the selected message */
 	public RasterGraphic[] getPixmaps() {
 		RasterBuilder b = builder;
-		if(b != null) {
+		if (b != null) {
 			MultiString multi = new MultiString(message);
 			try {
 				return b.createPixmaps(multi);
 			}
-			catch(IndexOutOfBoundsException e) {
+			catch (IndexOutOfBoundsException e) {
 				// pixmap too small for message
 			}
-			catch(InvalidMessageException e) {
+			catch (InvalidMessageException e) {
 				// most likely a MultiSyntaxError ...
 			}
 		}

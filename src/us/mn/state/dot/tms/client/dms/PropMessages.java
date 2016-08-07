@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.Font;
 import us.mn.state.dot.tms.InvalidMessageException;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.RasterBuilder;
 import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SignGroup;
@@ -45,6 +44,7 @@ import us.mn.state.dot.tms.units.Distance;
 import static us.mn.state.dot.tms.units.Distance.Units.INCHES;
 import static us.mn.state.dot.tms.units.Distance.Units.MILLIMETERS;
 import us.mn.state.dot.tms.utils.I18N;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * PropMessages is a GUI panel for displaying and editing sign messages on a
@@ -77,7 +77,7 @@ public class PropMessages extends JPanel {
 	private final ILabel font_lbl = new ILabel("dms.font.default");
 
 	/** Default font combo box */
-	private final JComboBox font_cbx = new JComboBox();
+	private final JComboBox<Font> font_cbx = new JComboBox<Font>();
 
 	/** Font height label */
 	private final ILabel font_height_ilbl = new ILabel("dms.font.height");
@@ -140,10 +140,10 @@ public class PropMessages extends JPanel {
 		font_cbx.setAction(new IAction("font") {
 			protected void doActionPerformed(ActionEvent e) {
 				proxy.setDefaultFont(
-					(Font)font_cbx.getSelectedItem());
+					(Font) font_cbx.getSelectedItem());
 			}
 		});
-		font_cbx.setModel(new IComboBoxModel(
+		font_cbx.setModel(new IComboBoxModel<Font>(
 			session.getSonarState().getDmsCache().getFontModel()));
 		layoutPanel();
 	}

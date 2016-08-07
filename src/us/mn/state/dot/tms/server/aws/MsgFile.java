@@ -15,10 +15,11 @@
 package us.mn.state.dot.tms.server.aws;
 
 import java.net.URL;
-import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.MultiString;
+
+import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.DMSImpl;
+import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SFile;
 import us.mn.state.dot.tms.utils.STime;
 
@@ -73,8 +74,11 @@ public class MsgFile {
 		if (multi.isBlank())
 			msg += ";;;;;;";
 		else {
-			String[] lines = (multi == null ?
-				new String[0] : multi.getText());
+			//FIXME CA-MN-MERGE changed here, see if correct
+			String[] lines = new String[0];
+			if (multi != null)
+				lines = multi.getLines(
+					DMSHelper.getLineCount(di), "");
 			for (int i = 0; i < 6; ++i) {
 				String l = (i < lines.length ? lines[i] : "");
 				msg += l + ";";

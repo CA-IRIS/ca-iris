@@ -8,7 +8,7 @@
 </head>
 
 <body>
-<div class="sidebar">
+<nav class="sidebar">
   <h1><a id="contents_link" href="#admin_guide">Contents</a></h1>
   <div id="contents_div"><!-- div required for js, DO NOT REMOVE --></div>
   <h2><a id="overview_link" href="#overview">Overview</a></h2>
@@ -64,6 +64,7 @@
     <h3><a href="#travel_time">Travel Time Estimation</a></h3>
     <h3><a href="#vsa">Variable Speed Advisory</a></h3>
     <h3><a href="#tolling">Tolling</a></h3>
+    <h3><a href="#spellchecker">Spell Checker</a></h3>
   </div>
   <h2><a id="troubleshooting_link" href="#troubleshooting">Troubleshooting</a></h2>
   <div id="troubleshooting_div">
@@ -92,10 +93,12 @@
     <h3><a href="#adddms">Create a DMS, Comm Link, and Controller</a></h3>
     <h3><a href="#createplan">Create a Plan to Activate DMS Messages</a></h3>
   </div>
-</div>
+</nav>
 
-<div class="mainbar">
-<div id="stamp">30 Sep 2015</div>
+<main class="mainbar">
+<header>
+<div id="stamp">12 Apr 2016</div>
+</header>
 <h1 id="admin_guide"><span class="left"><img src="iris_icon.svg"/></span>
 	IRIS Administrator Guide</h1>
 
@@ -121,6 +124,7 @@
 
 <h3 id="architecture">System Architecture</h3>
 
+<figure>
 <svg class="right" xmlns="http://www.w3.org/2000/svg" version="1.1"
      width="640" height="480">
   <title>System Architecture</title>
@@ -205,6 +209,7 @@
     </g>
   </g>
 </svg>
+</figure>
 
 <p>
 	The software has a client/server architecture.
@@ -269,7 +274,9 @@
 	<li>HySecurity STC (Gate Arms)</li>
 	<li>Optical Scientific ORG-815 (precipitation)</li>
 	<li>SSI RWIS sensor</li>
-	<li>DLI DIN Relay (LCS)</li>
+	<li>DLI DIN Relay (LCS, beacons)</li>
+	<li>Control By Web (beacons)</li>
+	<li>Incident Feed (external system provided)</li>
 </ul>
 <h3 id="advanced_features">Advanced Features</h3>
 <p>
@@ -879,6 +886,7 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </p>
 
 <h3 id="road_topology">Road Topology</h3>
+<figure>
 <svg class="right" width='240' height='480'
      xmlns="http://www.w3.org/2000/svg" version="1.1"
      xmlns:xlink='http://www.w3.org/1999/xlink'>
@@ -910,6 +918,7 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
   <tspan x="128" y="248">R_Nodes</tspan>
 </text>
 </svg>
+</figure>
 
 <p>
 	For many of the <a href="#features">features</a> IRIS provides, a model
@@ -931,19 +940,21 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </p>
 <h4>Road Setup</h4>
 <p>
-	Before creating the r_nodes, some roads must be created.
+	Before creating r_nodes, some roads must be created.
 	Select the <span class="menu">View ➔ System ➔ Roads</span> menu item to
 	bring up the Roads form.
-	To create a new road, select the last (empty) cell in the Road column
-	and type the name of the road.
-	This name can be up to 20 characters in length, and uniquely identifies
-	the road.
+	With <a href="#edit_mode">edit mode</a> <b>ON</b>, enter the road name
+	into the text box at the bottom of the form and press the <b>Create</b>
+	button.
+	Road names must be unique, and can be up to 20 characters in length.
 	It's a good idea to capitalize each word, and abbreviate any
 	designators — for example, "Main St".
 </p>
 <p>
-	The next column is <b>Abbrev</b>.
-	Here, an abbreviation of up to 6 characters can be entered.
+	When a road is created, it will be added to the Roads table.
+	Other road attributes can be changed here.
+	The second column is <b>Abbrev</b>, which is an abbreviation of the
+	road name (up to 6 characters).
 	This is used for labeling detectors and stations.
 </p>
 <p>
@@ -1108,9 +1119,9 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
       The limit is used in travel time estimation.
   </dd>
   <dt>pickable</dt>
-  <dd>For traveler information systems, an r_node can be marked pickable if a
-      user is allowed to pick a node as an origin or destination.
-      NOTE: This feature has not been implemented yet.
+  <dd>For deploying <a href="#dms">DMS</a> from <a href="#inc_locator">
+      incidents</a>, an r_node can be marked pickable if the road name should be
+      used on the sign message.
   </dd>
   <dt>above</dt>
   <dd>When rendering the <a href="#traffic_layer">traffic layer</a>, r_nodes are
@@ -1298,6 +1309,16 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	    <td><a href="#dlcs">DLCS</a>, <a href="#beacons">beacons</a></td>
 	    <td>TCP / HTTP</td>
 	</tr>
+	<tr>
+	    <td><a href="#cbw">Control By Web</a></td>
+	    <td><a href="#beacons">beacons</a></td>
+	    <td>TCP / HTTP</td>
+	</tr>
+	<tr>
+	    <td>Incident feed</td>
+	    <td><a href="#inc_feed">Incidents</a> from external system</td>
+	    <td>TCP / HTTP</td>
+	</tr>
 </table>
 <p/>
 
@@ -1331,10 +1352,11 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	to operate.
 	First, an action plan must be created which associates a DMS action
 	with the message feed.
-	The DMS action must be associated with a quick message that references
-	the message feed, using a special MULTI tag.
+	The DMS action must be associated with a <a href="#quick_msg">quick
+	message</a> that references the message feed, using a special MULTI tag.
 	So, if the message feed is on a Comm Link called "LFEED", then the
-	quick message MULTI string must be "[feedLFEED]".
+	<a href="#quick_msg">quick message</a> MULTI string must be
+	"[feedLFEED]".
 	Also, the action plan must be active and deployed.
 	This requirement allows only administrator-approved DMS to be controlled
 	by the message feed.
@@ -1353,10 +1375,41 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 
 <h4 id="din_relay">DIN Relay</h4>
 <p>
-	DIN relay is is product by DLI which allows simple devices to be turned
+	DIN relay is a product by DLI which allows simple devices to be turned
 	on of off through an HTTP (web) interface.
 	Each device can control up to 8 outlets, which for a
 	<a href="#dlcs">DLCS</A> means 2 lanes with 3 indications each.
+</p>
+
+<h4 id="cbw">Control By Web</h4>
+<p>
+	Control By Web is a web-based relay controller made by Xytronix.
+	It can be used to control <a href="#beacons">beacon</a> devices.
+</p>
+<p>
+	HTTP Basic Authentication can be used to connect with the controller
+	if enabled on the setup page of the device (setup.html).
+	To allow IRIS to authenticate, the password field of the controller
+	in IRIS must have <i>none:</i> prepended to the actual password.
+</p>
+
+<h4 id="inc_feed">Incident Feed Protocol</h4>
+<p>
+	The "inc feed" protocol can be used to interface IRIS with an external
+	system that generates <a href="#incident_management">incidents</a>.
+	Periodically, IRIS will poll the URI (using HTTP) for incidents.
+	The external system should respond with an ASCII text file, with one
+	line per active incident.
+</p>
+<p>
+	Each line should contain 6 fields, separated by comma characters ","
+	and terminated with a single newline character "\n" (ASCII 0x0A).
+	The fields are incident ID, type, incident detail, latitude, longitude,
+	and camera ID.
+	The type must be CRASH, STALL, ROADWORK, or HAZARD.
+	The detail may be blank, or one of the incident detail names.
+	Latitude and longitude must be coordinates of the incident.
+	Camera ID may be blank, or the ID of a camera to view the incident.
 </p>
 
 <h3 id="controllers">Controllers</h3>
@@ -1453,12 +1506,16 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	    <td>1</td>
 	</tr>
 	<tr>
-	    <td rowspan="2"><a href="#beacons">Beacon</a></td>
+	    <td rowspan="3"><a href="#beacons">Beacon</a></td>
 	    <td>MnDOT 170 (4, 5)</td>
 	    <td>2</td>
 	</tr>
 	<tr>
 	    <td><a href="#din_relay">DIN Relay</a></td>
+	    <td>1 - 8</td>
+	</tr>
+	<tr>
+	    <td><a href="#cbw">CBW</a></td>
 	    <td>1 - 8</td>
 	</tr>
 	<tr>
@@ -1712,9 +1769,7 @@ FIXME
 	In MULTI, messages are simple ASCII strings, with formatting or other
 	instructions denoted by tags inside square brackets.
 	For example, the tag <code>[nl]</code> indicates a new line.
-	Most of the useful standard MULTI tags are supported, as well as a few
-	which are specific to IRIS.
-	The following table summarizes the tags supported by IRIS.
+	Most of the useful MULTI tags are supported.
 </p>
 <table>
 	<tr>
@@ -1839,30 +1894,47 @@ FIXME
 	    <td>Text rectangle</td>
 	    <td>Yes</td>
 	</tr>
+</table>
+<br/>
+
+<h4 id="quick_msg">Quick Messages</h4>
+<p>
+	A quick message is a fully composed DMS message which can be associated
+	with a sign group.
+	When a DMS is selected, a drop-down list is populated with quick
+	messages from sign groups of which that DMS is a member.
+</p>
+<p>
+	Quick messages can also be used for DMS actions as part of an
+	<a href="#action_plans">action plan</a>.
+	Some additional "MULTI-like" tags are supported in quick messages used
+	in action plans.
+	These tags are replaced by IRIS before sending the message to the DMS.
+</p>
+<table>
+	<tr>
+	    <th>Tag</th>
+	    <th>Description</th>
+	</tr>
 	<tr>
 	    <td>[tt<i>n</i>]</td>
-	    <td>Travel time</td>
-	    <td>IRIS-only</td>
+	    <td><a href="#travel_time">Travel time</a></td>
 	</tr>
 	<tr>
 	    <td>[vsa]</td>
-	    <td>Speed advisory</td>
-	    <td>IRIS-only</td>
+	    <td><a href="#vsa">Speed advisory</a></td>
 	</tr>
 	<tr>
 	    <td>[slow<i>s</i>,<i>b</i>,<i>u</i>,<i>dist</i>]</td>
 	    <td>Slow traffic warning</td>
-	    <td>IRIS-only</td>
 	</tr>
 	<tr>
 	    <td>[feed<i>n</i>]</td>
 	    <td><a href="#msg_feed">Message feed</a></td>
-	    <td>IRIS-only</td>
 	</tr>
 	<tr>
 	    <td>[tz<i>{p,o,c}</i>,<i>{tz0},</i>…<i>{tzn}</i>]</td>
 	    <td><a href="#tolling">Toll Zone</a></td>
-	    <td>IRIS-only</td>
 	</tr>
 </table>
 <br/>
@@ -1933,6 +2005,14 @@ FIXME
 	changed.
 	In IRIS, lanes are numbered from right-to-left, starting with the
 	right lane as 1.
+</p>
+<p>
+	When a detector fails, <b>fake</b> data may be used for flow, speed
+	and density.
+	In the simplest case, one or more detectors can be used to calculate
+	the fake data.
+	To do this, put the detector ID(s) in the <b>fake</b> field (separated
+	by spaces).
 </p>
 
 <h4>VDS Protocols</h4>
@@ -2063,6 +2143,27 @@ FIXME
 	They can be used, for example, for reversible lanes which can be changed
 	by time of day.
 </p>
+<p>
+	There are a couple of extra security features to restrict access to
+	gate arm control.
+	There is a whitelist of IP addresses from which IRIS clients are allowed
+	to control gate arms.
+	It is specified as a property in the
+	<code>/etc/iris/iris-server.properties</code> configuration file.
+	The property is <code>gate.arm.whitelist</code>, and it contains a list
+	of addresses in CIDR notation (exact IP, or ranges specified as
+	192.168.1.0/24).
+</p>
+<p>
+	Another gate arm security feature causes the entire "gate arm system"
+	to be disabled whenever any configuration change is made to a gate arm.
+	This includes changes to a gate arm array, controller or associated
+	comm link.
+	IRIS will not send any command to open or close any gate arm in this
+	state.
+	The only way to re-enable gate arm control is to create a file at
+	<code>/var/lib/iris/gate_arm_enable</code> (using touch).
+</p>
 
 <h3 id="tag_readers">Tag Readers</h3>
 <p>
@@ -2151,8 +2252,200 @@ FIXME
 </p>
 
 <h3 id="incident_management">Incident Management</h3>
-FIXME
-
+<p>
+	The <b>Incident</b> tab on the client interface is used to manage
+	incidents within IRIS.
+	Traffic incidents have several attributes, including location, type,
+	detail, camera and lane impact.
+	Active incidents are written to an <a href="#xml_output">XML file</a>,
+	which can be processed by external systems.
+</p>
+<h4>Creating an Incident</h4>
+<p>
+	The user interface for creating incidents is streamlined to allow
+	operators to process them quickly.
+	First, click one of the incident type buttons: <b>Crash</b>,
+	<b>Stall</b>, <b>Road Work</b> or <b>Hazard</b>.
+	Then, the lane type can be selected &mdash; <i>Mainline</i> is the
+	default, but <i>Exit</i>, <i>Entrance</i> and <i>CD Road</i> are
+	available.
+	Now, the incident location must be selected on the map (the mouse cursor
+	will change to a crosshair).
+	After that the incident detail, verification camera and lane impact
+	can be selected (if required).
+	The camera list will be populated with a few cameras near the location
+	selected.
+	The lane impact is represented by boxes for each lane at the incident
+	location, including both shoulders.
+	Each lane can be marked clear (default), blocked (red) or partially
+	blocked (yellow) by clicking on the box.
+	Once the attributes have been set, press the <b>Log</b> button to create
+	the incident.
+	A triangular icon will appear on the map pointing in the direction of
+	travel, color-coded with the incident type.
+</p>
+<h4>Editing an Incident</h4>
+<p>
+	To change the location or verification camera, the <b>Edit</b> button
+	must be pressed first.
+	To change the lane impact or to clear the incident, the <b>Edit</b>
+	button is not required.
+	After making changes, be sure to press the <b>Log</b> button again.
+	Once an incident has been cleared, it will be removed from the list
+	after 5 minutes.
+	This allows a cleared incident to be reactivated if necessary.
+</p>
+<h4>Deploying Devices</h4>
+<p>
+	Devices can be deployed based on the incident impact by pressing the
+	<b>Deploy</b> button.
+	This will bring up a form with a list of suggested devices to deploy for
+	the incident.
+	The list may include <a href="#lcs">Lane-use control signals</a> or
+	<a href="#dms">Dynamic Message Signs</a>.
+	All DMS within the range of the incident are checked.
+	Each of these DMS will be deployed if matching
+	<a href="#inc_descriptor">descriptor</a>, <a href="#inc_locator">locator
+	</a> and <a href="#inc_advice">advice</a> are found.
+</p>
+<h5 id="inc_descriptor">Incident Descriptor</h5>
+<p>
+	An incident matches a descriptor only if all the attributes match.
+	Each matching descriptor will be checked to see if the
+	<a href="#multi">MULTI</a> string can be rendered on the DMS.
+	Select the <span class="menu">View ➔ Incident ➔ Incident
+	Descriptor</span> menu item to display the Incident Descriptor form.
+</p>
+<dl>
+	<dt>Sign group<dt>
+	<dd>A group of signs with similar dimensions</dd>
+	<dt>Event Type</dt>
+	<dd>CRASH, STALL, ROAD WORD, HAZARD</dd>
+	<dt>Lane Type</dt>
+	<dd>mainline, exit, merge, CD lane</dd>
+	<dt>Detail</dt>
+	<dd>animal, debris, ice, etc.</dd>
+	<dt>Cleared Flag</dt>
+	<dd>yes / no</dd>
+</dl>
+<h5 id="inc_locator">Incident Locator</h5>
+<p>
+	The incident is associated with the nearest <em>pickable</em>
+	<a href="#r_node">r_node</a>.
+	If the distance to that node is less than 1 mile, it can be used as a
+	<em>locator</em>.
+	If not, the nearest <em>non-pickable</em> r_node is found.
+	It can be used if distance is less than 1 mile.
+	Select the <span class="menu">View ➔ Incident ➔ Incident
+	Locator</span> menu item to display the Incident Locator form.
+</p>
+<p>
+	An incident matches a locator only if all the attributes match.
+	Each matching locator will be checked to see if the
+	<a href="#multi">MULTI</a> string can be rendered on the DMS.
+</p>
+<dl>
+	<dt>Sign group<dt>
+	<dd>A group of signs with similar dimensions</dd>
+	<dt>Range</dt>
+	<dd>near, middle, far</dd>
+	<dt>Branched</dt>
+	<dd>no / yes</dd>
+	<dt>Pickable</dt>
+	<dd>no / yes</dd>
+</dl>
+<p>
+	One MULTI-like tag is defined for incident locators.
+</p>
+<table>
+	<tr>
+		<th>Tag Value</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>[locrn]</td>
+		<td>Road name</td>
+	</tr>
+	<tr>
+		<td>[locrd]</td>
+		<td>Road direction</td>
+	</tr>
+	<tr>
+		<td>[locmd]</td>
+		<td>Location modifier (AT, N OF, S OF, etc.)</td>
+	</tr>
+	<tr>
+		<td>[locxn]</td>
+		<td>Cross-street name</td>
+	</tr>
+	<tr>
+		<td>[locxa]</td>
+		<td>Cross-street abbreviation</td>
+	</tr>
+	<tr>
+		<td>[locmi]</td>
+		<td>Miles from DMS to node</td>
+	</tr>
+</table>
+<p>
+	Road names are converted to all capital letters.
+	For the `[locrn]` and `[locxn]` tags, certain prefixes and suffixes are
+	replaced with other values.
+	For the `[locxa]` tag, all matching prefixes and suffixes are stripped.
+</p>
+<h5 id="inc_advice">Incident Advice</h5>
+<p>
+	An incident matches an advice record only if all attributes match.
+	Select the <span class="menu">View ➔ Incident ➔ Incident
+	Advice</span> menu item to display the Incident Advice form.
+</p>
+<dl>
+	<dt>Sign group<dt>
+	<dd>A group of signs with similar dimensions</dd>
+	<dt>Range</dt>
+	<dd>near, middle, far</dd>
+	<dt>Lane Type</dt>
+	<dd>mainline, exit, merge, CD lane</dd>
+	<dt>Impact</dt>
+	<dd>Lane impact code</dd>
+	<dt>Cleared Flag</dt>
+	<dd>yes / no</dd>
+</dl>
+<p>
+	A lane impact code is defined for all lanes plus both shoulders.
+	So, for a two-lane r_node, the impact code would be 4 characters.
+</p>
+<table>
+	<tr>
+		<th>Code</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>.</td>
+		<td>Not blocked</td>
+	</tr>
+	<tr>
+		<td>?</td>
+		<td>Partially blocked</td>
+	</tr>
+	<tr>
+		<td>!</td>
+		<td>Fully blocked</td>
+	</tr>
+	<tr>
+		<td>:</td>
+		<td>Partially of fully blocked (? or !)</td>
+	</tr>
+	<tr>
+		<td>;</td>
+		<td>Not fully blocked (. or ?)</td>
+	</tr>
+	<tr>
+		<td>,</td>
+		<td>Any (. ? or !)</td>
+	</tr>
+</table>
+<br/>
 <h3 id="action_plans">Action Plans</h3>
 FIXME
 
@@ -2189,7 +2482,7 @@ FIXME
 	Within a zone, each station has an associated toll, based on the highest
 	density recorded among HOT lane detectors downstream of that station.
 </p>
-<div class="label">p = α ⋅ k <sup>β</sup>, where α = 0.05932 and β = 1.156</div>
+<div class="label">p = α ⋅ k <sup>β</sup>, where α = 0.045 and β = 1.10</div>
 <p>
 	The toll price is then rounded to the nearest $0.25.
 </p>
@@ -2199,23 +2492,26 @@ FIXME
 	This is accomplished using an IRIS-specific <a href="#multi">MULTI</a>
 	tag.
 	The tag has two or more parameters, separated by commas.
-	The first parameter is the tolling mode, and must be "p", "o" or "c".
+	The first parameter is the tolling mode, and must be "<i>p</i>",
+	"<i>o</i>" or "<i>c</i>".
 	These indicate <i>priced</i>, <i>open</i> or <i>closed</i>,
 	respectively.
 	The second parameter is the (first) toll zone ID.
-	Additional toll zone IDs may be provided; the price will be the sum of
-	prices for all specified toll zones.
-	The tolls will be based on the first station downstream of the DMS.
-	Two <a href="#system_attributes">system attributes</a>,
-	toll_min_dollars and toll_max_dollars, limit the calculated price.
+	If the toll route spans multiple toll zones, additional zone IDs may be
+	provided after the first.
 </p>
 <p>
 	If the tolling mode is <i>priced</i>, the MULTI tag will be replaced
-	with the calculated price, in dollars and cents, for example "2.75".
+	with the calculated price, for example "2.75".
+	It will be the sum of prices for all specified toll zones.
+	Two <a href="#system_attributes">system attributes</a>,
+	toll_min_price and toll_max_price, limit the calculated price.
+</p>
+<p>
 	For <i>open</i> and <i>closed</i> modes, the MULTI tag will be replaced
 	with an empty string.
-	To display an associated message in these modes, add "OPEN" or "CLOSED"
-	after the MULTI tag.
+	If required, a message such as "OPEN" or "CLOSED" may be appended after
+	the MULTI tag.
 </p>
 <p>
 	Price events are logged when a message is sent to a DMS, and again when
@@ -2223,6 +2519,7 @@ FIXME
 	The price event includes the date and time, toll zone, tolling mode
 	(<i>priced</i>, <i>open</i>, <i>closed</i>), price, sent / verified
 	status and next downstream tag reader.
+	The logged toll zone is the last zone specified in the MULTI tag.
 	In <i>priced</i> mode, the displayed price is logged.
 	For <i>open</i> or <i>closed</i>, a price of 0 is logged.
 </p>
@@ -2234,6 +2531,24 @@ FIXME
 	The tag read events can be combined with the logged pricing information
 	to build a list of trips for each tag ID.
 	This information can be used to bill customers.
+</p>
+<h3 id="spellchecker">Spell Checker</h3>
+<p>
+	The system attributes <i>dict_allowed_scheme</i> and
+	<i>dict_banned_scheme</i> enable <a href="#dms">DMS</a>	spell checker
+	functionality.
+	The <i>dict_allowed_scheme</i> system attribute corresponds to the
+	Allowed Word List (white-list) defined on the Dictionary Form.
+	The <i>dict_banned_scheme</i> system attribute provides similar
+	functionality but for the Banned Word List on the Dictionary Form.
+</p>
+<p>
+	When an operator presses the DMS Send Button, each word in the DMS
+	message is compared against words defined in the dictionary.
+	A form appears if the DMS message contains words that don't appear on
+	the Allowed List or do appear on the Banned List.
+	The system attributes control if these rules are enforced or if IRIS
+	merely provides a recommendation to not use the word.
 </p>
 
 <h2 id="troubleshooting">Troubleshooting</h2>
@@ -2292,7 +2607,180 @@ FIXME
 FIXME
 
 <h3 id="debug_logs">Debug Trace Logs</h3>
-FIXME
+<p>
+	There are some debugging logs which can be enabled in the /var/log/iris
+	directory.
+	To enable a particular log, use the <code>touch</code> command to
+	create a file with the proper name.
+	Some of these logs can grow very large, so be sure to have enough disk
+	space available.
+</p>
+<table>
+	<tr>
+	    <th>Filename</th>
+	    <th>Description</th>
+	</tr>
+	<tr>
+	    <td>addco</td>
+	    <td>Addco DMS protocol</td>
+	</tr>
+	<tr>
+	    <td>bottleneck</td>
+	    <td>Bottleneck calculation for VSA algorithm</td>
+	</tr>
+	<tr>
+	    <td>canoga</td>
+	    <td>Canoga detector protocol</td>
+	</tr>
+	<tr>
+	    <td>cbw</td>
+	    <td>Control By Web protocol</td>
+	</tr>
+	<tr>
+	    <td>comm</td>
+	    <td>Communication errors with controllers</td>
+	</tr>
+	<tr>
+	    <td>device</td>
+	    <td>Device error log</td>
+	</tr>
+	<tr>
+	    <td>dinrelay</td>
+	    <td>Din-relay protocol</td>
+	</tr>
+	<tr>
+	    <td>dmsxml</td>
+	    <td>DMS-XML protocol</td>
+	</tr>
+	<tr>
+	    <td>e6</td>
+	    <td>E6 tag reader protocol</td>
+	</tr>
+	<tr>
+	    <td>e6_pkt</td>
+	    <td>E6 tag reader protocol packets</td>
+	</tr>
+	<tr>
+	    <td>feed</td>
+	    <td>Msgfeed protocol</td>
+	</tr>
+	<tr>
+	    <td>g4</td>
+	    <td>G4 detector protocol</td>
+	</tr>
+	<tr>
+	    <td>infinova</td>
+	    <td>Infinova PTZ protocol</td>
+	</tr>
+	<tr>
+	    <td>kadaptive</td>
+	    <td>K Adaptive metering algorithm</td>
+	</tr>
+	<tr>
+	    <td>manchester</td>
+	    <td>Manchester PTZ protocol</td>
+	</tr>
+	<tr>
+	    <td>meter</td>
+	    <td>Ramp meter configuration errors</td>
+	</tr>
+	<tr>
+	    <td>mndot170</td>
+	    <td>MnDOT protocol</td>
+	</tr>
+	<tr>
+	    <td>modem</td>
+	    <td>Modem error log</td>
+	</tr>
+	<tr>
+	    <td>ntcip</td>
+	    <td>NTCIP protocols</td>
+	</tr>
+	<tr>
+	    <td>org815</td>
+	    <td>ORG-815 rain guage protocol</td>
+	</tr>
+	<tr>
+	    <td>pelco</td>
+	    <td>Pelco switcher protocol</td>
+	</tr>
+	<tr>
+	    <td>pelcod</td>
+	    <td>Pelco-D PTZ protocol</td>
+	</tr>
+	<tr>
+	    <td>polling</td>
+	    <td>Generic operaton polling log</td>
+	</tr>
+	<tr>
+	    <td>prio</td>
+	    <td>Operation priority log</td>
+	</tr>
+	<tr>
+	    <td>profile</td>
+	    <td>System profiling log</td>
+	</tr>
+	<tr>
+	    <td>sched</td>
+	    <td>DMS scheduled message log</td>
+	</tr>
+	<tr>
+	    <td>slow</td>
+	    <td>DMS slow warning system log</td>
+	</tr>
+	<tr>
+	    <td>snmp</td>
+	    <td>SNMP error log</td>
+	</tr>
+	<tr>
+	    <td>sonar</td>
+	    <td>SONAR connection log</td>
+	</tr>
+	<tr>
+	    <td>sql</td>
+	    <td>SQL database error log</td>
+	</tr>
+	<tr>
+	    <td>ss105</td>
+	    <td>Wavetronix SS-105 protocol</td>
+	</tr>
+	<tr>
+	    <td>ss125</td>
+	    <td>Wavetronix SS-125 protocol</td>
+	</tr>
+	<tr>
+	    <td>ssi</td>
+	    <td>SSI weather protocol</td>
+	</tr>
+	<tr>
+	    <td>stc</td>
+	    <td>SmartTouch Controller gate arm protocol</td>
+	</tr>
+	<tr>
+	    <td>sys_attr</td>
+	    <td>System attribute change log</td>
+	</tr>
+	<tr>
+	    <td>szm</td>
+	    <td>Stratified zone metering log</td>
+	</tr>
+	<tr>
+	    <td>toll</td>
+	    <td>Tolling info log</td>
+	</tr>
+	<tr>
+	    <td>travel</td>
+	    <td>Travel time info log</td>
+	</tr>
+	<tr>
+	    <td>viconptz</td>
+	    <td>Vicon PTZ protocol</td>
+	</tr>
+	<tr>
+	    <td>vsa</td>
+	    <td>Variable speed advisory info log</td>
+	</tr>
+</table>
 
 <h2 id="maintenance">Maintenance</h2>
 <p>
@@ -2444,10 +2932,12 @@ hgbase.url=http://iris.dot.state.mn.us/hg/index.cgi/
 <h3 id="future_plans">Future Plans</h3>
 FIXME
 
-<h3 id="contributing">Contributing Source Code</h3>
-FIXME
+<h3 id="contributing">Contributing</h3>
+<p>
+	FIXME
+</p>
 
-<h3 id="contributing">Contributing to the Admin Guide</h3>
+<h4 id="contributing">Admin Guide</h4>
 <p>
 	Please format text so there is a newline after each sentence.
 	This makes patches less cluttered.
@@ -2611,7 +3101,8 @@ FIXME
 	<li>The new DMS Action should appear in the table</li>
 	<li>Click on the "Quick Message" column in the DMS Action just created
 	</li>
-	<li>Specify the name of an existing quick message to send to the sign
+	<li>Specify the name of an existing <a href="#quick_msg">quick
+	    message</a> to send to the sign
 	</li>
 	<li>Repeat the above DMS Actions steps as many times as desired to send
 	    a message to additional sign groups.</li>
@@ -2634,12 +3125,12 @@ Notes:
 	    Messages desired.</li>
 	<li>The quick messages that the Action Plan references don't have to be
 	    assigned to a Sign Group.</li>
-	<li>Use the dms debug log to diagnose problems with scheduled messages
-	    not appearing on signs.</li>
+	<li>Use the device debug log to diagnose problems with scheduled
+	    messages not appearing on signs.</li>
 </ul>
 
 </p>
-</div>
+</main>
 
 </body>
 </html>

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2010-2015  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,6 @@ import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
@@ -71,7 +70,7 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 
 	/** Get a mapping of the columns */
 	public Map<String, Object> getColumns() {
-		HashMap<String, Object> map = new HashMap<String, Object>();
+		HashMap<String, Object> map = new HashMap<>();
 		map.put("name", name);
 		map.put("geo_loc", geo_loc);
 		map.put("controller", controller);
@@ -383,7 +382,7 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		}
 	}
 
-	/** Time stamp of the last sample */
+	/** Time stamp from the last sample */
 	private transient long stamp = 0;
 
 	/** Get the time stamp from the last sample.
@@ -493,5 +492,4 @@ public class WeatherSensorImpl extends DeviceImpl implements WeatherSensor {
 		out.write(">\n");
 		out.write("</" + ABBR + ">\n");
 	}
-
 }

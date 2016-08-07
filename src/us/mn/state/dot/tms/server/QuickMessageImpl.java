@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2012  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.ChangeVetoException;
-import us.mn.state.dot.tms.MultiParser;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * A quick message is a sign message which consists of a MULTI string.
@@ -50,6 +50,7 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 	}
 
 	/** Get a mapping of the columns */
+	@Override
 	public Map<String, Object> getColumns() {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("name", name);
@@ -59,11 +60,13 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 	}
 
 	/** Get the database table name */
+	@Override
 	public String getTable() {
 		return "iris." + SONAR_TYPE;
 	}
 
 	/** Get the SONAR type name */
+	@Override
 	public String getTypeName() {
 		return SONAR_TYPE;
 	}
@@ -74,15 +77,9 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 	}
 
 	/** Create a quick message */
-	protected QuickMessageImpl(String n, String sg, String m) {
-		this(n, (SignGroup)namespace.lookupObject(SignGroup.SONAR_TYPE,
-			sg), m);
-	}
-
-	/** Create a quick message */
-	protected QuickMessageImpl(String n, SignGroup sg, String m) {
+	private QuickMessageImpl(String n, String sg, String m) {
 		super(n);
-		sign_group = sg;
+		sign_group = lookupSignGroup(sg);
 		multi = m;
 	}
 
@@ -91,12 +88,14 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 
 	/** Get the sign group associated with the quick message.
 	 * @return Sign group for quick message; null for no group. */
+	@Override
 	public SignGroup getSignGroup() {
 		return sign_group;
 	}
 
 	/** Set the sign group associated with the quick message.
 	 * @param sg Sign group to associate; null for no group. */
+	@Override
 	public void setSignGroup(SignGroup sg) {
 		sign_group = sg;
 	}
@@ -115,25 +114,28 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 
 	/** Get the message MULTI string.
 	 * @return Message text in MULTI markup.
-	 * @see us.mn.state.dot.tms.MultiString */
+	 * @see us.mn.state.dot.tms.utils.MultiString */
+	@Override
 	public String getMulti() {
 		return multi;
 	}
 
 	/** Set the message MULTI string.
 	 * @return Message text in MULTI markup.
-	 * @see us.mn.state.dot.tms.MultiString */
+	 * @see us.mn.state.dot.tms.utils.MultiString */
+	@Override
 	public void setMulti(String m) {
 		multi = m;
 	}
 
 	/** Set the MULTI string */
 	public void doSetMulti(String m) throws TMSException {
-		if(m.equals(multi))
-			return;
-		if(!MultiParser.isValid(m))
+		// FIXME: allow true MULTI plus quick message MULTI
+		if (!new MultiString(m).isValid())
 			throw new ChangeVetoException("Invalid MULTI: " + m);
-		store.update(this, "multi", m);
-		setMulti(m);
+		if (!m.equals(multi)) {
+			store.update(this, "multi", m);
+			setMulti(m);
+		}
 	}
 }

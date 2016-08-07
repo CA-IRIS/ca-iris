@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2013  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,14 @@ import us.mn.state.dot.tms.SystemAttrEnum;
  */
 public class ReaperJob extends Job {
 
+	/** Get the incident clear time threshold (ms) */
+	static private long getIncidentClearThreshold() {
+		int secs = SystemAttrEnum.INCIDENT_CLEAR_SECS.getInt();
+		return secs * (long) 1000;
+	}
+
 	/** Seconds to offset each poll from start of interval */
-	static protected final int OFFSET_SECS = 27;
+	static private final int OFFSET_SECS = 27;
 
 	/** List of reapable sign messages */
 	private final LinkedList<SignMessageImpl> reapable;
@@ -48,33 +54,49 @@ public class ReaperJob extends Job {
 
 	/** Perform the reaper job */
 	public void perform() {
-		reapIncidents();
 		reapSignMessages();
+		reapIncidents();
+		FeedBucket.purgeExpired();
 	}
 
 	/** Reap incidents which have been cleared for awhile */
 	private void reapIncidents() {
 		Iterator<Incident> it = IncidentHelper.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			Incident inc = it.next();
-			if(inc instanceof IncidentImpl)
-				reapIncident((IncidentImpl)inc);
+			if (inc instanceof IncidentImpl)
+				reapIncident((IncidentImpl) inc);
 		}
 	}
 
 	/** Reap an incident */
 	private void reapIncident(IncidentImpl inc) {
-		if(inc.getCleared()) {
-			if(inc.getClearTime() + getIncidentClearThreshold() <
-			   TimeSteward.currentTimeMillis())
-				inc.notifyRemove();
-		}
+		if (isReapable(inc))
+			inc.notifyRemove();
 	}
 
-	/** Get the incident clear time threshold (ms) */
-	private long getIncidentClearThreshold() {
-		int secs = SystemAttrEnum.INCIDENT_CLEAR_SECS.getInt();
-		return secs * (long)1000;
+	/** Check if an incident is reapable */
+	private boolean isReapable(IncidentImpl inc) {
+		return inc.getCleared()
+		    && isPastClearThreshold(inc)
+		    && !isReferenced(inc);
+	}
+
+	/** Check if an incident is past the clear threshold */
+	private boolean isPastClearThreshold(IncidentImpl inc) {
+		return inc.getClearTime() + getIncidentClearThreshold() <
+			    TimeSteward.currentTimeMillis();
+	}
+
+	/** Check if an incident is referenced by any sign message */
+	private boolean isReferenced(IncidentImpl inc) {
+		Iterator<SignMessage> it = SignMessageHelper.iterator();
+		while (it.hasNext()) {
+			SignMessage sm = it.next();
+			if (sm.getIncident() == inc)
+				return true;
+		}
+		return false;
 	}
 
 	/** Reap sign messages which have been unused for awhile */
@@ -84,11 +106,11 @@ public class ReaperJob extends Job {
 		// only happen during a very short window about one minute
 		// after the message loses its last reference.  Is it worth
 		// making a fix for this unlikely scenario?
-		if(reapable.isEmpty()) {
+		if (reapable.isEmpty()) {
 			findReapableMessages();
 			removeReferencedMessages();
 		} else {
-			for(SignMessageImpl sm: reapable)
+			for (SignMessageImpl sm: reapable)
 				reapMessage(sm);
 			reapable.clear();
 		}
@@ -101,26 +123,26 @@ public class ReaperJob extends Job {
 		// This is needed because objects are removed
 		// asynchronously from the namespace.
 		SignMessage m = SignMessageHelper.lookup(sm.getName());
-		if((m == sm) && !isReferenced(m))
+		if ((m == sm) && !isReferenced(m))
 			sm.notifyRemove();
 	}
 
 	/** Find all reapable sign messages */
 	private void findReapableMessages() {
 		Iterator<SignMessage> it = SignMessageHelper.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			SignMessage sm = it.next();
-			if(sm instanceof SignMessageImpl)
-				reapable.add((SignMessageImpl)sm);
+			if (sm instanceof SignMessageImpl)
+				reapable.add((SignMessageImpl) sm);
 		}
 	}
 
 	/** Remove referenced sign messages */
 	private void removeReferencedMessages() {
 		Iterator<SignMessageImpl> it = reapable.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			SignMessage sm = it.next();
-			if(isReferenced(sm))
+			if (isReferenced(sm))
 				it.remove();
 		}
 	}
@@ -128,11 +150,11 @@ public class ReaperJob extends Job {
 	/** Check if a sign message is referenced by any DMS */
 	private boolean isReferenced(SignMessage sm) {
 		Iterator<DMS> it = DMSHelper.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			DMS dms = it.next();
-			if(dms instanceof DMSImpl) {
-				DMSImpl dmsi = (DMSImpl)dms;
-				if(dmsi.hasReference(sm))
+			if (dms instanceof DMSImpl) {
+				DMSImpl dmsi = (DMSImpl) dms;
+				if (dmsi.hasReference(sm))
 					return true;
 			}
 		}

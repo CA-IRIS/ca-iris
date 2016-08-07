@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2013  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,24 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get a description of the location */
 	static private String getDescription(GeoLoc l, String connect) {
+		//FIXME CA-MN-MERGE fix and/or deal with sitdetails, new stuff below
 		return SiteDataHelper.getLocDescription(l, connect);
+//		StringBuilder b = new StringBuilder();
+//		if (l != null) {
+//			Road r = l.getRoadway();
+//			if (r != null) {
+//				short rd = l.getRoadDir();
+//				String road = r.getName() + " " +
+//					Direction.fromOrdinal(rd).abbrev;
+//				b.append(road.trim());
+//			}
+//		}
+//		String c = getCrossDescription(l, connect);
+//		if (c != null) {
+//			b.append(' ');
+//			b.append(c);
+//		}
+//		return (b.length() > 0) ? b.toString() : "Unknown location";
 	}
 
 	/** Get a description of the cross-street location */
@@ -71,11 +88,11 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get a description of the cross-street location */
 	static public String getCrossDescription(GeoLoc l, String connect) {
-		if(l != null) {
+		if (l != null) {
 			Road x = l.getCrossStreet();
-			if(x != null) {
+			if (x != null) {
 				StringBuilder cross = new StringBuilder();
-				if(connect != null)
+				if (connect != null)
 					cross.append(connect);
 				else
 					cross.append(getModifier(l));
@@ -92,73 +109,71 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get the cross-street modifier */
 	static public String getModifier(GeoLoc l) {
-		if(l != null) {
-			return LocModifier.fromOrdinal(
-				l.getCrossMod()).description;
-		} else
-			return "";
+		return (l != null)
+		      ? LocModifier.fromOrdinal(l.getCrossMod()).description
+		      : null;
 	}
 
 	/** Filter for alternate directions on a North-South road.
-	 * @param d Direction to be filtered
-	 * @param ad Alternate road direction
-	 * @return Filtered direction */
-	static protected Direction filterNorthSouth(Direction d, Direction ad) {
-		if(ad == Direction.EAST) {
-			if(d == Direction.EAST)
+	 * @param d Direction to be filtered.
+	 * @param ad Alternate road direction.
+	 * @return Filtered direction. */
+	static private Direction filterNorthSouth(Direction d, Direction ad) {
+		if (ad == Direction.EAST) {
+			if (d == Direction.EAST)
 				return Direction.NORTH;
-			if(d == Direction.WEST)
+			if (d == Direction.WEST)
 				return Direction.SOUTH;
-		} else if(ad == Direction.WEST) {
-			if(d == Direction.WEST)
+		} else if (ad == Direction.WEST) {
+			if (d == Direction.WEST)
 				return Direction.NORTH;
-			if(d == Direction.EAST)
+			if (d == Direction.EAST)
 				return Direction.SOUTH;
 		}
 		return d;
 	}
 
 	/** Filter for alternate directions on an East-West road.
-	 * @param d Direction to be filtered
-	 * @param ad Alternate road direction
-	 * @return Filtered direction */
-	static protected Direction filterEastWest(Direction d, Direction ad) {
-		if(ad == Direction.NORTH) {
-			if(d == Direction.NORTH)
+	 * @param d Direction to be filtered.
+	 * @param ad Alternate road direction.
+	 * @return Filtered direction. */
+	static private Direction filterEastWest(Direction d, Direction ad) {
+		if (ad == Direction.NORTH) {
+			if (d == Direction.NORTH)
 				return Direction.EAST;
-			if(d == Direction.SOUTH)
+			if (d == Direction.SOUTH)
 				return Direction.WEST;
-		} else if(ad == Direction.SOUTH) {
-			if(d == Direction.SOUTH)
+		} else if (ad == Direction.SOUTH) {
+			if (d == Direction.SOUTH)
 				return Direction.EAST;
-			if(d == Direction.NORTH)
+			if (d == Direction.NORTH)
 				return Direction.WEST;
 		}
 		return d;
 	}
 
 	/** Filter the roadway direction which matches the given direction.
-	 * @param d Direction to be filtered
-	 * @param rd Main road direction (NORTH_SOUTH / EAST_WEST)
-	 * @param ad Alternate road direction
-	 * @return Filtered direction */
-	static protected Direction filterDirection(Direction d, Direction rd,
+	 * @param d Direction to be filtered.
+	 * @param rd Main road direction (NORTH_SOUTH / EAST_WEST).
+	 * @param ad Alternate road direction.
+	 * @return Filtered direction. */
+	static private Direction filterDirection(Direction d, Direction rd,
 		Direction ad)
 	{
-		if(rd == Direction.NORTH_SOUTH)
+		if (rd == Direction.NORTH_SOUTH)
 			return filterNorthSouth(d, ad);
-		else if(rd == Direction.EAST_WEST)
+		else if (rd == Direction.EAST_WEST)
 			return filterEastWest(d, ad);
 		else
 			return d;
 	}
 
 	/** Filter the direction for the given road.
-	 * @param d Direction to be filtered
-	 * @param r Road in question
-	 * @return Filtered direction */
-	static protected Direction filterDirection(Direction d, Road r) {
-		if(r != null) {
+	 * @param d Direction to be filtered.
+	 * @param r Road in question.
+	 * @return Filtered direction. */
+	static private Direction filterDirection(Direction d, Road r) {
+		if (r != null) {
 			Direction rd = Direction.fromOrdinal(r.getDirection());
 			Direction ad = Direction.fromOrdinal(r.getAltDir());
 			return filterDirection(d, rd, ad);
@@ -167,7 +182,7 @@ public class GeoLocHelper extends BaseHelper {
 	}
 
 	/** Filter the direction for the given road */
-	static protected Direction filterDirection(short d, Road r) {
+	static private Direction filterDirection(short d, Road r) {
 		return filterDirection(Direction.fromOrdinal(d), r);
 	}
 
@@ -178,11 +193,11 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get the roadway corridor ID */
 	static public String getCorridorID(Road r, short d) {
-		if(r == null)
+		if (r == null)
 			return "null";
 		StringBuilder b = new StringBuilder();
 		String ab = r.getAbbrev();
-		if(ab != null)
+		if (ab != null)
 			b.append(ab);
 		else
 			return "null";
@@ -192,7 +207,7 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get the corridor for a road */
 	static public String getCorridorName(Road r, short d) {
-		if(r == null)
+		if (r == null)
 			return null;
 		String corridor = r.getName() + " " +
 			filterDirection(d, r).abbrev;
@@ -201,10 +216,9 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get the roadway corridor */
 	static public String getCorridorName(GeoLoc l) {
-		if(l != null)
-			return getCorridorName(l.getRoadway(), l.getRoadDir());
-		else
-			return null;
+		return (l != null)
+			? getCorridorName(l.getRoadway(), l.getRoadDir())
+			: null;
 	}
 
 	/** Get the linked roadway corridor */
@@ -216,7 +230,7 @@ public class GeoLocHelper extends BaseHelper {
 	static public boolean isSameCorridor(GeoLoc l0, GeoLoc l1) {
 		Road r0 = l0.getRoadway();
 		Road r1 = l1.getRoadway();
-		if(r0 == null || r1 == null)
+		if (r0 == null || r1 == null)
 			return false;
 		return (r0 == r1) &&
 			(filterDirection(l0.getRoadDir(), r0) ==
@@ -225,12 +239,12 @@ public class GeoLocHelper extends BaseHelper {
 
 	/** Get the latitude of a GeoLoc */
 	static public Double getLat(GeoLoc l) {
-		return l != null ? l.getLat() : null;
+		return (l != null) ? l.getLat() : null;
 	}
 
 	/** Get the longitude of a GeoLoc */
 	static public Double getLon(GeoLoc l) {
-		return l != null ? l.getLon() : null;
+		return (l != null) ? l.getLon() : null;
 	}
 
 	/** Check if the coordinates are null */
@@ -242,19 +256,15 @@ public class GeoLocHelper extends BaseHelper {
 	static public Distance distanceTo(GeoLoc l0, GeoLoc l1) {
 		Position p0 = getWgs84Position(l0);
 		Position p1 = getWgs84Position(l1);
-		if(p0 != null && p1 != null)
-			return new Distance(p0.distanceHaversine(p1));
-		else
-			return null;
+		return (p0 != null && p1 != null)
+			? new Distance(p0.distanceHaversine(p1)) : null;
 	}
 
 	/** Calculate the distance between two locations */
 	static public Distance distanceTo(GeoLoc l0, Position p1) {
 		Position p0 = getWgs84Position(l0);
-		if(p0 != null && p1 != null)
-			return new Distance(p0.distanceHaversine(p1));
-		else
-			return null;
+		return (p0 != null && p1 != null)
+			? new Distance(p0.distanceHaversine(p1)) : null;
 	}
 
 	/** Test if another location matches */
@@ -263,7 +273,7 @@ public class GeoLocHelper extends BaseHelper {
 		Road x0 = l0.getCrossStreet();
 		Road r1 = l1.getRoadway();
 		Road x1 = l1.getCrossStreet();
-		if(r0 == null || x0 == null || r1 == null || x1 == null)
+		if (r0 == null || x0 == null || r1 == null || x1 == null)
 			return false;
 		return (r0 == r1) && (x0 == x1) &&
 			(filterDirection(l0.getRoadDir(), r0) ==
@@ -273,7 +283,7 @@ public class GeoLocHelper extends BaseHelper {
 	}
 
 	/** Test if two roads start with the same name */
-	static protected boolean matchRootName(String n0, String n1) {
+	static private boolean matchRootName(String n0, String n1) {
 		return n0.startsWith(n1) || n1.startsWith(n0);
 	}
 
@@ -283,7 +293,7 @@ public class GeoLocHelper extends BaseHelper {
 		Road x0 = l0.getCrossStreet();
 		Road r1 = l1.getRoadway();
 		Road x1 = l1.getCrossStreet();
-		if(r0 == null || x0 == null || r1 == null || x1 == null)
+		if (r0 == null || x0 == null || r1 == null || x1 == null)
 			return false;
 		return matchRootName(r0.getName(), r1.getName()) &&
 			(x0 == x1) &&
@@ -294,12 +304,12 @@ public class GeoLocHelper extends BaseHelper {
 	}
 
 	/** Test if two locations have roadway/cross-street swapped */
-	static protected boolean isSwapped(GeoLoc l0, GeoLoc l1) {
+	static private boolean isSwapped(GeoLoc l0, GeoLoc l1) {
 		Road r0 = l0.getRoadway();
 		Road x0 = l0.getCrossStreet();
 		Road r1 = l1.getRoadway();
 		Road x1 = l1.getCrossStreet();
-		if(r0 == null || x0 == null || r1 == null || x1 == null)
+		if (r0 == null || x0 == null || r1 == null || x1 == null)
 			return false;
 		return (l0.getCrossMod() == l1.getCrossMod()) &&
 			(r0 == x1) && (r1 == x0);
@@ -318,7 +328,7 @@ public class GeoLocHelper extends BaseHelper {
 		Road x0 = l0.getCrossStreet();
 		Road r1 = l1.getRoadway();
 		Road x1 = l1.getCrossStreet();
-		if(r0 == null || x0 == null || r1 == null || x1 == null)
+		if (r0 == null || x0 == null || r1 == null || x1 == null)
 			return false;
 		return (l0.getCrossMod() == l1.getCrossMod()) &&
 			matchRootName(r0.getName(), r1.getName()) &&
@@ -329,28 +339,24 @@ public class GeoLocHelper extends BaseHelper {
 	static public Position getWgs84Position(GeoLoc p) {
 		Double lat = getLat(p);
 		Double lon = getLon(p);
-		if(lat != null && lon != null)
-			return new Position(lat, lon);
-		else
-			return null;
+		return (lat != null && lon != null)
+			? new Position(lat, lon) : null;
 	}
 
 	/** Create a spherical mercator position */
 	static public SphericalMercatorPosition getPosition(GeoLoc p) {
 		Position pos = getWgs84Position(p);
-		if(pos != null)
-			return SphericalMercatorPosition.convert(pos);
-		else
-			return null;
+		return (pos != null)
+			? SphericalMercatorPosition.convert(pos) : null;
 	}
 
 	/** Get the root label (for a detector or a station) */
 	static public String getRootLabel(GeoLoc loc) {
-		if(loc == null)
+		if (loc == null)
 			return FUTURE;
 		Road roadway = loc.getRoadway();
 		Road cross = loc.getCrossStreet();
-		if(roadway == null || cross == null)
+		if (roadway == null || cross == null)
 			return FUTURE;
 		Direction rd = Direction.fromOrdinal(loc.getRoadDir());
 		Direction cd = Direction.fromOrdinal(loc.getCrossDir());
@@ -372,7 +378,7 @@ public class GeoLocHelper extends BaseHelper {
 	static public double calculateBearing(GeoLoc loc_a, GeoLoc loc_b) {
 		MapVector va = createMapVector(loc_a);
 		MapVector vb = createMapVector(loc_b);
-		if(va != null && vb != null) {
+		if (va != null && vb != null) {
 			MapVector a = vb.subtract(va);
 			return a.getAngle();
 		} else
@@ -385,7 +391,7 @@ public class GeoLocHelper extends BaseHelper {
 	 * @return Map vector from origin to specified location, or null. */
 	static private MapVector createMapVector(GeoLoc loc) {
 		SphericalMercatorPosition pos = getPosition(loc);
-		if(pos != null) {
+		if (pos != null) {
 			double x = pos.getX();
 			double y = pos.getY();
 			return new MapVector(x, y);
@@ -404,32 +410,41 @@ public class GeoLocHelper extends BaseHelper {
 	{
 		SphericalMercatorPosition p0 = getPosition(l0);
 		SphericalMercatorPosition p1 = getPosition(l1);
-		if(p0 == null || p1 == null)
-			return Double.POSITIVE_INFINITY;
-		else {
+		if (p0 != null && p1 != null) {
 			MapLineSegment seg = new MapLineSegment(p0.getX(),
 				p0.getY(), p1.getX(), p1.getY());
 			return seg.distanceTo(smp.getX(), smp.getY());
-		}
+		} else
+			return Double.POSITIVE_INFINITY;
 	}
 
 	/** Snap a point to a line segment on the map.
 	 * @param l0 First end of line segment.
 	 * @param l1 Second end of line segment.
 	 * @param smp Selected point (spherical mercator position).
-	 * @return Selected point snapped to line segment. */
-	static public SphericalMercatorPosition segmentSnap(GeoLoc l0,
-		GeoLoc l1, SphericalMercatorPosition smp)
+	 * @return GeoLoc snapped to line segment. */
+	static public GeoLoc snapSegment(GeoLoc l0, GeoLoc l1,
+		SphericalMercatorPosition smp)
 	{
 		SphericalMercatorPosition p0 = getPosition(l0);
 		SphericalMercatorPosition p1 = getPosition(l1);
-		if(p0 == null || p1 == null)
-			return null;
-		else {
+		if (p0 != null && p1 != null) {
 			MapLineSegment seg = new MapLineSegment(p0.getX(),
 				p0.getY(), p1.getX(), p1.getY());
 			MapVector pnt = seg.snap(smp.getX(), smp.getY());
-			return new SphericalMercatorPosition(pnt.x, pnt.y);
+			return createTransient(pnt, l0);
 		}
+		return null;
+	}
+
+	/** Create a transient geo location */
+	static private TransGeoLoc createTransient(MapVector pnt, GeoLoc l0) {
+		SphericalMercatorPosition pos = new SphericalMercatorPosition(
+			pnt.x, pnt.y);
+		Position p = pos.getPosition();
+		float lat = (float) p.getLatitude();
+		float lon = (float) p.getLongitude();
+		return new TransGeoLoc(l0.getRoadway(), l0.getRoadDir(), lat,
+			lon);
 	}
 }

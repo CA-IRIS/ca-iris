@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ProxySelector;
 import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.Properties;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Scheduler;
@@ -30,7 +29,6 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.server.Server;
 import us.mn.state.dot.tms.BaseHelper;
 import us.mn.state.dot.tms.Station;
-import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.server.aws.AwsJob;
@@ -205,8 +203,7 @@ public class MainServer {
 		TIMER.addJob(new SendSettingsJob(500));
 		TIMER.addJob(new TollZoneJob());
 		TIMER.addJob(new ReaperJob());
-		TIMER.addJob(new CommLinkQuery30SecJob());
-		TIMER.addJob(new MsgFeedQueryJob());
+		TIMER.addJob(new CommLinkQuery30SecJob()); //FIXME CA-MN-MERGE needed?
 	}
 
 	/** Schedule jobs on FLUSH thread */

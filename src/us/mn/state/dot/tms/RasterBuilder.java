@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2008-2012  Minnesota Department of Transportation
+ * Copyright (C) 2008-2016  Minnesota Department of Transportation
  * Copyright (C) 2009-2010  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,11 @@
  */
 package us.mn.state.dot.tms;
 
+import java.util.ArrayList;
 import java.util.TreeMap;
+import us.mn.state.dot.tms.utils.MultiRenderer;
+import us.mn.state.dot.tms.utils.MultiString;
+import us.mn.state.dot.tms.utils.MultiSyntaxError;
 
 /**
  * A raster builder creates raster graphics for DMS display.
@@ -34,7 +38,7 @@ public class RasterBuilder {
 
 	/** Character width (pixels) for character-matrix signs.  Use 0 for
 	 * line-matrix or full-matrix signs. */
-	protected final int c_width;
+	private final int c_width;
 
 	/** Check for character-matrix sign */
 	public boolean isCharMatrix() {
@@ -43,7 +47,7 @@ public class RasterBuilder {
 
 	/** Character height (pixels) for character- or line-matrix signs.
 	 * Use 0 for full-matrix signs. */
-	protected final int c_height;
+	private final int c_height;
 
 	/** Check for full-matrix sign */
 	public boolean isFullMatrix() {
@@ -51,7 +55,7 @@ public class RasterBuilder {
 	}
 
 	/** Default font number */
-	protected final int default_font;
+	private final int default_font;
 
 	/**
 	 * Create a new raster builder.
@@ -77,10 +81,10 @@ public class RasterBuilder {
 	}
 
 	/** Check if a font width is usable */
-	protected boolean isFontWidthUsable(Font f) {
-		if(f.getWidth() > width)
+	private boolean isFontWidthUsable(Font f) {
+		if (f.getWidth() > width)
 			return false;
-		if(isCharMatrix()) {
+		if (isCharMatrix()) {
 			// char-matrix signs must match font width
 			// and must not have character spacing
 			return c_width == f.getWidth() &&
@@ -92,10 +96,10 @@ public class RasterBuilder {
 	}
 
 	/** Check if a font height is usable */
-	protected boolean isFontHeightUsable(Font f) {
-		if(f.getHeight() > height)
+	private boolean isFontHeightUsable(Font f) {
+		if (f.getHeight() > height)
 			return false;
-		if(isFullMatrix()) {
+		if (isFullMatrix()) {
 			// full-matrix signs must have line spacing
 			return f.getLineSpacing() > 0;
 		} else {
@@ -108,24 +112,18 @@ public class RasterBuilder {
 
 	/** Get the optimal line height (pixels) */
 	public int getLineHeightPixels() {
-		if(c_height > 0)
+		if (c_height > 0)
 			return c_height;
 		Font f = FontHelper.find(default_font);
-		if(f != null)
-			return f.getHeight();
-		else
-			return height;
+		return (f != null) ? f.getHeight() : height;
 	}
 
 	/** Get the optimal line spacing (pixels) */
 	public int getLineSpacingPixels() {
-		if(c_height > 0)
+		if (c_height > 0)
 			return 0;
 		Font f = FontHelper.find(default_font);
-		if(f != null)
-			return f.getLineSpacing();
-		else
-			return 1;
+		return (f != null) ? f.getLineSpacing() : 1;
 	}
 
 	/** Get the number of lines of text using the default font */
@@ -133,8 +131,8 @@ public class RasterBuilder {
 		int lh = getLineHeightPixels();
 		int ls = getLineSpacingPixels();
 		int l_max = SystemAttrEnum.DMS_MAX_LINES.getInt();
-		for(int lines = 1; lines < l_max; lines++) {
-			if(lh * (lines + 1) + ls * lines > height)
+		for (int lines = 1; lines < l_max; lines++) {
+			if (lh * (lines + 1) + ls * lines > height)
 				return lines;
 		}
 		return l_max;
@@ -144,39 +142,49 @@ public class RasterBuilder {
 	public BitmapGraphic[] createBitmaps(MultiString ms)
 		throws InvalidMessageException
 	{
-		int n_pages = ms.getNumPages();
-		BitmapGraphic[] bitmaps = new BitmapGraphic[n_pages];
-		for(int p = 0; p < n_pages; p++) {
-			bitmaps[p] = new BitmapGraphic(width, height);
-			render(ms, p, bitmaps[p]);
-		}
-		return bitmaps;
+		final ArrayList<BitmapGraphic> bitmaps =
+			new ArrayList<BitmapGraphic>();
+		RasterGraphic.Factory factory = new RasterGraphic.Factory() {
+			public RasterGraphic create() {
+				BitmapGraphic bg = new BitmapGraphic(width,
+					height);
+				bitmaps.add(bg);
+				return bg;
+			}
+		};
+		render(ms, factory);
+		return bitmaps.toArray(new BitmapGraphic[0]);
 	}
 
 	/** Render a PixmapGraphic for each page */
 	public RasterGraphic[] createPixmaps(MultiString ms)
 		throws InvalidMessageException
 	{
-		int n_pages = ms.getNumPages();
-		RasterGraphic[] pixmaps = new RasterGraphic[n_pages];
-		for(int p = 0; p < n_pages; p++) {
-			pixmaps[p] = new PixmapGraphic(width, height);
-			render(ms, p, pixmaps[p]);
-		}
-		return pixmaps;
+		final ArrayList<RasterGraphic> pixmaps =
+			new ArrayList<RasterGraphic>();
+		RasterGraphic.Factory factory = new RasterGraphic.Factory() {
+			public RasterGraphic create() {
+				PixmapGraphic pg = new PixmapGraphic(width,
+					height);
+				pixmaps.add(pg);
+				return pg;
+			}
+		};
+		render(ms, factory);
+		return pixmaps.toArray(new RasterGraphic[0]);
 	}
 
 	/** Render to a RasterGraphic for the specified page number */
-	private void render(MultiString ms, int p, RasterGraphic rg)
+	private void render(MultiString ms, RasterGraphic.Factory factory)
 		throws InvalidMessageException
 	{
-		MultiRenderer mr = new MultiRenderer(rg, p, c_width, c_height,
+		MultiRenderer mr = new MultiRenderer(factory, c_width, c_height,
 			default_font);
-		String multi = DMSHelper.ignoreFilter(ms).toString();
-		MultiParser.parse(multi, mr);
+		MultiString multi = DMSHelper.ignoreFilter(ms);
+		multi.parse(mr);
 		mr.complete();
 		MultiSyntaxError err = mr.getSyntaxError();
-		if(err != MultiSyntaxError.none) {
+		if (err != MultiSyntaxError.none) {
 			throw new InvalidMessageException(err.toString() +
 				": \"" + ms + '"');
 		}

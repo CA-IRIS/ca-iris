@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2012-2015  Minnesota Department of Transportation
+ * Copyright (C) 2012-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import javax.crypto.spec.PBEKeySpec;
 import us.mn.state.dot.sonar.server.AuthProvider;
 import us.mn.state.dot.sonar.server.UserImpl;
 import us.mn.state.dot.tms.utils.Base64;
+import static us.mn.state.dot.tms.utils.SString.isBlank;
 
 /**
  * Authentication provider for IRIS users.
@@ -40,11 +41,6 @@ public class IrisProvider implements AuthProvider {
 
 	/** Number of bits for key (encoded as 44 chars in Base64) */
 	static private final int KEY_BITS = 256;
-
-	/** Check if a string blank or null */
-	static private boolean isBlank(String dn) {
-		return dn == null || dn.isEmpty();
-	}
 
 	/** Random number generator for creating salt */
 	private final SecureRandom rng;
@@ -80,9 +76,9 @@ public class IrisProvider implements AuthProvider {
 		try {
 			return isBlank(user.getDn()) &&
 			       user instanceof IrisUserImpl &&
-			       check((IrisUserImpl)user, pwd);
+			       check((IrisUserImpl) user, pwd);
 		}
-		catch(Exception e) {
+		catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -95,7 +91,7 @@ public class IrisProvider implements AuthProvider {
 		String stored = user.getPassword();
 		int s_len = Base64.numCharacters(SALT_BITS);
 		int k_len = Base64.numCharacters(KEY_BITS);
-		if(stored.length() == s_len + k_len) {
+		if (stored.length() == s_len + k_len) {
 			String s = stored.substring(0, s_len);
 			String p = stored.substring(s_len);
 			String h = generateHash(pwd, Base64.decode(s));

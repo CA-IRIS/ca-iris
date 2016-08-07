@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2011-2015  Minnesota Department of Transportation
+ * Copyright (C) 2011-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2015       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +57,7 @@ public enum EncoderType {
 	 * @param d Description.
 	 * @param dst Stream type of direct stream.
 	 * @param ist Stream type of indirect stream (using video servlet). */
-	private EncoderType(String d, StreamType dst, StreamType ist) {
+	EncoderType(String d, StreamType dst, StreamType ist) {
 		description = d;
 		direct_stream = dst;
 		indirect_stream = ist;
@@ -71,23 +72,24 @@ public enum EncoderType {
 	/** Indirect stream type (using video servlet) */
 	public final StreamType indirect_stream;
 
-	/** Get the string description of the encoder type */
+	/** Get the string representation */
+	@Override
 	public String toString() {
 		return description;
 	}
 
 	/** Get a encoder type from an ordinal value */
 	static public EncoderType fromOrdinal(int o) {
-		for (EncoderType et: values()) {
-			if (et.ordinal() == o)
-				return et;
-		}
+		if (o >= 0 && o < values().length)
+			return values()[o];
+		else
 		return NONE;
 	}
 
+	//FIXME CA-MN-MERGE needed?
 	/** Get an array of encoder type descriptions */
 	static public String[] getDescriptions() {
-		LinkedList<String> d = new LinkedList<String>();
+		LinkedList<String> d = new LinkedList<>();
 		for (EncoderType et: values())
 			d.add(et.description);
 		return d.toArray(new String[d.size()]);

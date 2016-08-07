@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,13 +101,14 @@ public class IncidentDispatcher extends IPanel
 	private final TypeCache<Incident> cache;
 
 	/** Incident detail proxy list model */
-	private final ProxyListModel<IncidentDetail> dtl_model;
+	private final ProxyListModel<IncidentDetail> detail_mdl;
 
 	/** Type label */
 	private final JLabel type_lbl = createValueLabel();
 
 	/** Incident detail combo box */
-	private final JComboBox detail_cbx = new JComboBox();
+	private final JComboBox<IncidentDetail> detail_cbx =
+		new JComboBox<IncidentDetail>();
 
 	/** Location of incident */
 	private final JLabel location_lbl = createValueLabel();
@@ -119,7 +120,7 @@ public class IncidentDispatcher extends IPanel
 	private final JPanel cam_pnl = new JPanel(cam_cards);
 
 	/** Verify camera combo box */
-	private final JComboBox camera_cbx = new JComboBox();
+	private final JComboBox<Camera> camera_cbx = new JComboBox<Camera>();
 
 	/** Verify camera button */
 	private final JButton camera_btn = new JButton();
@@ -135,9 +136,9 @@ public class IncidentDispatcher extends IPanel
 	private final IAction log_inc = new IAction("incident.log") {
 		protected void doActionPerformed(ActionEvent e) {
 			Incident inc = sel_model.getSingleSelection();
-			if(inc instanceof ClientIncident)
-				create((ClientIncident)inc);
-			else if(inc != null)
+			if (inc instanceof ClientIncident)
+				create((ClientIncident) inc);
+			else if (inc != null)
 				logUpdate(inc);
 		}
 	};
@@ -146,8 +147,8 @@ public class IncidentDispatcher extends IPanel
 	private final IAction deploy_inc = new IAction("incident.deploy") {
 		protected void doActionPerformed(ActionEvent e) {
 			Incident inc = sel_model.getSingleSelection();
-			if(inc != null &&
-			   !(inc instanceof ClientIncident))
+			if (inc != null &&
+			  !(inc instanceof ClientIncident))
 				showDeployForm(inc);
 		}
 	};
@@ -156,9 +157,12 @@ public class IncidentDispatcher extends IPanel
 	private final IAction clear_inc = new IAction("incident.clear") {
 		protected void doActionPerformed(ActionEvent e) {
 			Incident inc = sel_model.getSingleSelection();
-			if(inc != null &&
-			   !(inc instanceof ClientIncident))
-				inc.setCleared(clear_btn.isSelected());
+			if (inc != null) {
+				boolean c = clear_btn.isSelected();
+				inc.setCleared(c);
+				if (c && !inc.getConfirmed())
+					inc.destroy();
+			}
 		}
 	};
 
@@ -169,7 +173,7 @@ public class IncidentDispatcher extends IPanel
 	private final IAction edit_inc = new IAction("incident.edit") {
 		protected void doActionPerformed(ActionEvent e) {
 			Incident inc = sel_model.getSingleSelection();
-			if(inc != null)
+			if (inc != null)
 				editIncident(inc);
 		}
 	};
@@ -180,10 +184,10 @@ public class IncidentDispatcher extends IPanel
 	/** Watch an incident */
 	private void watch(final Incident nw) {
 		final Incident ow = watching;
-		if(ow != null)
+		if (ow != null)
 			cache.ignoreObject(ow);
 		watching = nw;
-		if(nw != null)
+		if (nw != null)
 			cache.watchObject(nw);
 	}
 
@@ -195,18 +199,19 @@ public class IncidentDispatcher extends IPanel
 		manager = man;
 		sel_model = manager.getSelectionModel();
 		creator = ic;
-		cache = s.getSonarState().getIncidents();
-		dtl_model = new ProxyListModel<IncidentDetail>(
-			s.getSonarState().getIncidentDetails());
+		cache = s.getSonarState().getIncCache().getIncidents();
+		detail_mdl = new ProxyListModel<IncidentDetail>(
+			s.getSonarState().getIncCache().getIncidentDetails());
 	}
 
 	/** Initialize the widgets on the panel */
 	@Override
 	public void initialize() {
 		super.initialize();
-		dtl_model.initialize();
+		detail_mdl.initialize();
 		detail_cbx.setRenderer(new IncidentDetailRenderer());
-		detail_cbx.setModel(new IComboBoxModel(dtl_model));
+		detail_cbx.setModel(new IComboBoxModel<IncidentDetail>(
+			detail_mdl));
 		type_lbl.setHorizontalTextPosition(SwingConstants.TRAILING);
 		cam_pnl.add(camera_cbx, CAMERA_CBOX);
 		cam_pnl.add(camera_btn, CAMERA_BTN);
@@ -255,7 +260,7 @@ public class IncidentDispatcher extends IPanel
 		impact_pnl.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent ce) {
 				Incident inc = watching;
-				if(inc != null)
+				if (inc != null)
 					enableWidgets(inc);
 			}
 		});
@@ -274,12 +279,12 @@ public class IncidentDispatcher extends IPanel
 	/** Create a new incident */
 	private void create(ClientIncident inc) {
 		String name = createUniqueIncidentName();
-		if(isAddPermitted(name)) {
+		if (isAddPermitted(name)) {
 			HashMap<String, Object> attrs =
 				new HashMap<String, Object>();
 			Incident rpl = getReplaces(inc);
-			if(rpl != null) {
-				if(!needsReplacing(inc, rpl)) {
+			if (rpl != null) {
+				if (!needsReplacing(inc, rpl)) {
 					logUpdate(rpl);
 					return;
 				}
@@ -288,7 +293,7 @@ public class IncidentDispatcher extends IPanel
 			}
 			attrs.put("event_desc_id", inc.getEventType());
 			IncidentDetail dtl = getSelectedDetail();
-			if(dtl != null)
+			if (dtl != null)
 				attrs.put("detail", dtl);
 			attrs.put("lane_type", inc.getLaneType());
 			attrs.put("road", inc.getRoad());
@@ -300,7 +305,7 @@ public class IncidentDispatcher extends IPanel
 			attrs.put("cleared", false);
 			cache.createObject(name, attrs);
 			Incident proxy = getProxy(name);
-			if(proxy != null)
+			if (proxy != null)
 				sel_model.setSelected(proxy);
 			else
 				sel_model.clearSelection();
@@ -310,10 +315,7 @@ public class IncidentDispatcher extends IPanel
 	/** Get the incident that is being replaced */
 	private Incident getReplaces(ClientIncident inc) {
 		String rpl = inc.getReplaces();
-		if(rpl != null)
-			return cache.lookupObject(rpl);
-		else
-			return null;
+		return (rpl != null) ? cache.lookupObject(rpl) : null;
 	}
 
 	/** Test if an incident needs to be replaced */
@@ -327,9 +329,9 @@ public class IncidentDispatcher extends IPanel
 	}
 
 	/** Get name of original incident this replaces */
-	private static String getOriginalReplaces(Incident inc) {
+	static private String getOriginalReplaces(Incident inc) {
 		String rpl = inc.getReplaces();
-		if(rpl != null && rpl.length() > 0)
+		if (rpl != null && rpl.length() > 0)
 			return rpl;
 		else
 			return inc.getName();
@@ -344,8 +346,8 @@ public class IncidentDispatcher extends IPanel
 	/** Get the selected incident detail */
 	private IncidentDetail getSelectedDetail() {
 		Object detail = detail_cbx.getSelectedItem();
-		if(detail instanceof IncidentDetail)
-			return (IncidentDetail)detail;
+		if (detail instanceof IncidentDetail)
+			return (IncidentDetail) detail;
 		else
 			return null;
 	}
@@ -353,7 +355,7 @@ public class IncidentDispatcher extends IPanel
 	/** Get the selected camera */
 	private Object getSelectedCamera() {
 		Object cam = camera_cbx.getSelectedItem();
-		if(cam != null)
+		if (cam != null)
 			return cam;
 		else
 			return "";
@@ -364,9 +366,9 @@ public class IncidentDispatcher extends IPanel
 		inc.setImpact(impact_pnl.getImpact());
 	}
 
-	/** Show the incident deploy form */
+	/** Show the device deploy form */
 	private void showDeployForm(Incident inc) {
-		session.getDesktop().show(new IncidentDeployForm(session, inc,
+		session.getDesktop().show(new DeviceDeployForm(session, inc,
 			manager));
 	}
 
@@ -377,16 +379,16 @@ public class IncidentDispatcher extends IPanel
 	}
 
 	/** Get the incident proxy object */
-	protected Incident getProxy(String name) {
+	private Incident getProxy(String name) {
 		// wait for up to 20 seconds for proxy to be created
-		for(int i = 0; i < 200; i++) {
+		for (int i = 0; i < 200; i++) {
 			Incident inc = IncidentHelper.lookup(name);
-			if(inc != null)
+			if (inc != null)
 				return inc;
 			try {
 				Thread.sleep(100);
 			}
-			catch(InterruptedException e) {
+			catch (InterruptedException e) {
 				// Ignore
 			}
 		}
@@ -415,13 +417,13 @@ public class IncidentDispatcher extends IPanel
 	/** A proxy has been changed */
 	@Override
 	public void proxyChanged(Incident proxy, String a) {
-		if(proxy == sel_model.getSingleSelection())
+		if (proxy == sel_model.getSingleSelection())
 			updateAttribute(proxy, a);
 	}
 
 	/** Update an attribute for the given proxy.
 	 * FIXME: this should use ProxyWatcher */
-	protected void updateAttribute(final Incident proxy, final String a) {
+	private void updateAttribute(final Incident proxy, final String a) {
 		runSwing(new Runnable() {
 			public void run() {
 				doUpdateAttribute(proxy, a);
@@ -434,6 +436,7 @@ public class IncidentDispatcher extends IPanel
 	public void dispose() {
 		sel_model.removeProxySelectionListener(sel_listener);
 		cache.removeProxyListener(this);
+		detail_mdl.dispose();
 		clearSelected();
 		super.dispose();
 	}
@@ -476,7 +479,7 @@ public class IncidentDispatcher extends IPanel
 
 	/** Set a single selected incident */
 	private void setSelected(Incident inc) {
-		if(inc instanceof ClientIncident)
+		if (inc instanceof ClientIncident)
 			watch(null);
 		else
 			watch(inc);
@@ -490,12 +493,12 @@ public class IncidentDispatcher extends IPanel
 
 	/** Enable the dispatcher widgets */
 	private void enableWidgets(Incident inc) {
-		if(inc instanceof ClientIncident) {
-			boolean create = isAddPermitted("oname");
-			detail_cbx.setEnabled(create);
-			camera_cbx.setEnabled(create);
+		if (inc instanceof ClientIncident) {
+			boolean p = isAddPermitted("oname");
+			detail_cbx.setEnabled(p);
+			camera_cbx.setEnabled(p);
 			cam_cards.show(cam_pnl, CAMERA_CBOX);
-			log_inc.setEnabled(create);
+			log_inc.setEnabled(p);
 			deploy_inc.setEnabled(false);
 			clear_inc.setEnabled(false);
 			edit_inc.setEnabled(false);
@@ -520,21 +523,21 @@ public class IncidentDispatcher extends IPanel
 
 	/** Update one attribute on the form */
 	protected void doUpdateAttribute(Incident inc, String a) {
-		if(a == null) {
+		if (a == null) {
 			detail_cbx.setSelectedItem(inc.getDetail());
 			type_lbl.setText(manager.getTypeDesc(inc));
 			type_lbl.setIcon(manager.getIcon(inc));
 			location_lbl.setText(
 				manager.getGeoLoc(inc).getDescription());
-			if(inc instanceof ClientIncident)
+			if (inc instanceof ClientIncident)
 				camera_cbx.setModel(createCameraModel(inc));
 			setCameraAction(inc);
 		}
-		if(a == null || a.equals("impact"))
+		if (a == null || a.equals("impact"))
 			impact_pnl.setImpact(inc.getImpact());
-		if(a == null || a.equals("cleared"))
+		if (a == null || a.equals("cleared"))
 			clear_btn.setSelected(inc.getCleared());
-		if(a != null && (a.equals("impact") || a.equals("cleared")))
+		if (a != null && (a.equals("impact") || a.equals("cleared")))
 			enableWidgets(inc);
 	}
 
@@ -553,22 +556,23 @@ public class IncidentDispatcher extends IPanel
 	}
 
 	/** Create a combo box model for nearby cameras */
-	private DefaultComboBoxModel createCameraModel(Incident inc) {
-		DefaultComboBoxModel model = new DefaultComboBoxModel();
-		if(inc instanceof ClientIncident) {
+	private DefaultComboBoxModel<Camera> createCameraModel(Incident inc) {
+		DefaultComboBoxModel<Camera> mdl =
+			new DefaultComboBoxModel<Camera>();
+		if (inc instanceof ClientIncident) {
 			ClientIncident ci = (ClientIncident)inc;
 			Position pos = ci.getWgs84Position();
-			for(Camera cam: CameraHelper.findNearest(pos, 5)) {
-				model.addElement(cam);
-				if(model.getSelectedItem() == null)
-					model.setSelectedItem(cam);
+			for (Camera cam: CameraHelper.findNearest(pos, 5)) {
+				mdl.addElement(cam);
+				if (mdl.getSelectedItem() == null)
+					mdl.setSelectedItem(cam);
 			}
-			model.addElement(null);
+			mdl.addElement(null);
 		} else {
-			model.addElement(inc.getCamera());
-			model.setSelectedItem(inc.getCamera());
+			mdl.addElement(inc.getCamera());
+			mdl.setSelectedItem(inc.getCamera());
 		}
-		return model;
+		return mdl;
 	}
 
 	/** Check if the user is permitted to add the named incident */
@@ -583,7 +587,7 @@ public class IncidentDispatcher extends IPanel
 
 	/** Check if the user can deploy signs for an incident */
 	private boolean canDeploy(Incident inc) {
-		switch(LaneType.fromOrdinal(inc.getLaneType())) {
+		switch (LaneType.fromOrdinal(inc.getLaneType())) {
 		case MAINLINE:
 			return canSendIndications();
 		default:

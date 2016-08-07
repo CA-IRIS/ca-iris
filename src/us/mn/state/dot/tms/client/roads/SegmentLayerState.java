@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2013  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,48 +14,47 @@
  */
 package us.mn.state.dot.tms.client.roads;
 
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
+import us.mn.state.dot.tms.R_Node;
+import us.mn.state.dot.tms.client.proxy.ProxyLayer;
+import us.mn.state.dot.tms.client.proxy.ProxyLayerState;
 
 /**
  * SegmentLayerState is a class for drawing roadway segments.
  *
  * @author Douglas Lau
  */
-public class SegmentLayerState extends LayerState {
+public class SegmentLayerState extends ProxyLayerState<R_Node> {
 
-	/** Segment layer */
-	private final SegmentLayer seg_layer;
+	/** R_Node manager */
+	private final R_NodeManager manager;
+
+	/** Segment builder */
+	private final SegmentBuilder builder;
 
 	/** Create a new segment layer */
-	public SegmentLayerState(SegmentLayer sl, MapBean mb) {
-		super(sl, mb, new DensityTheme());
+	public SegmentLayerState(R_NodeManager m, ProxyLayer<R_Node> l,
+		MapBean mb, SegmentBuilder sb)
+	{
+		super(l, mb);
+		setTheme(new DensityTheme());
 		addTheme(new DensityTheme());
 		addTheme(new SpeedTheme());
 		addTheme(new FlowTheme());
 		addTheme(new FreewayTheme());
-		seg_layer = sl;
-	}
-
-	/** Get the visibility flag */
-	@Override
-	public boolean isVisible() {
-		Boolean v = getVisible();
-		return v != null ? v : isZoomVisible();
-	}
-
-	/** Is the layer visible at the current zoom level? */
-	private boolean isZoomVisible() {
-		return map.getModel().getZoomLevel().ordinal() >= 10;
+		manager = m;
+		builder = sb;
 	}
 
 	/** Iterate through the segments in the layer */
 	@Override
 	public MapObject forEach(MapSearcher s) {
-		if(isPastLaneZoomThreshold())
+		manager.setShapeScale(getScale());
+		if (isPastLaneZoomThreshold())
 			return forEachLane(s);
 		else
 			return forEachStation(s);
@@ -69,9 +68,9 @@ public class SegmentLayerState extends LayerState {
 	/** Iterate through the stations in the layer */
 	private MapObject forEachStation(MapSearcher s) {
 		float scale = getScale();
-		for(Segment seg: seg_layer) {
+		for (Segment seg: builder) {
 			MapSegment ms = new MapSegment(seg, scale);
-			if(s.next(ms))
+			if (s.next(ms))
 				return ms;
 		}
 		return null;
@@ -82,12 +81,12 @@ public class SegmentLayerState extends LayerState {
 	 * @return Map object found, if any. */
 	private MapObject forEachLane(MapSearcher s) {
 		float scale = getScale();
-		for(Segment seg: seg_layer) {
-			for(int sh = seg.getLeftMin(); sh < seg.getRightMax();
-			    sh++)
+		for (Segment seg: builder) {
+			for (int sh = seg.getLeftMin(); sh < seg.getRightMax();
+			     sh++)
 			{
 				MapSegment ms = new MapSegment(seg, sh, scale);
-				if(s.next(ms))
+				if (s.next(ms))
 					return ms;
 			}
 		}
@@ -95,11 +94,23 @@ public class SegmentLayerState extends LayerState {
 	}
 
 	/** Search a layer for a map object containing the given point */
+	@Override
 	public MapObject search(final Point2D p) {
 		return forEach(new MapSearcher() {
 			public boolean next(MapObject mo) {
 				return mo.getShape().contains(p);
 			}
 		});
+	}
+
+	/** Do left-click event processing */
+	@Override
+	protected void doLeftClick(MouseEvent e, MapObject o) {
+		if (o instanceof MapSegment) {
+			MapSegment ms = (MapSegment) o;
+			R_Node n = ms.getR_Node();
+			MapObject mo = builder.findGeoLoc(n);
+			super.doLeftClick(e, mo);
+		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,12 @@ public interface SignMessage extends SonarObject {
 	/** SONAR type name */
 	String SONAR_TYPE = "sign_message";
 
+	/** Get the associated incident */
+	Incident getIncident();
+
 	/** Get the message MULTI string.
 	 * @return Message text in MULTI markup.
-	 * @see us.mn.state.dot.tms.MultiString */
+	 * @see us.mn.state.dot.tms.utils.MultiString */
 	String getMulti();
 
 	/** Get beacon enabled flag */
@@ -54,9 +57,10 @@ public interface SignMessage extends SonarObject {
 	 * @see us.mn.state.dot.tms.DMSMessagePriority */
 	int getRunTimePriority();
 
-	/** Get the scheduled flag.
-	 * @return True if the message was scheduled. */
-	boolean getScheduled();
+	/** Get the sign message source value.
+	 * @return Sign message source.
+	 * @see us.mn.state.dot.tms.SignMsgSource */
+	int getSource();
 
 	/** Get the message duration.
 	 * @return Duration in minutes; null means indefinite. */

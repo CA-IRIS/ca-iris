@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2015  AHMCT, University of California
- * Copyright (C) 2012-2013  Minnesota Department of Transportation
+ * Copyright (C) 2012-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,10 @@
  */
 package us.mn.state.dot.tms.server.comm.ssi;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.server.WeatherSensorImpl;
 import us.mn.state.dot.tms.server.comm.ParsingException;
@@ -22,16 +26,15 @@ import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Speed;
 import us.mn.state.dot.tms.units.Temperature;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
 import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
+import static us.mn.state.dot.tms.units.Distance.Units.FEET;
 import static us.mn.state.dot.tms.units.Distance.Units.METERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MICROMETERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MILLIMETERS;
+import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.KPH;
+import static us.mn.state.dot.tms.units.Speed.Units.MPH;
+import us.mn.state.dot.tms.units.Temperature;
 import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
 
 /**
@@ -42,7 +45,7 @@ import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
  * @author Travis Swanston
  */
 public class RwisRec {
-
+//FIXME CA-MN-MERGE convert to US-Customary units?
 	/** Get the duration of a record in milliseconds */
 	static private long durationMs() {
 		return 20 * 1000;
@@ -56,11 +59,8 @@ public class RwisRec {
 		return fs;
 	}
 
-	/**
-	 * Get field as long which is a time.
-	 *
-	 * @return Time or null on error.
-	 */
+	/** Get field as long which is a time.
+	 * @return Time or null on error. */
 	static private Long parseDateTime(String field) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(
@@ -69,17 +69,15 @@ public class RwisRec {
 			sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 			Date pd = sdf.parse(field);
 			return pd.getTime();
-		} catch (ParseException e) {
+		}
+		catch (ParseException e) {
 			return null;
 		}
 	}
 
-	/**
-	 * Parse temperature.
-	 *
+	/** Parse temperature.
 	 * @param field Temp as 1/100 degree Celsius.
-	 * @return Parsed temperature.
-	 */
+	 * @return Parsed temperature. */
 	static private Temperature parseTemp(String field) {
 		Double t = parseDouble(field);
 		if (t != null)
@@ -92,9 +90,11 @@ public class RwisRec {
 	static private Integer parseInt(String field) {
 		try {
 			return Integer.parseInt(field);
-		} catch (NumberFormatException ex) {
+		}
+		catch (NumberFormatException ex) {
 			return null;
-		} catch (NullPointerException ex) {
+		}
+		catch (NullPointerException ex) {
 			return null;
 		}
 	}
@@ -113,6 +113,17 @@ public class RwisRec {
 			return null;
 	}
 
+	/** Parse speed.
+	 * @param field Speed in MPH.
+	 * @return Parsed speed. */
+	static private Speed parseMph(String field) {
+		Integer mph = parseInt(field);
+		if (mph != null)
+			return new Speed(mph, MPH);
+		else
+			return null;
+	}
+
 	/**
 	 * Parse distance.
 	 *
@@ -127,12 +138,20 @@ public class RwisRec {
 			return null;
 	}
 
-	/**
-	 * Parse distance.
-	 *
+	/** Parse distance.
+	 * @param field Distance in feet.
+	 * @return Parsed distance. */
+	static private Distance parseFt(String field) {
+		Integer ft = parseInt(field);
+		if (ft != null)
+			return new Distance(ft, FEET);
+		else
+			return null;
+	}
+
+	/** Parse distance.
 	 * @param field Distance in mm.
-	 * @return Parsed distance.
-	 */
+	 * @return Parsed distance. */
 	static private Distance parseMm(String field) {
 		Integer mm = parseInt(field);
 		if (mm != null)
@@ -145,9 +164,11 @@ public class RwisRec {
 	static private Double parseDouble(String field) {
 		try {
 			return Double.parseDouble(field);
-		} catch (NumberFormatException ex) {
+		}
+		catch (NumberFormatException ex) {
 			return null;
-		} catch (NullPointerException ex) {
+		}
+		catch (NullPointerException ex) {
 			return null;
 		}
 	}
@@ -178,10 +199,10 @@ public class RwisRec {
 	/** Relative humidity (%) (Rh) */
 	private final Integer rel_humidity;
 
-	/** Average wind speed in KPH (SpdAvg) */
+	/** Average wind speed in KPH (SpdAvg) */ //FIXME CA-MN-MERGE mph?
 	private final Speed wind_speed_avg;
 
-	/** Gust wind speed in KPH (SpdGust) */
+	/** Gust wind speed in KPH (SpdGust) */ //FIXME CA-MN-MERGE mph?
 	private final Speed wind_speed_gust;
 
 	/** Minimum wind direction in degrees (DirMin) */
@@ -211,10 +232,8 @@ public class RwisRec {
 	/** Visibility (Visibility) */
 	private final Distance visibility;
 
-	/**
-	 * Create a new RWIS record by parsing text that contains an ssi
+	/** Create a new RWIS record by parsing text that contains an ssi
 	 * record into fields.
-	 *
 	 * @param line A single text line (record).  The fields are: Siteid,
 	 *             DtTm, AirTemp, Dewpoint, Rh, SpdAvg, SpdGust, DirMin,
 	 *             DirAvg, DirMax, Pressure, PcIntens, PcType, PcRate,
@@ -232,8 +251,8 @@ public class RwisRec {
 		air_temp = parseTemp(header.getField(fs, "AirTemp"));
 		dew_point = parseTemp(header.getField(fs, "Dewpoint"));
 		rel_humidity = parseInt(header.getField(fs, "Rh"));
-		wind_speed_avg = parseKph(header.getField(fs, "SpdAvg"));
-		wind_speed_gust = parseKph(header.getField(fs, "SpdGust"));
+		wind_speed_avg = parseKph(header.getField(fs, "SpdAvg")); //FIXME CA-MN-MERGE mph?
+		wind_speed_gust = parseKph(header.getField(fs, "SpdGust")); //FIXME CA-MN-MERGE mph?
 		wind_dir_min = parseInt(header.getField(fs, "DirMin"));
 		wind_dir_avg = parseInt(header.getField(fs, "DirAvg"));
 		wind_dir_max = parseInt(header.getField(fs, "DirMax"));
@@ -242,7 +261,7 @@ public class RwisRec {
 		precip_type = header.getField(fs, "PcType");
 		precip_rate = parseInt(header.getField(fs, "PcRate"));
 		precip_accum = parseMm(header.getField(fs, "PcAccum"));
-		visibility = parseM(header.getField(fs, "Visibility"));
+		visibility = parseM(header.getField(fs, "Visibility")); //FIXME CA-MN-MERGE ft?
 	}
 
 	/** To string */
@@ -350,7 +369,7 @@ public class RwisRec {
 	/** Update the observation time */
 	private void updateObsTime(WeatherSensorImpl ws) {
 		if (obs_time != null)
-			ws.setObsTimeNotify(obs_time.longValue());
+			ws.setObsTimeNotify(obs_time);
 		else
 			ws.setObsTimeNotify(MISSING_DATA);
 	}

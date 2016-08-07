@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2013  Minnesota Department of Transportation
+ * Copyright (C) 2013-2015  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,16 +45,16 @@ public class WhitelistNamespace extends ServerNamespace {
 		NumberFormatException
 	{
 		String wl = props.getProperty("gate.arm.whitelist");
-		if(wl != null) {
-			for(String c: wl.split("[ \t,]+"))
+		if (wl != null) {
+			for (String c: wl.split("[ \t,]+"))
 				whitelist.add(new CIDRAddress(c));
 		}
 	}
 
 	/** Check if address is in whitelist */
 	private boolean checkList(InetAddress a) {
-		for(CIDRAddress cidr: whitelist) {
-			if(cidr.matches(a))
+		for (CIDRAddress cidr: whitelist) {
+			if (cidr.matches(a))
 				return true;
 		}
 		return false;
@@ -65,39 +65,13 @@ public class WhitelistNamespace extends ServerNamespace {
 		return (!isNameChecked(n)) || checkList(a);
 	}
 
-	/** Check if a user has read privileges for a name.
-	 * @param n Name to check.
-	 * @param u User to check.
-	 * @param a Inet address of connection.
-	 * @return true if read is allowed; false otherwise. */
-	@Override public boolean canRead(Name n, User u, InetAddress a) {
-		return canRead(n, u);
-	}
-
 	/** Check if a user has update privileges for a name.
 	 * @param n Name to check.
 	 * @param u User to check.
 	 * @param a Inet address of connection.
 	 * @return true if update is allowed; false otherwise. */
-	@Override public boolean canUpdate(Name n, User u, InetAddress a) {
+	@Override
+	public boolean canUpdate(Name n, User u, InetAddress a) {
 		return checkList(n, a) && canUpdate(n, u);
-	}
-
-	/** Check if a user has add privileges for a name.
-	 * @param n Name to check.
-	 * @param u User to check.
-	 * @param a Inet address of connection.
-	 * @return true if add is allowed; false otherwise. */
-	@Override public boolean canAdd(Name n, User u, InetAddress a) {
-		return checkList(n, a) && canAdd(n, u);
-	}
-
-	/** Check if a user has remove privileges for a name.
-	 * @param n Name to check.
-	 * @param u User to check.
-	 * @param a Inet address of connection.
-	 * @return true if remove is allowed; false otherwise. */
-	@Override public boolean canRemove(Name n, User u, InetAddress a) {
-		return checkList(n, a) && canRemove(n, u);
 	}
 }

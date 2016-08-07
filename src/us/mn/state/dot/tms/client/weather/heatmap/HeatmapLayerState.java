@@ -208,7 +208,7 @@ public class HeatmapLayerState extends LayerState {
 	/** Call the specified callback for each map object in the layer */
 	@Override
 	public MapObject forEach(MapSearcher s) {
-		return manager.forEach(s, getScale());
+		return manager.forEach(s);
 	}
 
 	/** Get the visibility flag */

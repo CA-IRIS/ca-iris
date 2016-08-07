@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 import javax.swing.border.EtchedBorder;
+import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLocHelper;
@@ -45,14 +46,44 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * @author Michael Darter
  * @author Travis Swanston
  */
-public class DmsCellRenderer extends JPanel implements ListCellRenderer {
+public class DmsCellRenderer extends JPanel implements ListCellRenderer<DMS> {
+
+	/** DMS cell renderer mode */
+	private enum DmsRendererMode {
+		LARGE(160, 48, CellRendererSize.LARGE),
+		MEDIUM(86, 24, CellRendererSize.MEDIUM),
+		SMALL(58, 16, CellRendererSize.SMALL);
+
+		/** Fixed pixel panel size */
+		public final Dimension pixel_panel_size;
+
+		/** Associated style summary cell renderer size */
+		private final CellRendererSize cell_size;
+
+		/** Create a new DMS renderer mode */
+		private DmsRendererMode(int w, int h, CellRendererSize cs) {
+			pixel_panel_size = UI.dimension(w, h);
+			cell_size = cs;
+		}
+
+		/** Determine the dms renderer mode, which determines the size
+		 * and apperance of the renderer.
+		 * @param sz StyleSummary renderer size. */
+		static private DmsRendererMode determine(CellRendererSize sz) {
+			for (DmsRendererMode m : DmsRendererMode.values()) {
+				if (m.cell_size == sz)
+					return m;
+			}
+			assert false;
+			return LARGE;
+		}
+	}
 
 	/** Prototype name */
 	static private final String PROTOTYPE_NAME = "V999W99X";
 
-	/** Sign pixel panel to display sign message */
-	private final SignPixelPanel pixel_pnl = new SignPixelPanel(50, 200,
-		false);
+	/** DMS cell renderer mode */
+	private final DmsRendererMode mode;
 
 	/** List cell renderer (needed for colors) */
 	private final DefaultListCellRenderer cell =
@@ -70,55 +101,30 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 	/** The label that displays the sign location */
 	private final JLabel loc_lbl = new JLabel();
 
-	/** DMS cell renderer mode */
-	private enum DmsRendererMode {
-		LARGE(160, 48, CellRendererSize.LARGE),
-		MEDIUM(86, 24, CellRendererSize.MEDIUM),
-		SMALL(58, 16, CellRendererSize.SMALL);
-
-		/** Fixed pixel panel size */
-		private final Dimension pixel_panel_size;
-
-		/** Associated style summary cell renderer size */
-		private final CellRendererSize cell_size;
-
-		/** Create a new DMS renderer mode */
-		private DmsRendererMode(int w, int h, CellRendererSize cs) {
-			pixel_panel_size = UI.dimension(w, h);
-			cell_size = cs;
-		}
-
-		/** Get preferred size of the pixel panel */
-		public Dimension pixelPanelSize() {
-			return pixel_panel_size;
-		}
-
-		/** Determine the dms renderer mode, which determines the size
-		 * and apperance of the renderer.
-		 * @param sz StyleSummary renderer size. */
-		static private DmsRendererMode determine(CellRendererSize sz) {
-			for (DmsRendererMode m : DmsRendererMode.values()) {
-				if (m.cell_size == sz)
-					return m;
-			}
-			assert false;
-			return LARGE;
-		}
-	}
-
-	/** DMS to render */
-	public final DMS dms;
-
-	/** DMS cell renderer mode */
-	private final DmsRendererMode mode;
+	/** Sign pixel panel to display sign message */
+	private final SignPixelPanel pixel_pnl = new SignPixelPanel(50, 200,
+		false);
 
 	/** Create a new DMS cell renderer.
-	 * @param d DMS to render.
 	 * @param sz StyleSummary renderer cell size. */
-	public DmsCellRenderer(DMS d, CellRendererSize sz) {
+	public DmsCellRenderer(CellRendererSize sz) {
 		super(new BorderLayout());
-		dms = d;
 		mode = DmsRendererMode.determine(sz);
+		initialize();
+	}
+
+	/** Initialize the renderer */
+	private void initialize() {
+		switch (mode) {
+		case SMALL:
+			initSmall();
+			break;
+		case MEDIUM:
+			initMedium();
+			break;
+		default:
+			initLarge();
+		}
 	}
 
 	/** Initialize a small size DMS cell renderer */
@@ -144,7 +150,7 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 		// This is only needed to get preferred height
 		name_lbl.setText(PROTOTYPE_NAME);
 		Dimension lsz = name_lbl.getPreferredSize();
-		Dimension psz = mode.pixelPanelSize();
+		Dimension psz = mode.pixel_panel_size;
 		setPreferredSize(new Dimension(psz.width,
 			lsz.height + psz.height));
 	}
@@ -167,7 +173,7 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 		// This is only needed to get preferred height
 		name_lbl.setText(PROTOTYPE_NAME);
 		Dimension lsz = name_lbl.getPreferredSize();
-		Dimension psz = mode.pixelPanelSize();
+		Dimension psz = mode.pixel_panel_size;
 		setPreferredSize(new Dimension(psz.width,
 			lsz.height * 2 + psz.height));
 	}
@@ -180,88 +186,53 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 
 	/** Get a component configured to render a cell of the list */
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value,
-		int index, boolean isSelected, boolean cellHasFocus)
+	public Component getListCellRendererComponent(JList<? extends DMS> list,
+		DMS dms, int index, boolean isSelected, boolean cellHasFocus)
 	{
 		if (isSelected) {
 			Component temp = cell.getListCellRendererComponent(list,
-				value, index, isSelected, cellHasFocus);
+				dms, index, isSelected, cellHasFocus);
 			title.setBackground(temp.getBackground());
 		} else
 			title.setBackground(name_lbl.getBackground());
+		setDMS(dms);
 		return this;
 	}
 
-	/** Update DMS attributes */
-	public void initialize() {
-		switch (mode) {
-		case SMALL:
-			initSmall();
-			break;
-		case MEDIUM:
-			initMedium();
-			break;
-		default:
-			initLarge();
-		}
-		updateAttr("messageCurrent");
-		updateAttr("ownerCurrent");
-	}
-
-	/** Update a specified attribute on the DMS.
-	 * @param a Attribute to update. */
-	public void updateAttr(String a) {
-		if (a.equals("messageCurrent")) {
-			String name = dms.getName();
-			String sn = SiteDataHelper.getSiteName(name);
-			if (sn != null)
-				name = sn;
-			name_lbl.setText(name);
-			String loc = GeoLocHelper.getDescription(
-				dms.getGeoLoc());
-			if (SystemAttrEnum.DMS_MANAGER_SHOW_LOCATION
-				.getBoolean())
-			{
-				loc_lbl.setText(loc);
-			}
-			else
-				loc_lbl.setText(" ");	// retain geom
-			updatePixelPanel();
-			updateToolTip(name, loc);
-		} else if (a.equals("ownerCurrent"))
-			if (SystemAttrEnum.DMS_MANAGER_SHOW_OWNER
-				.getBoolean())
-			{
-				user_lbl.setText(formatOwner());
-			}
-			else
-				user_lbl.setText("");
+	/** Set the DMS to render */
+	private void setDMS(DMS dms) {
+		//FIXME CA-MN-MERGE this SiteData stuff used to be in an updateAttr method
+		String name = dms.getName();
+		String sn = SiteDataHelper.getSiteName(name);
+		if (sn != null)
+			name = sn;
+		name_lbl.setText(name);
+		String loc = GeoLocHelper.getDescription(dms.getGeoLoc());
+		if (SystemAttrEnum.DMS_MANAGER_SHOW_LOCATION.getBoolean())
+			loc_lbl.setText(loc);
+		else
+			loc_lbl.setText(" ");	// retain geom
+		updateToolTip(dms, name, loc);
+		user_lbl.setText(formatOwner(dms));
+		updatePixelPanel(dms);
 	}
 
 	/** Format the owner name */
-	private String formatOwner() {
-		return IrisUserHelper.getNamePruned(dms.getOwnerCurrent());
+	private String formatOwner(DMS dms) {
+		return IrisUserHelper.getNamePruned(getUser(dms));
 	}
 
-	/** Update the pixel panel */
-	private void updatePixelPanel() {
-		switch (mode) {
-		case MEDIUM:
-		case LARGE:
-			pixel_pnl.setFilterColor(
-				SignPixelPanel.filterColor(dms));
-			pixel_pnl.setDimensions(dms);
-			pixel_pnl.setGraphic(getPageOne());
-			break;
-		}
+	/** Get the user name (may be overridden) */
+	protected User getUser(DMS dms) {
+		return dms.getOwnerCurrent();
 	}
 
 	/** Update tooltip */
-	private void updateToolTip(String name, String loc) {
+	private void updateToolTip(DMS dms, String name, String loc) {
 		StringBuilder tt = new StringBuilder();
 		switch (mode) {
 		case SMALL:
-			String owner = formatOwner();
+			String owner = formatOwner(dms);
 			tt.append(name);
 			if (!owner.isEmpty()) {
 				tt.append(": ");
@@ -281,12 +252,21 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer {
 		setToolTipText(tt.toString());
  	}
 
-	/** Get the raster graphic for page one */
-	private RasterGraphic getPageOne() {
-		RasterGraphic[] rasters = DMSHelper.getRasters(dms);
-		if (rasters != null && rasters.length > 0)
-			return rasters[0];
-		else
-			return null;
+	/** Update the pixel panel */
+	private void updatePixelPanel(DMS dms) {
+		switch (mode) {
+		case MEDIUM:
+		case LARGE:
+			pixel_pnl.setFilterColor(
+				SignPixelPanel.filterColor(dms));
+			pixel_pnl.setDimensions(dms);
+			pixel_pnl.setGraphic(getPageOne(dms));
+			break;
+		}
+	}
+
+	/** Get the raster graphic for page one (may be overridden) */
+	protected RasterGraphic getPageOne(DMS dms) {
+		return DMSHelper.getPageOne(dms);
 	}
 }

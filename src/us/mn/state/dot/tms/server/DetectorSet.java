@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,8 @@
  */
 package us.mn.state.dot.tms.server;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
 import us.mn.state.dot.tms.GeoLoc;
@@ -23,7 +25,8 @@ import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
- * A detector set is a logical grouping of detectors
+ * A detector set is a logical grouping of detectors.
+ * Tied to obsolete StratifiedAlgorithm code.
  *
  * @author Douglas Lau
  */
@@ -61,6 +64,19 @@ public class DetectorSet {
 	private final TreeSet<DetectorImpl> detectors =
 		new TreeSet<DetectorImpl>(COMPARATOR);
 
+	/** Create an empty detector set */
+	public DetectorSet() { }
+
+	/** Create a new detector set */
+	public DetectorSet(Collection<DetectorImpl> dets) {
+		detectors.addAll(dets);
+	}
+
+	/** Get all detectors */
+	public ArrayList<DetectorImpl> getAll() {
+		return new ArrayList<DetectorImpl>(detectors);
+	}
+
 	/** Add a detector to the detector set */
 	public void addDetector(DetectorImpl det) {
 		detectors.add(det);
@@ -81,9 +97,14 @@ public class DetectorSet {
 		return detectors.size();
 	}
 
-	/** Check if another detector set is the same */
-	public boolean isSame(DetectorSet other) {
-		return detectors.equals(other.detectors);
+	/** Check if another detector set equals this */
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DetectorSet) {
+			DetectorSet ds = (DetectorSet) obj;
+			return detectors.equals(ds.detectors);
+		} else
+			return false;
 	}
 
 	/** Add all the detectors from another detector set */
@@ -144,52 +165,23 @@ public class DetectorSet {
 		return isDefined();
 	}
 
-	/** Get the current volume of the detector set */
-	public int getVolume() {
+	/** Get the current total flow rate */
+	public int getFlow() {
 		boolean defined = false;
-		int vol = 0;
+		int flow = 0;
 		for (DetectorImpl det: detectors) {
-			int v = det.getVolume();
-			if (v < 0)
-				return v;
-			vol += v;
+			int f = det.getFlow();
+			if (f < 0)
+				return MISSING_DATA;
+			flow += f;
 			defined = true;
 		}
-		return defined ? vol : MISSING_DATA;
+		return defined ? flow : MISSING_DATA;
 	}
 
-	/** Get the current flow rate of the detector set.
-		Note: assumes that isGood returned true. */
-	public int getFlow() {
-		int flow = 0;
-		for (DetectorImpl det: detectors)
-			flow += (int)det.getFlow();
-		return flow;
-	}
-
-	/** Get the average density of the detector set */
-	public float getDensity() {
-		float k = 0;
-		int n_dets = 0;
-		for (DetectorImpl det: detectors) {
-			float d = det.getDensity();
-			if (d >= 0) {
-				k += d;
-				n_dets++;
-			}
-		}
-		return (n_dets > 0) ? (k / n_dets) : MISSING_DATA;
-	}
-
-	/** Get the max density */
-	public Double getMaxDensity() {
-		Double k = null;
-		for (DetectorImpl det: detectors) {
-			double d = det.getDensity();
-			if (d >= 0 && (k == null || d > k))
-				k = d;
-		}
-		return k;
+	/** Check if a detector is in the set */
+	public boolean hasDetector(DetectorImpl det) {
+		return detectors.contains(det);
 	}
 
 	/** Get the maximum occupancy for the detector set */
@@ -237,7 +229,7 @@ public class DetectorSet {
 				continue;
 			GeoLoc loc = det.lookupGeoLoc();
 			if (xStreet != null &&
-				xStreet == loc.getCrossStreet())
+			    xStreet == loc.getCrossStreet())
 			{
 				d_this = Math.max(d_this, d);
 			} else {

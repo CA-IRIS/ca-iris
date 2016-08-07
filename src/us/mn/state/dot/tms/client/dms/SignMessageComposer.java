@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2014  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2009-2015  AHMCT, University of California
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,13 @@ import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.Font;
 import us.mn.state.dot.tms.FontHelper;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.RasterBuilder;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import static us.mn.state.dot.tms.SignMessageHelper.DMS_MESSAGE_MAX_PAGES;
 import us.mn.state.dot.tms.client.Session;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
+import us.mn.state.dot.tms.utils.MultiBuilder;
+import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * A sign message composer is GUI for composing DMS messages.  It uses a number
@@ -282,7 +283,7 @@ public class SignMessageComposer extends JPanel {
 		int p = 0;
 		for (int i = 0; i < n_pages; i++) {
 			mess[i] = pages[i].getMulti(fn, prefix);
-			if (mess[i].toString().length() > 0)
+			if (!mess[i].isBlank())
 				p = i + 1;
 			fn = pages[i].getFontNumber();
 		}
@@ -294,19 +295,19 @@ public class SignMessageComposer extends JPanel {
 	 * @param p Number of non-blank pages.
 	 * @return Combined MULTI string for all pages. */
 	private String combinePages(MultiString[] mess, int p) {
-		MultiString multi = new MultiString();
+		MultiBuilder mb = new MultiBuilder();
 		for (int i = 0; i < p; i++) {
 			if (i == 0) {
 				if (p > 1) {
 					Integer pt = misc_pnl.getPageOnTime();
 					if (pt != null)
-						multi.setPageTimes(pt, null);
+						mb.setPageTimes(pt, null);
 				}
 			} else
-				multi.addPage();
-			multi.append(mess[i]);
+				mb.addPage();
+			mb.append(mess[i]);
 		}
-		return multi.toString();
+		return mb.toString();
 	}
 
 	/** Set the currently selected message */
@@ -317,9 +318,10 @@ public class SignMessageComposer extends JPanel {
 		// first because the line combobox updates (each) result in 
 		// intermediate preview updates which read the (incorrect) 
 		// font from the font combobox.
+		String prefix = dispatcher.getPagePrefix();
 		MultiString multi = new MultiString(ms);
 		setSelectedFonts(multi);
-		String[] lines = multi.getLines(n_lines);
+		String[] lines = multi.getLines(n_lines, prefix);
 		for (int i = 0; i < pages.length; i++)
 			pages[i].setSelected(lines);
 		adjusting--;

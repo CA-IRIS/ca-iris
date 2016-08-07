@@ -105,7 +105,7 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 		if(use_combined_commands)
 			return new PTZFullPhase();
-		return  new PanPhase();
+		return new PanPhase();
 	}
 
 	/**
@@ -145,15 +145,15 @@ public class OpPTZCamera extends OpCohuPTZ {
 				CommMessage<CohuPTZProperty> mess)
 				throws IOException {
 
-				if (pan != null) {
+			if (pan != null) {
 					log("sending pan=" + pan);
 					mess.add(new PanProperty(pan));
-					doStoreProps(mess);
+				doStoreProps(mess);
 					updateOpStatus("pan sent");
 					log("pan sent");
-				}
+			}
 
-				return new TiltPhase();
+			return new TiltPhase();
 		}
 	}
 

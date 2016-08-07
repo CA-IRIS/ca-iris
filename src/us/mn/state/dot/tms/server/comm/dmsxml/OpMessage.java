@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2000-2015  Minnesota Department of Transportation
+ * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2008-2014  AHMCT, University of California
  * Copyright (C) 2012 Iteris Inc.
  *
@@ -22,16 +22,16 @@ import java.util.GregorianCalendar;
 import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.BitmapGraphic;
 import us.mn.state.dot.tms.EventType;
-import us.mn.state.dot.tms.MultiString;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
 import us.mn.state.dot.tms.units.Interval;
 import static us.mn.state.dot.tms.units.Interval.Units.MILLISECONDS;
 import us.mn.state.dot.tms.utils.HexString;
-import static us.mn.state.dot.tms.server.comm.dmsxml.DmsXmlPoller.LOG;
+import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.STime;
 
 /**
@@ -101,8 +101,7 @@ class OpMessage extends OpDms {
 
 		// dms not configured
 		Phase phase2 = createPhaseTwo();
-		Phase phase1 = new PhaseGetConfig(phase2);
-		return phase1;
+		return new PhaseGetConfig(phase2);
 	}
 
 	/** Determine if single page message is flashing or not. */
@@ -168,7 +167,8 @@ class OpMessage extends OpDms {
 		xrr.addReq("Address", controller.getDrop());
 
 		// MsgText
-		xrr.addReq("MsgText", MultiString.canonical(m_sm.getMulti()));
+		xrr.addReq("MsgText", new MultiString(m_sm.getMulti())
+			.normalize());
 
 		// UseOnTime, always true
 		xrr.addReq("UseOnTime", true);

@@ -361,7 +361,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 								.doUpdate();
 						return false;
 					}
-				}, null);
+				});
 			}
 		});
 	}

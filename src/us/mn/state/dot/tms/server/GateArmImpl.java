@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2013-2014  Minnesota Department of Transportation
+ * Copyright (C) 2013-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.GateArmPoller;
+import us.mn.state.dot.tms.server.event.GateArmEvent;
 
 /**
  * A Gate Arm is a device for restricting access to a ramp on a road.
@@ -90,7 +91,7 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 	/** Create a new gate arm with a string name */
 	public GateArmImpl(String n) throws TMSException, SonarException {
 		super(n);
-		GateArmSystem.disable(n + ": create");
+		GateArmSystem.disable(n, "create");
 	}
 
 	/** Create a gate arm */
@@ -119,9 +120,7 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 				a.setIndex(idx, ga);
 		}
 		catch (TMSException e) {
-			System.err.println("GateArmImpl.setArrayIndex: " +
-				getName() + " error");
-			e.printStackTrace();
+			logError("setArrayIndex: " + e.getMessage());
 		}
 	}
 
@@ -135,7 +134,7 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 	/** Destroy an object */
 	@Override
 	public void doDestroy() throws TMSException {
-		GateArmSystem.disable(name + ": destroy");
+		GateArmSystem.disable(name, "destroy");
 		super.doDestroy();
 		setArrayIndex(null);
 	}
@@ -167,7 +166,7 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 	protected void updateControllerPin(ControllerImpl oc, int op,
 		ControllerImpl nc, int np)
 	{
-		GateArmSystem.disable("controller/pin");
+		GateArmSystem.disable(name, "controller/pin");
 		super.updateControllerPin(oc, op, nc, np);
 	}
 
@@ -202,7 +201,7 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 	/** Request a device operation */
 	public void sendDeviceRequest(DeviceRequest req) {
 		if (req == DeviceRequest.DISABLE_SYSTEM)
-			GateArmSystem.disable("system disable");
+			GateArmSystem.disable(name, "system disable");
 		else {
 			checkTimeout();
 			GateArmPoller p = getGateArmPoller();
@@ -251,7 +250,8 @@ public class GateArmImpl extends DeviceImpl implements GateArm {
 	 * @param o User who requested new state, or null. */
 	public void setArmStateNotify(GateArmState gas, User o) {
 		if (gas != arm_state) {
-			GateArmSystem.logEvent(gas, name, o);
+			String owner = (o != null) ? o.getName() : null;
+			logEvent(new GateArmEvent(gas, name, owner));
 			arm_state = gas;
 			notifyAttribute("armState");
 		}
