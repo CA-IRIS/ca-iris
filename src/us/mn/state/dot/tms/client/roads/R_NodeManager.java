@@ -14,8 +14,6 @@
  */
 package us.mn.state.dot.tms.client.roads;
 
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -31,7 +29,7 @@ import org.xml.sax.SAXException;
 import us.mn.state.dot.geokit.SphericalMercatorPosition;
 import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
-import us.mn.state.dot.map.Symbol;
+import us.mn.state.dot.map.Style;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CorridorBase;
 import us.mn.state.dot.tms.Detector;
@@ -61,9 +59,6 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 
 	/** Offset angle for default North map markers */
 	static private final double NORTH_ANGLE = Math.PI / 2;
-
-	/** Marker to draw r_nodes */
-	static private final R_NodeMarker MARKER = new R_NodeMarker();
 
 	/** Maximum distance to snap */
 	static private final Distance MAX_DIST = new Distance(1, MILES);
@@ -129,15 +124,15 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 		super.initialize();
 		if (builder != null) {
 			builder.initialize();
-		det_cache.addProxyListener(det_listener);
-	}
+			det_cache.addProxyListener(det_listener);
+		}
 	}
 
 	/** Dispose of the r_node manager */
 	@Override
 	public void dispose() {
 		if (builder != null) {
-		det_cache.removeProxyListener(det_listener);
+			det_cache.removeProxyListener(det_listener);
 			builder.dispose();
 		}
 		super.dispose();
@@ -351,15 +346,9 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 		};
 	}
 
-	/** Get a transformed marker shape */
-	@Override
-	protected Shape getShape(AffineTransform at) {
-		return MARKER.createTransformedShape(at);
-	}
-
 	/** Create a style list model for the given symbol */
 	@Override
-	protected StyleListModel<R_Node> createStyleListModel(Symbol s) {
+	protected StyleListModel<R_Node> createStyleListModel(Style sty) {
 		// No style list models on roadway tab
 		return null;
 	}
@@ -367,7 +356,7 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 	/** Create a theme for r_nodes */
 	@Override
 	protected ProxyTheme<R_Node> createTheme() {
-		return new ProxyTheme<>(this, MARKER);
+		return new ProxyTheme<R_Node>(this, new R_NodeMarker());
 	}
 
 	/** Lookup the corridor for a location */

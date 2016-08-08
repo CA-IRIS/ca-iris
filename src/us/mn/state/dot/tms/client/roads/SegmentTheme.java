@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2015  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,10 @@
 package us.mn.state.dot.tms.client.roads;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.Outline;
 import us.mn.state.dot.map.Style;
-import us.mn.state.dot.map.StyledTheme;
-import us.mn.state.dot.map.Symbol;
+import us.mn.state.dot.map.Theme;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -32,7 +27,7 @@ import us.mn.state.dot.tms.utils.I18N;
  *
  * @author Douglas Lau
  */
-abstract public class SegmentTheme extends StyledTheme {
+abstract public class SegmentTheme extends Theme {
 
 	/** Color for rendering gray stations */
 	static public final Color GRAY = Color.GRAY;
@@ -69,35 +64,16 @@ abstract public class SegmentTheme extends StyledTheme {
 
 	/** Create a new segment theme */
 	protected SegmentTheme(String name) {
-		super(name, new Rectangle(0, 0, 200, 200), lsize);
+		super(name, new SegmentSymbol(lsize));
 		addStyle(DEFAULT_STYLE);
 		addStyle(R_NODE_STYLE);
-	}
-
-	/** Draw the specified map object */
-	@Override
-	public void draw(Graphics2D g, MapObject mo, float scale) {
-		/* These map objects will always be MapSegment,
-		 * so don't apply a transform */
-		getSymbol(mo).draw(g, mo.getShape(), mo.getOutlineShape(),
-			scale);
-	}
-
-	/** Draw a selected map object */
-	@Override
-	public void drawSelected(Graphics2D g, MapObject mo, float scale) {
-		/* Selected map object will always be the r_node */
-		AffineTransform t = g.getTransform();
-		super.draw(g, mo, scale);
-		g.setTransform(t);
-		super.drawSelected(g, mo, scale);
 	}
 
 	/** Get the style to draw a given map object */
 	@Override
 	public Style getStyle(MapObject mo) {
 		if (mo instanceof MapSegment) {
-			MapSegment ms = (MapSegment)mo;
+			MapSegment ms = (MapSegment) mo;
 			return getSegmentStyle(ms);
 		} else
 			return R_NODE_STYLE;
@@ -110,7 +86,7 @@ abstract public class SegmentTheme extends StyledTheme {
 	@Override
 	public String getTip(MapObject mo) {
 		if (mo instanceof MapSegment)
-			return ((MapSegment)mo).getTip();
+			return ((MapSegment) mo).getTip();
 		else
 			return null;
 	}

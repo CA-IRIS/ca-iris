@@ -16,8 +16,6 @@
 package us.mn.state.dot.tms.client.dms;
 
 import java.awt.Color;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.util.Collection;
 import java.util.HashMap;
 import javax.swing.JLabel;
@@ -30,7 +28,7 @@ import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.RasterGraphic;
-import us.mn.state.dot.tms.SystemAttributeHelper;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
@@ -50,9 +48,6 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Travis Swanston
  */
 public class DMSManager extends ProxyManager<DMS> {
-
-	/** DMS Map object marker */
-	static private final DmsMarker MARKER = new DmsMarker();
 
 	/** Color definition for AWS controlled style */
 	static private final Color COLOR_HELIOTROPE = new Color(1, 0.5f,0.9f);
@@ -92,28 +87,22 @@ public class DMSManager extends ProxyManager<DMS> {
 		return new DMSTab(session, this);
 	}
 
-	/** Get the shape for a given proxy */
-	@Override
-	protected Shape getShape(AffineTransform at) {
-		return MARKER.createTransformedShape(at);
-	}
-
 	/** Create a theme for DMSs */
 	@Override
 	protected ProxyTheme<DMS> createTheme() {
 		// NOTE: the ordering of themes controls which color is used
 		//       to render the sign icon on the map
-		ProxyTheme<DMS> theme = new ProxyTheme<>(this, MARKER);
+		ProxyTheme<DMS> theme = new ProxyTheme<DMS>(this,
+			new DmsMarker());
 		theme.addStyle(ItemStyle.AVAILABLE, ProxyTheme.COLOR_AVAILABLE);
 		theme.addStyle(ItemStyle.DEPLOYED, ProxyTheme.COLOR_DEPLOYED);
 		theme.addStyle(ItemStyle.SCHEDULED, ProxyTheme.COLOR_SCHEDULED);
-		if(SystemAttributeHelper.awsEnabled())
-			theme.addStyle(ItemStyle.AWS_DEPLOYED,
-			ProxyTheme.COLOR_AWS_DEPLOYED);
+		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
+			theme.addStyle(ItemStyle.AWS_DEPLOYED, ProxyTheme.COLOR_AWS_DEPLOYED);
 		theme.addStyle(ItemStyle.MAINTENANCE,
 			ProxyTheme.COLOR_UNAVAILABLE);
 		theme.addStyle(ItemStyle.FAILED, ProxyTheme.COLOR_FAILED);
-		if(SystemAttributeHelper.awsEnabled())
+		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
 			theme.addStyle(ItemStyle.AWS_CONTROLLED,
 				COLOR_HELIOTROPE);
 		// NOTE: If a sign doesn't fit in one of the other themes,

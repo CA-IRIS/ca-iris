@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2010-2014  Minnesota Department of Transportation
+ * Copyright (C) 2010-2016  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
  * Copyright (C) 2016       Southwest Research Institute
  *
@@ -15,6 +15,8 @@
  * GNU General Public License for more details.
  */
 package us.mn.state.dot.tms.client.weather;
+
+import javax.swing.JPopupMenu;
 
 import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.map.MapObject;
@@ -44,11 +46,8 @@ import us.mn.state.dot.tms.client.weather.markers.VisibilityMarker;
 import us.mn.state.dot.tms.client.widget.Invokable;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
-import javax.swing.JPopupMenu;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -174,16 +173,15 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		return new WeatherTab(session, this);
 	}
 
-	/** Get the shape for a given proxy */
-	@Override
-	protected Shape getShape(AffineTransform at) {
-		return marker.createTransformedShape(at);
-	}
-
 	/** Create a theme for weather sensors */
 	@Override
 	protected ProxyTheme<WeatherSensor> createTheme() {
-		return new WeatherSensorTheme(this, DIRECTION_MARKER);
+		ProxyTheme<WeatherSensor> theme =
+			new ProxyTheme<>(this, DIRECTION_MARKER);
+		theme.addStyle(ItemStyle.NO_CONTROLLER,
+			ProxyTheme.COLOR_NO_CONTROLLER);
+		theme.addStyle(ItemStyle.ALL);
+		return theme;
 	}
 
 	/**
@@ -207,7 +205,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		p.addSeparator();
 		p.add(new MapAction(desktop.client, ws, ws.getGeoLoc()));
 		p.addSeparator();
-		p.add(new PropertiesAction<WeatherSensor>(this, ws));
+		p.add(new PropertiesAction<>(this, ws));
 		return p;
 	}
 
@@ -296,7 +294,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 			ret = new Angle(ws.getWindDir()).invert().toRads();
 		}
 		return ret;
-	}
+		}
 
 	/** Create a properties form for the specified proxy */
 	@Override

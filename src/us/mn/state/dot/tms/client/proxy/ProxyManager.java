@@ -15,9 +15,7 @@
  */
 package us.mn.state.dot.tms.client.proxy;
 
-import java.awt.Shape;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
 import java.util.Collection;
 import javax.swing.Box;
 import javax.swing.JLabel;
@@ -28,7 +26,7 @@ import us.mn.state.dot.map.LayerState;
 import us.mn.state.dot.map.MapBean;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.MapSearcher;
-import us.mn.state.dot.map.Symbol;
+import us.mn.state.dot.map.Style;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.GeoLoc;
@@ -60,21 +58,6 @@ abstract public class ProxyManager<T extends SonarObject> {
 		b.add(Box.createHorizontalGlue());
 		b.add(Box.createHorizontalStrut(6));
 		return b;
-	}
-
-	/** Limit the map scale based on system attributes.
-	 * @param scale Map scale in user coordinates per pixel.
-	 * @return Adjusted map scale in user coordinates per pixel. */
-	static public float adjustScale(final float scale) {
-		float sc_min = scale / 4.0f;
-		float sc_max = getIconSizeScaleMax();
-		return (sc_max > 0) ?
-			Math.max(Math.min(scale, sc_max), sc_min) : scale;
-	}
-
-	/** Get the map icon maximum size scale */
-	static private float getIconSizeScaleMax() {
-		return SystemAttrEnum.MAP_ICON_SIZE_SCALE_MAX.getFloat();
 	}
 
 	/** Check if the location is set */
@@ -280,25 +263,6 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Create a theme for this type of proxy */
 	abstract protected ProxyTheme<T> createTheme();
 
-	/** Get a transformed marker shape */
-	abstract protected Shape getShape(AffineTransform at);
-
-	/** Current marker shape */
-	private Shape shape;
-
-	/** Get current marker shape */
-	public final Shape getShape() {
-		return shape;
-	}
-
-	/** Set the shape scale */
-	public void setShapeScale(float scale) {
-		float sc = adjustScale(scale);
-		AffineTransform at = new AffineTransform();
-		at.setToScale(sc, sc);
-		shape = getShape(at);
-	}
-
 	/** Current cell renderer size */
 	private CellRendererSize m_cellSize = CellRendererSize.LARGE;
 
@@ -371,12 +335,12 @@ abstract public class ProxyManager<T extends SonarObject> {
 
 	/** Create a style list model for the given symbol name */
 	private StyleListModel<T> createStyleListModel(String s) {
-		return createStyleListModel(theme.getSymbol(s));
+		return createStyleListModel(theme.getStyle(s));
 	}
 
 	/** Create a style list model for the given symbol */
-	protected StyleListModel<T> createStyleListModel(Symbol s) {
-		return new StyleListModel<>(this, s.getLabel());
+	protected StyleListModel<T> createStyleListModel(Style sty) {
+		return new StyleListModel<>(this, sty.toString());
 	}
 
 	/** Check if a given attribute affects a proxy style */
@@ -452,7 +416,7 @@ abstract public class ProxyManager<T extends SonarObject> {
 	/** Check if a MapGeoLoc is visible */
 	private boolean isVisible(MapGeoLoc loc) {
 		return isLocationSet(loc) && isStyleVisible(loc);
-		}
+	}
 
 	/** Check if a MapGeoLoc style is visible */
 	private boolean isStyleVisible(MapGeoLoc loc) {

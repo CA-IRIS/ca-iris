@@ -16,11 +16,12 @@
 package us.mn.state.dot.tms.client.proxy;
 
 import java.awt.Color;
-import java.awt.Shape;
+import us.mn.state.dot.map.AbstractMarker;
 import us.mn.state.dot.map.MapObject;
 import us.mn.state.dot.map.Outline;
 import us.mn.state.dot.map.Style;
-import us.mn.state.dot.map.StyledTheme;
+import us.mn.state.dot.map.Theme;
+import us.mn.state.dot.map.VectorSymbol;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.utils.I18N;
@@ -32,7 +33,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * @author Douglas Lau
  * @author Michael Darter
  */
-public class ProxyTheme<T extends SonarObject> extends StyledTheme {
+public class ProxyTheme<T extends SonarObject> extends Theme {
 
 	/** Outline color */
 	static protected final Color OUTLINE_COLOR = new Color(0, 0, 0, 128);
@@ -78,7 +79,7 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 	static public final Color COLOR_AWS_DEPLOYED = Color.RED;
 
 	/** Size of legend icons */
-	static private final int lsize = UI.scaled(22);
+	static protected final int lsize = UI.scaled(22);
 
 	/** Proxy manager */
 	protected final ProxyManager<T> manager;
@@ -87,8 +88,8 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 	protected Style dstyle;
 
 	/** Create a new SONAR proxy theme */
-	public ProxyTheme(ProxyManager<T> m, Shape s) {
-		super(I18N.get(m.getSonarType()), s, lsize);
+	public ProxyTheme(ProxyManager<T> m, AbstractMarker mkr) {
+		super(I18N.get(m.getSonarType()), new VectorSymbol(mkr, lsize));
 		manager = m;
 	}
 
@@ -121,15 +122,16 @@ public class ProxyTheme<T extends SonarObject> extends StyledTheme {
 
 	/** Get an appropriate style for the given proxy object */
 	public Style getStyle(T proxy) {
-		for (Style st: styles) {
-			ItemStyle is = ItemStyle.lookupStyle(st.getLabel());
-			if (manager.checkStyle(is, proxy))
+		for (Style st: getStyles()) {
+			ItemStyle is = ItemStyle.lookupStyle(st.toString());
+			if (is != null && manager.checkStyle(is, proxy))
 				return st;
 		}
 		return dstyle;
 	}
 
 	/** Get tooltip text for the given map object */
+	@Override
 	public String getTip(MapObject o) {
 		T proxy = manager.findProxy(o);
 		if (proxy != null)

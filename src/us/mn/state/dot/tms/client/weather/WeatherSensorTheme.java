@@ -87,7 +87,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		WeatherSensorManager.DIRECTION_MARKER);
 
 	/** Create a new proxy theme */
-	public WeatherSensorTheme(ProxyManager<WeatherSensor> m, Shape s) {
+	public WeatherSensorTheme(ProxyManager<WeatherSensor> m, AbstractMarker s) {
 		super (m, s);
 		addStyle(ItemStyle.EXPIRED, Color.BLACK);
 		addStyle(ItemStyle.CRAZY,
@@ -97,6 +97,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.NO_CONTROLLER,
 			ProxyTheme.COLOR_NO_CONTROLLER);
 
+		//FIXME CA-MN-MERGE
 		// FIXME: This is nasty and relies on undocumented
 		// behavior that is probably actually a proxy bug
 		addStyle(WIND_SPEED_SYMS[LOW_IDX].style);
@@ -112,8 +113,9 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.ALL);
 	}
 
+	//FIXME CA-MN-MERGE
 	/** Generated low, mid, and high symbols for the given args */
-	private static VectorSymbol[] getStyleSymbols(ItemStyle is, Shape s) {
+	private static VectorSymbol[] getStyleSymbols(ItemStyle is, AbstractMarker s) {
 		final VectorSymbol[] ret = new VectorSymbol[3];
 		Style style = new Style(is.toString(), OUTLINE, LCOLOR);
 		ret[LOW_IDX] = new VectorSymbol(style, s);
@@ -176,6 +178,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		return t.get();
 	}
 
+	//FIXME CA-MN-MERGE
 	/** Get a symbol for the given map object */
 	public Symbol getSymbol(MapObject mo) {
 		Symbol ret = null;
