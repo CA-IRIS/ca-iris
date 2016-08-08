@@ -23,6 +23,12 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.utils.STime;
 
+import javax.swing.*;
+
+import static us.mn.state.dot.tms.ItemStyle.AIR_TEMP;
+import static us.mn.state.dot.tms.ItemStyle.PRECIPITATION;
+import static us.mn.state.dot.tms.ItemStyle.VISIBILITY;
+import static us.mn.state.dot.tms.ItemStyle.WIND_SPEED;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getAirTempCelsius;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getMultiTempsString;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getPrecipRate;
@@ -38,6 +44,10 @@ import static us.mn.state.dot.tms.WeatherSensorHelper.isLowPrecipRate;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isLowVisibility;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isLowWind;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isSampleExpired;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorManager.DIRECTION_MARKER;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorManager.PRECIP_MARKER;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorManager.TEMP_MARKER;
+import static us.mn.state.dot.tms.client.weather.WeatherSensorManager.VIS_MARKER;
 
 /**
  * Theme for weather sensor objects on the map.
@@ -57,34 +67,21 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	/** The "high" color */
 	public static final Color HCOLOR = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
 
-	/** Index for low symbol */
-	private static final int LOW_IDX = 0;
-
-	/** Index for mid symbol */
-	private static final int MID_IDX = 1;
-
-	/** Index for high symbol */
-	private static final int HIGH_IDX = 2;
-
 	/** Symbols for low, mid, and high air temp */
-	private static final VectorSymbol[] AIR_TEMP_SYMS = getStyleSymbols(
-		ItemStyle.AIR_TEMP,
-		WeatherSensorManager.TEMP_MARKER);
+	private static final VectorSymbol SYM_AIR_TEMP =
+		new VectorSymbol(TEMP_MARKER, lsize);
 
 	/** Symbols for low, mid, and high precipitation */
-	private static final VectorSymbol[] PRECIP_SYMS = getStyleSymbols(
-		ItemStyle.PRECIPITATION,
-		WeatherSensorManager.PRECIP_MARKER);
+	private static final VectorSymbol SYM_PRECIP =
+		new VectorSymbol(PRECIP_MARKER, lsize);
 
 	/** Symbols for low, mid, and high visibility */
-	private static final VectorSymbol[] VIS_SYMS = getStyleSymbols(
-		ItemStyle.VISIBILITY,
-		WeatherSensorManager.VIS_MARKER);
+	private static final VectorSymbol SYM_VIS =
+		new VectorSymbol(VIS_MARKER, lsize);
 
 	/** Symbols for low, mid, and high wind speed */
-	private static final VectorSymbol[] WIND_SPEED_SYMS = getStyleSymbols(
-		ItemStyle.WIND_SPEED,
-		WeatherSensorManager.DIRECTION_MARKER);
+	private static final VectorSymbol SYM_WIND_SPEED =
+		new VectorSymbol(DIRECTION_MARKER, lsize);
 
 	/** Create a new proxy theme */
 	public WeatherSensorTheme(ProxyManager<WeatherSensor> m, AbstractMarker s) {
@@ -97,33 +94,32 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		addStyle(ItemStyle.NO_CONTROLLER,
 			ProxyTheme.COLOR_NO_CONTROLLER);
 
-		//FIXME CA-MN-MERGE
-		// FIXME: This is nasty and relies on undocumented
-		// behavior that is probably actually a proxy bug
-		addStyle(WIND_SPEED_SYMS[LOW_IDX].style);
-		addSymbol(WIND_SPEED_SYMS[LOW_IDX]);
-		addStyle(VIS_SYMS[LOW_IDX].style);
-		addSymbol(VIS_SYMS[LOW_IDX]);
-		addStyle(PRECIP_SYMS[LOW_IDX].style);
-		addSymbol(PRECIP_SYMS[LOW_IDX]);
-		addStyle(AIR_TEMP_SYMS[LOW_IDX].style);
-		addSymbol(AIR_TEMP_SYMS[LOW_IDX]);
-		// FIXME: END
+		//FIXME CA-MN-MERGE will it blend?
+		addStyle(new Style(WIND_SPEED.name(), OUTLINE, LCOLOR));
+		addStyle(new Style(VISIBILITY.name(), OUTLINE, LCOLOR));
+		addStyle(new Style(PRECIPITATION.name(), OUTLINE, LCOLOR));
+		addStyle(new Style(AIR_TEMP.name(), OUTLINE, LCOLOR));
 
 		addStyle(ItemStyle.ALL);
 	}
 
-	//FIXME CA-MN-MERGE
-	/** Generated low, mid, and high symbols for the given args */
-	private static VectorSymbol[] getStyleSymbols(ItemStyle is, AbstractMarker s) {
-		final VectorSymbol[] ret = new VectorSymbol[3];
-		Style style = new Style(is.toString(), OUTLINE, LCOLOR);
-		ret[LOW_IDX] = new VectorSymbol(style, s);
-		style = new Style(is.toString(), OUTLINE, MCOLOR);
-		ret[MID_IDX] = new VectorSymbol(style, s);
-		style = new Style(is.toString(), OUTLINE, HCOLOR);
-		ret[HIGH_IDX] = new VectorSymbol(style, s);
-		return ret;
+	//FIXME CA-MN-MERGE will it blend?
+	/** Get a legend icon for a style */
+	@Override
+	public Icon getLegend(Style sty) {
+		ItemStyle is = ItemStyle.lookupStyle(sty.toString());
+		switch (is) {
+		case WIND_SPEED:
+			return SYM_WIND_SPEED.getLegend(sty);
+		case VISIBILITY:
+			return SYM_VIS.getLegend(sty);
+		case PRECIPITATION:
+			return SYM_PRECIP.getLegend(sty);
+		case AIR_TEMP:
+			return SYM_AIR_TEMP.getLegend(sty);
+		default:
+			return super.getLegend(sty);
+		}
 	}
 
 	/** Get tooltip text for the given map object */
@@ -178,22 +174,26 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		return t.get();
 	}
 
-	//FIXME CA-MN-MERGE
-	/** Get a symbol for the given map object */
-	public Symbol getSymbol(MapObject mo) {
-		Symbol ret = null;
+	//FIXME CA-MN-MERGE will it blend?
+	/** Get the style for the given map object */
+	@Override
+	public Style getStyle(MapObject mo) {
+		Style ret = null;
 		WeatherSensor ws = manager.findProxy(mo);
 
 		if (ws != null)
-			ret = getSymbol(ws);
+			ret = getStyle(ws);
 		if (ret == null)
-			ret = super.getSymbol(mo);
+			ret = super.getStyle(mo);
 
 		return ret;
 	}
 
-	/** Get a symbol for the given weather sensor */
-	private Symbol getSymbol(WeatherSensor ws) {
+	//FIXME CA-MN-MERGE will it blend?
+	/** Get the style for the given weather sensor, based on the measurement
+	 *  and its value */
+	@Override
+	public Style getStyle(WeatherSensor ws) {
 
 		if (isSampleExpired(ws) || isCrazyState(ws))
 			return null;
@@ -202,32 +202,27 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		Boolean hb;
 		Number n;
 
-		Symbol[] syms;
-
-		switch (manager.getStyleSummary().getStyle()) {
+		ItemStyle is = manager.getStyleSummary().getStyle();
+		switch (is) {
 		case AIR_TEMP:
-			syms = AIR_TEMP_SYMS;
 			lb = isLowAirTempCelsius(ws);
 			hb = isHighAirTempCelsius(ws);
 			n = getAirTempCelsius(ws);
 			break;
 
 		case PRECIPITATION:
-			syms = PRECIP_SYMS;
 			lb = isLowPrecipRate(ws);
 			hb = isHighPrecipRate(ws);
 			n = getPrecipRate(ws);
 			break;
 
 		case VISIBILITY:
-			syms = VIS_SYMS;
 			lb = isLowVisibility(ws);
 			hb = isHighVisibility(ws);
 			n = getVisibilityMeters(ws);
 			break;
 
 		case WIND_SPEED:
-			syms = WIND_SPEED_SYMS;
 			lb = isLowWind(ws);
 			hb = isHighWind(ws);
 			n = getWindSpeedKph(ws);
@@ -237,13 +232,17 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			return null;
 		}
 
+		// TODO: MnDOT has steered away from using static instances
+		// for reasons unknown (see markers). In keeping with this, the
+		// styles below are done in the same manner. See if this hinders
+		// performance.
 		if (n == null)
 			return null;
 		if (lb)
-			return syms[LOW_IDX];
+			return new Style(is.name(), OUTLINE, LCOLOR);
 		if (hb)
-			return syms[HIGH_IDX];
+			return new Style(is.name(), OUTLINE, HCOLOR);
 
-		return syms[MID_IDX];
+		return new Style(is.name(), OUTLINE, MCOLOR);
 	}
 }
