@@ -18,9 +18,9 @@ package us.mn.state.dot.tms.client.weather;
 
 import javax.swing.JPopupMenu;
 
-import us.mn.state.dot.map.AbstractMarker;
-import us.mn.state.dot.map.MapObject;
-import us.mn.state.dot.map.MapSearcher;
+import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.MapObject;
+import us.mn.state.dot.tms.client.map.MapSearcher;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;

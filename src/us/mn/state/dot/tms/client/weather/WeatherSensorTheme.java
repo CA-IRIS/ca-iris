@@ -17,7 +17,7 @@ package us.mn.state.dot.tms.client.weather;
 import java.awt.*;
 import java.awt.geom.Point2D;
 
-import us.mn.state.dot.map.*;
+import us.mn.state.dot.tms.client.map.*;
 import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.ToolTipBuilder;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;

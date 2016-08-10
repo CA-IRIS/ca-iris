@@ -15,15 +15,9 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
-import us.mn.state.dot.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.AbstractMarker;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
-
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
 
 /**
  * HeatmapTheme is defined purely to satisfy the Layer-Theme relationship
