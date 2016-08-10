@@ -97,7 +97,7 @@ public enum ItemStyle {
 
 	/** Hash map of all styles */
 	static private final HashMap<String, ItemStyle> ALL_STYLES =
-		new HashMap<String, ItemStyle>();
+		new HashMap<>();
 
 	/** Initialize hash map of all styles */
 	static {
@@ -112,7 +112,7 @@ public enum ItemStyle {
 
 	/** Get an array of item styles from a bit set */
 	static public ItemStyle[] toStyles(long bits) {
-		LinkedList<ItemStyle> styles = new LinkedList<ItemStyle>();
+		LinkedList<ItemStyle> styles = new LinkedList<>();
 		for(ItemStyle is: ItemStyle.values()) {
 			if(is.checkBit(bits))
 				styles.add(is);

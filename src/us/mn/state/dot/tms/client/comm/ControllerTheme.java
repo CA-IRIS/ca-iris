@@ -100,7 +100,7 @@ public class ControllerTheme extends ProxyTheme<Controller> {
 	private void drawSelected(Graphics2D g, Controller c,
 		SphericalMercatorPosition pos)
 	{
-		HashSet<GeoLoc> locs = new HashSet<GeoLoc>();
+		HashSet<GeoLoc> locs = new HashSet<>();
 		addRampMeterLocs(c, locs);
 		addDetectorLocs(c, locs);
 		g.setColor(WEB_COLOR);

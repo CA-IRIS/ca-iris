@@ -91,7 +91,7 @@ public class WeatherSensorHelper extends BaseHelper {
 
 	/** Get a weather sensor iterator */
 	static public Iterator<WeatherSensor> iterator() {
-		return new IteratorWrapper<WeatherSensor>(namespace.iterator(
+		return new IteratorWrapper<>(namespace.iterator(
 			WeatherSensor.SONAR_TYPE));
 	}
 
@@ -107,10 +107,8 @@ public class WeatherSensorHelper extends BaseHelper {
 
 	/** Test if the sensor has triggered an AWS state (e.g. high wind) */
 	static public boolean isAwsState(WeatherSensor proxy) {
-		if (isSampleExpired(proxy))
-			return false;
-		else
-			return (isHighWind(proxy) || isLowVisibility(proxy));
+		return !isSampleExpired(proxy) && (isHighWind(proxy)
+			|| isLowVisibility(proxy));
 	}
 
 	/** Get the high air temperature limit in ℃ */

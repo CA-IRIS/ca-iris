@@ -176,12 +176,13 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a theme for weather sensors */
 	@Override
 	protected ProxyTheme<WeatherSensor> createTheme() {
-		ProxyTheme<WeatherSensor> theme =
-			new ProxyTheme<>(this, DIRECTION_MARKER);
-		theme.addStyle(ItemStyle.NO_CONTROLLER,
-			ProxyTheme.COLOR_NO_CONTROLLER);
-		theme.addStyle(ItemStyle.ALL);
-		return theme;
+//		ProxyTheme<WeatherSensor> theme =
+//			new ProxyTheme<>(this, DIRECTION_MARKER);
+//		theme.addStyle(ItemStyle.NO_CONTROLLER,
+//			ProxyTheme.COLOR_NO_CONTROLLER);
+//		theme.addStyle(ItemStyle.ALL);
+//		return theme;
+		return new WeatherSensorTheme(this);
 	}
 
 	/**
@@ -253,8 +254,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	 * Listener for calls from ProxyManager's SwingProxyAdapter.
 	 * This is overridden in order to update the marker so that it
 	 * reflects the average wind direction.
-	 */
-	/** Called when a proxy attribute has been changed */
+	 * Called when a proxy attribute has been changed */
 	@Override
 	protected void proxyChangedSwing(WeatherSensor proxy, String attr) {
 		super.proxyChangedSwing(proxy, attr);
@@ -290,11 +290,10 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 			}
 		}
 		Double ret = null;
-		if (ws != null) {
+		if (ws != null)
 			ret = new Angle(ws.getWindDir()).invert().toRads();
-		}
 		return ret;
-		}
+	}
 
 	/** Create a properties form for the specified proxy */
 	@Override

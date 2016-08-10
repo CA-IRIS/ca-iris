@@ -58,7 +58,7 @@ public class WeatherMeasurementDataSet {
 	private ItemStyle measurementType = ItemStyle.WIND_SPEED;
 
 	/** hashmap containing the data */
-	private Map<Color, List<WeatherMeasurementSample>> color_data = new HashMap<Color, List<WeatherMeasurementSample>>();
+	private Map<Color, List<WeatherMeasurementSample>> color_data = new HashMap<>();
 
 	/** Constructor */
 	public WeatherMeasurementDataSet() {
