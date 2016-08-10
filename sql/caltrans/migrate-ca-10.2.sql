@@ -11,6 +11,10 @@ UPDATE iris.comm_link SET protocol = 36 WHERE protocol = 34;
 UPDATE iris.comm_link SET protocol = 35 WHERE protocol = 33;
 DELETE FROM iris.comm_protocol WHERE id IN (33, 34);
 
+-- fix some table ownership issues found in D10
+ALTER TABLE event.tag_type OWNER TO tms;
+ALTER TABLE event.tag_read_event OWNER TO tms;
+ALTER VIEW tag_read_event_view OWNER TO tms;
 
 -- migrate-4.27.sql
 \set ON_ERROR_STOP
