@@ -104,14 +104,14 @@ public class OpPTZCamera extends OpCohuPTZ {
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
 		if(use_combined_commands)
-			return new PTZFullPhase();
+			return new PTCombinedPhase();
 		return  new PanPhase();
 	}
 
 	/**
 	 * ptz full command phase
 	 */
-	protected class PTZFullPhase extends Phase<CohuPTZProperty> {
+	protected class PTCombinedPhase extends Phase<CohuPTZProperty> {
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
@@ -125,11 +125,8 @@ public class OpPTZCamera extends OpCohuPTZ {
 				log("pan/tilt sent");
 			}
 
-			// zoom has to be handled separate w/ variable speed
-			if(!stop_zoom)
-				return new ZoomPhase();
-
-			return null;
+			// zoom is sent separately due to sidewinder camera
+			return new ZoomPhase();
 		}
 
 		@Override
@@ -213,12 +210,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			cmd = processPTZInfo(Command.PAN, pan, cmd);
 			cmd = processPTZInfo(Command.TILT, tilt, cmd);
-
-			// zoom can't be added with variable speeds
-			// but it can be added so long as it is a stop command
-			// see PTZFullPhase
-			if(stop_zoom)
-				cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
 
 			writePayload(os, c.getDrop(), cmd);
 		}
