@@ -26,7 +26,6 @@ import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
-import us.mn.state.dot.geokit.SphericalMercatorPosition;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CorridorBase;
 import us.mn.state.dot.tms.Detector;
@@ -37,15 +36,14 @@ import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.map.LayerState;
 import us.mn.state.dot.tms.client.map.MapBean;
-import us.mn.state.dot.tms.client.map.Style;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
-import us.mn.state.dot.tms.client.proxy.StyleListModel;
 import us.mn.state.dot.tms.client.proxy.SwingProxyAdapter;
 import us.mn.state.dot.tms.client.widget.Invokable;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runQueued;
+import us.mn.state.dot.tms.geo.SphericalMercatorPosition;
 import us.mn.state.dot.tms.units.Distance;
 import static us.mn.state.dot.tms.units.Distance.Units.MILES;
 import us.mn.state.dot.tms.utils.I18N;
@@ -344,13 +342,6 @@ public class R_NodeManager extends ProxyManager<R_Node> {
 			}
 			public void remove() { }
 		};
-	}
-
-	/** Create a style list model for the given symbol */
-	@Override
-	protected StyleListModel<R_Node> createStyleListModel(Style sty) {
-		// No style list models on roadway tab
-		return null;
 	}
 
 	/** Create a theme for r_nodes */

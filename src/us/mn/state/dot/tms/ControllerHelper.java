@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2009-2014  Minnesota Department of Transportation
+ * Copyright (C) 2009-2016  Minnesota Department of Transportation
  * Copyright (C) 2011  Berkeley Transportation Systems Inc.
  * Copyright (C) 2010-2015  AHMCT, University of California
  *
@@ -18,7 +18,7 @@ package us.mn.state.dot.tms;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import us.mn.state.dot.geokit.Position;
+import us.mn.state.dot.tms.geo.Position;
 
 /**
  * Helper for controllers.

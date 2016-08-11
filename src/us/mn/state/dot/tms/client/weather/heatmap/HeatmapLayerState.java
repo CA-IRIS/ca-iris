@@ -15,7 +15,6 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
-import us.mn.state.dot.geokit.SphericalMercatorPosition;
 import us.mn.state.dot.tms.client.map.LayerChange;
 import us.mn.state.dot.tms.client.map.LayerState;
 import us.mn.state.dot.tms.client.map.MapBean;
@@ -28,6 +27,7 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
+import us.mn.state.dot.tms.geo.SphericalMercatorPosition;
 
 import java.awt.Color;
 import java.awt.Composite;
