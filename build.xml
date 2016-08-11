@@ -1,0 +1,546 @@
+<?xml version="1.0"?>
+<!-- ant build file for IRIS project
+     Copyright (C) 2007-2015  Minnesota Department of Transportation
+
+     This program is free software; you can redistribute it and/or modify
+     it under the terms of the GNU General Public License as published by
+     the Free Software Foundation; either version 2 of the License, or
+     (at your option) any later version.
+
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.  -->
+
+<project name="iris" default="dist" basedir=".">
+
+	<!-- Base directory configuration -->
+	<property name="src.dir" value="src"/>
+	<property name="etc.dir" value="etc"/>
+	<property name="images.dir" value="images"/>
+	<property name="bin.dir" value="bin"/>
+	<property name="lib.dir" value="lib"/>
+ 	<property name="i18n.dir" value="etc/i18n"/>
+	<property name="docs.dir" value="docs"/>
+	<property name="sql.dir" value="sql"/>
+
+	<!-- Property configuration -->
+	<property file="project.properties"/>
+	<property file="${user.home}/.ant.properties"/>
+	<property file="${lib.dir}/iris-build.properties"/>
+
+	<!-- File locations -->
+	<property name="manifest.server" value="server-MANIFEST.MF"/>
+	<property name="manifest.client" value="client-MANIFEST.MF"/>
+	<property name="dist.server" value="${name}-server-${version}"/>
+	<property name="dist.client" value="${name}-client-${version}"/>
+
+	<!-- Build directory configuration -->
+	<property name="build.dir" value="${basedir}/build"/>
+	<property name="build.etc" value="${build.dir}/etc"/>
+	<property name="build.bin" value="${build.dir}/bin"/>
+	<property name="build.src" value="${build.dir}/src"/>
+	<property name="build.lib" value="${build.dir}/lib"/>
+	<property name="build.i18n" value="${build.dir}/i18n"/>
+	<property name="build.images" value="${build.dir}/images"/>
+	<property name="build.classes" value="${build.dir}/classes"/>
+	<property name="build.javadocs" value="${build.dir}/javadocs"/>
+ 	<property name="build.deps" value="${build.dir}/deps"/>
+ 	<property name="build.tar" value= "${build.dir}/${name}-${version}"/>
+ 	<property name="build.rpm" value="${build.dir}/rpm"/>
+ 	<property name="tar.file"
+ 	          value="${build.rpm}/SOURCES/${name}-${version}.tar.gz"/>
+
+	<!-- Install directory configuration -->
+	<property name="install.dir" value="${build.dir}/install"/>
+
+	<!-- Dependent jar configuration -->
+	<property name="scheduler.jar"
+		  value="scheduler-${scheduler.version}.jar"/>
+	<property name="sonar.server.jar"
+		  value="sonar-server-${sonar.version}.jar"/>
+	<property name="sonar.client.jar"
+		  value="sonar-client-${sonar.version}.jar"/>
+	<property name="mapbean.jar" value="mapbean-${mapbean.version}.jar"/>
+	<property name="geokit.jar" value="geokit-${geokit.version}.jar"/>
+	<property name="server.jar" value="${name}-server-${version}.jar"/>
+	<property name="common.jar" value="${name}-common-${version}.jar"/>
+	<property name="client.jar" value="${name}-client-${version}.jar"/>
+
+	<!-- Compiler configuration -->
+	<property name="build.compiler.pedantic" value="true"/>
+	<path id="classpath">
+		<fileset dir="${lib.dir}">
+			<include name="mail.jar"/>
+			<include name="${geokit.jar}"/>
+			<include name="${mapbean.jar}"/>
+			<include name="${scheduler.jar}"/>
+			<include name="${sonar.server.jar}"/>
+			<include name="${sonar.client.jar}"/>
+		</fileset>
+	</path>
+
+	<!-- junit related -->
+	<property name="testsrc.dir" location="test"/>
+	<property name="testbuild.dir" location="${build.dir}/test"/>
+	<property name="testdata.dir" location="${testbuild.dir}/data"/>
+	<property name="testreports.dir" location="${testbuild.dir}/reports"/>
+	<path id="junit.classpath">
+		<path refid="classpath"/>
+		<pathelement location="${build.dir}/classes"/>
+		<pathelement location="${build.dir}/test"/>
+	</path>
+
+	<!-- Check for one file dependancy -->
+	<target name="check-dep">
+		<available property="file.exists"
+			   file="${lib.dir}/${file.dep}"/>
+		<fail unless="file.exists"
+		      message="Missing dependency: ${lib.dir}/${file.dep}"/>
+	</target>
+
+	<!-- Check for one subproject dependancy -->
+	<target name="check-subproject">
+		<available property="file.exists"
+			   file="${lib.dir}/${file.dep}"/>
+		<antcall target="build-subproject"/>
+	</target>
+
+	<!-- Build a subproject -->
+	<target name="build-subproject" unless="file.exists">
+		<antcall target="hg-check"/>
+		<copy todir="${build.deps}/${repo.name}/lib">
+			<fileset dir="${lib.dir}"/>
+		</copy>
+		<ant dir="${build.deps}/${repo.name}"
+		     target="jar" inheritAll="false"/>
+		<copy todir="${lib.dir}">
+			<fileset dir="${build.deps}/${repo.name}/build/lib/"/>
+		</copy>
+	</target>
+
+	<!-- Check a mercurial subproject -->
+	<target name="hg-check" unless="file.exists">
+		<available property="dir.exists"
+		           file="${build.deps}/${repo.name}"/>
+		<antcall target="hg-clone"/>
+	</target>
+
+	<!-- Clone a mercurial subproject -->
+	<target name="hg-clone" unless="dir.exists">
+		<mkdir dir="${build.deps}"/>
+		<exec executable="hg" dir="${build.deps}" failonerror="true">
+			<arg value="clone"/>
+			<arg value="-r${repo.version}"/>
+			<arg value="${hgbase.url}${repo.name}"/>
+		</exec>
+	</target>
+
+	<!-- Check for dependencies -->
+	<target name="check">
+		<antcall target="check-dep">
+			<param name="file.dep" value="iris-build.properties"/>
+		</antcall>
+		<antcall target="check-dep">
+			<param name="file.dep" value="mail.jar"/>
+		</antcall>
+		<antcall target="check-subproject">
+			<param name="file.dep" value="${scheduler.jar}"/>
+			<param name="repo.name" value="scheduler"/>
+			<param name="repo.version"
+			       value="${scheduler.version}"/>
+		</antcall>
+		<antcall target="check-subproject">
+			<param name="file.dep" value="${sonar.server.jar}"/>
+			<param name="repo.name" value="sonar"/>
+			<param name="repo.version" value="${sonar.version}"/>
+		</antcall>
+		<antcall target="check-subproject">
+			<param name="file.dep" value="${sonar.client.jar}"/>
+			<param name="repo.name" value="sonar"/>
+			<param name="repo.version" value="${sonar.version}"/>
+		</antcall>
+		<antcall target="check-subproject">
+			<param name="file.dep" value="${geokit.jar}"/>
+			<param name="repo.name" value="geokit"/>
+			<param name="repo.version" value="${geokit.version}"/>
+		</antcall>
+		<antcall target="check-subproject">
+			<param name="file.dep" value="${mapbean.jar}"/>
+			<param name="repo.name" value="mapbean"/>
+			<param name="repo.version" value="${mapbean.version}"/>
+		</antcall>
+	</target>
+
+	<!-- Prepare the build/etc directory -->
+	<target name="prepare-etc">
+		<copy todir="${build.etc}">
+			<fileset dir="${etc.dir}"/>
+			<filterset begintoken="@@" endtoken="@@">
+				<filter token="NAME" value="${name}"/>
+				<filter token="VERSION" value="${version}"/>
+				<filter token="SCHEDULER.VERSION"
+				        value="${scheduler.version}"/>
+				<filter token="SONAR.VERSION"
+					value="${sonar.version}"/>
+				<filter token="GEOKIT.VERSION"
+				        value="${geokit.version}"/>
+				<filter token="MAPBEAN.VERSION"
+					value="${mapbean.version}"/>
+				<filter token="BUILD.RPM" value="${build.rpm}"/>
+				<filter token="RPM.URL" value="${rpm.url}"/>
+				<filter token="RPM.RELEASE"
+				        value="${rpm.release}"/>
+				<filter token="RPM.DESCRIPTION"
+				        value="${rpm.description}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<!-- Prepare the build directory -->
+	<target name="prepare"
+	        depends="prepare-etc">
+
+		<copy todir="${build.src}" filtering="true">
+			<fileset dir="${src.dir}"/>
+			<filterset begintoken="@@" endtoken="@@">
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+
+		<copy todir="${build.bin}">
+			<fileset dir="${bin.dir}" />
+			<filterset begintoken="@@" endtoken="@@">
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+
+		<copy todir="${build.images}">
+			<fileset dir="${images.dir}">
+				<include name="*.png"/>
+				<include name="*.jpg"/>
+			</fileset>
+		</copy>
+
+		<mkdir dir="${build.classes}"/>
+		<mkdir dir="${build.lib}"/>
+		<mkdir dir="${build.i18n}"/>
+		<copy todir="${build.i18n}">
+			<fileset dir="${i18n.dir}">
+				<include name="*.properties"/>
+			</fileset>
+			<filterset begintoken="@@" endtoken="@@">
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<!-- Compile the source code -->
+	<target name="compile"
+	        depends="check,prepare"
+	        description="Compile all of the source files">
+		<javac srcdir="${build.src}"
+		       destdir="${build.classes}"
+		       debug="${debug}"
+		       deprecation="on"
+		       includeantruntime="true"
+		       source="1.6"
+		       target="1.6">
+			<classpath refid="classpath"/>
+<!--			<compilerarg value="-Xlint:unchecked"/> -->
+		</javac>
+	</target>
+
+	<!-- Create the server jar -->
+	<target name="server-jar"
+		depends="compile"
+		description="Create the iris-server jar">
+		<jar jarfile="${build.lib}/${server.jar}"
+		     manifest="${build.etc}/${manifest.server}">
+			<fileset dir="${build.classes}">
+				<include name="us/mn/state/dot/tms/server/**/*"/>
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- Create the iris server distribution -->
+	<target name="server"
+		depends="server-jar,common-jar"
+		description="Create the iris server distribution">
+		<copy todir="${dist.server}">
+			<fileset dir="${build.lib}">
+				<include name="${server.jar}"/>
+				<include name="${common.jar}"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist.server}">
+			<fileset dir="${lib.dir}">
+				<include name="mail.jar"/>
+				<include name="${scheduler.jar}"/>
+				<include name="${geokit.jar}"/>
+				<include name="${sonar.server.jar}"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Create the common jar -->
+	<target name="common-jar"
+		depends="compile">
+		<jar jarfile="${build.lib}/${common.jar}">
+			<fileset dir="${build.classes}"
+				 includes="us/mn/state/dot/tms/*.class"/>
+			<fileset dir="${build.classes}"
+				 includes="us/mn/state/dot/tms/units/*.class"/>
+			<fileset dir="${build.classes}"
+				 includes="us/mn/state/dot/tms/utils/*.class"/>
+			<fileset dir="${build.i18n}"/>
+		</jar>
+	</target>
+
+	<!-- Create the client jar -->
+	<target name="client-jar"
+	        depends="compile"
+	        description="Create the iris-client jar">
+		<jar jarfile="${build.lib}/${client.jar}"
+		     manifest="${build.etc}/${manifest.client}">
+			<fileset dir="${build.classes}"
+				 includes="us/mn/state/dot/tms/client/**/*"/>
+			<fileset dir="${build.dir}" includes="images/*"/>
+		</jar>
+	</target>
+
+	<!-- Create the iris client distribution -->
+	<target name="client"
+	        depends="client-jar,common-jar"
+	        description="Create the iris client distribution">
+		<mkdir dir="${dist.client}"/>
+		<copy todir="${dist.client}">
+			<fileset dir="${build.etc}">
+				<include name="*.jnlp"/>
+				<include name="index.html"/>
+			</fileset>
+			<fileset dir="${build.bin}">
+				<include name="iris.sh"/>
+				<include name="iris.bat"/>
+			</fileset>
+		</copy>
+		<chmod file="${dist.client}/iris.sh" perm="ugo+x"/>
+		<fixcrlf srcDir="${dist.client}" eol="crlf" includes="*.bat"/>
+		<fixcrlf srcDir="${dist.client}" eol="lf" includes="*.sh"/>
+
+		<touch file="${dist.client}/session_ids"/>
+
+		<mkdir dir="${dist.client}/images"/>
+		<copy todir="${dist.client}/images">
+			<fileset dir="${images.dir}">
+				<include name="iris.png"/>
+				<include name="iris_icon.png"/>
+			</fileset>
+		</copy>
+
+		<mkdir dir="${dist.client}/lib"/>
+		<copy todir="${dist.client}/lib">
+			<fileset dir="${lib.dir}">
+				<include name="mail.jar"/>
+				<include name="${scheduler.jar}"/>
+				<include name="${geokit.jar}"/>
+				<include name="${mapbean.jar}"/>
+				<include name="${sonar.client.jar}"/>
+			</fileset>
+			<fileset dir="${build.lib}">
+				<include name="${common.jar}"/>
+				<include name="${client.jar}"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Create the full iris distribution -->
+	<target name="dist"
+	        depends="server,client"
+	        description="Create the full iris distribution">
+
+		<signjar keystore="${sign.store}" storepass="${sign.store.pass}"
+		         alias="${sign.alias}" keypass="${sign.alias.pass}"
+			 lazy="true">
+			<fileset dir="${dist.client}/lib">
+				<include name="*.jar"/>
+			</fileset>
+		</signjar>
+	</target>
+
+	<!-- Install iris client and server -->
+	<target name="install"
+	        depends="dist"
+	        description="Install the full iris distribution">
+
+		<copy todir="${install.dir}/usr/lib/systemd/system">
+			<fileset file="${build.bin}/iris.service"/>
+		</copy>
+		<chmod file="${install.dir}/usr/lib/systemd/system" perm="660"/>
+
+		<copy todir="${install.dir}/usr/bin">
+			<fileset file="${build.bin}/iris_ctl"/>
+		</copy>
+		<chmod file="${install.dir}/usr/bin/iris_ctl" perm="755"/>
+
+		<copy todir="${install.dir}/etc/iris">
+			<fileset file="${etc.dir}/iris-client.properties"/>
+			<fileset file="${etc.dir}/iris-server.properties"/>
+		</copy>
+		<chmod file="${install.dir}/etc/iris/*" perm="660"/>
+
+		<mkdir dir="${install.dir}/var/lib/iris/sql"/>
+		<copy todir="${install.dir}/var/lib/iris/sql">
+			<fileset file="${sql.dir}/tms-template.sql"/>
+			<fileset file="${sql.dir}/migrate-*.sql"/>
+		</copy>
+		<mkdir dir="${install.dir}/var/lib/iris/sql/fonts"/>
+		<copy todir="${install.dir}/var/lib/iris/sql/fonts">
+			<fileset file="${sql.dir}/fonts/*.sql"/>
+		</copy>
+		<mkdir dir="${install.dir}/var/lib/iris/meter"/>
+		<mkdir dir="${install.dir}/var/lib/iris/traffic"/>
+		<mkdir dir="${install.dir}/var/log/iris"/>
+		<mkdir dir="${install.dir}/var/www/html/iris_xml"/>
+
+		<copy todir="${install.dir}/usr/share/java/${dist.server}">
+			<fileset dir="${dist.server}"/>
+		</copy>
+
+		<copy todir="${install.dir}/etc/security/limits.d">
+			<fileset file="${build.etc}/99-tms.conf"/>
+		</copy>
+
+		<copy todir="${install.dir}/etc/httpd/conf.d">
+			<fileset file="${build.etc}/iris.conf"/>
+		</copy>
+
+		<copy todir="${install.dir}/var/www/html/${dist.client}">
+			<fileset dir="${dist.client}"
+			         excludes="iris.bat,iris.sh"/>
+		</copy>
+	</target>
+
+	<!-- Create source tarball -->
+	<target name="tarball"
+	        depends="check"
+	        description="Create source tarball">
+		<copy todir="${build.tar}">
+			<fileset dir="${basedir}" excludes="build/**" />
+		</copy>
+		<tar destfile="${tar.file}"
+		     basedir="${build.dir}"
+		     includes="${name}-${version}/"
+		     compression="gzip" />
+	</target>
+
+	<!-- Create an RPM package -->
+	<target name="rpm"
+	        depends="prepare-etc,tarball"
+	        description="Create an RPM package">
+		<mkdir dir="${build.rpm}/BUILD"/>
+		<mkdir dir="${build.rpm}/BUILDROOT"/>
+		<mkdir dir="${build.rpm}/RPMS"/>
+		<mkdir dir="${build.rpm}/SOURCES"/>
+		<mkdir dir="${build.rpm}/SPECS"/>
+		<mkdir dir="${build.rpm}/SRPMS"/>
+		<copy todir="${build.rpm}/SPECS">
+			<fileset file="${build.etc}/iris.spec"/>
+		</copy>
+		<exec executable="rpmbuild"
+		      dir="${build.rpm}"
+		      failonerror="true">
+			<arg value="-ba"/>
+			<arg value="--buildroot"/>
+			<arg value="${build.rpm}/BUILDROOT"/>
+			<arg value="${build.rpm}/SPECS/iris.spec"/>
+		</exec>
+	</target>
+
+	<!-- Create the API documentation -->
+	<target name="docs"
+	        depends="prepare"
+	        description="Create the API documentation">
+		<mkdir dir="${build.javadocs}" />
+		<javadoc packagenames="${packages}"
+		         classpathref="classpath"
+			 sourcepath="${src.dir}"
+		         destdir="${build.javadocs}"
+		         author="true"
+		         version="true"
+			 windowtitle="${name} version ${version} API"
+			 doctitle="${name} version ${version}"
+		         bottom="Copyright &#169; Minnesota Department of
+		                 Transportation. All Rights Reserved."/>
+	</target>
+
+	<!-- Clean up generated stuff -->
+	<target name="clean"
+	        description="Remove the build and distribution directories">
+		<delete dir="${build.dir}"/>
+		<delete dir="${dist.server}"/>
+		<delete dir="${dist.client}"/>
+	</target>
+
+	<!-- Clean up everything -->
+	<target name="distclean"
+	        description="Clean to the base repository distribution"
+	        depends="clean">
+		<mkdir dir="${lib.dir}" />
+		<delete>
+			<fileset dir="${lib.dir}">
+				<include name="${scheduler.jar}"/>
+				<include name="${geokit.jar}"/>
+				<include name="${mapbean.jar}"/>
+				<include name="${sonar.client.jar}"/>
+				<include name="${sonar.server.jar}"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<!-- init junit dirs-->
+	<target name="init-junit"
+		depends="prepare">
+		<delete dir="${testdata.dir}"/>
+		<delete dir="${testreports.dir}"/>
+		<mkdir dir="${testbuild.dir}" />
+		<mkdir dir="${testdata.dir}" />
+		<mkdir dir="${testreports.dir}" />
+	</target>
+
+	<!-- compile junit test cases -->
+	<target name="compile-junit"
+		depends="compile, init-junit">
+		<javac srcdir="${testsrc.dir}"
+		       destdir="${testbuild.dir}"
+		       debug="true"
+		       deprecation="on"
+		       includeantruntime="true"
+		       source="1.6"
+		       target="1.6">
+			<classpath refid="junit.classpath"/>
+		</javac>
+	</target>
+
+	<!-- run junit test cases -->
+	<target name="test" depends="compile-junit"
+		description="Run junit test cases">
+		<junit printsummary="yes" 
+			fork="yes" 
+			haltonfailure="yes" 
+			errorProperty="test.failed" 
+			failureProperty="test.failed">
+			<assertions><enable/></assertions>
+			<classpath refid="junit.classpath"/>
+			<formatter type="plain" usefile="false"/>
+			<formatter type="xml" usefile="true"/>
+			<jvmarg value="-Ddebug=true"/>
+			<batchtest todir="${testreports.dir}">
+				<fileset dir="${testbuild.dir}" includes="**/*Test.class"/>
+			</batchtest>
+		</junit>
+		<fail message="Junit tests failed. Check log and/or reports."
+		       if="test.failed"/>
+	</target>
+
+</project>

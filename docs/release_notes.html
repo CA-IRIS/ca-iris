@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" name="Author" content="Douglas Lau"/>
+	<link href="iris_doc.css" rel="stylesheet" type="text/css"/>
+	<title>MnDOT IRIS 4.x Release Notes</title>
+</head>
+
+<body>
+<h1>MnDOT IRIS 4.x Release Notes</h1>
+<dl>
+	<dt>4.26.0 (30 September 2015)</dt>
+	<dd><ul>
+		<li>
+			Fixed a rare deadlock in comm link error handling.
+		</li>
+		<li>
+			Added driver for Transcore E6 tag readers.
+		</li>
+		<li>
+			Added AXIS JPEG encder type.
+		</li>
+		<li>
+			Added DMS reinit detect for dmsxml protocol.
+		</li>
+		<li>
+			Dropped support for insecure SSLv3.
+		</li>
+		<li>
+			Fixed an NPE in ss105 driver.
+		</li>
+		<li>
+			Fixed a couple of Addco DMS bugs.
+		</li>
+	</ul></dd>
+	<dt>4.25.0 (17 August 2015)</dt>
+	<dd><ul>
+		<li>
+			Added driver protocol for addco DMS signs.
+		</li>
+		<li>
+			Fixed various minor NTCIP problems.
+		</li>
+		<li>
+			Added simple algorithm for toll pricing.
+		</li>
+		<li>
+			Renamed travel_time_max_legs system attribute to
+			route_max_legs.
+		</li>
+		<li>
+			Renamed travel_time_max_miles system attribute to
+			route_max_miles.
+		</li>
+	</ul></dd>
+	<dt>4.24.0 (25 June 2015)</dt>
+	<dd><ul>
+		<li>
+			Added basic toll zone DB table and class.
+		</li>
+		<li>
+			Enhanced NTCIP "send DMS message" operation to check
+			graphic IDs and update graphics if necessary.
+		</li>
+		<li>
+			Added NTCIP workaround for Daktronics DMS.
+		</li>
+		<li>
+			Refactored NTCIP MIB code to use Java enum.
+		</li>
+		<li>
+			Fixed NTCIP 24-bit graphics to use BGR (not RGB).
+		</li>
+		<li>
+			Added support for closing [/sc] (character spacing)
+			MULTI tags.
+		</li>
+		<li>
+			Fixed problems with NTCIP exception handling.
+		</li>
+		<li>
+			Split out SNMP code from NTCIP driver.
+		</li>
+		<li>
+			Added map_extent_name_initial system attribute.
+		</li>
+		<li>
+			Added speed_limit_min_mph, speed_limit_default_mph, and
+			speed_limit_max_mph system attributes.
+		</li>
+	</ul></dd>
+	<dt>4.23.0 (20 Apr 2015)</dt>
+	<dd><ul>
+		<li>
+			Improved on client exception handling.
+		</li>
+		<li>
+			Fixed some DMS message rendering issues.
+		</li>
+		<li>
+			Fixed a couple of client race bugs.
+		</li>
+		<li>
+			Fixed a camera playlist bug.
+		</li>
+		<li>
+			Updated G4 driver for new firmware.
+		</li>
+		<li>
+			Merged duplicate CRC implementations.
+		</li>
+		<li>
+			Added camera_wiper_precip_mm_hr system attribute.
+		</li>
+		<li>
+			Removed KML output.
+		</li>
+	</ul></dd>
+	<dt>4.22.0 (26 Jan 2015)</dt>
+	<dd><ul>
+		<li>
+			Redesigned comm link form to allow sorting and filtering
+			controllers.
+		</li>
+		<li>
+			Added optional camera streaming controls and external
+			viewer support.
+		</li>
+		<li>
+			Internationalized error message dialogs.
+		</li>
+		<li>
+			Improved multiple DMS selection speed.
+		</li>
+		<li>
+			Fixed a couple of minor gate arm problems.
+		</li>
+		<li>
+			Fixed some client repainting problems.
+		</li>
+	</ul></dd>
+	<dt>4.21.0 (18 Dec 2014)</dt>
+	<dd><ul>
+		<li>
+			Removed system attributes which allowed specifying a
+			filesystem path (gate arm security fix).
+			Use hardcoded values for kml_filename,
+			uptime_log_filename, xml_output_directory,
+			and sample_archive_directory.
+		</li>
+		<li>
+			Replaced controller "active" boolean with "condition"
+			enum (planned, active, construction, removed).
+		</li>
+		<li>
+			Removed obsolete station.xml output.
+		</li>
+		<li>
+			Fixed some user interface glitches.
+		</li>
+	</ul></dd>
+	<dt>4.20.0 (11 Dec 2014)</dt>
+	<dd><ul>
+		<li>
+			Added "Create" button below all object table forms to
+			make UI more discoverable.
+		</li>
+		<li>
+			Added logging for beacon events.
+		</li>
+		<li>
+			Added optional "Store" button to create quick messages.
+		</li>
+		<li>
+			Added milepoint column to geo_loc table.
+		</li>
+		<li>
+			Fixed "Failed Controller" update problems.
+		</li>
+		<li>
+			Cleaned up and refactored UI code.
+		</li>
+	</ul></dd>
+	<dt>4.19.0 (12 Nov 2014)</dt>
+	<dd><ul>
+		<li>
+			Added generic protocol debugging infrastructure.
+		</li>
+		<li>
+			Removed obsolete vicon switcher driver.
+		</li>
+		<li>
+			Added ramp meter lock "Construction" value.
+		</li>
+		<li>
+			Cleaned up protocol driver API.
+		</li>
+		<li>
+			Refactored mndot170 protocol driver.
+		</li>
+	</ul></dd>
+	<dt>4.18.0 (27 Oct 2014)</dt>
+	<dd><ul>
+		<li>
+			Add support for "internal" DMS beacons to NTCIP
+			protocol.
+		</li>
+		<li>
+			Enable ramp meters to have external advance warning
+			beacons.
+		</li>
+		<li>
+			Enable DMS to have external beacons.
+		</li>
+		<li>
+			Allow DMS actions to specify beacon state.
+		</li>
+		<li>
+			Add "tag reader" objects for tolling sensors.
+		</li>
+		<li>
+			Added automatic camera wiper function when nearby
+			weather sensor indicates high precipitation rate.
+		</li>
+		<li>
+			UI cleanups for camera preset functions.
+		</li>
+		<li>
+			Fixed lots of problems with vicon PTZ protocol.
+		</li>
+		<li>
+			Restored controller_report and related database views.
+		</li>
+		<li>
+			Added better DevicePoller abstraction to allow use of
+			NIO for future protocol drivers.
+		</li>
+	</ul></dd>
+	<dt>4.17.0 (6 Oct 2014)</dt>
+	<dd><ul>
+		<li>
+			Added camera presets, which can be associated with
+			DMS, ramp meters or beacons.
+		</li>
+		<li>
+			Allow client tab ordering via user.properties file.
+		</li>
+		<li>
+			Added device_controller_view.
+		</li>
+		<li>
+			Removed controller_report and related database views.
+		</li>
+		<li>
+			Improved documentation.
+		</li>
+	</ul></dd>
+	<dt>4.16.0 (19 Sep 2014)</dt>
+	<dd><ul>
+		<li>
+			Ahoy Mateys!
+		</li>
+		<li>
+			Added support for wipers in Pelco D protocol.
+		</li>
+		<li>
+			Added focus, iris and wiper control to Vicon protocol.
+		</li>
+		<li>
+			Added focus, iris, wiper and preset control to
+			manchester protocol.
+		</li>
+		<li>
+			Improved queue control for ramp metering.
+		</li>
+		<li>
+			Added alternate (simpler) user interface for camera PTZ
+			and lens functions.
+		</li>
+		<li>
+			Added a database schema test script.
+		</li>
+		<li>
+			Replaced all SQL rewrite rules with triggers.
+		</li>
+	</ul></dd>
+	<dt>4.15.0 (28 Aug 2014)</dt>
+	<dd><ul>
+		<li>
+			Fixed queue estimation in metering algorithm.
+		</li>
+		<li>
+			Improved meter event logging.
+		</li>
+		<li>
+			Cleaned up DMS sign message composer code.
+		</li>
+	</ul></dd>
+	<dt>4.14.0 (5 Aug 2014)</dt>
+	<dd><ul>
+		<li>
+			Simplified start/stop logic for metering algorithm.
+		</li>
+		<li>
+			Cleaned up code for density adaptive metering algorithm.
+		</li>
+		<li>
+			Enhanced document describing density metering algorithm.
+		</li>
+		<li>
+			Allowed density metering for meters on CD roads.
+		</li>
+		<li>
+			Purge comm events after comm_event_purge_days sys attr.
+		</li>
+		<li>
+			Log meter events in meter_event DB table.
+		</li>
+		<li>
+			Purge meter events after meter_event_purge_days attr.
+		</li>
+		<li>
+			Fallback to iris-client.properties for any properties
+			missing from user.properties file.
+		</li>
+	</ul></dd>
+	<dt>4.13.0 (25 Jun 2014)</dt>
+	<dd><ul>
+		<li>
+			Added user interface for camera misc. functions.
+		</li>
+		<li>
+			Added Cohu camera PTZ protocol.
+		</li>
+		<li>
+			Cleaned up code for density adaptive metering algorithm.
+		</li>
+		<li>
+			Added document describing density metering algorithm.
+		</li>
+		<li>
+			Fixed a couple of bugs in NTCIP protocol driver.
+		</li>
+		<li>
+			Fixed URI parsing problem in dinrelay driver.
+		</li>
+		<li>
+			Fixed an exception in DMS message rendering.
+		</li>
+		<li>
+			Improved installation scripts.
+		</li>
+		<li>
+			Improved client login code.
+		</li>
+	</ul></dd>
+	<dt>4.12.0 (4 Mar 2014)</dt>
+	<dd><ul>
+		<li>
+			Added beacon actions for action plans.
+		</li>
+		<li>
+			Fixed an NTCIP error with brightness tables.
+		</li>
+		<li>
+			Added support for beacons to dinrelay protocol.
+		</li>
+		<li>
+			Cleaned up SQL template functions.
+		</li>
+	</ul></dd>
+	<dt>4.11.0 (19 Feb 2014)</dt>
+	<dd><ul>
+		<li>
+			Renamed "Warning Sign" devices to "Beacons".
+		</li>
+		<li>
+			Use comm. link poll period for alarms, weather stations,
+			DMS, Beacons and Gate Arms.
+		</li>
+		<li>
+			Added lots of content to administrator guide.
+		</li>
+		<li>
+			Don't recommend invalid lane indications for DLCS.
+		</li>
+		<li>
+			Fixed problems in RPM .spec file.
+		</li>
+		<li>
+			Removed unused ramp metering algorithm.
+		</li>
+		<li>
+			Added "System disable" button for gate arms.
+		</li>
+		<li>
+			Cleaned up more code.
+		</li>
+	</ul></dd>
+	<dt>4.10.0 (29 Jan 2014)</dt>
+	<dd><ul>
+		<li>
+			Added poll_enabled and poll_period to CommLink.
+		</li>
+		<li>
+			Added client "Edit Mode" toggle button.
+		</li>
+		<li>
+			Fixed a couple of client administration bugs.
+		</li>
+		<li>
+			Added support for more NTCIP MULTI tags.
+		</li>
+		<li>
+			Fixed various gate arm problems.
+		</li>
+		<li>
+			Added client IP whitelisting for gate arm control.
+		</li>
+		<li>
+			Improved threading on client.
+		</li>
+		<li>
+			Lots of code cleanups.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.10.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.9.0 (10 Oct 2013)</dt>
+	<dd><ul>
+		<li>
+			Updated SONAR wire-protocol to allow null references
+			to be encoded properly.
+		</li>
+		<li>
+			Added "styles" attribute to LCS arrays.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.9.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.8.0 (7 Oct 2013)</dt>
+	<dd><ul>
+		<li>
+			Added Gate Arm device types, with new user interface.
+		</li>
+		<li>
+			Added STC gate arm driver (HySecurity STC).
+		</li>
+		<li>
+			Removed hard-coded sample file extensions by adding
+			SampleArchiveFactory.hasKnownExtension.
+		</li>
+		<li>
+			Added incident_view to database.
+		</li>
+		<li>
+			Added infinova debug log.
+		</li>
+		<li>
+			Fixed ramp meter showing as "METERING" when failed.
+		</li>
+		<li>
+			Updated SQL template to use more modern techniques.
+		</li>
+		<li>
+			Cleaned up user interface code.
+		</li>
+		<li>
+			Added simple protocol emulator (protest) in D.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.8.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.7.0 (29 May 2013)</dt>
+	<dd><ul>
+		<li>
+			Added "abandoned" flag to r_nodes.
+		</li>
+		<li>
+			Added check constraints for r_node lane shift values.
+		</li>
+		<li>
+			Added SQL script to "center" r_node shift values.
+		</li>
+		<li>
+			Use "lane configuration panel" for incident impact
+			widget.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.7.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.6.0 (22 May 2013)</dt>
+	<dd><ul>
+		<li>
+			Renamed sign_text priority to rank.
+		</li>
+		<li>
+			Fixed widget rendering problems on Windows.
+		</li>
+		<li>
+			Improved lane configuration on LCS (shoulders).
+		</li>
+		<li>
+			Added "Center Map" menu item to some objects.
+		</li>
+		<li>
+			Cleaned up client component code.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.6.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.5.0 (14 May 2013)</dt>
+	<dd><ul>
+		<li>
+			Improved font editor user interface.
+		</li>
+		<li>
+			Added 15 standard DMS fonts to database template.
+		</li>
+		<li>
+			Updated LCS deployment policy for incidents.
+		</li>
+		<li>
+			Improved client user interface style consistency.
+		</li>
+		<li>
+			Improved styles updates for DMS and ramp meters.
+		</li>
+		<li>
+			Added cabinet_view to database.
+		</li>
+		<li>
+			Fixed a timestamp problem in RTMS G4 driver.
+		</li>
+		<li>
+			Fixed parsing of NTCIP Counter objects.
+		</li>
+		<li>
+			Improved handling of invalid NTCIP state changes.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.5.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.4.0 (24 April 2013)</dt>
+	<dd><ul>
+		<li>
+			Improved sign_event_view and recent_sign_event_view.
+		</li>
+		<li>
+			Fixed a bug in fake detector parsing.
+		</li>
+		<li>
+			Improved map tile loading.
+		</li>
+		<li>
+			Improved installation procedure.
+		</li>
+		<li>
+			Fixed quirk in DMS sign pixel panel sizing.
+		</li>
+		<li>
+			Fixed problems with K-adaptive metering algorithm.
+		</li>
+		<li>
+			Added "styles" attribute to meter and DMS.
+		</li>
+		<li>
+			Added some missing NTCIP 1203 objects.
+		</li>
+		<li>
+			Replaced "dms" and "lcs" debug logs with "ntcip".
+		</li>
+		<li>
+			Updated U of M density metering algorithm.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.4.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.3.0 (8 April 2013)</dt>
+	<dd><ul>
+		<li>
+			Added custom [slow...] MULTI tag for "slow traffic
+			ahead" type warnings.
+		</li>
+		<li>
+			Fixed bug which prevented updates to sign text multi
+			strings from being stored in database.
+		</li>
+		<li>
+			Removed more unnecessary attribute updates from server.
+		</li>
+		<li>
+			Cleaned up detector_view in database.
+		</li>
+		<li>
+			Added "units" subpackage with classes defined for
+			Distance, Interval, Speed and Temperature.  Converted
+			code to use units instead of raw int and float values.
+		</li>
+		<li>
+			Fixed problem with DMS page on/off time and multiple
+			page messages.
+		</li>
+		<li>
+			Fixed a bug in LCS array administration.
+		</li>
+		<li>
+			Fixed a serious bug in dinrelay protocol.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.3.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.2.0 (17 January 2013)</dt>
+	<dd><ul>
+		<li>
+			Replaced camera PTZ button panel with on-screen PTZ
+			control (mouse click pan/tilt; mouse wheel for zoom).
+		</li>
+		<li>
+			Added alarm trigger time attribute.
+		</li>
+		<li>
+			Reduced resource usage of client program.
+		</li>
+		<li>
+			Removed unnecessary attribute updates from server.
+		</li>
+		<li>
+			Fixed resource leak problems with client.
+		</li>
+		<li>
+			Lots of code cleanups.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.2.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.1.0 (2 January 2013)</dt>
+	<dd><ul>
+		<li>
+			Store vehicle classification data for ss105, ss125 and
+			g4 drivers.
+		</li>
+		<li>
+			Updated Wavetronix HD driver for newer firmware.
+		</li>
+		<li>
+			Fixed whole class of NullPointerException problems
+			caused by deleted SONAR objects.
+		</li>
+		<li>
+			Fixed client JNLP problem with proxy servers.
+		</li>
+		<li>
+			Use concurrent data structure for sonar object caches;
+			no locking needed in most cases.
+			This should improve client responsiveness.
+		</li>
+		<li>
+			Added debug logs for each scheduler (thread).
+		</li>
+		<li>
+			Continued major cleanup of comm protocol drivers.
+		</li>
+		<li>
+			Lots of other code cleanups and improvements.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.1.sql</code>.
+		</li>
+	</ul></dd>
+	<dt>4.0.0 (14 November 2012)</dt>
+	<dd><ul>
+		<li>
+			Updated to use SystemD instead of old SysV init.
+		</li>
+		<li>
+			Server now depends on OpenJDK 1.7
+		</li>
+		<li>
+			Initial configuration of server now is performed by
+			iris_ctl script (see administrator guide).
+		</li>
+		<li>
+			RPM is now "noarch", and can be used on either 32-bit
+			or 64-bit systems.
+		</li>
+		<li>
+			Fixed connection problems with G4 driver.
+		</li>
+		<li>
+			Started major cleanup of protocol drivers.
+		</li>
+		<li>
+			Fixed a couple of minor bugs.
+		</li>
+		<li>
+			Iris client and server must be upgraded together.
+			Migrate script must be run to update database:
+			<code>psql tms -f migrate-4.0.sql</code>.
+		</li>
+	</ul></dd>
+</dl>
+<a href="release_notes_3.html">IRIS 3.x Release Notes</a>
+
+</body>
+</html>

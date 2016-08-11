@@ -1,0 +1,18 @@
+\set ON_ERROR_STOP
+
+SET SESSION AUTHORIZATION 'tms';
+
+INSERT INTO iris.capability (name, enabled) VALUES ('weather_tab', true);
+
+INSERT INTO iris.privilege
+	(name, capability, pattern, priv_r, priv_w, priv_c, priv_d)
+	VALUES
+	('prv_ws1', 'weather_tab', 'weather_sensor(/.*)?',
+	true, false, false, false);
+
+INSERT INTO iris.role_capability (role, capability)
+	VALUES ('administrator', 'weather_tab');
+
+INSERT INTO iris.role_capability (role, capability)
+	VALUES ('operator', 'weather_tab');
+

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- JNLP File for iris-client Web Start Application -->
+<jnlp spec="1.0"
+      codebase="http://@@WEBSTART.HOST@@/iris-client"
+      href="iris-client.jnlp">
+    <information>
+	<title>IRIS</title>
+	<vendor>MnDOT</vendor>
+	<homepage href="index.html"/>
+	<description>Intelligent Roadway Information System</description>
+	<icon href="images/iris_icon.png"/>
+	<shortcut>
+		<desktop/>
+		<menu/>
+	</shortcut>
+    </information>
+    <resources>
+	<j2se version="1.6+" max-heap-size="768m"/>
+	<jar href="lib/iris-client-@@VERSION@@.jar"/>
+	<jar href="lib/iris-common-@@VERSION@@.jar"/>
+	<jar href="lib/scheduler-@@SCHEDULER.VERSION@@.jar"/>
+	<jar href="lib/sonar-client-@@SONAR.VERSION@@.jar"/>
+	<jar href="lib/mapbean-@@MAPBEAN.VERSION@@.jar"/>
+	<jar href="lib/geokit-@@GEOKIT.VERSION@@.jar"/>
+	<extension name="mail" href="mail.jnlp"/>
+    </resources>
+    <security>
+       <all-permissions/>
+    </security>
+    <application-desc main-class="us.mn.state.dot.tms.client.MainClient">
+	<argument>http://@@WEBSTART.HOST@@/iris-client/iris-client.properties</argument>
+    </application-desc>
+</jnlp>

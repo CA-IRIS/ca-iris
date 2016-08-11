@@ -1,0 +1,2 @@
+-- CA-IRIS v10.0 is a port of IRIS v4.22
+-- TODO: document upgrade sequence from CA-IRIS v9.x -> v10.0
