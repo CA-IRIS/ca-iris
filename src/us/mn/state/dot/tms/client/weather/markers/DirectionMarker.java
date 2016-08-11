@@ -16,7 +16,7 @@
 package us.mn.state.dot.tms.client.weather.markers;
 
 
-import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.Marker;
 
 /**
  * Marker used to paint weather sensors.
@@ -26,7 +26,7 @@ import us.mn.state.dot.tms.client.map.AbstractMarker;
  * @author Michael Darter
  * @author Travis Swanston
  */
-public class DirectionMarker extends AbstractMarker {
+public class DirectionMarker extends Marker {
 
 	/** Size, in pixels, to render markers */
 	static protected final int MARKER_SIZE_PIX = 20;

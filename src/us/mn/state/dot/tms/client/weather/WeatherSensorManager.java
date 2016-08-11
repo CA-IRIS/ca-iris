@@ -18,7 +18,7 @@ package us.mn.state.dot.tms.client.weather;
 
 import javax.swing.JPopupMenu;
 
-import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.Marker;
 import us.mn.state.dot.tms.client.map.MapObject;
 import us.mn.state.dot.tms.client.map.MapSearcher;
 import us.mn.state.dot.sonar.client.ProxyListener;
@@ -66,20 +66,20 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  */
 public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
-	public static final AbstractMarker DIRECTION_MARKER =
+	public static final Marker DIRECTION_MARKER =
 		new DirectionMarker();
 
-	public static final AbstractMarker PRECIP_MARKER =
+	public static final Marker PRECIP_MARKER =
 		new PrecipitationMarker();
 
-	public static final AbstractMarker VIS_MARKER =
+	public static final Marker VIS_MARKER =
 		new VisibilityMarker();
 
-	public static final AbstractMarker TEMP_MARKER =
+	public static final Marker TEMP_MARKER =
 		new TemperatureMarker();
 
 	/** The current marker */
-	protected AbstractMarker marker = DIRECTION_MARKER;
+	protected Marker marker = DIRECTION_MARKER;
 
 	public HeatmapLayer getHeatmapLayer() {
 		return heatmapLayer;
@@ -103,7 +103,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
-			AbstractMarker old_marker = marker;
+			Marker old_marker = marker;
 			switch (s) {
 			case AIR_TEMP:
 				marker = TEMP_MARKER;
@@ -151,7 +151,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	}
 
 	/** Get the current marker */
-	public AbstractMarker getMarker() {
+	public Marker getMarker() {
 		return marker;
 	}
 

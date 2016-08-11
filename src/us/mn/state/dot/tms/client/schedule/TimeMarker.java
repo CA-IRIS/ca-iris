@@ -17,14 +17,14 @@ package us.mn.state.dot.tms.client.schedule;
 import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
-import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.Marker;
 
 /**
  * Marker used to paint time plans.
  *
  * @author Douglas Lau
  */
-public class TimeMarker extends AbstractMarker {
+public class TimeMarker extends Marker {
 
 	/** Size in pixels to render marker */
 	static private final int MARKER_SIZE_PIX = 36;

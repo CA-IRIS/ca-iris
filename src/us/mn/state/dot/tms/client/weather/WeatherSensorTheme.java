@@ -29,7 +29,6 @@ import us.mn.state.dot.tms.utils.STime;
 
 import javax.swing.*;
 
-import static javafx.scene.input.KeyCode.L;
 import static us.mn.state.dot.tms.ItemStyle.AIR_TEMP;
 import static us.mn.state.dot.tms.ItemStyle.PRECIPITATION;
 import static us.mn.state.dot.tms.ItemStyle.VISIBILITY;
@@ -59,7 +58,7 @@ import static us.mn.state.dot.tms.WeatherSensorHelper.isSampleExpired;
  */
 public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
-	public static final AbstractMarker DIRECTION_MARKER =
+	public static final Marker DIRECTION_MARKER =
 		new DirectionMarker();
 
 	/** The "low" color */

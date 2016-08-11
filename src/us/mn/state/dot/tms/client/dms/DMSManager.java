@@ -92,7 +92,7 @@ public class DMSManager extends ProxyManager<DMS> {
 	protected ProxyTheme<DMS> createTheme() {
 		// NOTE: the ordering of themes controls which color is used
 		//       to render the sign icon on the map
-		ProxyTheme<DMS> theme = new ProxyTheme<DMS>(this,
+		ProxyTheme<DMS> theme = new ProxyTheme<>(this,
 			new DmsMarker());
 		theme.addStyle(ItemStyle.AVAILABLE, ProxyTheme.COLOR_AVAILABLE);
 		theme.addStyle(ItemStyle.DEPLOYED, ProxyTheme.COLOR_DEPLOYED);
@@ -107,8 +107,7 @@ public class DMSManager extends ProxyManager<DMS> {
 				COLOR_HELIOTROPE);
 		// NOTE: If a sign doesn't fit in one of the other themes,
 		//       it will be rendered using the ALL theme.
-		theme.addStyle(ItemStyle.ALL, ProxyTheme.COLOR_INACTIVE,
-			ProxyTheme.OUTLINE_INACTIVE);
+		theme.addStyle(ItemStyle.ALL); //FIXME CA-MN-MERGE , ProxyTheme.COLOR_INACTIVE,	ProxyTheme.OUTLINE_INACTIVE);
 		return theme;
 	}
 

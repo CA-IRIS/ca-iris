@@ -19,21 +19,21 @@ import java.awt.*;
 import java.awt.geom.*;
 
 /**
- * An abstract marker which delegates all Shape methods to a general path
+ * A marker which delegates Shape methods to a general path.
  *
  * @author Douglas Lau
  * @author Dan Rossiter
  */
-abstract public class AbstractMarker extends Path2D.Float {
+abstract public class Marker extends Path2D.Float {
 
 	/** Create a new abstract marker */
-	protected AbstractMarker(int c) {
+	protected Marker(int c) {
 		super(Path2D.WIND_EVEN_ODD, c);
 	}
 
 	/** Create a new abstract marker based on a shape */
 	//FIXME CA-MN-MERGE added to support Arc2D.Float objects (TimeMarker)
-	protected AbstractMarker(Shape s) {
+	protected Marker(Shape s) {
 		super(s);
 	}
 

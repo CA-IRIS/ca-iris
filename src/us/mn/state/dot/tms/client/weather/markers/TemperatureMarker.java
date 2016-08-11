@@ -14,7 +14,7 @@
  */
 package us.mn.state.dot.tms.client.weather.markers;
 
-import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.Marker;
 
 /**
  * Marker used to paint weather sensors.
@@ -26,7 +26,7 @@ import us.mn.state.dot.tms.client.map.AbstractMarker;
  *
  * @author Dan Rossiter
  */
-public class TemperatureMarker extends AbstractMarker {
+public class TemperatureMarker extends Marker {
 
     /** Create a new temp markers */
     public TemperatureMarker() {

@@ -15,7 +15,7 @@
  */
 package us.mn.state.dot.tms.client.weather.heatmap;
 
-import us.mn.state.dot.tms.client.map.AbstractMarker;
+import us.mn.state.dot.tms.client.map.Marker;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 
@@ -34,12 +34,12 @@ public class HeatmapTheme extends ProxyTheme {
 	}
 
 	/** Constructor */
-	public HeatmapTheme(ProxyManager m, AbstractMarker s) {
+	public HeatmapTheme(ProxyManager m, Marker s) {
 		super(m, s);
 	}
 
 	/** required shape of a rectangle of zero width and height */
-	private static class DummyShape extends AbstractMarker {
+	private static class DummyShape extends Marker {
 		public DummyShape(int c) {
 
 			super(c);
