@@ -51,8 +51,8 @@ public class ProxyListModel<T extends SonarObject>
 	/** Proxy comparator */
 	private final Comparator<T> comp = comparator();
 
-	/** List of displayed indices if filtered */
-	private final ArrayList<Integer> indices = new ArrayList<Integer>();
+	/** List of displayed filtered_list if filtered */
+	private final ArrayList<T> filtered_list = new ArrayList<T>();
 
 	/** The filter to determine which elements should be shown */
 	private Filter<T> filter;
@@ -72,25 +72,27 @@ public class ProxyListModel<T extends SonarObject>
 		}
 		protected void proxyAddedSwing(T proxy) {
 			int i = doProxyAdded(proxy);
-			if (i >= 0)
+			if (i >= 0) {
+				applyFilter(false);
 				fireIntervalAdded(this, i, i);
+			}
 		}
 		protected void enumerationCompleteSwing(Collection<T> proxies) {
-			removeListDataListener(filter_listener);
 			for (T proxy: proxies) {
 				if (check(proxy))
 					list.add(proxy);
 			}
 			int sz = list.size() - 1;
-			if (sz >= 0)
-				fireIntervalAdded(this, 0, sz);
-			addListDataListener(filter_listener);
-			applyFilter();
+			if (sz >= 0) {
+				applyFilter(true);
+			}
 		}
 		protected void proxyRemovedSwing(T proxy) {
 			int i = doProxyRemoved(proxy);
-			if (i >= 0)
+			if (i >= 0) {
+				applyFilter(false);
 				fireIntervalRemoved(this, i, i);
+			}
 		}
 		protected void proxyChangedSwing(T proxy, String attr) {
 			ProxyListModel.this.proxyChangedSwing(proxy);
@@ -98,27 +100,27 @@ public class ProxyListModel<T extends SonarObject>
 	};
 
 	/** Listens for changes in backing data in order to re-filter as needed */
-	private final ListDataListener filter_listener = new ListDataListener(){
-		@Override
-		public void intervalAdded(ListDataEvent e) {
-			applyFilter();
-		}
-
-		@Override
-		public void intervalRemoved(ListDataEvent e) {
-			applyFilter();
-		}
-
-		@Override
-		public void contentsChanged(ListDataEvent e) {
-			applyFilter();
-		}
-	};
+//	private final ListDataListener filter_listener = new ListDataListener(){
+//		@Override
+//		public void intervalAdded(ListDataEvent e) {
+//			applyFilter();
+//		}
+//
+//		@Override
+//		public void intervalRemoved(ListDataEvent e) {
+//			applyFilter();
+//		}
+//
+//		@Override
+//		public void contentsChanged(ListDataEvent e) {
+//			applyFilter();
+//		}
+//	};
 
 	/** Create a new proxy list model */
 	public ProxyListModel(TypeCache<T> c) {
 		cache = c;
-		addListDataListener(filter_listener);
+//		addListDataListener(filter_listener);
 	}
 
 	/** Initialize the proxy list model. This cannot be done in the
@@ -129,7 +131,7 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Dispose of the proxy model */
 	public void dispose() {
-		removeListDataListener(filter_listener);
+//		removeListDataListener(filter_listener);
 		cache.removeProxyListener(swing_listener);
 		swing_listener.dispose();
 	}
@@ -183,7 +185,7 @@ public class ProxyListModel<T extends SonarObject>
 	/** Sets the filter to be applied against members */
 	public void setFilter(Filter<T> f) {
 		filter = f;
-		applyFilter();
+		applyFilter(true);
 	}
 
 	/** Gets the filter to be applied against members */
@@ -192,25 +194,26 @@ public class ProxyListModel<T extends SonarObject>
 	}
 
 	/** Applies the filter against current members */
-	private void applyFilter() {
+	private void applyFilter(boolean fire) {
 		// prevent recursing through fireContentsChanged
 		if (applyingFilter)
 			return;
 
 		applyingFilter = true;
-		ArrayList<Integer> oldIndices = new ArrayList<Integer>(indices);
-		indices.clear();
+		ArrayList<T> oldIndices = new ArrayList<T>(
+			filtered_list);
+		filtered_list.clear();
 
 		Filter<T> f = filter;
 		if (f != null) {
 			for (int i = 0; i < list.size(); i++) {
-				if (f.accept(list.get(i)))
-					indices.add(i);
+				T x = list.get(i);
+				if (f.accept(x))
+					filtered_list.add(x);
 			}
 		}
 
-		if (oldIndices.size() != indices.size()
-			|| !IterableUtil.sequenceEqual(oldIndices, indices)) {
+		if (fire) {
 			fireContentsChanged(this, 0, getSize() - 1);
 		}
 
@@ -220,19 +223,19 @@ public class ProxyListModel<T extends SonarObject>
 	/** Gets the size */
 	@Override
 	public int getSize() {
-		return (filter != null) ? indices.size() : list.size();
+		return (filter != null) ? filtered_list.size() : list.size();
 	}
 
 	/** Get the element at the specified index (for ListModel) */
 	@Override
-	public Object getElementAt(int index) {
-		int i = (filter != null && !indices.isEmpty()) ? indices.get(index) : index;
-		return list.get(i);
+	public T getElementAt(int index) {
+		return(filter != null)
+			? filtered_list.get(index) : list.get(index);
 	}
 
 	/** Get the proxy at the specified index */
 	public T getProxy(int index) {
-		return (T)getElementAt(index);
+		return getElementAt(index);
 	}
 
 	/** Get the index of the given proxy */
