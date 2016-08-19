@@ -1,15 +1,39 @@
+/*
+ * IRIS -- Intelligent Roadway Information System
+ * Copyright (C) 2016       Southwest Research Institute
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 package uk.me.jstott.sun;
 
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import junit.framework.TestCase;
-import uk.me.jstott.coordconv.LatitudeLongitude;
+import us.mn.state.dot.tms.geo.Position;
+/**
+ * imported into IRIS framework for use in daytime/nighttime CCTV presets
+ * full source can be found here: http://www.jstott.com/jsuntimes/
+ * All source provided under GPL v2
+ *
+ * Source was modified to utilize existing classes within IRIS (e.g. Position in
+ * place of LatitudeLongitude).
+ *
+ * Jacob Barde - August 2016
+ */
 
 public class SunTest extends TestCase {
 
 	public void testSunrise() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -22,7 +46,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testMorningCivilTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -35,7 +59,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testMorningNauticalTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -48,7 +72,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testMorningAstronomicalTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -61,7 +85,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testSunset() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -74,7 +98,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testEveningCivilTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -87,7 +111,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testEveningNauticalTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();
@@ -100,7 +124,7 @@ public class SunTest extends TestCase {
 	}
 
 	public void testEveningAstronomicalTwilight() {
-		LatitudeLongitude ll = new LatitudeLongitude(51.51236489989193,
+		Position ll = new Position(51.51236489989193,
 				-0.22371768951416016);
 		TimeZone gmt = TimeZone.getTimeZone("Europe/London");
 		Calendar cal = Calendar.getInstance();

@@ -1,3 +1,17 @@
+/*
+ * IRIS -- Intelligent Roadway Information System
+ * Copyright (C) 2016       Southwest Research Institute
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 //-----------------------------------------------------------------------------
 // Time.java
 //
@@ -10,17 +24,27 @@
 //-----------------------------------------------------------------------------
 
 package uk.me.jstott.sun;
+/**
+ * imported into IRIS framework for use in daytime/nighttime CCTV presets
+ * full source can be found here: http://www.jstott.com/jsuntimes/
+ * All source provided under GPL v2
+ *
+ * Source was modified to utilize existing classes within IRIS (e.g. Position in
+ * place of LatitudeLongitude).
+ *
+ * Jacob Barde - August 2016
+ */
 
 /**
  * Class to represent a time (hh:mm.ss) object.
- * 
+ *
  * For more information on using this class, look at
  * http://www.jstott.me.uk/jsuntimes/
- * 
  * @author Jonathan Stott
  * @version 0.1
  */
 public class Time {
+
 	private int hours;
 	private int minutes;
 	private double seconds;
@@ -28,28 +52,24 @@ public class Time {
 
 	/**
 	 * Create a time object
-	 * 
-	 * @param h
-	 *            hours
-	 * @param m
-	 *            minute
-	 * @param s
-	 *            seconds
+	 * @param h hours
+	 * @param m minute
+	 * @param s seconds
 	 */
 	public Time(int h, int m, double s) {
 		if (h < 0 || h > 23) {
 			throw new IllegalArgumentException("Hours (" + h
-					+ ") must be an integer from 0 through 23");
+				+ ") must be an integer from 0 through 23");
 		}
 
 		if (m < 0 || m > 59) {
 			throw new IllegalArgumentException("Minutes (" + m
-					+ ") must be an integer from 0 through 59");
+				+ ") must be an integer from 0 through 59");
 		}
 
 		if (s < 0 || s >= 60) {
 			throw new IllegalArgumentException("Seconds (" + s
-					+ ") must be from 0 to 60");
+				+ ") must be from 0 to 60");
 		}
 
 		hours = h;
@@ -60,9 +80,7 @@ public class Time {
 	/**
 	 * Determines whether the seconds should be rounded to the nearest whole
 	 * value when using the toString() method.
-	 * 
-	 * @param r
-	 *            true to cause seconds to be rounded
+	 * @param r true to cause seconds to be rounded
 	 */
 	public void setRoundedSeconds(boolean r) {
 		roundedSeconds = r;
@@ -70,7 +88,6 @@ public class Time {
 
 	/**
 	 * Return a String representation of the Time
-	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
@@ -123,8 +140,7 @@ public class Time {
 	}
 
 	/**
-	 * @param hours
-	 *            The hours to set.
+	 * @param hours The hours to set.
 	 */
 	public void setHours(int hours) {
 		this.hours = hours;
@@ -138,8 +154,7 @@ public class Time {
 	}
 
 	/**
-	 * @param minutes
-	 *            The minutes to set.
+	 * @param minutes The minutes to set.
 	 */
 	public void setMinutes(int minutes) {
 		this.minutes = minutes;
@@ -153,8 +168,7 @@ public class Time {
 	}
 
 	/**
-	 * @param seconds
-	 *            The seconds to set.
+	 * @param seconds The seconds to set.
 	 */
 	public void setSeconds(double seconds) {
 		this.seconds = seconds;
