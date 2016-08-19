@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package uk.me.jstott.sun;
+package us.mn.state.dot.tms.utils.twilight;
 
 import junit.framework.TestCase;
 
