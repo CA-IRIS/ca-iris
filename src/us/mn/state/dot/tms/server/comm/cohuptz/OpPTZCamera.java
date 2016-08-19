@@ -25,7 +25,6 @@ import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.DeviceContentionException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Cohu PTZ operation to pan/tilt/zoom a camera.
@@ -67,9 +66,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 	 */
 	protected static final boolean use_combined_commands = true;
 
-	/** to evaluate whether to include zoom in full property/phase */
-	private final boolean stop_zoom;
-
 	/** so queued operations aren't dropped for being supposed duplicates */
 	private final long created;
 
@@ -88,10 +84,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 		pan  = p;
 		tilt = t;
 		zoom = z;
-
-		stop_zoom = use_fixed_speed ||
-			NumericAlphaComparator.compareFloats(z, 0F,
-				CohuPTZProperty.PTZ_THRESH) == 0F;
 
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p == null ? "null" : p.toString(),
@@ -119,13 +111,13 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			if(pan != null || tilt != null) {
 				log("sending full ptz");
-				mess.add(new PTZFullProperty());
+				mess.add(new PTCombinedProperty());
 				doStoreProps(mess);
 				updateOpStatus("pan/tilt sent");
 				log("pan/tilt sent");
 			}
 
-			// zoom is sent separately due to sidewinder camera
+			// zoom always sent separately due to sidewinder camera
 			return new ZoomPhase();
 		}
 
@@ -139,18 +131,18 @@ public class OpPTZCamera extends OpCohuPTZ {
 	protected class PanPhase extends Phase<CohuPTZProperty> {
 
 		protected Phase<CohuPTZProperty> poll(
-				CommMessage<CohuPTZProperty> mess)
-				throws IOException {
+			CommMessage<CohuPTZProperty> mess)
+			throws IOException {
 
-				if (pan != null) {
-					log("sending pan=" + pan);
-					mess.add(new PanProperty(pan));
-					doStoreProps(mess);
-					updateOpStatus("pan sent");
-					log("pan sent");
-				}
+			if (pan != null) {
+				log("sending pan=" + pan);
+				mess.add(new PanProperty(pan));
+				doStoreProps(mess);
+				updateOpStatus("pan sent");
+				log("pan sent");
+			}
 
-				return new TiltPhase();
+			return new TiltPhase();
 		}
 	}
 
@@ -197,9 +189,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 	}
 
 	/** PTZ full property, send this exact command */
-	protected class PTZFullProperty extends CohuPTZProperty {
+	protected class PTCombinedProperty extends CohuPTZProperty {
 
-		public PTZFullProperty() { }
+		public PTCombinedProperty() { }
 
 		/** Encode a STORE request */
 		@Override
