@@ -450,7 +450,7 @@ public class DMSDispatcher extends JPanel {
 	/** Set the fully composed message.  This will update all the widgets
 	 * on the dispatcher with the specified message. */
 	public void setMessage(String ms) {
-		if(ms != null) {
+		if(ms != null && !ms.equals(message)) {
 			message = ms;
 			singleTab.setMessage();
 			composer.setMessage(ms);
@@ -500,22 +500,27 @@ public class DMSDispatcher extends JPanel {
 
 	/** Can a message be sent to all selected DMS? */
 	public boolean canSend() {
+	    return canSend(false);
+    }
+
+    /** Can a message be sent to all selected DMS? */
+    public boolean canSend(boolean checkMsg) {
 		Set<DMS> sel = getValidSelected();
 		if (sel.isEmpty())
 			return false;
 		for (DMS dms: sel) {
-			if (!canSend(dms))
+			if (!canSend(dms, checkMsg))
 				return false;
 		}
 		return true;
 	}
 
 	/** Can a message be sent to the specified DMS? */
-	public boolean canSend(DMS dms) {
+    private boolean canSend(DMS dms, boolean checkMsg) {
 		return creator.canCreate() &&
 		       isUpdatePermitted(dms, "ownerNext") &&
 		       isUpdatePermitted(dms, "messageNext") &&
-               isMsgValidOnSign(dms);
+                (!checkMsg || isMsgValidOnSign(dms));
 	}
 
 	/** Is DMS attribute update permitted? */

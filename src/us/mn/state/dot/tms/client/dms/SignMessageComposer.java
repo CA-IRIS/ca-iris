@@ -324,6 +324,7 @@ public class SignMessageComposer extends JPanel {
 		String[] lines = multi.getLines(n_lines, prefix);
 		for (int i = 0; i < pages.length; i++)
 			pages[i].setSelected(lines);
+        button_pnl.updateSendEnabled();
 		adjusting--;
 	}
 
