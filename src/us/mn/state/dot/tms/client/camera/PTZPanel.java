@@ -243,9 +243,13 @@ public class PTZPanel extends JPanel {
 	public void setEnabled(boolean enable) {
 		speed_sldr.setEnabled(enable);
 		left_btn.setEnabled(enable);
-		right_btn.setEnabled(enable);
-		up_btn.setEnabled(enable);
+		left_down_btn.setEnabled(enable);
 		down_btn.setEnabled(enable);
+		right_down_btn.setEnabled(enable);
+		right_btn.setEnabled(enable);
+		right_up_btn.setEnabled(enable);
+		up_btn.setEnabled(enable);
+		left_up_btn.setEnabled(enable);
 		zoom_in_btn.setEnabled(enable);
 		zoom_out_btn.setEnabled(enable);
 	}
