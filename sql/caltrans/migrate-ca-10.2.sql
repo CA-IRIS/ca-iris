@@ -1,3 +1,5 @@
+-- current as of MnDOT 4.35.4
+
 
 -- updates required before rest of updates
 \set ON_ERROR_STOP
@@ -15,6 +17,12 @@ DELETE FROM iris.comm_protocol WHERE id IN (33, 34);
 ALTER TABLE event.tag_type OWNER TO tms;
 ALTER TABLE event.tag_read_event OWNER TO tms;
 ALTER VIEW tag_read_event_view OWNER TO tms;
+
+
+
+-- ============================================================================
+-- BEGIN: MnDOT updates
+-- ============================================================================
 
 -- migrate-4.27.sql
 \set ON_ERROR_STOP
