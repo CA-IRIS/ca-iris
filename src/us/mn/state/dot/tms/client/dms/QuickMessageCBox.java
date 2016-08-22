@@ -17,9 +17,6 @@ package us.mn.state.dot.tms.client.dms;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -117,9 +114,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	/** DMS dispatcher */
 	private final DMSDispatcher dispatcher;
 
-	/** Focus listener for editor component */
-	private final FocusListener focus_listener;
-
 	/** Action listener for combo box */
 	private final ActionListener action_listener;
 
@@ -156,15 +150,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		editor_component = (JTextField) getEditor().getEditorComponent();
 		editor_component.addKeyListener(key_listener);
 		setEditable(true);
-		focus_listener = new FocusAdapter() {
-			public void focusGained(FocusEvent e) {
-				getEditor().selectAll();
-			}
-			public void focusLost(FocusEvent e) {
-				handleEditorFocusLost(e);
-			}
-		};
-		editor_component.addFocusListener(focus_listener);
 		action_listener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				updateDispatcher();
@@ -178,23 +163,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 			((AbstractDocument)jtf.getDocument())
 				.setDocumentFilter(
 				new UppercaseDocumentFilter());
-	}
-
-	/** Handle editor focus lost */
-	protected void handleEditorFocusLost(FocusEvent e) {
-		Object item = getEditor().getItem();
-		if(item instanceof String)
-			handleEditorFocusLost((String)item);
-	}
-
-	/** Handle editor focus lost */
-	protected void handleEditorFocusLost(String item) {
-		getEditor().setItem(item);
-		QuickMessage qm = QuickMessageHelper.lookup(item);
-		if (qm != null) {
-			model.setSelectedItem(qm);
-			updateDispatcher(qm);
-		}
 	}
 
 	/** Update the dispatcher with the selected quick message */
@@ -299,6 +267,10 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 				model.addElement(msg);
 			}
 		}
+
+		if (model.getSize() == 1) {
+		    model.setSelectedItem(model.getElementAt(0));
+        }
 	}
 
 	/** Set the enabled status */
@@ -314,7 +286,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	/** Dispose */
 	public void dispose() {
 		removeActionListener(action_listener);
-		editor_component.removeFocusListener(focus_listener);
 		editor_component.removeKeyListener(key_listener);
 	}
 }
