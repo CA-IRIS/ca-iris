@@ -169,8 +169,9 @@ public class ComposerButtonPanel extends JPanel {
 		super.setEnabled(b);
 		clear.setEnabled(b);
 		store.setEnabled(b);
-		send_msg.setEnabled(b && dispatcher.canSend());
-		blank_msg.setEnabled(b && dispatcher.canSend());
+		boolean dispatcherCanSend = dispatcher.canSend();
+		send_msg.setEnabled(b && dispatcherCanSend);
+		blank_msg.setEnabled(b && dispatcherCanSend);
 		query_msg.setEnabled(b && dispatcher.canRequest());
 	}
 }

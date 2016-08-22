@@ -478,21 +478,25 @@ public class DMSDispatcher extends JPanel {
 
 	/** Get raster graphic array for the selected message */
 	public RasterGraphic[] getPixmaps() {
-		RasterBuilder b = builder;
-		if (b != null) {
-			MultiString multi = new MultiString(message);
-			try {
-				return b.createPixmaps(multi);
-			}
-			catch (IndexOutOfBoundsException e) {
-				// pixmap too small for message
-			}
-			catch (InvalidMessageException e) {
-				// most likely a MultiSyntaxError ...
-			}
-		}
-		return null;
+        return getPixmaps(builder);
 	}
+
+    /** Get raster graphic array for the selected message */
+	private RasterGraphic[] getPixmaps(RasterBuilder b) {
+        if (b != null) {
+            MultiString multi = new MultiString(message);
+            try {
+                return b.createPixmaps(multi);
+            }
+            catch (IndexOutOfBoundsException e) {
+                // pixmap too small for message
+            }
+            catch (InvalidMessageException e) {
+                // most likely a MultiSyntaxError ...
+            }
+        }
+        return null;
+    }
 
 	/** Can a message be sent to all selected DMS? */
 	public boolean canSend() {
@@ -510,13 +514,22 @@ public class DMSDispatcher extends JPanel {
 	public boolean canSend(DMS dms) {
 		return creator.canCreate() &&
 		       isUpdatePermitted(dms, "ownerNext") &&
-		       isUpdatePermitted(dms, "messageNext");
+		       isUpdatePermitted(dms, "messageNext") &&
+               isMsgValidOnSign(dms);
 	}
 
 	/** Is DMS attribute update permitted? */
 	private boolean isUpdatePermitted(DMS dms, String a) {
 		return session.isUpdatePermitted(dms, a);
 	}
+
+	/** Determine whether given message is valid on given sign. */
+	private boolean isMsgValidOnSign(DMS dms) {
+	    // NOTE: This could be optimized if rendering for each check becomes too expensive.
+        // This optimization would require decoupling the validation in RasterBuilder from the render process.
+        RasterBuilder builder = DMSHelper.createRasterBuilder(dms);
+        return getPixmaps(builder) != null;
+    }
 
 	/** Can a device request be sent to all selected DMS? */
 	public boolean canRequest() {
