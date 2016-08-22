@@ -38,7 +38,6 @@ import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SystemAttrEnum;
-import us.mn.state.dot.tms.server.QuickMessageImpl;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
@@ -52,12 +51,48 @@ import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
  * @author Michael Darter
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class QuickMessageCBox extends JComboBox<QuickMessage>
 {
 
 	/** Prototype sign text */
-	static private final QuickMessage PROTOTYPE_OBJ = new QuickMessageImpl("123456789012");
+	static private final QuickMessage PROTOTYPE_OBJ = new QuickMessage() {
+		@Override
+		public String getTypeName() {
+			return QuickMessage.SONAR_TYPE;
+		}
+
+		@Override
+		public String getName() {
+			return "123456789012";
+		}
+
+		@Override
+		public SignGroup getSignGroup() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setSignGroup(SignGroup sg) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getMulti() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setMulti(String multi) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void destroy() {
+			throw new UnsupportedOperationException();
+		}
+	};
 
 	/** Given a QuickMessage or String, return the corresponding quick
 	 * message name or an empty string if none exists. */
