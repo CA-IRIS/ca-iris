@@ -55,14 +55,26 @@ public class PTZPanel extends JPanel {
 	/** Button used to pan left */
 	private final JButton left_btn;
 
+	/** Button used to pan/tilt left/down */
+	private final JButton left_down_btn;
+
+	/** Button used to tilt down */
+	private final JButton down_btn;
+
+	/** Button used to pan/tilt right/down */
+	private final JButton right_down_btn;
+
 	/** Button used to pan right */
 	private final JButton right_btn;
+
+	/** Button used to pan/tilt right/up */
+	private final JButton right_up_btn;
 
 	/** Button used to tilt up */
 	private final JButton up_btn;
 
-	/** Button used to tilt down */
-	private final JButton down_btn;
+	/** Button used to pan/tilt left/up */
+	private final JButton left_up_btn;
 
 	/** Button used to zoom in */
 	private final JButton zoom_in_btn;
@@ -93,9 +105,13 @@ public class PTZPanel extends JPanel {
 		btn_font = new Font(null, Font.PLAIN, Widgets.UI.scaled(12));
 		speed_sldr = createSpeedSlider();
 		left_btn = createPtzButton("camera.ptz.left", -1, 0, 0);
-		right_btn = createPtzButton("camera.ptz.right", 1, 0, 0);
-		up_btn = createPtzButton("camera.ptz.up", 0, 1, 0);
+		left_down_btn = createPtzButton("pt.left.down", -1, -1, 0);
 		down_btn = createPtzButton("camera.ptz.down", 0, -1, 0);
+		right_down_btn = createPtzButton("pt.right.down", 1, -1, 0);
+		right_btn = createPtzButton("camera.ptz.right", 1, 0, 0);
+		right_up_btn = createPtzButton("pt.right.up", 1, 1, 0);
+		up_btn = createPtzButton("camera.ptz.up", 0, 1, 0);
+		left_up_btn = createPtzButton("pt.left.up", -1, 1, 0);
 		zoom_in_btn = createPtzButton("camera.ptz.zoom.in", 0, 0, 1);
 		zoom_out_btn = createPtzButton("camera.ptz.zoom.out", 0, 0, -1);
 		add(buildSpeedSliderPanel());
@@ -184,14 +200,19 @@ public class PTZPanel extends JPanel {
 		gbc.gridy = 0;
 		p.add(up_btn, gbc);
 		gbc.gridx = 0;
+		p.add(left_up_btn, gbc);
 		gbc.gridy = 1;
 		p.add(left_btn, gbc);
+		gbc.gridy = 2;
+		p.add(left_down_btn, gbc);
+		gbc.gridx = 1;
+		p.add(down_btn, gbc);
 		gbc.gridx = 2;
+		p.add(right_down_btn, gbc);
 		gbc.gridy = 1;
 		p.add(right_btn, gbc);
-		gbc.gridx = 1;
-		gbc.gridy = 2;
-		p.add(down_btn, gbc);
+        gbc.gridy = 0;
+        p.add(right_up_btn, gbc);
 		return p;
 	}
 
