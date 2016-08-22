@@ -42,6 +42,7 @@ import us.mn.state.dot.tms.client.widget.Widgets;
  * @author Michael Darter
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class PTZPanel extends JPanel {
 
