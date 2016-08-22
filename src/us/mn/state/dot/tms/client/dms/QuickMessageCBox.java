@@ -92,6 +92,11 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		public void destroy() {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+        public String toString() {
+            return getName();
+        }
 	};
 
 	/** Given a QuickMessage or String, return the corresponding quick
