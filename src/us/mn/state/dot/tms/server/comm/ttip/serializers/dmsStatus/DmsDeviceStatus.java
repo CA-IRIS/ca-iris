@@ -11,6 +11,7 @@ package us.mn.state.dot.tms.server.comm.ttip.serializers.dmsStatus;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.SignMsgSource;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.ttip.TtipPoller;
 import us.mn.state.dot.tms.server.comm.ttip.serializers.common.Head;
@@ -175,6 +176,6 @@ public class DmsDeviceStatus {
         //FIXME CA-MN-MERGE fixing for new implementation
 //        return dms.createMessage(multi, false, DMSMessagePriority.OTHER_SYSTEM);
         return dms.createMsg(multi, false, DMSMessagePriority.OTHER_SYSTEM,
-                             DMSMessagePriority.OTHER_SYSTEM, null, null);
+                             DMSMessagePriority.OTHER_SYSTEM, SignMsgSource.external, null);
     }
 }
