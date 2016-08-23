@@ -20,7 +20,7 @@ ALTER VIEW tag_read_event_view OWNER TO tms;
 
 -- detector_event history table
 -- the detector_event table, at least in D10 gets quite large, really fast.
--- this table keeps values without referential integrity (not really needed in history tables)
+-- this table keeps values without referential integrity to speed up insertion
 CREATE TABLE event.detector_event_hist (
 -- event_id INTEGER DEFAULT nextval('event.event_id_seq') NOT NULL,
   event_id INTEGER NOT NULL,
@@ -30,6 +30,14 @@ CREATE TABLE event.detector_event_hist (
 --	device_id VARCHAR(10) REFERENCES iris._detector(name) ON DELETE CASCADE
 	device_id VARCHAR(10)
 );
+ALTER TABLE event.detector_event_hist OWNER TO tms;
+
+-- add a single record to the history table, so that something is there for later
+-- MAX calls
+INSERT INTO event.detector_event_hist (event_id, event_date, event_desc_id, device_id)
+  SELECT event_id, event_date, event_desc_id, device_id
+  FROM event.detector_event
+  WHERE event_id = (SELECT MIN(event_id) FROM event.detector_event);
 
 
 
