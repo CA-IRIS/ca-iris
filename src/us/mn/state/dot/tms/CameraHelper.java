@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import us.mn.state.dot.tms.geo.Position;
 import us.mn.state.dot.tms.units.Distance;
+import us.mn.state.dot.tms.utils.GPSutil;
 
 /**
  * Helper class for cameras.
@@ -117,16 +118,33 @@ public class CameraHelper extends BaseHelper {
 	}
 
 	/**
-	 * Retrieve a list of cameras sorted by the (or their) night-shift
+	 * Retrieve a list of cameras with night-shift
 	 * change time
 	 * @return
 	 */
-	static public TreeSet<Camera> getCamerasByNightshift() {
-		TreeSet<Camera> rv = new TreeSet<>();
+	static public List<Camera> getCamerasByNightshift() {
+		List<Camera> rv = new ArrayList<>();
 		Iterator<Camera> it = iterator();
 		while (it.hasNext()) {
 			Camera cam = it.next();
+			if(PresetAliasHelper.hasNightshiftPreset(cam))
+				rv.add(cam);
 		}
 		return rv;
 	}
+
+	static public Position getGeographicCenter() {
+		List<Position> pl = new ArrayList<>();
+		double lat = 0.0;
+		double lon = 0.0;
+		for (Camera cam : getCamerasByNightshift()) {
+			lat = cam.getGeoLoc().getLat();
+			lon = cam.getGeoLoc().getLon();
+			pl.add(new Position(lat, lon));
+		}
+
+		return GPSutil.getGeographicCenter(pl);
+	}
+
+
 }
