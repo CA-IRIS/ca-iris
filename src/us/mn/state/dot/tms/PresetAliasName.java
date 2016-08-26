@@ -25,7 +25,10 @@ package us.mn.state.dot.tms;
 public enum PresetAliasName {
 
 	/** Home Preset (0) */
-	HOME("Home");
+	HOME("Home"),
+
+	/** Night-shift Home preset (1) */
+	NIGHTSHIFT("Night-shift Home");
 
 	/** Create a new preset alias value */
 	private PresetAliasName(String a) {

@@ -15,9 +15,12 @@
  */
 package us.mn.state.dot.tms;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import us.mn.state.dot.tms.geo.Position;
 import us.mn.state.dot.tms.units.Distance;
 
@@ -111,5 +114,19 @@ public class CameraHelper extends BaseHelper {
 				break;
 		}
 		return v.substring(i);
+	}
+
+	/**
+	 * Retrieve a list of cameras sorted by the (or their) night-shift
+	 * change time
+	 * @return
+	 */
+	static public TreeSet<Camera> getCamerasByNightshift() {
+		TreeSet<Camera> rv = new TreeSet<>();
+		Iterator<Camera> it = iterator();
+		while (it.hasNext()) {
+			Camera cam = it.next();
+		}
+		return rv;
 	}
 }

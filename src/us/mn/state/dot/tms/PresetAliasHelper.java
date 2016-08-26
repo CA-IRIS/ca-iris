@@ -17,6 +17,9 @@ package us.mn.state.dot.tms;
 import java.lang.Integer;
 import java.util.Iterator;
 
+import static us.mn.state.dot.tms.PresetAliasName.HOME;
+import static us.mn.state.dot.tms.PresetAliasName.NIGHTSHIFT;
+
 /**
  * Camera preset alias helper methods.
  *
@@ -49,12 +52,39 @@ public class PresetAliasHelper extends BaseHelper {
 		while (it.hasNext()) {
 			PresetAlias pa = it.next();
 			if ((pa.getCamera() == c) &&
-				(pa.getPresetAliasName() == alias))
-			{
+				(pa.getPresetAliasName() == alias)) {
 				return Integer.valueOf(pa.getPresetNum());
 			}
 		}
 		return null;
 	}
 
+	/**
+	 * Get the current night shift home preset mapping for a given camera
+	 *
+	 * @param c the Camera
+	 * @return
+	 */
+	static public Integer getNightshiftHome(Camera c) {
+		return getPreset(c, NIGHTSHIFT);
+	}
+
+	/**
+	 * Get the current day shift home preset mapping for a given camera
+	 *
+	 * @param c the Camera
+	 * @return
+	 */
+	static public Integer getDayshiftHome(Camera c) {
+		return getPreset(c, HOME);
+	}
+
+	/**
+	 * Determine if a camera has a night-shift preset enabled
+	 * @param c the camera
+	 * @return
+	 */
+	static public boolean hasNightshiftPreset(Camera c) {
+		return getNightshiftHome(c) != null ? true : false;
+	}
 }

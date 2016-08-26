@@ -2450,6 +2450,7 @@ COPY iris.encoder_type (id, description) FROM stdin;
 
 COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
 0	Home
+1	Night-shift Home
 \.
 
 COPY iris.system_attribute (name, value) FROM stdin;
