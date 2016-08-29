@@ -14,17 +14,17 @@
  */
 package us.mn.state.dot.tms.server;
 
-import java.util.Calendar;
 import us.mn.state.dot.sched.Job;
-import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.PresetAliasHelper;
+import us.mn.state.dot.tms.PresetAliasName;
 
-import static us.mn.state.dot.sched.TimeSteward.getCalendarInstance;
 
 /**
  * Used to move cameras to their night-shift and day-shift positions
  * @author Jacob Barde
  */
-public class CameraNightshiftJob extends Job{
+public class CameraNightshiftJob extends Job {
 
 	public CameraNightshiftJob() {
 		super(0);
@@ -32,6 +32,18 @@ public class CameraNightshiftJob extends Job{
 
 	@Override
 	public void perform() throws Exception {
+		/*
+		get daytime/nighttime cameras
+		while observing camera movement concurrency and movement pauses:
+			if not in use, execute moveCamera
+			if in use, mark to move later
+		 */
+	}
 
+	public void moveCamera(Camera c, PresetAliasName pan) {
+		Integer p = PresetAliasHelper.getPreset(c, pan);
+
+		if (p != null)
+			c.setRecallPreset(p);
 	}
 }
