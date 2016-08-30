@@ -590,3 +590,9 @@ COPY iris.inc_range (id, description) FROM stdin;
 
 -- Add incident to sign_message
 ALTER TABLE iris.sign_message ADD COLUMN incident VARCHAR(16);
+
+-- MnDOT 4.35.5 and up are still needed
+
+-- ============================================================================
+-- BEGIN 10.2 changes
+-- ============================================================================
