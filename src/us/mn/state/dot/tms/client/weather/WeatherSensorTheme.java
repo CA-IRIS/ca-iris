@@ -107,7 +107,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	}
 
 
-	//FIXME CA-MN-MERGE will it blend?
+	//FIXME CA-MN-MERGE will it blend? Blend?
 	/** Get a legend icon for a style */
 	@Override
 	public Icon getLegend(Style sty) {
