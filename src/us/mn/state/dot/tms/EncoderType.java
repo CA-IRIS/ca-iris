@@ -86,15 +86,6 @@ public enum EncoderType {
 		return NONE;
 	}
 
-	//FIXME CA-MN-MERGE needed?
-	/** Get an array of encoder type descriptions */
-	static public String[] getDescriptions() {
-		LinkedList<String> d = new LinkedList<>();
-		for (EncoderType et: values())
-			d.add(et.description);
-		return d.toArray(new String[d.size()]);
-	}
-
 	/** Does this EncoderType support indirect streaming? */
 	public boolean supportsIndirect() {
 		return (indirect_stream != StreamType.NONE);

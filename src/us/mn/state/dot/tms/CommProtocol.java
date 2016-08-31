@@ -160,12 +160,4 @@ public enum CommProtocol {
 		return null;
 	}
 
-	//FIXME CA-MN-MERGE needed?
-	/** Get an array of comm protocol descriptions */
-	static public String[] getDescriptions() {
-		LinkedList<String> d = new LinkedList<>();
-		for (CommProtocol cp: values())
-			d.add(cp.description);
-		return d.toArray(new String[d.size()]);
-	}
 }

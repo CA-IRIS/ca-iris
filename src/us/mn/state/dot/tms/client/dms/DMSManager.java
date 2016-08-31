@@ -107,7 +107,7 @@ public class DMSManager extends ProxyManager<DMS> {
 				COLOR_HELIOTROPE);
 		// NOTE: If a sign doesn't fit in one of the other themes,
 		//       it will be rendered using the ALL theme.
-		theme.addStyle(ItemStyle.ALL); //FIXME CA-MN-MERGE , ProxyTheme.COLOR_INACTIVE,	ProxyTheme.OUTLINE_INACTIVE);
+		theme.addStyle(ItemStyle.ALL);
 		return theme;
 	}
 

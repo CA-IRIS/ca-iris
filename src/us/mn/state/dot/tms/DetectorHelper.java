@@ -72,7 +72,6 @@ public class DetectorHelper extends BaseHelper {
 		    && !d.getAbandoned();
 	}
 
-	//FIXME CA-MN-MERGE needed?
 	/**
 	 * Return all the detectors for the specified controller.
 	 * @param c Controller (may be null)

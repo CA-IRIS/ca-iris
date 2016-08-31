@@ -197,7 +197,6 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer<DMS> {
 
 	/** Set the DMS to render */
 	private void setDMS(DMS dms) {
-		//FIXME CA-MN-MERGE this SiteData stuff used to be in an updateAttr method
 		String name = dms.getName();
 		String sn = SiteDataHelper.getSiteName(name);
 		if (sn != null)

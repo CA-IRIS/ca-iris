@@ -71,14 +71,12 @@ public class MsgFile {
 		if (fname.isEmpty())
 			return;
 		String msg = STime.getCurTimeShortString() + ";" + di + ";";
-		if (multi.isBlank())
+		if (multi == null || multi.isBlank())
 			msg += ";;;;;;";
 		else {
-			//FIXME CA-MN-MERGE changed here, see if correct
-			String[] lines = new String[0];
-			if (multi != null)
-				lines = multi.getLines(
-					DMSHelper.getLineCount(di), "");
+			String[] lines = multi != null
+				? multi.getLines(DMSHelper.getLineCount(di), "")
+				: new String[0];
 			for (int i = 0; i < 6; ++i) {
 				String l = (i < lines.length ? lines[i] : "");
 				msg += l + ";";

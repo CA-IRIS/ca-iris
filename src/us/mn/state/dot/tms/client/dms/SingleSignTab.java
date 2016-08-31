@@ -405,12 +405,6 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 
 	/** Update the preview panel */
 	private void updatePreviewPanel(DMS dms) {
-//		DMSPanelPager p = createPreviewPager();
-//		if(p != null && dms != null) {
-//			preview_pnl.setDimensions(dms);
-//			setPager(p);
-
-		//FIXME CA-MN-MERGE keep this. stops the flickering?
 		RasterGraphic[] rg;
 		if(dms != null && (rg = dispatcher.getPixmaps()) != null) {
 			String ms = dispatcher.getMessage();

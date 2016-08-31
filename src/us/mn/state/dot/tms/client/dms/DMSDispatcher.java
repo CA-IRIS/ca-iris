@@ -154,7 +154,7 @@ public class DMSDispatcher extends JPanel {
 	public void sendSelectedMessage() {
 		if (shouldSendMessage()) {
 			sendMessage();
-			removeInvalidSelections(); //FIXME CA-MN-MERGE originally outside of if statement
+			removeInvalidSelections();
 		}
 	}
 
@@ -360,7 +360,6 @@ public class DMSDispatcher extends JPanel {
 	private void doSelectionChanged() {
 		if (!areBuilderAndComposerValid()) {
 			builder = null;
-			//FIXME CA-MN-MERGE why is this in a loop?
 			for (DMS s: sel_model.getSelected()) {
 				createBuilder(s);
 				break;

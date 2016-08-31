@@ -77,7 +77,6 @@ public class DR500Poller extends MessagePoller<DR500Property>
 	/** Query the sample poller. */
 	@Override
 	public void queryPoller() {
-		//FIXME CA-MN-MERGE this has to go
 	}
 
 	/** Get the protocol debug log */
