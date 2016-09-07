@@ -20,10 +20,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import us.mn.state.dot.tms.geo.Position;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.utils.GPSutil;
+
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_MOVE_PAUSE;
 
 /**
  * Helper class for cameras.
@@ -122,12 +124,12 @@ public class CameraHelper extends BaseHelper {
 	 * change time
 	 * @return
 	 */
-	static public List<Camera> getCamerasByNightshift() {
+	static public List<Camera> getCamerasByShift(PresetAliasName pan) {
 		List<Camera> rv = new ArrayList<>();
 		Iterator<Camera> it = iterator();
 		while (it.hasNext()) {
 			Camera cam = it.next();
-			if(PresetAliasHelper.hasNightshiftPreset(cam))
+			if (PresetAliasHelper.hasShiftPreset(cam, pan))
 				rv.add(cam);
 		}
 		return rv;
@@ -137,7 +139,10 @@ public class CameraHelper extends BaseHelper {
 		List<Position> pl = new ArrayList<>();
 		double lat = 0.0;
 		double lon = 0.0;
-		for (Camera cam : getCamerasByNightshift()) {
+
+		Iterator<Camera> it = iterator();
+		while (it.hasNext()) {
+			Camera cam = it.next();
 			lat = cam.getGeoLoc().getLat();
 			lon = cam.getGeoLoc().getLon();
 			pl.add(new Position(lat, lon));
@@ -146,5 +151,21 @@ public class CameraHelper extends BaseHelper {
 		return GPSutil.getGeographicCenter(pl);
 	}
 
+	static public int getShiftPause() {
+		int delay = 0;
 
+		if (null != CAMERA_SHIFT_MOVE_PAUSE)
+			delay = CAMERA_SHIFT_MOVE_PAUSE.getInt();
+
+		return delay;
+	}
+
+	static public int getConcurrentMovements() {
+		int concurrent = 1;
+
+		if (null != CAMERA_SHIFT_CONCUR_MOVE)
+			concurrent = CAMERA_SHIFT_CONCUR_MOVE.getInt();
+
+		return concurrent;
+	}
 }

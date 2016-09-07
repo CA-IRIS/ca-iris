@@ -27,7 +27,7 @@ package us.mn.state.dot.tms.utils.twilight;
 /**
  * imported into IRIS framework for use in daytime/nighttime CCTV presets
  * full source can be found here: http://www.jstott.com/jsuntimes/
- * All source provided under GPL v2
+ * All source provided by Jonathan Stott under GPL v2
  *
  * Source was modified to utilize existing classes within IRIS (e.g. Position in
  * place of LatitudeLongitude).

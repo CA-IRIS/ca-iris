@@ -259,4 +259,13 @@ public class VideoServerCoupler {
 		if (cam_count_map != null)
 			ccmap = cam_count_map;
 	}
+
+	/**
+	 * get the cameras in use.
+	 * use sparingly, as this will query the video server every time
+	 */
+	public Map<String, Integer> getCamerasInUse() {
+		updateCameraCounts();
+		return ccmap;
+	}
 }
