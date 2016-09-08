@@ -38,9 +38,11 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 
+import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
@@ -382,16 +384,19 @@ public class CameraDispatcher extends JPanel {
 		EncoderType et = EncoderType.fromOrdinal(c.getEncoderType());
 		if (!et.supportsIndirect())
 			return;
-		Integer p = PresetAliasHelper.getPreset(c,
-			PresetAliasName.HOME);
-		if (p == null)
+
+		PresetAliasName pan = CameraHelper.calculateLastShift();
+		if (!HOME.equals(pan)
+			&& !PresetAliasHelper.hasShiftPreset(c, pan))
+			pan = HOME;
+		if (!PresetAliasHelper.hasShiftPreset(c, pan))
 			return;
 
 		TimeSteward.sleep_well(250);        // kludge to avoid race
 		int numConns = vw_manager.getNumConns(c.getName());
 		// were we the last connection to this camera?
 		if (numConns == 0)
-			c.setRecallPreset(p);
+			c.setRecallPreset(pan.ordinal());
 	}
 
 	/**

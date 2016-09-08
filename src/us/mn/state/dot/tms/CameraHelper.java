@@ -17,16 +17,25 @@
 package us.mn.state.dot.tms;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.geo.Position;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.utils.GPSutil;
+import us.mn.state.dot.tms.utils.twilight.Sun;
+import us.mn.state.dot.tms.utils.twilight.Time;
 
+import static us.mn.state.dot.tms.PresetAliasName.HOME;
+import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_MOVE_PAUSE;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_SUNRISE_OFFSET;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_SUNSET_OFFSET;
 
 /**
  * Helper class for cameras.
@@ -172,5 +181,100 @@ public class CameraHelper extends BaseHelper {
 			concurrent = CAMERA_SHIFT_CONCUR_MOVE.getInt();
 
 		return concurrent;
+	}
+
+	/** get sunrise offset system attribute */
+	static public int getSunriseOffset() {
+		int offset = 0;
+		if (null != CAMERA_SHIFT_SUNRISE_OFFSET)
+			offset = CAMERA_SHIFT_SUNRISE_OFFSET.getInt();
+		return offset;
+	}
+
+	/** get sunset offset system attribute */
+	static public int getSunsetOffset() {
+		int offset = 0;
+		if (null != CAMERA_SHIFT_SUNSET_OFFSET)
+			offset = CAMERA_SHIFT_SUNSET_OFFSET.getInt();
+		return offset;
+	}
+
+	/** calculate what the last shift was. */
+	static public PresetAliasName calculateLastShift() {
+		PresetAliasName rv = HOME; // default
+		GregorianCalendar today =
+			(GregorianCalendar) TimeSteward.getCalendarInstance();
+		GregorianCalendar nightshift =
+			(GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
+		GregorianCalendar dayshift =
+			(GregorianCalendar) getShiftTime(HOME, 0);
+		if (today.getTimeInMillis() > nightshift.getTimeInMillis()
+			|| today.getTimeInMillis() < dayshift.getTimeInMillis())
+			rv = NIGHT_SHIFT;
+
+		return rv;
+	}
+
+	/**
+	 * calculate the shift time
+	 * @param pan       preset alias name. HOME for dayshift, NIGHT_SHIFT
+	 *                  for nightshift
+	 * @param dayOffset day offset. -1 for yesterday, 0 for today,
+	 *                  1 for tomorrow. other values discarded, 0 is used
+	 *
+	 * @return
+	 */
+	static public Calendar getShiftTime(PresetAliasName pan,
+		int dayOffset) {
+		int off = dayOffset;
+		if (dayOffset < -1 || dayOffset > 1)
+			off = 0;
+		GregorianCalendar di =
+			(GregorianCalendar) TimeSteward.getCalendarInstance();
+		di.roll(Calendar.DAY_OF_MONTH, off);
+
+		if (off != 0) {
+			/* if there is a day offset, set date instance time to
+			 * 03:01 (3:01 AM) to account for possible Daylight
+			 * Savings Time changes. */
+			di.set(Calendar.HOUR_OF_DAY, 3);
+			di.set(Calendar.MINUTE, 1);
+			di.set(Calendar.SECOND, 0);
+		}
+
+		Position center = getGeographicCenter();
+		Time twilight;
+
+		if (NIGHT_SHIFT.equals(pan))
+			twilight = Sun.sunsetTime(di, center, di.getTimeZone(),
+				di.getTimeZone().inDaylightTime(di.getTime()));
+		else
+			twilight = Sun.sunriseTime(di, center, di.getTimeZone(),
+				di.getTimeZone().inDaylightTime(di.getTime()));
+
+		GregorianCalendar diTwilight = (GregorianCalendar)
+			setTimeToCalendar(TimeSteward.getCalendarInstance(),
+				twilight);
+
+		if (NIGHT_SHIFT.equals(pan))
+			diTwilight.setTimeInMillis(
+				(diTwilight.getTimeInMillis()
+					+ getSunsetOffset() * 60
+					* 1000));
+		else
+			diTwilight.setTimeInMillis(
+				(diTwilight.getTimeInMillis()
+					+ getSunriseOffset() * 60
+					* 1000));
+
+		return diTwilight;
+	}
+
+	/** set the sun-rise/set time to a calendar instance */
+	static private Calendar setTimeToCalendar(Calendar c, Time time) {
+		c.set(Calendar.HOUR_OF_DAY, time.getHours());
+		c.set(Calendar.MINUTE, time.getMinutes());
+		c.set(Calendar.SECOND, (int) time.getSeconds());
+		return c;
 	}
 }
