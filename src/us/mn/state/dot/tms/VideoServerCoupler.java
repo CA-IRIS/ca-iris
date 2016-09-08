@@ -35,6 +35,7 @@ import java.util.Properties;
 
  * @author Travis Swanston
  * @author Jacob Barde
+ * @see us.mn.state.dot.tms.client.camera.VideoWallManager
  */
 public class VideoServerCoupler {
 
@@ -246,6 +247,7 @@ public class VideoServerCoupler {
 		return null;
 	}
 
+	/** update the camera in-use counts */
 	protected void updateCameraCounts() {
 
 		Map<String, Integer> cam_count_map = null;

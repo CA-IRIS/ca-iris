@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@ import java.util.Iterator;
  * Camera preset alias helper methods.
  *
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class PresetAliasHelper extends BaseHelper {
 

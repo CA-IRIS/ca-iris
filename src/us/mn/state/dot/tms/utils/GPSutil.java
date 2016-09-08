@@ -54,8 +54,8 @@ public class GPSutil {
 
 			double latDiff = (northern + 90) - (southern + 90);
 			double lonDiff = (eastern + 180) - (western + 180);
-			lat = northern - latDiff;
-			lon = eastern - lonDiff;
+			lat = northern - (latDiff / 2);
+			lon = eastern - (lonDiff / 2);
 			rv = new Position(lat, lon);
 		}
 

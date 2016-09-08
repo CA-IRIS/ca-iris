@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@ import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_MOVE_PAUSE;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @uahtor Jacob Barde
  */
 public class CameraHelper extends BaseHelper {
 
@@ -135,6 +137,7 @@ public class CameraHelper extends BaseHelper {
 		return rv;
 	}
 
+	/** return the geographical center of all cameras */
 	static public Position getGeographicCenter() {
 		List<Position> pl = new ArrayList<>();
 		double lat = 0.0;
@@ -151,6 +154,7 @@ public class CameraHelper extends BaseHelper {
 		return GPSutil.getGeographicCenter(pl);
 	}
 
+	/** get the shift pause system attribute */
 	static public int getShiftPause() {
 		int delay = 0;
 
@@ -160,6 +164,7 @@ public class CameraHelper extends BaseHelper {
 		return delay;
 	}
 
+	/** get the shift concurrent movements system attribute */
 	static public int getConcurrentMovements() {
 		int concurrent = 1;
 

@@ -43,6 +43,18 @@ public class CameraShiftJob extends Job {
 	/** maximum amount of time in minutes to run this job */
 	private int maxRuntime = 120;
 
+	/** don't send the camera movements, but process cameras normally.
+	 * for testing only */
+	private boolean disableCameraMovements = false;
+
+	/**
+	 * Create a camera shift job
+	 * @param pan       preset to move cameras to.
+	 * @param vsc       server side connection to video server, used to
+	 *                  query for cameras that are in use.
+	 * @param mxRuntime maximum time the job should run, default 120 if null
+	 *                  is passed.
+	 */
 	public CameraShiftJob(PresetAliasName pan, VideoServerCoupler vsc,
 		Integer mxRuntime) {
 		super(0);
@@ -52,6 +64,7 @@ public class CameraShiftJob extends Job {
 			maxRuntime = mxRuntime;
 	}
 
+	/** perform job */
 	@Override
 	public void perform() throws Exception {
 
@@ -124,11 +137,20 @@ public class CameraShiftJob extends Job {
 		return rv;
 	}
 
+	/** move the camera to desired preset */
 	private void moveCamera(Camera c, PresetAliasName pan) {
+		if (disableCameraMovements)
+			return;
+
 		Integer p = PresetAliasHelper.getPreset(c, pan);
 
 		// move the camera to preset
 		if (p != null)
 			c.setRecallPreset(p);
+	}
+
+	/** set the disableCameraMovements property */
+	public void setDisableCameraMovements(boolean f) {
+		this.disableCameraMovements = f;
 	}
 }
