@@ -38,7 +38,7 @@ import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 public class CameraShiftJob extends Job {
 
 	/** maximum amount of time in minutes to run this job */
-	static final private int MAX_RUNTIME = 120; // 2 hours
+	static final private int MAX_RUNTIME = 720; // 12 hours
 
 	/** instance of the scheduler controlling this job */
 	private final Scheduler scheduler;
@@ -53,7 +53,7 @@ public class CameraShiftJob extends Job {
 	private PresetAliasName destPan = HOME;
 
 	/** last time a log message was issued warning of excessive time */
-	private long lastLogMessage = 0;
+	private long lastLogMessage;
 
 	/**
 	 * Create a camera shift job
@@ -180,7 +180,9 @@ public class CameraShiftJob extends Job {
 
 		int mxrt = MAX_RUNTIME * 60 * 1000;
 
-		if ((TimeSteward.currentTimeMillis() - lastLogMessage) > 3600) {
+		if ((TimeSteward.currentTimeMillis() - lastLogMessage)
+			> (3600 * 1000)) {
+
 			log.log("WARNING: Camera Shift Job is taking more "
 				+ "than an hour.");
 			lastLogMessage = TimeSteward.currentTimeMillis();
@@ -198,7 +200,10 @@ public class CameraShiftJob extends Job {
 		Integer p = PresetAliasHelper.getPreset(c, pan);
 
 		// move the camera to preset
-		if (p != null)
+		if (p != null) {
 			c.setRecallPreset(p);
+			log.log("Moved camera '" + c.getName() + "' to "
+				+ pan.name() + " position");
+		}
 	}
 }

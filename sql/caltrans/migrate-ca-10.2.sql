@@ -609,8 +609,8 @@ INSERT INTO iris.camera_preset_alias_name (id, alias) VALUES (1, 'Night-shift Ho
 
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_concur_move', 1);
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_move_pause', 5);
-INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunrise_offset', 0);
-INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offset', 0);
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunrise_offset', -30);
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offset', -30);
 
 -- feature 592
 -- detector_event history table
