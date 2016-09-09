@@ -73,7 +73,8 @@ public class CameraShiftJob extends Job {
 
 		super((offset * 60 * 1000)); // convert to milliseconds
 		scheduler = s;
-		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift();
+		destPan = (pan != null)
+			? pan : CameraHelper.calculateLastShift();
 		log.log(TimeSteward.currentDateTimeString(true)
 			+ " Camera shift job created.");
 	}

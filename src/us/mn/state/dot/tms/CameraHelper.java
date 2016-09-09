@@ -155,9 +155,13 @@ public class CameraHelper extends BaseHelper {
 		Iterator<Camera> it = iterator();
 		while (it.hasNext()) {
 			Camera cam = it.next();
-			lat = cam.getGeoLoc().getLat();
-			lon = cam.getGeoLoc().getLon();
-			pl.add(new Position(lat, lon));
+			if (cam != null && cam.getGeoLoc() != null
+				&& cam.getGeoLoc().getLat() != null
+				&& cam.getGeoLoc().getLon() != null) {
+				lat = cam.getGeoLoc().getLat();
+				lon = cam.getGeoLoc().getLon();
+				pl.add(new Position(lat, lon));
+			}
 		}
 
 		return GPSutil.getGeographicCenter(pl);
