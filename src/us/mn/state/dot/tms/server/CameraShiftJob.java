@@ -44,7 +44,7 @@ public class CameraShiftJob extends Job {
 	private final Scheduler scheduler;
 
 	/** log for messages relating to this job */
-	private final DebugLog log;
+	private final DebugLog log = new DebugLog("camerashiftjob");
 
 	/** a map to track what cameras were moved (or attempted to do so) */
 	private Map<Camera, Boolean> camMoved = new HashMap<>();
@@ -74,12 +74,15 @@ public class CameraShiftJob extends Job {
 		super(Calendar.SECOND, 0, Calendar.MINUTE, offset);
 		scheduler = s;
 		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift();
-		log = new DebugLog("camerashiftjob");
+		log.log(TimeSteward.currentDateTimeString(true)
+			+ " Camera shift job created.");
 	}
 
 	/** perform job */
 	@Override
 	public void perform() throws Exception {
+		log.log(TimeSteward.currentDateTimeString(true)
+			+ " Begin performing camera shift job.");
 
 		for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
 			camMoved.put(c, false);
@@ -162,6 +165,9 @@ public class CameraShiftJob extends Job {
 			- now.getTimeInMillis()) / 1000 / 60;
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
+
+		log.log(TimeSteward.currentDateTimeString(true)
+			+ " Completed camera shift job.");
 	}
 
 	/** determine if the job should continue executing at this point */
