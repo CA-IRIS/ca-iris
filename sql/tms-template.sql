@@ -2476,6 +2476,7 @@ client_units_si	true
 comm_event_purge_days	14
 database_version	4.35.0
 detector_auto_fail_enable	true
+detector_reduce_malf_logging	false
 device_op_status_enable	false
 dialup_poll_period_mins	120
 dict_allowed_scheme	0

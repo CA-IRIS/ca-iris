@@ -3,6 +3,7 @@
  * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2011       Berkeley Transportation Systems Inc.
  * Copyright (C) 2010-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +55,7 @@ import us.mn.state.dot.tms.server.event.DetFailEvent;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 
@@ -719,6 +721,15 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		return SystemAttrEnum.DETECTOR_AUTO_FAIL_ENABLE.getBoolean();
 	}
 
+	/**
+	 * CA-only: reduce logging of malfunctions
+	 *
+	 * Reduce the number of logged malfunctions.  CA District 10 has a lot.
+	 */
+	private boolean isDetectorReducedLogging() {
+		return SystemAttrEnum.DETECTOR_REDUCE_MALF_LOGGING.getBoolean();
+	}
+
 	/** Force fail the detector */
 	private void doForceFail() {
 		try {
@@ -775,8 +786,11 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 			malfunction(EventType.DET_CHATTER);
 		if (vs.value == 0) {
 			no_hits += vs.period;
-			if (no_hits > getNoHitThreshold().seconds())
+			if (no_hits > getNoHitThreshold().seconds()) {
 				malfunction(EventType.DET_NO_HITS);
+				if (isDetectorReducedLogging())
+					locked_on = 0;
+			}
 		} else
 			no_hits = 0;
 	}
@@ -818,12 +832,18 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		scn_cache.add(new PeriodicSample(occ.stamp,occ.period,n_scans));
 	}
 
-	/** Test an occupancy sample with error detecting algorithms */
+	/**
+	 * Test an occupancy sample with error detecting algorithms
+	 * @param occ occupancy sample
+	 */
 	private void testScans(OccupancySample occ) {
 		if (occ.value >= OccupancySample.MAX) {
 			locked_on += occ.period;
-			if (locked_on > getLockedOnThreshold().seconds())
+			if (locked_on > getLockedOnThreshold().seconds()) {
 				malfunction(EventType.DET_LOCKED_ON);
+				if (isDetectorReducedLogging())
+					locked_on = 0;
+			}
 		} else
 			locked_on = 0;
 	}
