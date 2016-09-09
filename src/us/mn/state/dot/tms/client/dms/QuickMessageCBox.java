@@ -17,15 +17,17 @@ package us.mn.state.dot.tms.client.dms;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Iterator;
 import java.util.TreeSet;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.text.AbstractDocument;
+
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DmsSignGroup;
 import us.mn.state.dot.tms.DmsSignGroupHelper;
@@ -46,16 +48,55 @@ import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
  * @author Michael Darter
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
-public class QuickMessageCBox extends JComboBox
-	//FIXME CA-MN-MERGE removed <QuickMessage> generic from JComboBox
-	// prototype text won't work with it.
+public class QuickMessageCBox extends JComboBox<QuickMessage>
 {
 
 	/** Prototype sign text */
-	static private final String PROTOTYPE_TEXT = "123456789012";
+	static private final QuickMessage PROTOTYPE_OBJ = new QuickMessage() {
+		@Override
+		public String getTypeName() {
+			return QuickMessage.SONAR_TYPE;
+		}
 
-	/** Given a QuickMessage or String, return the cooresponding quick 
+		@Override
+		public String getName() {
+			return "123456789012";
+		}
+
+		@Override
+		public SignGroup getSignGroup() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setSignGroup(SignGroup sg) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getMulti() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setMulti(String multi) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void destroy() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+        public String toString() {
+            return getName();
+        }
+	};
+
+	/** Given a QuickMessage or String, return the corresponding quick
 	 * message name or an empty string if none exists. */
 	static private String getQuickLibMsgName(Object obj) {
 		if (obj instanceof String)
@@ -73,11 +114,17 @@ public class QuickMessageCBox extends JComboBox
 	/** DMS dispatcher */
 	private final DMSDispatcher dispatcher;
 
-	/** Focus listener for editor component */
-	private final FocusListener focus_listener;
-
 	/** Action listener for combo box */
 	private final ActionListener action_listener;
+
+	/** Key listener for combo box */
+	private final KeyListener key_listener;
+
+    /** The combo box editor component */
+	private final JTextField editor_component;
+
+    /** The full message set */
+	private TreeSet<QuickMessage> msgs;
 
 	/** Counter to indicate we're adjusting widgets.  This needs to be
 	 * incremented before calling dispatcher methods which might cause
@@ -90,18 +137,19 @@ public class QuickMessageCBox extends JComboBox
 		dispatcher = d;
 		// Use a prototype display value so that the UI doesn't become
 		// unusable when quick messages with long names are used.
-		setPrototypeDisplayValue(PROTOTYPE_TEXT);
-		setEditable(true);
-		focus_listener = new FocusAdapter() {
-			public void focusGained(FocusEvent e) {
-				getEditor().selectAll();
-			}
-			public void focusLost(FocusEvent e) {
-				handleEditorFocusLost(e);
+		setPrototypeDisplayValue(PROTOTYPE_OBJ);
+		key_listener = new KeyAdapter() {
+			public void keyReleased(KeyEvent ke) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						applyFilter();
+					}
+				});
 			}
 		};
-		getEditor().getEditorComponent().addFocusListener(
-			focus_listener);
+		editor_component = (JTextField) getEditor().getEditorComponent();
+		editor_component.addKeyListener(key_listener);
+		setEditable(true);
 		action_listener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				updateDispatcher();
@@ -115,24 +163,6 @@ public class QuickMessageCBox extends JComboBox
 			((AbstractDocument)jtf.getDocument())
 				.setDocumentFilter(
 				new UppercaseDocumentFilter());
-	}
-
-	/** Handle editor focus lost */
-	protected void handleEditorFocusLost(FocusEvent e) {
-		Object item = getEditor().getItem();
-		if(item instanceof String)
-			handleEditorFocusLost((String)item);
-	}
-
-	/** Handle editor focus lost */
-	protected void handleEditorFocusLost(String item) {
-		String name = item.replace(" ", "");
-		getEditor().setItem(name);
-		QuickMessage qm = QuickMessageHelper.lookup(name);
-		if (qm != null) {
-			model.setSelectedItem(qm);
-			updateDispatcher(qm);
-		}
 	}
 
 	/** Update the dispatcher with the selected quick message */
@@ -194,7 +224,7 @@ public class QuickMessageCBox extends JComboBox
 
 	/** Populate the quick message model, with sorted quick messages */
 	public void populateModel(DMS dms) {
-		TreeSet<QuickMessage> msgs = createMessageSet(dms);
+		msgs = createMessageSet(dms);
 		adjusting++;
 		model.removeAllElements();
 		for (QuickMessage qm: msgs)
@@ -223,6 +253,26 @@ public class QuickMessageCBox extends JComboBox
 		return msgs;
 	}
 
+	/** Filters combo box members based on typed text. */
+	private void applyFilter() {
+		if (!isPopupVisible()) {
+			showPopup();
+		}
+
+		String enteredText = editor_component.getText().toLowerCase();
+		for (QuickMessage msg : msgs) {
+			if (!msg.getName().toLowerCase().contains(enteredText)) {
+				model.removeElement(msg);
+			} else if (model.getIndexOf(msg) < 0) {
+				model.addElement(msg);
+			}
+		}
+
+		if (model.getSize() == 1) {
+		    model.setSelectedItem(model.getElementAt(0));
+        }
+	}
+
 	/** Set the enabled status */
 	@Override
 	public void setEnabled(boolean e) {
@@ -236,7 +286,6 @@ public class QuickMessageCBox extends JComboBox
 	/** Dispose */
 	public void dispose() {
 		removeActionListener(action_listener);
-		getEditor().getEditorComponent().
-			removeFocusListener(focus_listener);
+		editor_component.removeKeyListener(key_listener);
 	}
 }
