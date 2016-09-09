@@ -38,7 +38,7 @@ import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 public class CameraShiftJob extends Job {
 
 	/** maximum amount of time in minutes to run this job */
-	static final private int MAX_RUNTIME = 720; // 12 hours
+	static final private int MAX_RUNTIME = 120; // 12 hours
 
 	/** instance of the scheduler controlling this job */
 	private final Scheduler scheduler;
@@ -51,12 +51,6 @@ public class CameraShiftJob extends Job {
 
 	/** Preset Alias Name to move cameras to */
 	private PresetAliasName destPan = HOME;
-
-	/**
-	 * don't send the camera movements, but process cameras normally.
-	 * for testing only
-	 */
-	private boolean disableCameraMovements = false;
 
 	/** last time a log message was issued warning of excessive time */
 	private long lastLogMessage = 0;
@@ -75,15 +69,14 @@ public class CameraShiftJob extends Job {
 		scheduler = s;
 		destPan = (pan != null)
 			? pan : CameraHelper.calculateLastShift();
-		log.log(TimeSteward.currentDateTimeString(true)
-			+ " Camera shift job created.");
+		log.log("Camera shift job created, should execute in " + offset
+			+ " minutes.");
 	}
 
 	/** perform job */
 	@Override
 	public void perform() throws Exception {
-		log.log(TimeSteward.currentDateTimeString(true)
-			+ " Begin performing camera shift job.");
+		log.log("Begin performing camera shift job.");
 
 		for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
 			camMoved.put(c, false);
@@ -158,6 +151,7 @@ public class CameraShiftJob extends Job {
 		Calendar tds = CameraHelper.getShiftTime(HOME, 0);
 		if (now.getTimeInMillis() > tds.getTimeInMillis())
 			offset = 1;
+
 		Calendar c;
 		if (NIGHT_SHIFT.equals(nsp))
 			c = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
@@ -171,8 +165,7 @@ public class CameraShiftJob extends Job {
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
 
-		log.log(TimeSteward.currentDateTimeString(true)
-			+ " Completed camera shift job.");
+		log.log(" Completed camera shift job.");
 	}
 
 	/** determine if the job should continue executing at this point */
@@ -188,10 +181,11 @@ public class CameraShiftJob extends Job {
 		int mxrt = MAX_RUNTIME * 60 * 1000;
 
 		if ((TimeSteward.currentTimeMillis() - lastLogMessage) > 3600) {
-			log.log("WARNING: Camera Shift Job is taking more than "
-				+ "an hour.");
+			log.log("WARNING: Camera Shift Job is taking more "
+				+ "than an hour.");
 			lastLogMessage = TimeSteward.currentTimeMillis();
 		}
+
 		// discontinue job if max runtime exceeded (default 12 hours)
 		if ((TimeSteward.currentTimeMillis() - started) > mxrt)
 			rv = false;
@@ -201,19 +195,10 @@ public class CameraShiftJob extends Job {
 
 	/** move the camera to desired preset */
 	private void moveCamera(Camera c, PresetAliasName pan) {
-		if (disableCameraMovements)
-			return;
-
 		Integer p = PresetAliasHelper.getPreset(c, pan);
 
 		// move the camera to preset
 		if (p != null)
 			c.setRecallPreset(p);
 	}
-
-	/** set the disableCameraMovements property */
-	public void setDisableCameraMovements(boolean f) {
-		this.disableCameraMovements = f;
-	}
-
 }

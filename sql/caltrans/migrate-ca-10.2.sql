@@ -605,7 +605,7 @@ ALTER TABLE iris.sign_message ADD COLUMN incident VARCHAR(16);
 -- ============================================================================
 
 -- feature 525
-INSERT INTO iris.camera_preset_alias_name (id, alias) VALUES (1, "Night-shift Home");
+INSERT INTO iris.camera_preset_alias_name (id, alias) VALUES (1, 'Night-shift Home');
 
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_concur_move', 1);
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_move_pause', 5);
