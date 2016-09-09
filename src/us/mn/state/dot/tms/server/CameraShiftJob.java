@@ -71,7 +71,7 @@ public class CameraShiftJob extends Job {
 	 */
 	public CameraShiftJob(Scheduler s, PresetAliasName pan, int offset) {
 
-		super(Calendar.SECOND, 0, Calendar.MINUTE, offset);
+		super((offset * 60 * 1000)); // convert to milliseconds
 		scheduler = s;
 		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift();
 		log.log(TimeSteward.currentDateTimeString(true)
@@ -151,18 +151,22 @@ public class CameraShiftJob extends Job {
 		GregorianCalendar now =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
 
-		// if the current time is after the today's dayshift, calculate
-		// for tomorrow's dayshift
-		int dayOffset = 0;
+		// if the current time is after the today's day-shift, calculate
+		// for tomorrow's day-shift
+		int offset = 0;
 		Calendar tds = CameraHelper.getShiftTime(HOME, 0);
 		if (now.getTimeInMillis() > tds.getTimeInMillis())
-			dayOffset = 1;
-		Calendar c = (NIGHT_SHIFT.equals(nsp))
-			? CameraHelper.getShiftTime(NIGHT_SHIFT, 0)
-			: CameraHelper.getShiftTime(HOME, dayOffset);
+			offset = 1;
+		Calendar c;
+		if (NIGHT_SHIFT.equals(nsp))
+			c = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
+		else if (offset != 0)
+			c = CameraHelper.getShiftTime(HOME, offset); // tomorrow
+		else
+			c = tds; // today's day-shift
 
-		int offset = (int) (c.getTimeInMillis()
-			- now.getTimeInMillis()) / 1000 / 60;
+		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis())
+			/ 1000 / 60;
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
 
