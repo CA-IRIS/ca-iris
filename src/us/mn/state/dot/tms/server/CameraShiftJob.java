@@ -38,13 +38,13 @@ import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 public class CameraShiftJob extends Job {
 
 	/** maximum amount of time in minutes to run this job */
-	static final private int MAX_RUNTIME = 120; // 12 hours
+	static final private int MAX_RUNTIME = 120; // 2 hours
 
 	/** instance of the scheduler controlling this job */
 	private final Scheduler scheduler;
 
 	/** log for messages relating to this job */
-	private final DebugLog log = new DebugLog("camerashiftjob");
+	static final public DebugLog log = new DebugLog("camerashiftjob");
 
 	/** a map to track what cameras were moved (or attempted to do so) */
 	private Map<Camera, Boolean> camMoved = new HashMap<>();
@@ -70,7 +70,7 @@ public class CameraShiftJob extends Job {
 		destPan = (pan != null)
 			? pan : CameraHelper.calculateLastShift();
 		log.log("Camera shift job created, should execute in " + offset
-			+ " minutes.");
+			+ " minutes for the " + destPan.name() + " preset.");
 	}
 
 	/** perform job */
@@ -165,7 +165,7 @@ public class CameraShiftJob extends Job {
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
 
-		log.log(" Completed camera shift job.");
+		log.log("Completed camera shift job.");
 	}
 
 	/** determine if the job should continue executing at this point */
