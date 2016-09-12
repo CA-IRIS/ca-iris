@@ -15,6 +15,7 @@
  */
 package us.mn.state.dot.tms.client.camera;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -27,12 +28,16 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
-import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.widget.Icons;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.Widgets;
 import us.mn.state.dot.tms.utils.I18N;
+
+import static us.mn.state.dot.tms.PresetAliasHelper.getPreset;
+import static us.mn.state.dot.tms.PresetAliasName.HOME;
+import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 
 /**
  * A panel containing controls for recalling and storing camera presets.
@@ -192,8 +197,37 @@ public class PresetPanel extends JPanel {
 	@Override
 	public void setEnabled(boolean e) {
 		super.setEnabled(e);
-		for(JButton b: preset_btn)
+
+		/** preset number of the HOME (day-shift) alias */
+		Integer dsButtonNum = getPreset(cam_ptz.getCamera(), HOME);
+
+		/** preset number of the NIGHT_SHIFT (night-shift) alias */
+		Integer nsButtonNum = getPreset(cam_ptz.getCamera(),
+			NIGHT_SHIFT);
+
+		for(JButton b: preset_btn) {
+			Integer bn = null;
+			try {
+				bn = Integer.parseInt(b.getText());
+			}
+			catch (NumberFormatException e1) {
+				// do nothing
+			}
+
+			if (bn != null) {
+				if (dsButtonNum == bn)
+					b.setBackground(
+						new Color(0xFF, 0xE0, 0xAB));
+				else if (nsButtonNum == bn)
+					b.setBackground(
+						new Color(0xC1, 0xAB, 0xFF));
+				else
+					b.setBackground(null);
+			} else
+				b.setBackground(null);
+
 			b.setEnabled(e && cam_ptz.canRecallPreset());
+		}
 		store_btn.setEnabled(e && cam_ptz.canStorePreset());
 	}
 }
