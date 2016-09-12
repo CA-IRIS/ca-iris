@@ -224,10 +224,10 @@ public class PresetPanel extends JPanel {
 				b.setBackground(null);
 				if (dsButtonNum == bn)
 					b.setBackground(
-						new Color(0xFF, 0xE0, 0xAB));
+						new Color(0xE5, 0xDF, 0xB8));
 				else if (nsButtonNum == bn)
 					b.setBackground(
-						new Color(0xC1, 0xAB, 0xFF));
+						new Color(0xDA, 0xB8, 0xE5));
 			} else
 				b.setBackground(null);
 			b.setEnabled(e && cam_ptz.canRecallPreset());
