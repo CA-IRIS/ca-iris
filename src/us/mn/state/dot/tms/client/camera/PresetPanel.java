@@ -18,12 +18,17 @@ package us.mn.state.dot.tms.client.camera;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -64,7 +69,7 @@ public class PresetPanel extends JPanel {
 		SystemAttrEnum.CAMERA_PRESET_PANEL_COLUMNS.getInt();
 
 	/** Array of buttons used to select presets */
-	private final JButton[] preset_btn = new JButton[NUM_PRESET_BTNS];
+	private final PresetButton[] preset_btn = new PresetButton[NUM_PRESET_BTNS];
 
 	/** Button used to store presets */
 	private final JToggleButton store_btn;
@@ -138,12 +143,13 @@ public class PresetPanel extends JPanel {
 	}
 
 	/** Create a preset button */
-	private JButton createPresetButton(final int num) {
-		JButton btn = new JButton(new IAction("camera.preset") {
+	private PresetButton createPresetButton(final int num) {
+		PresetButton btn = new PresetButton(new IAction("camera.preset") {
 			protected void doActionPerformed(ActionEvent e) {
 				handlePresetBtnPress(num);
 			}
 		});
+
 		btn.setPreferredSize(btn_dim);
 		btn.setMinimumSize(btn_dim);
 		btn.setFont(btn_font);
@@ -205,7 +211,7 @@ public class PresetPanel extends JPanel {
 		Integer nsButtonNum = getPreset(cam_ptz.getCamera(),
 			NIGHT_SHIFT);
 
-		for(JButton b: preset_btn) {
+		for(PresetButton b: preset_btn) {
 			Integer bn = null;
 			try {
 				bn = Integer.parseInt(b.getText());
@@ -215,19 +221,60 @@ public class PresetPanel extends JPanel {
 			}
 
 			if (bn != null) {
+				b.setBackground(null);
 				if (dsButtonNum == bn)
 					b.setBackground(
 						new Color(0xFF, 0xE0, 0xAB));
 				else if (nsButtonNum == bn)
 					b.setBackground(
 						new Color(0xC1, 0xAB, 0xFF));
-				else
-					b.setBackground(null);
 			} else
 				b.setBackground(null);
-
 			b.setEnabled(e && cam_ptz.canRecallPreset());
 		}
 		store_btn.setEnabled(e && cam_ptz.canStorePreset());
+	}
+
+	/** custom button class for better button look & feel for shift colors*/
+	protected class PresetButton extends JButton {
+
+		public PresetButton(Action a) {
+			super(a);
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			if (getBackground() != null) {
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setPaint(
+					new GradientPaint(
+						new Point(0, 0),
+						getBackground(),
+						new Point(0, getHeight() / 3),
+						Color.WHITE));
+				g2.fillRect(0, 0, getWidth(), getHeight() / 3);
+				g2.setPaint(
+					new GradientPaint(
+						new Point(0, getHeight() / 3),
+						Color.WHITE,
+						new Point(0, getHeight()),
+						getBackground()));
+				g2.fillRect(0, getHeight() / 3, getWidth(),
+					getHeight());
+				g2.dispose();
+			}
+
+			super.paintComponent(g);
+		}
+
+		@Override
+		public void setBackground(Color bg) {
+			super.setBackground(bg);
+
+			setContentAreaFilled(true);
+			if (bg != null)
+				setContentAreaFilled(false);
+		}
 	}
 }
