@@ -153,7 +153,7 @@ public class DMSManager extends ProxyManager<DMS> {
 		s_model.setAllowMultiple(true);
 
 		// if user can't do anything about these changes then don't bother them
-		if (s.canUpdate(DMS.SONAR_TYPE)) {
+		if (SystemAttrEnum.DMS_NOTIFY_NEEDS_ATTENTION.getBoolean() && s.canUpdate(DMS.SONAR_TYPE)) {
 			getCache().addProxyListener(dms_listener);
 			session.getSonarState().getConCache().getControllers().addProxyListener(controller_listener);
 		}

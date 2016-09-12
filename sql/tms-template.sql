@@ -2500,6 +2500,7 @@ dms_manager_show_owner	true
 dms_manufacturer_enable	true
 dms_max_lines	3
 dms_message_min_pages	1
+dms_notify_needs_attention	true
 dms_page_off_default_secs	0.0
 dms_page_on_default_secs	2.0
 dms_page_on_max_secs	10.0
