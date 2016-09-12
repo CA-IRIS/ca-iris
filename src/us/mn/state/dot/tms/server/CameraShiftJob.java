@@ -26,6 +26,7 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
+import us.mn.state.dot.tms.SystemAttrEnum;
 
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
@@ -55,6 +56,9 @@ public class CameraShiftJob extends Job {
 	/** last time a log message was issued warning of excessive time */
 	private long lastLogMessage;
 
+	/** used to determine if we execute on server startup */
+	private boolean ignoreStartup = false;
+
 	/**
 	 * Create a camera shift job
 	 * @param s      the scheduler in charge of this job, used to add a
@@ -67,6 +71,9 @@ public class CameraShiftJob extends Job {
 
 		super((offset * 60 * 1000)); // convert to milliseconds
 		scheduler = s;
+		if (!SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean()
+			&& pan == null)
+			ignoreStartup = true;
 		destPan = (pan != null)
 			? pan : CameraHelper.calculateLastShift();
 		log.log("Camera shift job created, should execute in " + offset
@@ -77,6 +84,14 @@ public class CameraShiftJob extends Job {
 	@Override
 	public void perform() throws Exception {
 		log.log("Begin performing camera shift job.");
+
+		if (ignoreStartup) {
+			log.log("Not shifting cameras, as "
+				+ SystemAttrEnum.CAMERA_SHIFT_REINIT.name()
+				+ " is set to "
+				+ SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean());
+			return;
+		}
 
 		for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
 			camMoved.put(c, false);
@@ -130,6 +145,8 @@ public class CameraShiftJob extends Job {
 	public void complete() {
 		super.complete();
 
+		log.log("Camera shift job wrapping up.");
+
 		// log cameras that the job was unable to move for shift
 		for (Camera c : camMoved.keySet()) {
 			if (!camMoved.get(c))
@@ -145,20 +162,29 @@ public class CameraShiftJob extends Job {
 		GregorianCalendar now =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
 
-		// if the current time is after the today's day-shift, calculate
-		// for tomorrow's day-shift
+		// if the current time is after the today's shifts, calculate
+		// for tomorrow's shift
 		int offset = 0;
 		Calendar tds = CameraHelper.getShiftTime(HOME, 0);
-		if (now.getTimeInMillis() > tds.getTimeInMillis())
+		if (HOME.equals(nsp)
+			&& now.getTimeInMillis() > tds.getTimeInMillis())
+			offset = 1;
+
+		Calendar tns = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
+		if (NIGHT_SHIFT.equals(nsp)
+			&& now.getTimeInMillis() > tns.getTimeInMillis())
 			offset = 1;
 
 		Calendar c;
 		if (NIGHT_SHIFT.equals(nsp))
-			c = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
-		else if (offset != 0)
-			c = CameraHelper.getShiftTime(HOME, offset); // tomorrow
+			c = (offset == 0)
+				? tns
+				: CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
+
 		else
-			c = tds; // today's day-shift
+			c = (offset == 0)
+				? tds
+				: CameraHelper.getShiftTime(HOME, offset);
 
 		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis())
 			/ 1000 / 60;
