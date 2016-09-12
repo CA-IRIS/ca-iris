@@ -88,7 +88,7 @@ public class DMSManager extends ProxyManager<DMS> {
 					String dcname = dms.getController().getName();
 					if (cname.equals(dcname)) {
 						JOptionPane.showMessageDialog(null,
-							/* TODO: I18N.get("...") */ "DMS " + dms.getName() + " requires attention.");
+                                String.format(I18N.get("dms.notification.attention_required"), dms.getName()));
 						break;
 					}
 				}
@@ -136,7 +136,7 @@ public class DMSManager extends ProxyManager<DMS> {
 			} else if (aws_signs.remove(proxy.getName()) &&
 				SignMessageHelper.isBlank(proxy.getMessageCurrent())) {
 				JOptionPane.showMessageDialog(null,
-					/* TODO: I18N.get("...") */ "DMS " + proxy.getName() + " requires attention.");
+					String.format(I18N.get("dms.notification.attention_required"), proxy.getName()));
 			}
 		}
 
