@@ -15,16 +15,13 @@
  */
 package us.mn.state.dot.tms.client.camera;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -220,16 +217,13 @@ public class PresetPanel extends JPanel {
 				// do nothing
 			}
 
+			b.setPresetAliasName(null);
 			if (bn != null) {
-				b.setBackground(null);
 				if (dsButtonNum == bn)
-					b.setBackground(
-						new Color(0xE5, 0xDF, 0xB8));
+					b.setPresetAliasName(HOME);
 				else if (nsButtonNum == bn)
-					b.setBackground(
-						new Color(0xDA, 0xB8, 0xE5));
-			} else
-				b.setBackground(null);
+					b.setPresetAliasName(NIGHT_SHIFT);
+			}
 			b.setEnabled(e && cam_ptz.canRecallPreset());
 		}
 		store_btn.setEnabled(e && cam_ptz.canStorePreset());
@@ -238,43 +232,45 @@ public class PresetPanel extends JPanel {
 	/** custom button class for better button look & feel for shift colors*/
 	protected class PresetButton extends JButton {
 
+		private PresetAliasName presetAliasName = null;
+
 		public PresetButton(Action a) {
 			super(a);
 		}
 
 		@Override
 		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
 
-			if (getBackground() != null) {
+			if (getPresetAliasName() != null) {
 				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setPaint(
-					new GradientPaint(
-						new Point(0, 0),
-						getBackground(),
-						new Point(0, getHeight() / 3),
-						Color.WHITE));
-				g2.fillRect(0, 0, getWidth(), getHeight() / 3);
-				g2.setPaint(
-					new GradientPaint(
-						new Point(0, getHeight() / 3),
-						Color.WHITE,
-						new Point(0, getHeight()),
-						getBackground()));
-				g2.fillRect(0, getHeight() / 3, getWidth(),
-					getHeight());
+				g2.setPaint(getForeground());
+
+				// simple bar on the preset button to indicate
+				// a day-shift [Home] preset assignment.
+				if (HOME.equals(presetAliasName))
+					g2.fillRect(0, 0,
+						getWidth(), getHeight() / 5);
+
+				// simple bar on the preset button to indicate
+				// a night-shift preset assignment.
+				if (NIGHT_SHIFT.equals(presetAliasName))
+					g2.fillRect(0, (4 * getHeight() / 5),
+						getWidth(), getHeight() / 5);
+
 				g2.dispose();
 			}
 
-			super.paintComponent(g);
 		}
 
-		@Override
-		public void setBackground(Color bg) {
-			super.setBackground(bg);
+		public PresetAliasName getPresetAliasName() {
+			return presetAliasName;
+		}
 
-			setContentAreaFilled(true);
-			if (bg != null)
-				setContentAreaFilled(false);
+		public void setPresetAliasName(
+			PresetAliasName presetAliasName) {
+			this.presetAliasName = presetAliasName;
+			this.repaint();
 		}
 	}
 }
