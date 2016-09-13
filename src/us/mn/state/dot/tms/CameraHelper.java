@@ -271,8 +271,7 @@ public class CameraHelper extends BaseHelper {
 //		log.log("Shift time: " + twilight.toString() + " dst=" + dst);
 
 		GregorianCalendar diTwilight = (GregorianCalendar)
-			setTimeToCalendar(TimeSteward.getCalendarInstance(),
-				twilight);
+			setTimeToCalendar(di, twilight);
 //		log.log("Calendar twilight: " + twilight.toString());
 
 		if (NIGHT_SHIFT.equals(pan))
