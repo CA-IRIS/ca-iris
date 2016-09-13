@@ -180,7 +180,6 @@ public class CameraShiftJob extends Job {
 			c = (offset == 0)
 				? tns
 				: CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
-
 		else
 			c = (offset == 0)
 				? tds
@@ -215,8 +214,11 @@ public class CameraShiftJob extends Job {
 		}
 
 		// discontinue job if max runtime exceeded (default 12 hours)
-		if ((TimeSteward.currentTimeMillis() - started) > mxrt)
+		if ((TimeSteward.currentTimeMillis() - started) > mxrt) {
 			rv = false;
+			log.log("Terminating job, as it has taken more than 12"
+				+ " hours.");
+		}
 
 		return rv;
 	}

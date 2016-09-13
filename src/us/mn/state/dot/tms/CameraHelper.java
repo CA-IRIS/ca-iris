@@ -234,7 +234,6 @@ public class CameraHelper extends BaseHelper {
 	static public Calendar getShiftTime(PresetAliasName pan,
 		int dayOffset) {
 
-		/** log for messages relating to this job */
 		final DebugLog log = CameraShiftJob.log;
 
 		int off = dayOffset;
@@ -242,7 +241,7 @@ public class CameraHelper extends BaseHelper {
 			off = 0;
 		GregorianCalendar di =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
-		log.log("Shift =" + pan.name() + ", offset=" + dayOffset);
+		log.log("Shift=" + pan.name() + ", offset=" + dayOffset);
 		di.roll(Calendar.DAY_OF_MONTH, off);
 		log.log("Calendar rolled: " + date2str(di));
 
@@ -287,7 +286,7 @@ public class CameraHelper extends BaseHelper {
 					+ getSunriseOffset() * 60
 					* 1000));
 
-		log.log("Shift change: " + date2str(diTwilight));
+		log.log("Shift (" + pan.name() + ") change: " + date2str(diTwilight));
 		return diTwilight;
 	}
 

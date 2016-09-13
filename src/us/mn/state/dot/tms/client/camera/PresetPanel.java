@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2014  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014       AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +47,7 @@ import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class PresetPanel extends JPanel {
 
@@ -229,15 +231,19 @@ public class PresetPanel extends JPanel {
 		store_btn.setEnabled(e && cam_ptz.canStorePreset());
 	}
 
-	/** custom button class for better button look & feel for shift colors*/
+	/** custom button class for shift preset indicators */
 	protected class PresetButton extends JButton {
 
+		/** alias for the button */
 		private PresetAliasName presetAliasName = null;
 
+		/** constructor. other constructors from JButton may need to be
+		 * added later, if needed. */
 		public PresetButton(Action a) {
 			super(a);
 		}
 
+		/** overridden method to paint indication bars on the button */
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -263,10 +269,12 @@ public class PresetPanel extends JPanel {
 
 		}
 
+		/** getter for preset alias name */
 		public PresetAliasName getPresetAliasName() {
 			return presetAliasName;
 		}
 
+		/** setter for preset alias name */
 		public void setPresetAliasName(
 			PresetAliasName presetAliasName) {
 			this.presetAliasName = presetAliasName;
