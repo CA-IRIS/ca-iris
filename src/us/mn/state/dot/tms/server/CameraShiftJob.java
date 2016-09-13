@@ -75,7 +75,7 @@ public class CameraShiftJob extends Job {
 			&& pan == null)
 			ignoreStartup = true;
 		destPan = (pan != null)
-			? pan : CameraHelper.calculateLastShift();
+			? pan : CameraHelper.calculateLastShift(offset);
 		log.log("Camera shift job created, should execute in " + offset
 			+ " minutes for the " + destPan.name() + " preset.");
 	}

@@ -385,7 +385,7 @@ public class CameraDispatcher extends JPanel {
 		if (!et.supportsIndirect())
 			return;
 
-		PresetAliasName pan = CameraHelper.calculateLastShift();
+		PresetAliasName pan = CameraHelper.calculateLastShift(0);
 		if (!HOME.equals(pan)
 			&& !PresetAliasHelper.hasShiftPreset(c, pan))
 			pan = HOME;
