@@ -16,6 +16,9 @@ ALTER TABLE event.tag_type OWNER TO tms;
 ALTER TABLE event.tag_read_event OWNER TO tms;
 ALTER VIEW tag_read_event_view OWNER TO tms;
 
+-- new system attributes
+INSERT INTO iris.system_attribute(name, value) VALUES ('dms_notify_needs_attention', 'true');
+
 -- migrate-4.27.sql
 \set ON_ERROR_STOP
 
