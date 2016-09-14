@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +15,15 @@
  */
 package us.mn.state.dot.tms;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
  * SiteDataHelper has static methods for dealing with SiteData entities.
- *
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class SiteDataHelper extends BaseHelper {
 
@@ -40,24 +43,26 @@ public class SiteDataHelper extends BaseHelper {
 	// [CTYFULL]    county name
 	// [GLNAME]     GeoLoc name
 
-	public final static String TAG_RDFULL     = "\\[RDFULL\\]";
-	public final static String TAG_RDABBR     = "\\[RDABBR\\]";
-	public final static String TAG_RD         = "\\[RD\\]";
-	public final static String TAG_RDDIR      = "\\[RDDIR\\]";
-	public final static String TAG_RDDIRFULL  = "\\[RDDIRFULL\\]";
-	public final static String TAG_XRDFULL    = "\\[XRDFULL\\]";
-	public final static String TAG_XRDABBR    = "\\[XRDABBR\\]";
-	public final static String TAG_XRD        = "\\[XRD\\]";
-	public final static String TAG_XRDDIR     = "\\[XRDDIR\\]";
+	public final static String TAG_RDFULL = "\\[RDFULL\\]";
+	public final static String TAG_RDABBR = "\\[RDABBR\\]";
+	public final static String TAG_RD = "\\[RD\\]";
+	public final static String TAG_RDDIR = "\\[RDDIR\\]";
+	public final static String TAG_RDDIRFULL = "\\[RDDIRFULL\\]";
+	public final static String TAG_XRDFULL = "\\[XRDFULL\\]";
+	public final static String TAG_XRDABBR = "\\[XRDABBR\\]";
+	public final static String TAG_XRD = "\\[XRD\\]";
+	public final static String TAG_XRDDIR = "\\[XRDDIR\\]";
 	public final static String TAG_XRDDIRFULL = "\\[XRDDIRFULL\\]";
-	public final static String TAG_XMOD       = "\\[XMOD\\]";
-	public final static String TAG_MILE       = "\\[MILE\\]";
-	public final static String TAG_CTY        = "\\[CTY\\]";
-	public final static String TAG_CTYFULL    = "\\[CTYFULL\\]";
-	public final static String TAG_GLNAME     = "\\[GLNAME\\]";
+	public final static String TAG_XMOD = "\\[XMOD\\]";
+	public final static String TAG_MILE = "\\[MILE\\]";
+	public final static String TAG_CTY = "\\[CTY\\]";
+	public final static String TAG_CTYFULL = "\\[CTYFULL\\]";
+	public final static String TAG_GLNAME = "\\[GLNAME\\]";
 
 	static public final String DESCFMT_DEFAULT =
 		"[RDFULL] [RDDIR] [XMOD] [XRDFULL] [XRDDIR]";
+
+	private final static Map<String, String> geoLocToSite = new HashMap<>();
 
 	static private String getFormatString(GeoLoc gl) {
 		// return format from SiteData if present
@@ -96,18 +101,48 @@ public class SiteDataHelper extends BaseHelper {
 
 	/** Lookup a SiteData entity by GeoLoc */
 	static public SiteData lookupByGeoLoc(GeoLoc gl) {
-		if (gl == null)
-			return null;
-		String gn = gl.getName();
+		return gl != null ? lookupByGeoLoc(gl.getName()) : null;
+	}
+
+	static public SiteData lookupByGeoLoc(String gn) {
+		SiteData sd = null;
+
 		if (gn == null)
 			return null;
-		Iterator<SiteData> it = iterator();
-		while (it.hasNext()) {
-			SiteData sd = it.next();
-			if (gn.equals(sd.getGeoLoc()))
-				return sd;
+
+		// try to find cached value first
+		String sn;
+		synchronized (geoLocToSite) {
+			sn = geoLocToSite.get(gn);
 		}
-		return null;
+
+		// verify hasn't changed since cached value was added
+		if (sn != null) {
+			sd = lookup(sn);
+			if (sd == null || !gn.equals(sd.getGeoLoc())) {
+				synchronized (geoLocToSite) {
+					geoLocToSite.remove(gn);
+				}
+				sd = null;
+			}
+		}
+
+		// perform the expensive operation (and cache the result)
+		if (sd == null) {
+			Iterator<SiteData> it = iterator();
+			while (it.hasNext()) {
+				SiteData tmp = it.next();
+				if (gn.equals(tmp.getGeoLoc())) {
+					sd = tmp;
+					synchronized (geoLocToSite) {
+						geoLocToSite.put(gn, sd.getName());
+					}
+					break;
+				}
+			}
+		}
+
+		return sd;
 	}
 
 	/**
@@ -118,23 +153,10 @@ public class SiteDataHelper extends BaseHelper {
 	 * entity doesn't contain a site name
 	 */
 	static public String getSiteName(String gn) {
-		if (gn == null)
-			return null;
-		SiteData siteData = null;
-		Iterator<SiteData> it = iterator();
-		while (it.hasNext()) {
-			SiteData sd = it.next();
-			if (gn.equals(sd.getGeoLoc())) {
-				siteData = sd;
-				break;
-			}
-		}
-		if (siteData == null)
-			return null;
-		String sn = siteData.getSiteName();
-		if (sanitize(sn).equals(""))
-			return null;
-		return sn;
+		SiteData sd = lookupByGeoLoc(gn);
+		String sn = sd != null ? sd.getName() : null;
+
+		return !sanitize(sn).equals("") ? sn : null;
 	}
 
 	/**
@@ -144,23 +166,10 @@ public class SiteDataHelper extends BaseHelper {
 	 * @return A GeoLoc name string, or null if site name not found.
 	 */
 	static public String getGeoLocNameBySiteName(String sn) {
-		if (sn == null)
-			return null;
-		SiteData siteData = null;
-		Iterator<SiteData> it = iterator();
-		while (it.hasNext()) {
-			SiteData sd = it.next();
-			if (sn.equals(sd.getSiteName())) {
-				siteData = sd;
-				break;
-			}
-		}
-		if (siteData == null)
-			return null;
-		String gl = siteData.getGeoLoc();
-		if (sanitize(gl).equals(""))
-			return null;
-		return gl;
+		SiteData sd = lookup(sn);
+		String gl = sd != null ? sd.getGeoLoc() : null;
+
+		return !sanitize(gl).equals("") ? gl : null;
 	}
 
 	/** Build a string to describe a GeoLoc */
