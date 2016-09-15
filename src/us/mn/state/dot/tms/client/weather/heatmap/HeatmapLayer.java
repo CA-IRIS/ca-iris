@@ -49,6 +49,7 @@ public class HeatmapLayer extends Layer {
 	public LayerState getLayerState() {
 		return layerState;
 	}
+
 	/**
 	 * Constructor to create the heatmap layer
 	 * @param s session
@@ -76,7 +77,6 @@ public class HeatmapLayer extends Layer {
 	/** Update the layer status */
 	public void updateStatus() {
 		fireLayerChanged(LayerChange.status);
-//		fireLayerChanged(LayerChange.theme);
 	}
 
 

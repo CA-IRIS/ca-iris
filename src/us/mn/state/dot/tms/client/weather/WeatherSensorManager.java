@@ -322,7 +322,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	}
 
 	private void updateHeatmapLayer() {
-		if(getHeatmapLayer() == null)
+		if (getHeatmapLayer() == null)
 			return;
 
 		getHeatmapLayer().updateGeometry();
