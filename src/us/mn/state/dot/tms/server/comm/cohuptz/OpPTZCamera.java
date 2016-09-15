@@ -25,7 +25,6 @@ import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.DeviceContentionException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Cohu PTZ operation to pan/tilt/zoom a camera.
@@ -67,9 +66,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 	 */
 	protected static final boolean use_combined_commands = true;
 
-	/** to evaluate whether to include zoom in full property/phase */
-	private final boolean stop_zoom;
-
 	/** so queued operations aren't dropped for being supposed duplicates */
 	private final long created;
 
@@ -89,10 +85,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 		tilt = t;
 		zoom = z;
 
-		stop_zoom = use_fixed_speed ||
-			NumericAlphaComparator.compareFloats(z, 0F,
-				CohuPTZProperty.PTZ_THRESH) == 0F;
-
 		log(String.format("PTZ command: P:%s  T:%s  Z:%s",
 			p == null ? "null" : p.toString(),
 			t == null ? "null" : t.toString(),
@@ -104,14 +96,14 @@ public class OpPTZCamera extends OpCohuPTZ {
 	protected Phase<CohuPTZProperty> phaseTwo() {
 
 		if(use_combined_commands)
-			return new PTZFullPhase();
-		return new PanPhase();
+			return new PTCombinedPhase();
+		return  new PanPhase();
 	}
 
 	/**
 	 * ptz full command phase
 	 */
-	protected class PTZFullPhase extends Phase<CohuPTZProperty> {
+	protected class PTCombinedPhase extends Phase<CohuPTZProperty> {
 
 		protected Phase<CohuPTZProperty> poll(
 			CommMessage<CohuPTZProperty> mess)
@@ -119,17 +111,14 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			if(pan != null || tilt != null) {
 				log("sending full ptz");
-				mess.add(new PTZFullProperty());
+				mess.add(new PTCombinedProperty());
 				doStoreProps(mess);
 				updateOpStatus("pan/tilt sent");
 				log("pan/tilt sent");
 			}
 
-			// zoom has to be handled separate w/ variable speed
-			if(!stop_zoom)
-				return new ZoomPhase();
-
-			return null;
+			// zoom always sent separately due to sidewinder camera
+			return new ZoomPhase();
 		}
 
 		@Override
@@ -142,15 +131,15 @@ public class OpPTZCamera extends OpCohuPTZ {
 	protected class PanPhase extends Phase<CohuPTZProperty> {
 
 		protected Phase<CohuPTZProperty> poll(
-				CommMessage<CohuPTZProperty> mess)
-				throws IOException {
+			CommMessage<CohuPTZProperty> mess)
+			throws IOException {
 
 			if (pan != null) {
-					log("sending pan=" + pan);
-					mess.add(new PanProperty(pan));
+				log("sending pan=" + pan);
+				mess.add(new PanProperty(pan));
 				doStoreProps(mess);
-					updateOpStatus("pan sent");
-					log("pan sent");
+				updateOpStatus("pan sent");
+				log("pan sent");
 			}
 
 			return new TiltPhase();
@@ -200,9 +189,9 @@ public class OpPTZCamera extends OpCohuPTZ {
 	}
 
 	/** PTZ full property, send this exact command */
-	protected class PTZFullProperty extends CohuPTZProperty {
+	protected class PTCombinedProperty extends CohuPTZProperty {
 
-		public PTZFullProperty() { }
+		public PTCombinedProperty() { }
 
 		/** Encode a STORE request */
 		@Override
@@ -213,12 +202,6 @@ public class OpPTZCamera extends OpCohuPTZ {
 
 			cmd = processPTZInfo(Command.PAN, pan, cmd);
 			cmd = processPTZInfo(Command.TILT, tilt, cmd);
-
-			// zoom can't be added with variable speeds
-			// but it can be added so long as it is a stop command
-			// see PTZFullPhase
-			if(stop_zoom)
-				cmd = processPTZInfo(Command.ZOOM, zoom, cmd);
 
 			writePayload(os, c.getDrop(), cmd);
 		}
