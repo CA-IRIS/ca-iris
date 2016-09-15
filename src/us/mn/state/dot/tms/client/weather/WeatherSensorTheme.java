@@ -38,6 +38,7 @@ import static us.mn.state.dot.tms.WeatherSensorHelper.getMultiTempsString;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getPrecipRate;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getVisibilityMeters;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getWindSpeedKph;
+import static us.mn.state.dot.tms.WeatherSensorHelper.isAwsState;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isCrazyState;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isHighAirTempCelsius;
 import static us.mn.state.dot.tms.WeatherSensorHelper.isHighPrecipRate;
@@ -214,10 +215,11 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		case CRAZY:
 			return isCrazyState(ws) ? super.getStyle(ws) : null;
 
+		case AWS:
+			return isAwsState(ws) ? super.getStyle(ws) : null;
+
 		case ALL:
 			return super.getStyle(ws);
-
-		// FIXME AWS, normal, no controller?
 
 		case WIND_SPEED:
 			base = STY_WIND_SPEED;
