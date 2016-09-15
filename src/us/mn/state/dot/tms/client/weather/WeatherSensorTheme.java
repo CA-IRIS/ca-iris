@@ -107,7 +107,7 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	}
 
 
-	//FIXME CA-MN-MERGE will it blend? Blend?
+	//FIXME CA-MN-MERGE will it blend?
 	/** Get a legend icon for a style */
 	@Override
 	public Icon getLegend(Style sty) {
@@ -248,11 +248,11 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			break;
 
 		default:
-			return null; //super.getStyle(ws);
+			return super.getStyle(ws);
 		}
 
 		if (n == null)
-			return null; //super.getStyle(ws);
+			return super.getStyle(ws);
 		if (lb)
 			return base[0];
 		if (hb)
