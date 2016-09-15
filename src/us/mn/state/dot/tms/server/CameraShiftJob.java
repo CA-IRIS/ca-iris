@@ -99,7 +99,7 @@ public class CameraShiftJob extends Job {
 
 		if (camMoved.isEmpty()) {
 			log.log("WARNING: no cameras to shift-move.");
-			return; // nothing to do
+			return;
 		}
 
 		int concurrent = CameraHelper.getConcurrentMovements();
@@ -122,16 +122,11 @@ public class CameraShiftJob extends Job {
 				TimeSteward.sleep((delay - diff));
 
 			for (Camera c : camMoved.keySet()) {
-
-				// skip moved cameras
 				if (camMoved.get(c))
 					continue;
-
-				// too many moving cameras, break for delay
 				if (movingNow >= concurrent)
 					break;
 
-				// move camera
 				moveCamera(c, destPan);
 				movingNow++;
 				lastMovement = TimeSteward.currentTimeMillis();
@@ -147,7 +142,6 @@ public class CameraShiftJob extends Job {
 
 		log.log("Camera shift job wrapping up.");
 
-		// log cameras that the job was unable to move for shift
 		for (Camera c : camMoved.keySet()) {
 			if (!camMoved.get(c))
 				log.log("WARNING: Camera Shift Job was unable "
@@ -155,35 +149,30 @@ public class CameraShiftJob extends Job {
 					+ "'.");
 		}
 
-		// calculate when next job should occur
 		PresetAliasName nsp = (HOME.equals(destPan))
 			? NIGHT_SHIFT : HOME;
-
 		GregorianCalendar now =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
 
-		// if the current time is after the today's shifts, calculate
-		// for tomorrow's shift
 		int offset = 0;
 		Calendar tds = CameraHelper.getShiftTime(HOME, 0);
+		Calendar tns = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
 		if (HOME.equals(nsp)
 			&& now.getTimeInMillis() > tds.getTimeInMillis())
 			offset = 1;
-
-		Calendar tns = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
-		if (NIGHT_SHIFT.equals(nsp)
+		else if (NIGHT_SHIFT.equals(nsp)
 			&& now.getTimeInMillis() > tns.getTimeInMillis())
 			offset = 1;
 
-		Calendar c;
-		if (NIGHT_SHIFT.equals(nsp))
-			c = (offset == 0)
-				? tns
-				: CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
-		else
+		Calendar c = tds;
+		if (HOME.equals(nsp))
 			c = (offset == 0)
 				? tds
 				: CameraHelper.getShiftTime(HOME, offset);
+		else if (NIGHT_SHIFT.equals(nsp))
+			c = (offset == 0)
+				? tns
+				: CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
 
 		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis())
 			/ 1000 / 60;
@@ -197,7 +186,6 @@ public class CameraShiftJob extends Job {
 	private boolean doJob(long started) {
 		boolean rv = false;
 
-		// if a camera in the list hasn't been moved, do the job
 		for (Camera c : camMoved.keySet()) {
 			if (!camMoved.get(c))
 				rv = true;
@@ -213,7 +201,6 @@ public class CameraShiftJob extends Job {
 			lastLogMessage = TimeSteward.currentTimeMillis();
 		}
 
-		// discontinue job if max runtime exceeded (default 12 hours)
 		if ((TimeSteward.currentTimeMillis() - started) > mxrt) {
 			rv = false;
 			log.log("Terminating job, as it has taken more than 12"
@@ -227,7 +214,6 @@ public class CameraShiftJob extends Job {
 	private void moveCamera(Camera c, PresetAliasName pan) {
 		Integer p = PresetAliasHelper.getPreset(c, pan);
 
-		// move the camera to preset
 		if (p != null) {
 			c.setRecallPreset(p);
 			log.log("Moved camera '" + c.getName() + "' to "

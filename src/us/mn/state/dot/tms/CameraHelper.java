@@ -259,11 +259,8 @@ public class CameraHelper extends BaseHelper {
 			di.set(Calendar.MINUTE, 1);
 			di.set(Calendar.SECOND, 0);
 		}
-//		log.log("Calendar changed: " + date2str(di));
 
 		Position center = getGeographicCenter();
-//		log.log("Position: " + center.getLatitude() + "  "
-//			+ center.getLongitude());
 		Time twilight;
 
 		boolean dst = di.getTimeZone().inDaylightTime(di.getTime());
@@ -274,11 +271,8 @@ public class CameraHelper extends BaseHelper {
 			twilight = Sun.sunriseTime(di, center, di.getTimeZone(),
 				dst);
 
-//		log.log("Shift time: " + twilight.toString() + " dst=" + dst);
-
 		GregorianCalendar diTwilight = (GregorianCalendar)
 			setTimeToCalendar(di, twilight);
-//		log.log("Calendar twilight: " + twilight.toString());
 
 		if (NIGHT_SHIFT.equals(pan))
 			diTwilight.setTimeInMillis(
