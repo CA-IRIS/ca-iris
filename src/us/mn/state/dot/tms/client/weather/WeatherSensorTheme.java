@@ -30,9 +30,17 @@ import us.mn.state.dot.tms.utils.STime;
 import javax.swing.*;
 
 import static us.mn.state.dot.tms.ItemStyle.AIR_TEMP;
+import static us.mn.state.dot.tms.ItemStyle.AWS;
+import static us.mn.state.dot.tms.ItemStyle.CRAZY;
+import static us.mn.state.dot.tms.ItemStyle.EXPIRED;
+import static us.mn.state.dot.tms.ItemStyle.NORMAL;
+import static us.mn.state.dot.tms.ItemStyle.NO_CONTROLLER;
 import static us.mn.state.dot.tms.ItemStyle.PRECIPITATION;
 import static us.mn.state.dot.tms.ItemStyle.VISIBILITY;
 import static us.mn.state.dot.tms.ItemStyle.WIND_SPEED;
+import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_COLOR_HIGH;
+import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_COLOR_LOW;
+import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_COLOR_MID;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getAirTempCelsius;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getMultiTempsString;
 import static us.mn.state.dot.tms.WeatherSensorHelper.getPrecipRate;
@@ -59,17 +67,14 @@ import static us.mn.state.dot.tms.WeatherSensorHelper.isSampleExpired;
  */
 public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 
-	public static final Marker DIRECTION_MARKER =
-		new DirectionMarker();
-
 	/** The "low" color */
-	static public final Color LCOLOR = SystemAttrEnum.RWIS_COLOR_LOW.getColor();
+	static public final Color LCOLOR = RWIS_COLOR_LOW.getColor();
 
 	/** The "mid" color */
-	static public final Color MCOLOR = SystemAttrEnum.RWIS_COLOR_MID.getColor();
+	static public final Color MCOLOR = RWIS_COLOR_MID.getColor();
 
 	/** The "high" color */
-	static public final Color HCOLOR = SystemAttrEnum.RWIS_COLOR_HIGH.getColor();
+	static public final Color HCOLOR = RWIS_COLOR_HIGH.getColor();
 
 	/** Symbols for measurement types */
 	static private final VectorSymbol SYM_AIR_TEMP =
@@ -90,15 +95,13 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	/** Create a new proxy theme */
 	public WeatherSensorTheme(WeatherSensorManager m) {
 		super (m, new DirectionMarker());
-		addStyle(ItemStyle.EXPIRED, Color.BLACK);
-		addStyle(ItemStyle.CRAZY,
-			ProxyTheme.COLOR_CRAZY);
-		addStyle(ItemStyle.AWS, ProxyTheme.COLOR_AWS_DEPLOYED);
-		addStyle(ItemStyle.NORMAL, Color.GREEN);
-		addStyle(ItemStyle.NO_CONTROLLER,
-			ProxyTheme.COLOR_NO_CONTROLLER);
 
-		//FIXME CA-MN-MERGE will it blend?
+		addStyle(EXPIRED, Color.BLACK);
+		addStyle(CRAZY, ProxyTheme.COLOR_CRAZY);
+		addStyle(AWS, ProxyTheme.COLOR_AWS_DEPLOYED);
+		addStyle(NO_CONTROLLER, ProxyTheme.COLOR_NO_CONTROLLER);
+		addStyle(NORMAL, Color.GREEN);
+
 		addStyle(WIND_SPEED, LCOLOR);
 		addStyle(VISIBILITY, LCOLOR);
 		addStyle(PRECIPITATION, LCOLOR);
@@ -108,7 +111,6 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 	}
 
 
-	//FIXME CA-MN-MERGE will it blend?
 	/** Get a legend icon for a style */
 	@Override
 	public Icon getLegend(Style sty) {
@@ -179,7 +181,6 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		return t.get();
 	}
 
-	//FIXME CA-MN-MERGE may need some work
 	/** Get the style for the given map object */
 	@Override
 	public Style getStyle(MapObject mo) {
@@ -194,7 +195,6 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		return ret;
 	}
 
-	//FIXME CA-MN-MERGE needs some work (refreshing)
 	/** Get the style for the given weather sensor, based on the measurement
 	 *  and its value */
 	@Override
@@ -207,20 +207,14 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		ItemStyle is = manager.getStyleSummary().getStyle();
 		Style[] base = null;
 
-		switch (is) {
-
-		case EXPIRED:
-			return isSampleExpired(ws) ? super.getStyle(ws) : null;
-
-		case CRAZY:
-			return isCrazyState(ws) ? super.getStyle(ws) : null;
-
-		case AWS:
-			return isAwsState(ws) ? super.getStyle(ws) : null;
-
-		case ALL:
+		if (EXPIRED.equals(is) && isSampleExpired(ws))
+			return super.getStyle(ws);
+		if (CRAZY.equals(is) && isCrazyState(ws))
+			return super.getStyle(ws);
+		if (AWS.equals(is) && isAwsState(ws))
 			return super.getStyle(ws);
 
+		switch (is) {
 		case WIND_SPEED:
 			base = STY_WIND_SPEED;
 			lb = isLowWind(ws);
@@ -250,16 +244,16 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			break;
 
 		default:
-			return null; //super.getStyle(ws);
+			return super.getStyle(ws);
 		}
 
 		if (n == null)
-			return null; //super.getStyle(ws);
+			return super.getStyle(ws);
+
 		if (lb)
 			return base[0];
 		if (hb)
 			return base[2];
-
 		return base[1];
 	}
 
