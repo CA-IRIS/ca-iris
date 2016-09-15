@@ -250,11 +250,11 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 			break;
 
 		default:
-			return super.getStyle(ws);
+			return null; //super.getStyle(ws);
 		}
 
 		if (n == null)
-			return super.getStyle(ws);
+			return null; //super.getStyle(ws);
 		if (lb)
 			return base[0];
 		if (hb)
