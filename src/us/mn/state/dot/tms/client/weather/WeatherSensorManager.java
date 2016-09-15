@@ -38,7 +38,7 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 import us.mn.state.dot.tms.client.proxy.SonarObjectForm;
 import us.mn.state.dot.tms.client.proxy.StyleSummary;
-import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatMapLayer;
 import us.mn.state.dot.tms.client.weather.markers.DirectionMarker;
 import us.mn.state.dot.tms.client.weather.markers.PrecipitationMarker;
 import us.mn.state.dot.tms.client.weather.markers.TemperatureMarker;
@@ -81,11 +81,11 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** The current marker */
 	protected Marker marker = DIRECTION_MARKER;
 
-	public HeatmapLayer getHeatmapLayer() {
+	public HeatMapLayer getHeatmapLayer() {
 		return heatmapLayer;
 	}
 
-	private final HeatmapLayer heatmapLayer;
+	private final HeatMapLayer heatmapLayer;
 
 	/** Whether style summary has been initialized */
 	private boolean style_initialized;
@@ -134,7 +134,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a new weather sensor manager */
 	public WeatherSensorManager(Session s, GeoLocManager lm) {
 		super(s, lm);
-		heatmapLayer = new HeatmapLayer(s, this);
+		heatmapLayer = new HeatMapLayer(s, this);
 	}
 
 	/**

@@ -20,21 +20,21 @@ import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.client.proxy.ProxyTheme;
 
 /**
- * HeatmapTheme is defined purely to satisfy the Layer-Theme relationship
+ * HeatMapTheme is defined purely to satisfy the Layer-Theme relationship
  * As a heatmap does not need any traditional shapes, this serves placate
  * the existing framework.
  *
  * @author Jacob Barde
  */
-public class HeatmapTheme extends ProxyTheme {
+public class HeatMapTheme extends ProxyTheme {
 
 	/** Constructor */
-	public HeatmapTheme(ProxyManager m) {
+	public HeatMapTheme(ProxyManager m) {
 		this(m, new DummyShape(4));
 	}
 
 	/** Constructor */
-	public HeatmapTheme(ProxyManager m, Marker s) {
+	public HeatMapTheme(ProxyManager m, Marker s) {
 		super(m, s);
 	}
 

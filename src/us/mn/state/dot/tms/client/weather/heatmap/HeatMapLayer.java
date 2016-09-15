@@ -27,11 +27,11 @@ import us.mn.state.dot.tms.utils.I18N;
  * A layer specific to heatmap related objects.
  * Since traditional vector markers are not used (like most layers), most of
  * the functionality for this layer is handled by its corresponding LayerState
- * @see HeatmapLayerState
+ * @see HeatMapLayerState
  *
  * @author Jacob Barde
  */
-public class HeatmapLayer extends Layer {
+public class HeatMapLayer extends Layer {
 
 	/** session */
 	private final Session session;
@@ -55,7 +55,7 @@ public class HeatmapLayer extends Layer {
 	 * @param s session
 	 * @param m manager
 	 */
-	public HeatmapLayer(Session s, WeatherSensorManager m) {
+	public HeatMapLayer(Session s, WeatherSensorManager m) {
 		super(I18N.get("weather.heatmaps"));
 		session = s;
 		manager = m;
@@ -65,7 +65,7 @@ public class HeatmapLayer extends Layer {
 	@Override
 	public LayerState createState(MapBean mb) {
 		if(layerState == null)
-			layerState = new HeatmapLayerState(this, mb);
+			layerState = new HeatMapLayerState(this, mb);
 		return layerState;
 	}
 
