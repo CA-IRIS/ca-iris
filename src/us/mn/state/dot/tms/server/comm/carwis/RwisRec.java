@@ -14,14 +14,9 @@
  */
 package us.mn.state.dot.tms.server.comm.carwis;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimeZone;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.server.WeatherSensorImpl;
-import us.mn.state.dot.tms.server.comm.ParsingException;
 import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
 
 /**

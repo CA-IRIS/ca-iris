@@ -122,9 +122,11 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 				break;
 			}
 
-			// either marker changed or we went from standard to non-standard
-			// status types (not mutually exclusive (eg: All to Wind Speed)
-			if (old_marker != marker || (special.contains(s) != special.contains(oldS)))
+			// either marker changed or we went from standard to
+			// non-standard status types (not mutually exclusive
+			// (eg: All to Wind Speed)
+			if (old_marker != marker || (special.contains(s)
+				!= special.contains(oldS)))
 				updateTheme();
 
 			oldS = s;
@@ -176,12 +178,6 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	/** Create a theme for weather sensors */
 	@Override
 	protected ProxyTheme<WeatherSensor> createTheme() {
-//		ProxyTheme<WeatherSensor> theme =
-//			new ProxyTheme<>(this, DIRECTION_MARKER);
-//		theme.addStyle(ItemStyle.NO_CONTROLLER,
-//			ProxyTheme.COLOR_NO_CONTROLLER);
-//		theme.addStyle(ItemStyle.ALL);
-//		return theme;
 		return new WeatherSensorTheme(this);
 	}
 
