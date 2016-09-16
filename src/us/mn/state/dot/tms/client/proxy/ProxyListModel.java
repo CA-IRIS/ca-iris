@@ -73,7 +73,7 @@ public class ProxyListModel<T extends SonarObject>
 		protected void proxyAddedSwing(T proxy) {
 			int i = doProxyAdded(proxy);
 			if (i >= 0) {
-				applyFilter(false);
+				applyFilter();
 				fireIntervalAdded(this, i, i);
 			}
 		}
@@ -84,13 +84,15 @@ public class ProxyListModel<T extends SonarObject>
 			}
 			int sz = list.size() - 1;
 			if (sz >= 0) {
-				applyFilter(true);
+				applyFilter();
+				fireContentsChanged(this, 0, getSize() - 1);
+
 			}
 		}
 		protected void proxyRemovedSwing(T proxy) {
 			int i = doProxyRemoved(proxy);
 			if (i >= 0) {
-				applyFilter(false);
+				applyFilter();
 				fireIntervalRemoved(this, i, i);
 			}
 		}
@@ -185,7 +187,8 @@ public class ProxyListModel<T extends SonarObject>
 	/** Sets the filter to be applied against members */
 	public void setFilter(Filter<T> f) {
 		filter = f;
-		applyFilter(true);
+		applyFilter();
+		fireContentsChanged(this, 0, getSize() - 1);
 	}
 
 	/** Gets the filter to be applied against members */
@@ -194,7 +197,7 @@ public class ProxyListModel<T extends SonarObject>
 	}
 
 	/** Applies the filter against current members */
-	private void applyFilter(boolean fire) {
+	private void applyFilter() {
 		// prevent recursing through fireContentsChanged
 		if (applyingFilter)
 			return;
@@ -211,10 +214,6 @@ public class ProxyListModel<T extends SonarObject>
 				if (f.accept(x))
 					filtered_list.add(x);
 			}
-		}
-
-		if (fire) {
-			fireContentsChanged(this, 0, getSize() - 1);
 		}
 
 		applyingFilter = false;
