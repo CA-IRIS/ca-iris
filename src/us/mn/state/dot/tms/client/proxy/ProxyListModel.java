@@ -25,6 +25,7 @@ import javax.swing.event.ListDataListener;
 
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.sonar.client.TypeCache;
+import us.mn.state.dot.tms.utils.IterableUtil;
 
 /**
  * A filterable swing ListModel kept in sync with a SONAR TypeCache.
@@ -50,8 +51,8 @@ public class ProxyListModel<T extends SonarObject>
 	/** Proxy comparator */
 	private final Comparator<T> comp = comparator();
 
-	/** List of displayed filtered_list if filtered */
-	private final ArrayList<T> filtered_list = new ArrayList<T>();
+	/** List of displayed indices if filtered */
+	private final ArrayList<Integer> indices = new ArrayList<Integer>();
 
 	/** The filter to determine which elements should be shown */
 	private Filter<T> filter;
@@ -71,39 +72,22 @@ public class ProxyListModel<T extends SonarObject>
 		}
 		protected void proxyAddedSwing(T proxy) {
 			int i = doProxyAdded(proxy);
-			if (i >= 0 && filter != null && filter.accept(proxy)) {
-				applyFilter();
-				i = filtered_list.indexOf(proxy);
-				if (i >= 0)
-					fireIntervalRemoved(this, i, i);
-			}
-			if (i >= 0 && filter == null)
+			if (i >= 0)
 				fireIntervalAdded(this, i, i);
-
 		}
 		protected void enumerationCompleteSwing(Collection<T> proxies) {
 			for (T proxy: proxies) {
 				if (check(proxy))
 					list.add(proxy);
 			}
-			applyFilter();
-			int sz = getSize() - 1;
-			if (sz >= 0) {
+			int sz = list.size() - 1;
+			if (sz >= 0)
 				fireIntervalAdded(this, 0, sz);
-
-			}
 		}
 		protected void proxyRemovedSwing(T proxy) {
-			int i = -1;
-			if (filter != null) {
-				i = filtered_list.indexOf(proxy);
-				if (i >= 0)
-					fireIntervalRemoved(this, i, i);
-			}
-			i = doProxyRemoved(proxy);
-			if (i >= 0 && filter == null)
+			int i = doProxyRemoved(proxy);
+			if (i >= 0)
 				fireIntervalRemoved(this, i, i);
-			applyFilter();
 		}
 		protected void proxyChangedSwing(T proxy, String attr) {
 			ProxyListModel.this.proxyChangedSwing(proxy);
@@ -193,39 +177,10 @@ public class ProxyListModel<T extends SonarObject>
 			fireIntervalAdded(this, post, post);
 	}
 
-	/** Gets the size */
-	@Override
-	public int getSize() {
-		return (filter != null)
-			? filtered_list.size() : list.size();
-	}
-
-	/** Get the element at the specified index (for ListModel) */
-	@Override
-	public T getElementAt(int index) {
-		return (filter != null)
-			? filtered_list.get(index) : list.get(index);
-	}
-
-	/** Get the proxy at the specified index */
-	public T getProxy(int index) {
-		return getElementAt(index);
-	}
-
-	/** Get the index of the given proxy */
-	public int getIndex(T proxy) {
-		for (int i = 0; i < getSize(); ++i) {
-			if (proxy == getProxy(i))
-				return i;
-		}
-		return -1;
-	}
-
 	/** Sets the filter to be applied against members */
 	public void setFilter(Filter<T> f) {
 		filter = f;
 		applyFilter();
-		fireContentsChanged(this, 0, getSize() - 1);
 	}
 
 	/** Gets the filter to be applied against members */
@@ -240,17 +195,48 @@ public class ProxyListModel<T extends SonarObject>
 			return;
 
 		applyingFilter = true;
-		filtered_list.clear();
+		ArrayList<Integer> oldIndices = new ArrayList<Integer>(indices);
+		indices.clear();
 
 		Filter<T> f = filter;
 		if (f != null) {
 			for (int i = 0; i < list.size(); i++) {
-				T x = list.get(i);
-				if (f.accept(x))
-					filtered_list.add(x);
+				if (f.accept(list.get(i)))
+					indices.add(i);
 			}
 		}
 
+
+		if (oldIndices.size() != indices.size() || !IterableUtil.sequenceEqual(oldIndices, indices)) {
+			fireContentsChanged(this, 0, getSize() - 1);
+		}
+
 		applyingFilter = false;
+	}
+
+	/** Gets the size */
+	@Override
+	public int getSize() {
+		return (filter != null) ? indices.size() : list.size();
+	}
+
+	/** Get the element at the specified index (for ListModel) */
+	@Override
+	public Object getElementAt(int index) {
+		return list.get((filter != null) ? indices.get(index) : index);
+	}
+
+	/** Get the proxy at the specified index */
+	public T getProxy(int index) {
+		return (T)getElementAt(index);
+	}
+
+	/** Get the index of the given proxy */
+	public int getIndex(T proxy) {
+		for (int i = 0; i < getSize(); ++i) {
+			if (proxy == getProxy(i))
+				return i;
+		}
+		return -1;
 	}
 }
