@@ -138,29 +138,66 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Add a new proxy to the model */
 	private int doProxyAdded(T proxy) {
+	    int ret = -1;
 		if (check(proxy)) {
-			int n_size = list.size();
-			for (int i = 0; i < n_size; ++i) {
+			int sz = list.size();
+			for (int i = 1; i < sz; i++) {
 				int c = comp.compare(proxy, list.get(i));
 				if (c == 0)
-					return -1;
+				    break;
 				if (c < 0) {
-					list.add(i, proxy);
-					return i;
+				    ret = i;
+                    break;
 				}
 			}
-			list.add(proxy);
-			return n_size;
-		} else
-			return -1;
+
+			if (ret != -1) {
+                list.add(ret, proxy);
+
+                // must return index based on current filter
+                Filter<T> f = filter;
+                if (f != null) {
+                    if (f.accept(proxy)) {
+                        // add to filtered indices
+                        sz = getSize();
+                        int i;
+                        for (i = 0; i < sz; i++) {
+                            int c = comp.compare(proxy, getProxy(i));
+                            if (c < 0) break;
+                        }
+                        indices.add(i, ret);
+                        ret = i;
+                    } else {
+                        // not visible based on current filter
+                        ret = -1;
+                    }
+                }
+            }
+		}
+
+		return ret;
 	}
 
 	/** Remove a proxy from the model */
 	protected int doProxyRemoved(T proxy) {
-		int i = getIndex(proxy);
-		if (i >= 0)
-			list.remove(i);
-		return i;
+		int j = -1;
+		for (int i = 0; i < list.size(); i++) {
+			if (proxy == list.get(i)) {
+				j = i;
+				break;
+			}
+		}
+
+		if (j >= 0) {
+			list.remove(j);
+            if (filter != null) {
+                j = indices.indexOf(j);
+                if (j != -1)
+                    indices.remove(j);
+            }
+		}
+
+		return j;
 	}
 
 	/** Change a proxy in the list model */
@@ -205,7 +242,6 @@ public class ProxyListModel<T extends SonarObject>
 					indices.add(i);
 			}
 		}
-
 
 		if (oldIndices.size() != indices.size() || !IterableUtil.sequenceEqual(oldIndices, indices)) {
 			fireContentsChanged(this, 0, getSize() - 1);
