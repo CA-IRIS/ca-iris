@@ -131,7 +131,16 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 
 		@Override
 		public void keyReleased(KeyEvent e) {
-			model.setFilter(createNewFilter());
+			model.setFilter(new ProxyListModel.Filter<T>() {
+				@Override
+				public boolean accept(T element) {
+					String description = manager.getDescription(element);
+					String txt = filter_text_field.getText();
+					if (txt == null)
+						txt = "";
+					return description != null && description.toLowerCase().contains(txt.toLowerCase());
+				}
+			});
 		}
 	};
 
@@ -363,22 +372,10 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 		if (mdl != null) {
 			model.setFilter(mdl.getFilter());
 			mdl.dispose();
-	}
+		}
 		fireSelectionChanged();
 	}
 
-	private ProxyListModel.Filter createNewFilter() {
-		return new ProxyListModel.Filter<T>() {
-			@Override
-			public boolean accept(T element) {
-				String description = manager.getDescription(element);
-				String txt = filter_text_field.getText();
-				if (txt == null)
-					txt = "";
-				return description != null && description.toLowerCase().contains(txt.toLowerCase());
-			}
-		};
-	}
 	/** Add a proxy selection listener to the model */
 	public void addSelectionListener(ActionListener l) {
 		lsnrs.add(l);
