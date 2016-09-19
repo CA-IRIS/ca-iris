@@ -167,6 +167,11 @@ public class ProxyListModel<T extends SonarObject>
                         }
                         indices.add(i, ret);
                         ret = i;
+
+						// increment indices after inserted
+						for (int j = i; j < indices.size(); j++) {
+							indices.set(j, indices.get(j) + 1);
+						}
                     } else {
                         // not visible based on current filter
                         ret = -1;
@@ -180,24 +185,30 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Remove a proxy from the model */
 	protected int doProxyRemoved(T proxy) {
-		int j = -1;
+		int ret = -1;
 		for (int i = 0; i < list.size(); i++) {
 			if (proxy == list.get(i)) {
-				j = i;
+				ret = i;
 				break;
 			}
 		}
 
-		if (j >= 0) {
-			list.remove(j);
+		if (ret >= 0) {
+			list.remove(ret);
             if (filter != null) {
-                j = indices.indexOf(j);
-                if (j != -1)
-                    indices.remove(j);
+                ret = indices.indexOf(ret);
+                if (ret != -1) {
+					indices.remove(ret);
+
+					// decrement indices after removed
+					for (int i = ret; i < indices.size(); i++) {
+						indices.set(i, indices.get(i) - 1);
+					}
+                }
             }
 		}
 
-		return j;
+		return ret;
 	}
 
 	/** Change a proxy in the list model */
