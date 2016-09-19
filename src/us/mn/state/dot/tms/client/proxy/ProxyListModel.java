@@ -141,11 +141,13 @@ public class ProxyListModel<T extends SonarObject>
 	    int ret = -1;
 		if (check(proxy)) {
 			int sz = list.size();
+			ret = sz;
 			for (int i = 1; i < sz; i++) {
 				int c = comp.compare(proxy, list.get(i));
-				if (c == 0)
-				    break;
-				if (c < 0) {
+				if (c == 0) {
+					ret = -1;
+					break;
+				} else if (c < 0) {
 				    ret = i;
                     break;
 				}
