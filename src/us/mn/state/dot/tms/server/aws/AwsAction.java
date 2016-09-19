@@ -191,10 +191,6 @@ public class AwsAction {
 		AwsJob.logfinest("d=" + di + ", creating sign message " +
 			"with actp=" + act_priority + ", runp=" + run_priority +
 			", multi=" + multi);
-		//FIXME CA-MN-MERGE check on this, aws => external?
-//		SignMessage sm = di.createMessage(multi.toString(),
-//			false, act_priority, run_priority,
-//			getSignMessageDuration());
 		SignMessage sm = di.createMsg(multi.toString(),
 			false, act_priority, run_priority,
 			SignMsgSource.external, getSignMessageDuration());

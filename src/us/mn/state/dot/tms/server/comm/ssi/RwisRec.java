@@ -31,10 +31,8 @@ import static us.mn.state.dot.tms.units.Distance.Units.FEET;
 import static us.mn.state.dot.tms.units.Distance.Units.METERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MICROMETERS;
 import static us.mn.state.dot.tms.units.Distance.Units.MILLIMETERS;
-import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.KPH;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
-import us.mn.state.dot.tms.units.Temperature;
 import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
 
 /**
@@ -45,7 +43,6 @@ import static us.mn.state.dot.tms.units.Temperature.Units.CELSIUS;
  * @author Travis Swanston
  */
 public class RwisRec {
-//FIXME CA-MN-MERGE convert to US-Customary units?
 	/** Get the duration of a record in milliseconds */
 	static private long durationMs() {
 		return 20 * 1000;
@@ -199,10 +196,10 @@ public class RwisRec {
 	/** Relative humidity (%) (Rh) */
 	private final Integer rel_humidity;
 
-	/** Average wind speed in KPH (SpdAvg) */ //FIXME CA-MN-MERGE mph?
+	/** Average wind speed in KPH (SpdAvg) */
 	private final Speed wind_speed_avg;
 
-	/** Gust wind speed in KPH (SpdGust) */ //FIXME CA-MN-MERGE mph?
+	/** Gust wind speed in KPH (SpdGust) */
 	private final Speed wind_speed_gust;
 
 	/** Minimum wind direction in degrees (DirMin) */
@@ -251,8 +248,8 @@ public class RwisRec {
 		air_temp = parseTemp(header.getField(fs, "AirTemp"));
 		dew_point = parseTemp(header.getField(fs, "Dewpoint"));
 		rel_humidity = parseInt(header.getField(fs, "Rh"));
-		wind_speed_avg = parseKph(header.getField(fs, "SpdAvg")); //FIXME CA-MN-MERGE mph?
-		wind_speed_gust = parseKph(header.getField(fs, "SpdGust")); //FIXME CA-MN-MERGE mph?
+		wind_speed_avg = parseKph(header.getField(fs, "SpdAvg"));
+		wind_speed_gust = parseKph(header.getField(fs, "SpdGust"));
 		wind_dir_min = parseInt(header.getField(fs, "DirMin"));
 		wind_dir_avg = parseInt(header.getField(fs, "DirAvg"));
 		wind_dir_max = parseInt(header.getField(fs, "DirMax"));
@@ -261,7 +258,7 @@ public class RwisRec {
 		precip_type = header.getField(fs, "PcType");
 		precip_rate = parseInt(header.getField(fs, "PcRate"));
 		precip_accum = parseMm(header.getField(fs, "PcAccum"));
-		visibility = parseM(header.getField(fs, "Visibility")); //FIXME CA-MN-MERGE ft?
+		visibility = parseM(header.getField(fs, "Visibility"));
 	}
 
 	/** To string */

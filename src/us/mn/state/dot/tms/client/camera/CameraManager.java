@@ -94,7 +94,6 @@ public class CameraManager extends ProxyManager<Camera> {
 	/** Create a new camera manager */
 	public CameraManager(Session s, GeoLocManager lm) {
 		super(s, lm, ItemStyle.ALL);
-		//FIXME CA-MN-MERGE something new from MnDOT?
 		s_model.setAllowMultiple(true);
 	}
 

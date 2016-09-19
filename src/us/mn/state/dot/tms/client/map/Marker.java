@@ -15,8 +15,8 @@
  */
 package us.mn.state.dot.tms.client.map;
 
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.Shape;
+import java.awt.geom.Path2D;
 
 /**
  * A marker which delegates Shape methods to a general path.
@@ -32,7 +32,6 @@ abstract public class Marker extends Path2D.Float {
 	}
 
 	/** Create a new abstract marker based on a shape */
-	//FIXME CA-MN-MERGE added to support Arc2D.Float objects (TimeMarker)
 	protected Marker(Shape s) {
 		super(s);
 	}

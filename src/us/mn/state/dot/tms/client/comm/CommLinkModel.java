@@ -76,7 +76,6 @@ public class CommLinkModel extends ProxyTableModel<CommLink> {
 		});
 		cols.add(new ProxyColumn<CommLink>("comm.link.protocol", 140) {
 			public Object getValueAt(CommLink cl) {
-//				return PROTOCOLS.get(cl.getProtocol());
 				return CommProtocol.fromOrdinal(
 					cl.getProtocol());
 			}

@@ -44,7 +44,7 @@ import us.mn.state.dot.tms.client.roads.R_NodeManager;
 import us.mn.state.dot.tms.client.schedule.PlanManager;
 import us.mn.state.dot.tms.client.toll.TagReaderManager;
 import us.mn.state.dot.tms.client.weather.WeatherSensorManager;
-import us.mn.state.dot.tms.client.weather.heatmap.HeatmapLayer;
+import us.mn.state.dot.tms.client.weather.heatmap.HeatMapLayer;
 import us.mn.state.dot.tms.client.widget.SmartDesktop;
 
 /**
@@ -145,7 +145,7 @@ public class Session {
 	private final HashMap<String, MapTab> all_tabs = new HashMap<>();
 
 	/** Heatmap layer */
-	private final HeatmapLayer heatmapLayer;
+	private final HeatMapLayer heatmapLayer;
 
 	/** Tile layer */
 	private final TileLayer tile_layer;

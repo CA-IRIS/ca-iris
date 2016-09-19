@@ -356,7 +356,6 @@ public class CameraDispatcher extends JPanel {
 		);
 		int numConns = vw_manager.getNumConns(selected.getName());
 		boolean streaming = (numConns > 0);
-//		boolean streaming = stream_pnl.isStreaming(); //FIXME CA-MN-MERGE needed?non-CA
 		boolean extOnly = !video_req.hasMJPEG(selected);
 		boolean blindOk = SystemAttrEnum.CAMERA_PTZ_BLIND.getBoolean();
 		boolean enable = (hasCtrl && hasPerms &&

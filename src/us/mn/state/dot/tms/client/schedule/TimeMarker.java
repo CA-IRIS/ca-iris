@@ -15,8 +15,6 @@
 package us.mn.state.dot.tms.client.schedule;
 
 import java.awt.geom.Arc2D;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Path2D;
 import us.mn.state.dot.tms.client.map.Marker;
 
 /**
@@ -35,7 +33,7 @@ public class TimeMarker extends Marker {
 
 	/** Create a new time marker */
 	public TimeMarker() {
-		super(ARC); //FIXME CA-MN-MERGE
+		super(ARC);
 		float size = MARKER_SIZE_PIX;
 		float half = size / 2;
 		float quarter = size / 4;
@@ -44,6 +42,6 @@ public class TimeMarker extends Marker {
 		moveTo(x, y);
 		lineTo(x, y -= half);
 		moveTo(x, y);
-		lineTo(x += quarter, y);
+		lineTo(x + quarter, y);
 	}
 }

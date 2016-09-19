@@ -41,19 +41,19 @@ import static us.mn.state.dot.tms.SystemAttrEnum.RWIS_MEASUREMENT_RADIUS;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
- * HeatmapLayerState manages the rendering of the low/medium/high weather station
+ * HeatMapLayerState manages the rendering of the low/medium/high weather station
  * area circles that denote an easy means of determining important weather-related
  * information for the given area.
  *
  * @author Jacob Barde
  */
-public class HeatmapLayerState extends LayerState {
+public class HeatMapLayerState extends LayerState {
 
 	/** radius of circles (meters) */
 	private static final float RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
 
 	/** heatmap layer */
-	private final HeatmapLayer heatmapLayer;
+	private final HeatMapLayer heatMapLayer;
 
 	/** manager */
 	private final ProxyManager<WeatherSensor> manager;
@@ -74,7 +74,9 @@ public class HeatmapLayerState extends LayerState {
 		}
 	};
 
-	private final ProxyListener<WeatherSensor> sensor_listener = new ProxyListener<WeatherSensor>() {
+	private final ProxyListener<WeatherSensor> sensor_listener =
+		new ProxyListener<WeatherSensor>() {
+
 		@Override
 		public void proxyAdded(WeatherSensor proxy) {
 		}
@@ -103,9 +105,9 @@ public class HeatmapLayerState extends LayerState {
 	 * @param layer heatmap layer
 	 * @param mb mapbean
 	 */
-	public HeatmapLayerState(HeatmapLayer layer, MapBean mb) {
-		super(layer, mb, new HeatmapTheme(layer.getManager()));
-		heatmapLayer = layer;
+	public HeatMapLayerState(HeatMapLayer layer, MapBean mb) {
+		super(layer, mb, new HeatMapTheme(layer.getManager()));
+		heatMapLayer = layer;
 		manager = layer.getManager();
 		dataSet = new WeatherMeasurementDataSet();
 		manager.getStyleSummary().addSelectionListener(style_listener);
@@ -193,9 +195,9 @@ public class HeatmapLayerState extends LayerState {
 	}
 
 	/** Get the heatmap layer */
-	public HeatmapLayer getHeatmapLayer() {
+	public HeatMapLayer getHeatMapLayer() {
 
-		return heatmapLayer;
+		return heatMapLayer;
 	}
 
 	/** Get the manager */

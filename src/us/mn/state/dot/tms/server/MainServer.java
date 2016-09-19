@@ -203,7 +203,7 @@ public class MainServer {
 		TIMER.addJob(new SendSettingsJob(500));
 		TIMER.addJob(new TollZoneJob());
 		TIMER.addJob(new ReaperJob());
-		TIMER.addJob(new CommLinkQuery30SecJob()); //FIXME CA-MN-MERGE needed?
+		TIMER.addJob(new CommLinkQuery30SecJob());
 	}
 
 	/** Schedule jobs on FLUSH thread */
