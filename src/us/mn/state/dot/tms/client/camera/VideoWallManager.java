@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2015 AHMCT, University of California
+ * Copyright (C) 2016      Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +33,6 @@ import java.util.Map;
 import java.util.Properties;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
-import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.client.Session;
 
@@ -44,6 +44,8 @@ import us.mn.state.dot.tms.client.Session;
  * CONSTRAINTS, BECAME PRODUCTION CODE.  IT NEEDS A FULL REDESIGN AND
  * REWRITE.
  * NOTE: There are some race conditions...
+ * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class VideoWallManager {
 
@@ -60,12 +62,9 @@ public class VideoWallManager {
 
 	// current status maps.
 	// do not manipulate contents; only change references.
-	private volatile Map<String, String> decstat_map
-		= new HashMap<String, String>();
-	private volatile Map<String, String> grouputil_map
-		= new HashMap<String, String>();
-	private volatile Map<String, Integer> ccmap
-		= new HashMap<String, Integer>();
+	private volatile Map<String, String> decstat_map = new HashMap<>();
+	private volatile Map<String, String> grouputil_map = new HashMap<>();
+	private volatile Map<String, Integer> ccmap = new HashMap<>();
 
 
 	/** Scheduler that runs refresh job */
@@ -171,12 +170,12 @@ public class VideoWallManager {
 
 
 	public Map<String, String> getDecoderMap() {
-		return (Map<String, String>)decstat_map;
+		return decstat_map;
 	}
 
 
 	public Map<String, String> getGroupUtilMap() {
-		return (Map<String, String>)grouputil_map;
+		return grouputil_map;
 	}
 
 	// synchronous get.  -1 on error.
@@ -194,8 +193,7 @@ public class VideoWallManager {
 
 		if (num != null)
 			return num.intValue();
-		else
-			return 0;
+		return 0;
 	}
 
 	public List<String> getInUseCameraList() {
@@ -219,9 +217,7 @@ public class VideoWallManager {
 
 	// which camera is did connected to?
 	public String getCameraByDecoder(String did) {
-		if (did == null)
-			return null;
-		return decstat_map.get(did);
+		return (did == null) ? null : decstat_map.get(did);
 	}
 
 	// which decoder is connected to cid?
@@ -286,7 +282,7 @@ public class VideoWallManager {
 
 	// returns null on error
 	private HashMap<String, String> decodeDecstatResponse(String r) {
-		HashMap<String, String> map = new HashMap<String, String>();
+		HashMap<String, String> map = new HashMap<>();
 		// e.g. DECSTAT\tdec1:,dec3:C002,dec2:,dec4:C007
 		String[] fields1 = r.split("\t",-1);
 		if (fields1.length < 2)
@@ -310,7 +306,7 @@ public class VideoWallManager {
 
 	// returns null on error
 	private HashMap<String, String> decodeGrouputilResponse(String r) {
-		HashMap<String, String> map = new HashMap<String, String>();
+		HashMap<String, String> map = new HashMap<>();
 		// e.g. UTIL\tISDN:4/12,POTS:3/7
 		String[] fields1 = r.split("\t",-1);
 		if (fields1.length < 1)
@@ -334,7 +330,7 @@ public class VideoWallManager {
 
 	// returns null on error
 	private HashMap<String, Integer> decodeCamconnsResponse(String r) {
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		HashMap<String, Integer> map = new HashMap<>();
 		// e.g. CAMCONNS\tC002:3,C003:1
 		String[] fields1 = r.split("\t",-1);
 		if (fields1.length < 1)

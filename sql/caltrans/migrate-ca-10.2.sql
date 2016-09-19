@@ -604,6 +604,15 @@ ALTER TABLE iris.sign_message ADD COLUMN incident VARCHAR(16);
 -- BEGIN 10.2 changes
 -- ============================================================================
 
+-- feature 525
+INSERT INTO iris.camera_preset_alias_name (id, alias) VALUES (1, 'Night-shift Home');
+
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_concur_move', 1);
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_move_pause', 5);
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_reinit', 'true');
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunrise_offset', -30);
+INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offset', -30);
+
 -- feature 592
 -- detector_event history table
 -- the detector_event table, at least in D10 gets quite large, really fast.
@@ -627,3 +636,6 @@ INSERT INTO event.detector_event_hist (event_id, event_date, event_desc_id, devi
   WHERE event_id = (SELECT MIN(event_id) FROM event.detector_event);
 
 INSERT INTO iris.system_attribute (name, value) VALUES ('detector_reduce_malf_logging', 'false');
+
+
+

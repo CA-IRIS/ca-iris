@@ -269,7 +269,8 @@ public class CameraManager extends ProxyManager<Camera> {
 		List<String> cams_used = null;
 		MapTab mt = this.session.lookupTab("camera");
 		if (mt instanceof CameraTab)
-			cams_used = ((CameraTab) mt).getDispatcher().getVideoWallManager().getInUseCameraList();
+			cams_used = ((CameraTab) mt).getDispatcher()
+				.getVideoWallManager().getInUseCameraList();
 
 		if (cams_used == null)
 			return;
@@ -289,7 +290,7 @@ public class CameraManager extends ProxyManager<Camera> {
 		in_use.addAll(new_in_use);
 
 		// an end-run-around on sonar, but using it to update styles
-		for(Camera c : changed_cams) {
+		for (Camera c : changed_cams) {
 			getCache().notifyProxyChanged(c, "publish");
 		}
 	}

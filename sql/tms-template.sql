@@ -2450,6 +2450,7 @@ COPY iris.encoder_type (id, description) FROM stdin;
 
 COPY iris.camera_preset_alias_name (id, alias) FROM stdin;
 0	Home
+1	Night-shift Home
 \.
 
 COPY iris.system_attribute (name, value) FROM stdin;
@@ -2467,6 +2468,10 @@ camera_ptz_axis_wipe
 camera_ptz_blind	true
 camera_ptz_panel_enable	false
 camera_ptz_return_home	false
+camera_shift_concur_move	1
+camera_shift_move_pause	1
+camera_shift_sunrise_offset	0
+camera_shift_sunset_offset	0
 camera_sort	0
 camera_stream_controls_enable	false
 camera_stream_duration_secs	0

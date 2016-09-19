@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +22,15 @@ package us.mn.state.dot.tms;
  * NOTE: more alias names are planned for future functionality.
  *
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public enum PresetAliasName {
 
 	/** Home Preset (0) */
-	HOME("Home");
+	HOME("Home"),
+
+	/** Night-shift Home preset (1) */
+	NIGHT_SHIFT("Night-shift Home");
 
 	/** Create a new preset alias value */
 	private PresetAliasName(String a) {

@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2013-2014  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014       AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +18,36 @@ package us.mn.state.dot.tms.client.camera;
 
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
-import us.mn.state.dot.tms.Camera;
+import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.widget.Icons;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.Widgets;
 import us.mn.state.dot.tms.utils.I18N;
 
+import static us.mn.state.dot.tms.PresetAliasHelper.getPreset;
+import static us.mn.state.dot.tms.PresetAliasName.HOME;
+import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
+
 /**
  * A panel containing controls for recalling and storing camera presets.
  *
  * @author Douglas Lau
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class PresetPanel extends JPanel {
 
@@ -59,7 +68,7 @@ public class PresetPanel extends JPanel {
 		SystemAttrEnum.CAMERA_PRESET_PANEL_COLUMNS.getInt();
 
 	/** Array of buttons used to select presets */
-	private final JButton[] preset_btn = new JButton[NUM_PRESET_BTNS];
+	private final PresetButton[] preset_btn = new PresetButton[NUM_PRESET_BTNS];
 
 	/** Button used to store presets */
 	private final JToggleButton store_btn;
@@ -133,12 +142,13 @@ public class PresetPanel extends JPanel {
 	}
 
 	/** Create a preset button */
-	private JButton createPresetButton(final int num) {
-		JButton btn = new JButton(new IAction("camera.preset") {
+	private PresetButton createPresetButton(final int num) {
+		PresetButton btn = new PresetButton(new IAction("camera.preset") {
 			protected void doActionPerformed(ActionEvent e) {
 				handlePresetBtnPress(num);
 			}
 		});
+
 		btn.setPreferredSize(btn_dim);
 		btn.setMinimumSize(btn_dim);
 		btn.setFont(btn_font);
@@ -192,8 +202,83 @@ public class PresetPanel extends JPanel {
 	@Override
 	public void setEnabled(boolean e) {
 		super.setEnabled(e);
-		for(JButton b: preset_btn)
+
+		/** preset number of the HOME (day-shift) alias */
+		Integer dsButtonNum = getPreset(cam_ptz.getCamera(), HOME);
+
+		/** preset number of the NIGHT_SHIFT (night-shift) alias */
+		Integer nsButtonNum = getPreset(cam_ptz.getCamera(),
+			NIGHT_SHIFT);
+
+		for(PresetButton b: preset_btn) {
+			Integer bn = null;
+			try {
+				bn = Integer.parseInt(b.getText());
+			}
+			catch (NumberFormatException e1) {
+				// do nothing
+			}
+
+			b.setPresetAliasName(null);
+			if (bn != null) {
+				if (dsButtonNum == bn)
+					b.setPresetAliasName(HOME);
+				else if (nsButtonNum == bn)
+					b.setPresetAliasName(NIGHT_SHIFT);
+			}
 			b.setEnabled(e && cam_ptz.canRecallPreset());
+		}
 		store_btn.setEnabled(e && cam_ptz.canStorePreset());
+	}
+
+	/** custom button class for shift preset indicators */
+	protected class PresetButton extends JButton {
+
+		/** alias for the button */
+		private PresetAliasName presetAliasName = null;
+
+		/** constructor. other constructors from JButton may need to be
+		 * added later, if needed. */
+		public PresetButton(Action a) {
+			super(a);
+		}
+
+		/** overridden method to paint indication bars on the button */
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+
+			if (getPresetAliasName() != null) {
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setPaint(getForeground());
+
+				// simple bar on the preset button to indicate
+				// a day-shift [Home] preset assignment.
+				if (HOME.equals(presetAliasName))
+					g2.fillRect(0, 0,
+						getWidth(), getHeight() / 5);
+
+				// simple bar on the preset button to indicate
+				// a night-shift preset assignment.
+				if (NIGHT_SHIFT.equals(presetAliasName))
+					g2.fillRect(0, (4 * getHeight() / 5),
+						getWidth(), getHeight() / 5);
+
+				g2.dispose();
+			}
+
+		}
+
+		/** getter for preset alias name */
+		public PresetAliasName getPresetAliasName() {
+			return presetAliasName;
+		}
+
+		/** setter for preset alias name */
+		public void setPresetAliasName(
+			PresetAliasName presetAliasName) {
+			this.presetAliasName = presetAliasName;
+			this.repaint();
+		}
 	}
 }

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@ import java.util.Iterator;
  * Camera preset alias helper methods.
  *
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class PresetAliasHelper extends BaseHelper {
 
@@ -49,12 +51,19 @@ public class PresetAliasHelper extends BaseHelper {
 		while (it.hasNext()) {
 			PresetAlias pa = it.next();
 			if ((pa.getCamera() == c) &&
-				(pa.getPresetAliasName() == alias))
-			{
+				(pa.getPresetAliasName() == alias)) {
 				return Integer.valueOf(pa.getPresetNum());
 			}
 		}
 		return null;
 	}
 
+	/**
+	 * Determine if a camera has a preset enabled
+	 * @param c the camera
+	 * @return
+	 */
+	static public boolean hasShiftPreset(Camera c, PresetAliasName pan) {
+		return getPreset(c, pan) != null ? true : false;
+	}
 }

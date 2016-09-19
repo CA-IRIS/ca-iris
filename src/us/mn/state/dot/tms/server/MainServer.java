@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2016  Minnesota Department of Transportation
  * Copyright (C) 2011-2015  AHMCT, University of California
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +44,7 @@ import us.mn.state.dot.tms.utils.PropertyLoader;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class MainServer {
 
@@ -68,6 +70,9 @@ public class MainServer {
 	/** AWS thread for AWS jobs */
 	static private final Scheduler aws_scheduler =
 		new Scheduler("aws");
+
+	/** Camera shift job */
+	static private final Scheduler shift_scheduler = new Scheduler("shift");
 
 	/** Sample archive factory */
 	static public final SampleArchiveFactoryImpl a_factory =
@@ -109,6 +114,8 @@ public class MainServer {
 			scheduleTimerJobs();
 			scheduleFlushJobs();
 			aws_scheduler.addJob(new AwsJob());
+			shift_scheduler.addJob(
+				new CameraShiftJob(shift_scheduler, null, 10));
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);
