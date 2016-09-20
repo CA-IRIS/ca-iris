@@ -481,30 +481,30 @@ public class DMSDispatcher extends JPanel {
         return getPixmaps(builder);
 	}
 
-    /** Get raster graphic array for the selected message */
+	/** Get raster graphic array for the selected message */
 	private RasterGraphic[] getPixmaps(RasterBuilder b) {
-        if (b != null) {
-            MultiString multi = new MultiString(message);
-            try {
-                return b.createPixmaps(multi);
-            }
-            catch (IndexOutOfBoundsException e) {
-                // pixmap too small for message
-            }
-            catch (InvalidMessageException e) {
-                // most likely a MultiSyntaxError ...
-            }
-        }
-        return null;
-    }
+		if (b != null) {
+			MultiString multi = new MultiString(message);
+			try {
+				return b.createPixmaps(multi);
+			}
+			catch (IndexOutOfBoundsException e) {
+				// pixmap too small for message
+			}
+			catch (InvalidMessageException e) {
+				// most likely a MultiSyntaxError ...
+			}
+		}
+		return null;
+	}
 
 	/** Can a message be sent to all selected DMS? */
 	public boolean canSend() {
 	    return canSend(false);
     }
 
-    /** Can a message be sent to all selected DMS? */
-    public boolean canSend(boolean checkMsg) {
+	/** Can a message be sent to all selected DMS? */
+	public boolean canSend(boolean checkMsg) {
 		Set<DMS> sel = getValidSelected();
 		if (sel.isEmpty())
 			return false;
@@ -516,11 +516,11 @@ public class DMSDispatcher extends JPanel {
 	}
 
 	/** Can a message be sent to the specified DMS? */
-    private boolean canSend(DMS dms, boolean checkMsg) {
+	private boolean canSend(DMS dms, boolean checkMsg) {
 		return creator.canCreate() &&
-		       isUpdatePermitted(dms, "ownerNext") &&
-		       isUpdatePermitted(dms, "messageNext") &&
-                (!checkMsg || isMsgValidOnSign(dms));
+			isUpdatePermitted(dms, "ownerNext") &&
+			isUpdatePermitted(dms, "messageNext") &&
+			(!checkMsg || isMsgValidOnSign(dms));
 	}
 
 	/** Is DMS attribute update permitted? */
@@ -530,11 +530,13 @@ public class DMSDispatcher extends JPanel {
 
 	/** Determine whether given message is valid on given sign. */
 	private boolean isMsgValidOnSign(DMS dms) {
-	    // NOTE: This could be optimized if rendering for each check becomes too expensive.
-        // This optimization would require decoupling the validation in RasterBuilder from the render process.
-        RasterBuilder builder = DMSHelper.createRasterBuilder(dms);
-        return getPixmaps(builder) != null;
-    }
+		// NOTE: This could be optimized if rendering for each check
+		// becomes too expensive.
+		// This optimization would require decoupling the validation in
+		// RasterBuilder from the render process.
+		RasterBuilder builder = DMSHelper.createRasterBuilder(dms);
+		return getPixmaps(builder) != null;
+	}
 
 	/** Can a device request be sent to all selected DMS? */
 	public boolean canRequest() {
@@ -556,6 +558,6 @@ public class DMSDispatcher extends JPanel {
 	/** Check if AWS is allowed and user has permission to change */
 	public boolean isAwsPermitted(DMS dms) {
 		return dms.getAwsAllowed() &&
-		       isUpdatePermitted(dms, "awsControlled");
+			isUpdatePermitted(dms, "awsControlled");
 	}
 }

@@ -169,13 +169,13 @@ public class ComposerButtonPanel extends JPanel {
 		super.setEnabled(b);
 		clear.setEnabled(b);
 		store.setEnabled(b);
-        updateSendEnabled();
+		updateSendEnabled();
 		blank_msg.setEnabled(b && dispatcher.canSend(false));
 		query_msg.setEnabled(b && dispatcher.canRequest());
 	}
 
 	/** Updated enabled state of send msg button based on msg */
 	public void updateSendEnabled() {
-	    send_msg.setEnabled(isEnabled() && dispatcher.canSend(true));
+		send_msg.setEnabled(isEnabled() && dispatcher.canSend(true));
     }
 }
