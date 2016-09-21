@@ -78,8 +78,8 @@ public class CommMessageImpl<T extends ControllerProperty>
 			os.flush();
 		}
 		for (T p: props) {
-			p.decodeQuery(c, messenger.getInputStream(p.getPath(),
-				c));
+			p.decodeQuery(c,
+				messenger.getInputStream(p.getPath(), c));
 			logQuery(p);
 		}
 	}
@@ -107,8 +107,8 @@ public class CommMessageImpl<T extends ControllerProperty>
 		if (os != null)
 			os.flush();
 		for (T p: props) {
-			p.decodeStore(c, messenger.getInputStream(p.getPath(),
-				c));
+			p.decodeStore(c,
+				messenger.getInputStream(p.getPath(), c));
 		}
 	}
 

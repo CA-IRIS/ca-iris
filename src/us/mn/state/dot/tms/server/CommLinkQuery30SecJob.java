@@ -58,7 +58,7 @@ public class CommLinkQuery30SecJob extends Job {
 	protected void query30Sec(CommLinkImpl cl) {
 		DevicePoller p = cl.getPoller();
 		if (p instanceof SamplePoller) {
-			SamplePoller sp = (SamplePoller)p;
+			SamplePoller sp = (SamplePoller) p;
 			sp.queryPoller();
 		}
 	}

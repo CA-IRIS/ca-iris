@@ -42,7 +42,7 @@ public class SS125Poller extends MessagePoller<SS125Property>
 	/** Create a new SS125 poller */
 	public SS125Poller(String n, Messenger m) {
 		super(n, m);
-		CommLinkImpl cli = (CommLinkImpl)CommLinkHelper.lookup(n);
+		CommLinkImpl cli = (CommLinkImpl) CommLinkHelper.lookup(n);
 		if (cli == null) {
 			SS125_LOG.log("Failed to find CommLink.");
 			return;

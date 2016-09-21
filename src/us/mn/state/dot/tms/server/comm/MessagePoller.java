@@ -23,7 +23,6 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.Scheduler;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.EventType;
 import us.mn.state.dot.tms.server.ControllerImpl;
 
@@ -390,8 +389,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 		try {
 			synchronized (messenger) {
 				o.poll(createMessage(o));
-		}
-
+			}
 		} catch (DeviceContentionException e) {
 			plog("ERROR: DeviceContentionException.");
 			handleContention(o, e);

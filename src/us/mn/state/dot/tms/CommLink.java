@@ -86,7 +86,7 @@ public interface CommLink extends SonarObject {
 	int getPollPeriod();
 
 	/** Maximum timeout (milliseconds) */
-	int MAX_TIMEOUT_MS = 20 * 1000;
+	int MAX_TIMEOUT_MS = 60 * 1000;
 
 	/** Set the polling timeout (milliseconds) */
 	void setTimeout(int t);
