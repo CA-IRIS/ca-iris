@@ -291,7 +291,7 @@ abstract public class MessagePoller<T extends ControllerProperty>
 			messenger_open = true;
 		}
 		plog("messenger opened.");
-		}
+	}
 
 	/** Close messenger connection if present */
 	private void ensureClosed() {
