@@ -24,10 +24,8 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
-import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.geo.Position;
-import us.mn.state.dot.tms.server.CameraShiftJob;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.utils.GPSutil;
 import us.mn.state.dot.tms.utils.twilight.Sun;
@@ -240,16 +238,12 @@ public class CameraHelper extends BaseHelper {
 	static public Calendar getShiftTime(PresetAliasName pan,
 		int dayOffset) {
 
-		final DebugLog log = CameraShiftJob.log;
-
 		int off = dayOffset;
 		if (dayOffset < -1 || dayOffset > 1)
 			off = 0;
 		GregorianCalendar di =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
-		log.log("Shift=" + pan.name() + ", offset=" + dayOffset);
 		di.roll(Calendar.DAY_OF_MONTH, off);
-		log.log("Calendar rolled: " + date2str(di));
 
 		if (off != 0) {
 			/* if there is a day offset, set date instance time to
@@ -285,7 +279,6 @@ public class CameraHelper extends BaseHelper {
 					+ getSunriseOffset() * 60
 					* 1000));
 
-		log.log("Shift (" + pan.name() + ") change: " + date2str(diTwilight));
 		return diTwilight;
 	}
 
