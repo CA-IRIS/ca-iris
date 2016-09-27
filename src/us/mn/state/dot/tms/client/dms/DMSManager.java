@@ -118,9 +118,7 @@ public class DMSManager extends ProxyManager<DMS> {
 
         @Override
         public void proxyChanged(DMS proxy, String a) {
-            if ("aws_controlled".equals(a)) {
-                handleAwsChange(proxy);
-            }
+			handleAwsChange(proxy);
         }
 
         /** @param proxy The DMS where AWS state has changed. */
