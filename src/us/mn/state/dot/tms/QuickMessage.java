@@ -27,6 +27,9 @@ public interface QuickMessage extends SonarObject {
 	/** SONAR type name */
 	String SONAR_TYPE = "quick_message";
 
+	/** prefix for temporary quick messages */
+	String TEMP_PREFIX = "~tmp";
+
 	/** Get the sign group associated with the quick message.
 	 * @return Sign group for quick message; null for no group. */
 	SignGroup getSignGroup();

@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.tms.ActionPlan;
-import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.DmsAction;
 import us.mn.state.dot.tms.PlanPhase;
 import us.mn.state.dot.tms.QuickMessage;
@@ -159,7 +158,7 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 	public void doSetQuickMessage(QuickMessage qm) throws TMSException {
 		if(qm == quick_message)
 			return;
-		store.update(this, "quick_message", qm);
+		store.update(this, QuickMessage.SONAR_TYPE, qm);
 		setQuickMessage(qm);
 	}
 

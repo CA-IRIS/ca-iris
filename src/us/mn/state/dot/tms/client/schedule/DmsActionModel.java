@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +17,13 @@ package us.mn.state.dot.tms.client.schedule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.TableCellEditor;
 
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.ActionPlan;
@@ -31,6 +34,7 @@ import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.DmsSignGroup;
 import us.mn.state.dot.tms.PlanPhase;
 import us.mn.state.dot.tms.PlanPhaseHelper;
+import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SignGroupHelper;
@@ -45,6 +49,7 @@ import us.mn.state.dot.tms.client.widget.IComboBoxModel;
  * Table model for DMS actions assigned to action plans
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class DmsActionModel extends ProxyTableModel<DmsAction> {
 
@@ -106,15 +111,42 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		});
 		cols.add(new ProxyColumn<DmsAction>("quick.message", 160) {
 			public Object getValueAt(DmsAction da) {
-				return da.getQuickMessage();
+				QuickMessage qm = da.getQuickMessage();
+				if (qm != null
+					&& qm.getName().startsWith(
+						QuickMessage.TEMP_PREFIX))
+					return qm.getMulti();
+				return qm;
 			}
 			public boolean isEditable(DmsAction da) {
 				return canUpdate(da);
 			}
 			public void setValueAt(DmsAction da, Object value) {
 				String v = value.toString().trim();
-				da.setQuickMessage(
-					QuickMessageHelper.lookup(v));
+				QuickMessage orig = da.getQuickMessage();
+				QuickMessage qm = QuickMessageHelper.lookup(v);
+
+				if (qm != null) {
+					da.setQuickMessage(qm);
+					return;
+				}
+
+				if (qm == null) {
+					int opt = JOptionPane.showConfirmDialog(
+						null,
+						I18N.get("action.plan.dms.raw.body"),
+						I18N.get("action.plan.dms.raw.title"),
+						JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE);
+					if (opt == JOptionPane.YES_OPTION) {
+						da.setQuickMessage(
+							createTempQMRaw(da.getSignGroup(), (String) value));
+						return;
+					}
+				}
+
+				// restore original if not above
+				da.setQuickMessage(orig);
 			}
 		});
 		cols.add(new ProxyColumn<DmsAction>("dms.beacon.enabled", 100,
@@ -321,6 +353,67 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	private PlanPhase lookupPlanPhase() {
 		PlanPhase phase = PlanPhaseHelper.lookup("deployed");
 		return (phase != null) ? phase : action_plan.getDefaultPhase();
+	}
+
+	/** Create a temporary QuickMessage to be used for Raw/Multi */
+	private QuickMessage createTempQMRaw(final SignGroup g, final String m) {
+
+		if (g == null || m == null)
+			return null;
+		final String nm = QuickMessage.TEMP_PREFIX
+				+ TimeSteward.currentTimeMillis();
+
+		QuickMessage rv = null;
+//		rv = new QuickMessage() {
+//			private String name = nm;
+//			private SignGroup signGroup = g;
+//			private String multi = m;
+//
+//			@Override
+//			public SignGroup getSignGroup() {
+//				return signGroup;
+//			}
+//
+//			@Override
+//			public void setSignGroup(SignGroup sg) {
+//				this.signGroup = sg;
+//			}
+//
+//			@Override
+//			public String getMulti() {
+//				return multi;
+//			}
+//
+//			@Override
+//			public void setMulti(String multi) {
+//				this.multi = multi;
+//			}
+//
+//			@Override
+//			public String getTypeName() {
+//				return SONAR_TYPE;
+//			}
+//
+//			@Override
+//			public String getName() {
+//				return name;
+//			}
+//
+//			@Override
+//			public void destroy() {
+//
+//			}
+//		};
+		TypeCache<QuickMessage> qc = session.getSonarState()
+			.getDmsCache().getQuickMessages();
+		Map<String, Object> attrs = new HashMap<>();
+		attrs.put("name", nm);
+		attrs.put("sign_group", g);
+		attrs.put("multi", m);
+
+		qc.createObject(nm, attrs);
+		rv = QuickMessageHelper.lookup(nm);
+		return rv;
 	}
 
 	/** Create a DMS sign group name */
