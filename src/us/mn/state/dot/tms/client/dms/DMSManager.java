@@ -98,7 +98,42 @@ public class DMSManager extends ProxyManager<DMS> {
 	};
 
 	/** Detect transition from AWS message to blank sign */
-	private final ProxyListener<DMS> dms_listener;
+	private final ProxyListener<DMS> dms_listener = new ProxyListener<DMS>() {
+
+        /** All AWS-deployed signs */
+        private final Set<String> aws_signs = new HashSet<>();
+
+        @Override
+        public void proxyAdded(DMS proxy) {
+            handleAwsChange(proxy);
+        }
+
+        @Override
+        public void enumerationComplete() { }
+
+        @Override
+        public synchronized void proxyRemoved(DMS proxy) {
+            aws_signs.remove(proxy.getName());
+        }
+
+        @Override
+        public void proxyChanged(DMS proxy, String a) {
+            if ("aws_controlled".equals(a)) {
+                handleAwsChange(proxy);
+            }
+        }
+
+        /** @param proxy The DMS where AWS state has changed. */
+        private synchronized void handleAwsChange(DMS proxy) {
+            if (DMSHelper.isAwsDeployed(proxy)) {
+                aws_signs.add(proxy.getName());
+            } else if (aws_signs.remove(proxy.getName()) &&
+                SignMessageHelper.isBlank(proxy.getMessageCurrent())) {
+                JOptionPane.showMessageDialog(null,
+                    String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()));
+            }
+        }
+    };
 
 	/** Set the blank DMS action */
 	public void setBlankAction(BlankDmsAction a) {
@@ -112,54 +147,8 @@ public class DMSManager extends ProxyManager<DMS> {
 
 		// if user can't do anything about these changes then don't bother them
 		if (SystemAttrEnum.DMS_NOTIFY_NEEDS_ATTENTION.getBoolean() && s.isUpdatePermitted(DMS.SONAR_TYPE)) {
-			dms_listener = new ProxyListener<DMS>() {
-
-				/** All AWS-deployed signs */
-				private final Set<String> aws_signs = new HashSet<>();
-
-				// Init records of cache state in order to detect changes
-				{
-					for (DMS dms : getCache()) {
-						handleAwsChange(dms);
-					}
-				}
-
-				@Override
-				public void proxyAdded(DMS proxy) {
-					handleAwsChange(proxy);
-				}
-
-				@Override
-				public void enumerationComplete() { }
-
-				@Override
-				public synchronized void proxyRemoved(DMS proxy) {
-					aws_signs.remove(proxy.getName());
-				}
-
-				@Override
-				public void proxyChanged(DMS proxy, String a) {
-					if ("aws_controlled".equals(a)) {
-						handleAwsChange(proxy);
-					}
-				}
-
-				/** @param proxy The DMS where AWS state has changed. */
-				private synchronized void handleAwsChange(DMS proxy) {
-					if (DMSHelper.isAwsDeployed(proxy)) {
-						aws_signs.add(proxy.getName());
-					} else if (aws_signs.remove(proxy.getName()) &&
-						SignMessageHelper.isBlank(proxy.getMessageCurrent())) {
-						JOptionPane.showMessageDialog(null,
-							String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()));
-					}
-				}
-			};
-
 			getCache().addProxyListener(dms_listener);
 			session.getSonarState().getConCache().getControllers().addProxyListener(controller_listener);
-		} else {
-			dms_listener = null;
 		}
 	}
 
@@ -328,9 +317,7 @@ public class DMSManager extends ProxyManager<DMS> {
 	public void dispose() {
 		super.dispose();
 
-		if (dms_listener != null) {
-			getCache().removeProxyListener(dms_listener);
-			session.getSonarState().getConCache().getControllers().removeProxyListener(controller_listener);
-		}
+        getCache().removeProxyListener(dms_listener);
+        session.getSonarState().getConCache().getControllers().removeProxyListener(controller_listener);
 	}
 }
