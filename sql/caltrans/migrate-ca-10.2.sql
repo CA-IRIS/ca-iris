@@ -608,7 +608,7 @@ ALTER TABLE iris.sign_message ADD COLUMN incident VARCHAR(16);
 -- detector_event history table
 -- the detector_event table, at least in D10 gets quite large, really fast.
 -- this table keeps values without referential integrity to speed up insertion
-CREATE TABLE event.detector_event_hist (
+CREATE TABLE IF NOT EXISTS event.detector_event_hist (
 -- event_id INTEGER DEFAULT nextval('event.event_id_seq') NOT NULL,
   event_id INTEGER NOT NULL,
 	event_date TIMESTAMP with time zone NOT NULL,
