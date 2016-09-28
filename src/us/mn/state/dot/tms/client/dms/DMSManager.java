@@ -87,12 +87,7 @@ public class DMSManager extends ProxyManager<DMS> {
 				for (DMS dms : getCache()) {
 					String dcname = dms.getController().getName();
 					if (cname.equals(dcname)) {
-						JOptionPane.showOptionDialog(null,
-							String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()),
-							I18N.get("notification.attention_required_title"),
-							JOptionPane.OK_OPTION,
-							JOptionPane.INFORMATION_MESSAGE,
-							null, null, null);
+						showAttentionRequired(proxy.getName());
 						break;
 					}
 				}
@@ -131,11 +126,20 @@ public class DMSManager extends ProxyManager<DMS> {
                 aws_signs.add(proxy.getName());
             } else if (aws_signs.remove(proxy.getName()) &&
                 SignMessageHelper.isBlank(proxy.getMessageCurrent())) {
-                JOptionPane.showMessageDialog(null,
-                    String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()));
+				showAttentionRequired(proxy.getName());
             }
         }
     };
+
+    /** Displays the attention required notification for CMS */
+    private static void showAttentionRequired(String name) {
+		JOptionPane.showOptionDialog(null,
+			String.format(I18N.get("notification.attention_required"), I18N.get("dms"), name),
+			I18N.get("notification.attention_required_title"),
+			JOptionPane.OK_OPTION,
+			JOptionPane.INFORMATION_MESSAGE,
+			null, null, null);
+	}
 
 	/** Set the blank DMS action */
 	public void setBlankAction(BlankDmsAction a) {
