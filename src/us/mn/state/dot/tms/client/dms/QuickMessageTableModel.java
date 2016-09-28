@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.client.dms;
 
 import java.util.ArrayList;
 import us.mn.state.dot.tms.QuickMessage;
+import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroupHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
@@ -97,5 +98,11 @@ public class QuickMessageTableModel extends ProxyTableModel<QuickMessage> {
 	@Override
 	public int getRowHeight() {
 		return 20;
+	}
+
+	@Override
+	protected boolean check(QuickMessage proxy) {
+		return !QuickMessageHelper.isRawQuickMessage(proxy)
+			&& super.check(proxy);
 	}
 }

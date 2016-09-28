@@ -45,6 +45,8 @@ import us.mn.state.dot.tms.client.proxy.ProxyListModel;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
 import us.mn.state.dot.tms.client.widget.IComboBoxModel;
 
+import static us.mn.state.dot.tms.QuickMessageHelper.isRawQuickMessage;
+
 /**
  * Table model for DMS actions assigned to action plans
  *
@@ -415,7 +417,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 
 		if (g == null || m == null)
 			return null;
-		final String nm = QuickMessage.TEMP_PREFIX
+		final String nm = QuickMessage.RAW_PREFIX
 				+ TimeSteward.currentTimeMillis();
 
 		Map<String, Object> attrs = new HashMap<>();
@@ -435,14 +437,6 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		}
 
 		return q;
-	}
-
-	/** determine if quickmessage is a raw/temporary */
-	private boolean isRawQuickMessage(final QuickMessage q) {
-		if (q != null && q.getName() != null
-			&& q.getName().startsWith(QuickMessage.TEMP_PREFIX))
-			return true;
-		return false;
 	}
 
 	/** Create a DMS sign group name */

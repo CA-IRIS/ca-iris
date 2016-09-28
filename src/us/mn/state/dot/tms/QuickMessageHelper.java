@@ -104,4 +104,11 @@ public class QuickMessageHelper extends BaseHelper {
 		return new MultiString(dsm.getMulti()).equals(newms);
 	}
 
+	/** determine if quickmessage is a raw/temporary */
+	static public boolean isRawQuickMessage(final QuickMessage q) {
+		if (q != null && q.getName() != null
+			&& q.getName().startsWith(QuickMessage.RAW_PREFIX))
+			return true;
+		return false;
+	}
 }
