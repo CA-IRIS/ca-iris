@@ -14,11 +14,9 @@
  */
 package us.mn.state.dot.tms.server;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
-import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.ChangeVetoException;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignGroup;

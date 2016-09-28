@@ -111,27 +111,70 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		});
 		cols.add(new ProxyColumn<DmsAction>("quick.message", 160) {
 			public Object getValueAt(DmsAction da) {
-				QuickMessage qm = da.getQuickMessage();
-				if (qm != null
-					&& qm.getName().startsWith(
-						QuickMessage.TEMP_PREFIX))
-					return qm.getMulti();
-				return qm;
+				QuickMessage q = da.getQuickMessage();
+				if (isRawQuickMessage(q)) {
+					final QuickMessage q2 = da.getQuickMessage();
+					return new QuickMessage() {
+						@Override
+						public String toString() {
+							return q2.getMulti();
+						}
+
+						@Override
+						public SignGroup getSignGroup() {
+							return q2.getSignGroup();
+						}
+
+						@Override
+						public void setSignGroup(SignGroup sg) {
+							q2.setSignGroup(sg);
+						}
+
+						@Override
+						public String getMulti() {
+							return q2.getMulti();
+						}
+
+						@Override
+						public void setMulti(
+							String multi) {
+							q2.setMulti(multi);
+						}
+
+						@Override
+						public String getTypeName() {
+							return q2.getTypeName();
+						}
+
+						@Override
+						public String getName() {
+							return q2.getName();
+						}
+
+						@Override
+						public void destroy() {
+							q2.destroy();
+						}
+					};
+				}
+				return q;
 			}
 			public boolean isEditable(DmsAction da) {
 				return canUpdate(da);
 			}
 			public void setValueAt(DmsAction da, Object value) {
 				String v = value.toString().trim();
-				QuickMessage orig = da.getQuickMessage();
+				QuickMessage old = da.getQuickMessage();
 				QuickMessage qm = QuickMessageHelper.lookup(v);
 
 				if (qm != null) {
 					da.setQuickMessage(qm);
-					return;
-				}
-
-				if (qm == null) {
+					if (isRawQuickMessage(old)
+						&& session.canRemove(
+						QuickMessage.SONAR_TYPE,
+						old.getName()))
+						old.destroy();
+				} else {
 					int opt = JOptionPane.showConfirmDialog(
 						null,
 						I18N.get("action.plan.dms.raw.body"),
@@ -140,13 +183,17 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 						JOptionPane.QUESTION_MESSAGE);
 					if (opt == JOptionPane.YES_OPTION) {
 						da.setQuickMessage(
-							createTempQMRaw(da.getSignGroup(), (String) value));
-						return;
+							createRawQuickMessage(
+								da.getSignGroup(),
+								(String) value));
+						if (isRawQuickMessage(old)
+							&& session.canRemove(
+							QuickMessage.SONAR_TYPE,
+							old.getName()))
+							old.destroy();
 					}
 				}
 
-				// restore original if not above
-				da.setQuickMessage(orig);
 			}
 		});
 		cols.add(new ProxyColumn<DmsAction>("dms.beacon.enabled", 100,
@@ -227,7 +274,11 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	/** DMS sign group type cache */
 	private final TypeCache<DmsSignGroup> dms_sign_groups;
 
-    /** Sign group type cache */
+	/** */
+	private final TypeCache<QuickMessage> quick_messages;
+
+
+	/** Sign group type cache */
 	private final TypeCache<SignGroup> sign_groups;
 
 	/** Async handling of case where SignGroup must be created */
@@ -270,6 +321,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		dms_sign_groups = s.getSonarState().getDmsCache().getDmsSignGroups();
 		sign_groups = s.getSonarState().getDmsCache().getSignGroups();
 		sign_groups.addProxyListener(sign_group_listener);
+		quick_messages = s.getSonarState().getDmsCache().getQuickMessages();
 	}
 
 	/** Get the SONAR type name */
@@ -355,65 +407,42 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		return (phase != null) ? phase : action_plan.getDefaultPhase();
 	}
 
-	/** Create a temporary QuickMessage to be used for Raw/Multi */
-	private QuickMessage createTempQMRaw(final SignGroup g, final String m) {
+	/**
+	 * Create a raw/temporary QuickMessage to be used for direct MULTI text
+	 * in the action
+	 */
+	private QuickMessage createRawQuickMessage(final SignGroup g, final String m) {
 
 		if (g == null || m == null)
 			return null;
 		final String nm = QuickMessage.TEMP_PREFIX
 				+ TimeSteward.currentTimeMillis();
 
-		QuickMessage rv = null;
-//		rv = new QuickMessage() {
-//			private String name = nm;
-//			private SignGroup signGroup = g;
-//			private String multi = m;
-//
-//			@Override
-//			public SignGroup getSignGroup() {
-//				return signGroup;
-//			}
-//
-//			@Override
-//			public void setSignGroup(SignGroup sg) {
-//				this.signGroup = sg;
-//			}
-//
-//			@Override
-//			public String getMulti() {
-//				return multi;
-//			}
-//
-//			@Override
-//			public void setMulti(String multi) {
-//				this.multi = multi;
-//			}
-//
-//			@Override
-//			public String getTypeName() {
-//				return SONAR_TYPE;
-//			}
-//
-//			@Override
-//			public String getName() {
-//				return name;
-//			}
-//
-//			@Override
-//			public void destroy() {
-//
-//			}
-//		};
-		TypeCache<QuickMessage> qc = session.getSonarState()
-			.getDmsCache().getQuickMessages();
 		Map<String, Object> attrs = new HashMap<>();
 		attrs.put("name", nm);
 		attrs.put("sign_group", g);
 		attrs.put("multi", m);
+		quick_messages.createObject(nm, attrs);
 
-		qc.createObject(nm, attrs);
-		rv = QuickMessageHelper.lookup(nm);
-		return rv;
+		int count = 0;
+		QuickMessage q = quick_messages.lookupObject(nm);
+		while (q == null) {
+			TimeSteward.sleep_well(100);
+			q = quick_messages.lookupObject(nm);
+			if(count > 100)
+				break;
+			count++;
+		}
+
+		return q;
+	}
+
+	/** determine if quickmessage is a raw/temporary */
+	private boolean isRawQuickMessage(final QuickMessage q) {
+		if (q != null && q.getName() != null
+			&& q.getName().startsWith(QuickMessage.TEMP_PREFIX))
+			return true;
+		return false;
 	}
 
 	/** Create a DMS sign group name */
@@ -426,5 +455,14 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	public void dispose() {
 		super.dispose();
 		sign_groups.removeProxyListener(sign_group_listener);
+	}
+
+	@Override
+	public void deleteProxy(DmsAction p) {
+		QuickMessage q = p.getQuickMessage();
+		super.deleteProxy(p);
+		if (isRawQuickMessage(q) && session.canRemove(
+			QuickMessage.SONAR_TYPE, q.getName()))
+			q.destroy();
 	}
 }

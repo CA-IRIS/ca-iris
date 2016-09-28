@@ -19,7 +19,6 @@ import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Helper class for quick messages.
- *
  * @author Douglas Lau
  */
 public class QuickMessageHelper extends BaseHelper {
@@ -31,7 +30,7 @@ public class QuickMessageHelper extends BaseHelper {
 
 	/** Lookup the quick message with the specified name */
 	static public QuickMessage lookup(String name) {
-		return (QuickMessage)namespace.lookupObject(
+		return (QuickMessage) namespace.lookupObject(
 			QuickMessage.SONAR_TYPE, name);
 	}
 
@@ -41,39 +40,66 @@ public class QuickMessageHelper extends BaseHelper {
 			QuickMessage.SONAR_TYPE));
 	}
 
-	/** Find a quick message with the specified MULTI string.
+	/**
+	 * Find a quick message with the specified MULTI string.
 	 * @param ms MULTI string.
-	 * @return A matching quick message or null if no match is found. */
+	 *
+	 * @return A matching quick message or null if no match is found.
+	 */
 	static public QuickMessage find(String ms) {
-		if(ms != null) {
+		if (ms != null) {
 			MultiString multi = new MultiString(ms);
 			Iterator<QuickMessage> it = iterator();
-			while(it.hasNext()) {
+			while (it.hasNext()) {
 				QuickMessage qm = it.next();
-				if(multi.equals(qm.getMulti()))
+				if (multi.equals(qm.getMulti()))
 					return qm;
 			}
 		}
 		return null;
 	}
 
-	/** Is the specified quick message deployed? Equivalence is used
+	/**
+	 * Find a quick message with the specified sign group and MULTI string.
+	 * @param sg sign group
+	 * @param ms MULTI string.
+	 *
+	 * @return A matching quick message or null if no match is found.
+	 */
+	static public QuickMessage find(SignGroup sg, String ms) {
+		if (sg != null && ms != null) {
+			MultiString multi = new MultiString(ms);
+			Iterator<QuickMessage> it = iterator();
+			while (it.hasNext()) {
+				QuickMessage qm = it.next();
+				if (sg.equals(qm.getSignGroup())
+					&& multi.equals(qm.getMulti()))
+					return qm;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Is the specified quick message deployed? Equivalence is used
 	 * to determine if the specified and deployed message are equal.
-	 * @param dms DMS to check, may be null.
+	 * @param dms    DMS to check, may be null.
 	 * @param qmname Name of quick message, may be null.
+	 *
 	 * @return True if the specifed quick message is equivalent to the
-	 *         deployed message on the specified DMS.  */
+	 * deployed message on the specified DMS.
+	 */
 	static public boolean isQuickMsgDeployed(DMS dms, String qmname) {
-		if(dms == null || qmname == null)
+		if (dms == null || qmname == null)
 			return false;
 		QuickMessage newqm = lookup(qmname);
-		if(newqm == null)
+		if (newqm == null)
 			return false;
 		String newms = newqm.getMulti();
-		if(newms == null)
+		if (newms == null)
 			return false;
 		SignMessage dsm = dms.getMessageCurrent();
-		if(dsm == null)
+		if (dsm == null)
 			return false;
 		return new MultiString(dsm.getMulti()).equals(newms);
 	}
