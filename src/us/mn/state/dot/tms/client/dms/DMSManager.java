@@ -87,8 +87,12 @@ public class DMSManager extends ProxyManager<DMS> {
 				for (DMS dms : getCache()) {
 					String dcname = dms.getController().getName();
 					if (cname.equals(dcname)) {
-						JOptionPane.showMessageDialog(null,
-                            String.format(I18N.get("notification.attention_required"), I18N.get("dms"), dms.getName()));
+						JOptionPane.showOptionDialog(null,
+							String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()),
+							I18N.get("notification.attention_required_title"),
+							JOptionPane.OK_OPTION,
+							JOptionPane.INFORMATION_MESSAGE,
+							null, null, null);
 						break;
 					}
 				}
