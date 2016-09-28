@@ -25,6 +25,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.ListCellRenderer;
+import javax.swing.SwingUtilities;
 
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
@@ -132,13 +133,18 @@ public class DMSManager extends ProxyManager<DMS> {
     };
 
     /** Displays the attention required notification for CMS */
-    private static void showAttentionRequired(String name) {
-		JOptionPane.showOptionDialog(null,
-			String.format(I18N.get("notification.attention_required"), I18N.get("dms"), name),
-			I18N.get("notification.attention_required_title"),
-			JOptionPane.OK_OPTION,
-			JOptionPane.INFORMATION_MESSAGE,
-			null, null, null);
+    private static void showAttentionRequired(final String name) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				JOptionPane.showOptionDialog(null,
+					String.format(I18N.get("notification.attention_required"), I18N.get("dms"), name),
+					I18N.get("notification.attention_required_title"),
+					JOptionPane.OK_OPTION,
+					JOptionPane.INFORMATION_MESSAGE,
+					null, null, null);
+			}
+		});
 	}
 
 	/** Set the blank DMS action */
