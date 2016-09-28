@@ -137,12 +137,10 @@ public class DMSManager extends ProxyManager<DMS> {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				JOptionPane.showOptionDialog(null,
+				JOptionPane.showMessageDialog(null,
 					String.format(I18N.get("notification.attention_required"), I18N.get("dms"), name),
 					I18N.get("notification.attention_required_title"),
-					JOptionPane.OK_OPTION,
-					JOptionPane.INFORMATION_MESSAGE,
-					null, null, null);
+					JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 	}
