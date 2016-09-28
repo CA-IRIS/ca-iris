@@ -51,6 +51,7 @@ import static us.mn.state.dot.tms.QuickMessageHelper.isRawQuickMessage;
  * Table model for DMS actions assigned to action plans
  *
  * @author Douglas Lau
+ * @author Dan Rossiter
  * @author Jacob Barde
  */
 public class DmsActionModel extends ProxyTableModel<DmsAction> {
@@ -172,26 +173,19 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 				if (qm != null) {
 					da.setQuickMessage(qm);
 					if (isRawQuickMessage(old)
-						&& session.canRemove(
-						QuickMessage.SONAR_TYPE,
-						old.getName()))
+						&& session.canRemove(QuickMessage.SONAR_TYPE, old.getName()))
 						old.destroy();
 				} else {
 					int opt = JOptionPane.showConfirmDialog(
 						null,
 						I18N.get("action.plan.dms.raw.body"),
 						I18N.get("action.plan.dms.raw.title"),
-						JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE);
+						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 					if (opt == JOptionPane.YES_OPTION) {
 						da.setQuickMessage(
-							createRawQuickMessage(
-								da.getSignGroup(),
-								(String) value));
+							createRawQuickMessage(da.getSignGroup(), (String) value));
 						if (isRawQuickMessage(old)
-							&& session.canRemove(
-							QuickMessage.SONAR_TYPE,
-							old.getName()))
+							&& session.canRemove(QuickMessage.SONAR_TYPE, old.getName()))
 							old.destroy();
 					}
 				}
@@ -267,11 +261,11 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	/** Plan phase model */
 	private final ProxyListModel<PlanPhase> phase_mdl;
 
-    /** Sign group that is in the process of being created. */
-    private String pending_sign_group = null;
+	/** Sign group that is in the process of being created. */
+	private String pending_sign_group = null;
 
-    /** DMS for which a sign group is being created. */
-    private DMS pending_dms = null;
+	/** DMS for which a sign group is being created. */
+	private DMS pending_dms = null;
 
 	/** DMS sign group type cache */
 	private final TypeCache<DmsSignGroup> dms_sign_groups;
@@ -417,8 +411,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 
 		if (g == null || m == null)
 			return null;
-		final String nm = QuickMessage.RAW_PREFIX
-				+ TimeSteward.currentTimeMillis();
+		final String nm = QuickMessage.RAW_PREFIX + TimeSteward.currentTimeMillis();
 
 		Map<String, Object> attrs = new HashMap<>();
 		attrs.put("name", nm);
@@ -431,7 +424,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		while (q == null) {
 			TimeSteward.sleep_well(100);
 			q = quick_messages.lookupObject(nm);
-			if(count > 100)
+			if(count > 100) // 10 second wait
 				break;
 			count++;
 		}
@@ -451,12 +444,12 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		sign_groups.removeProxyListener(sign_group_listener);
 	}
 
+	/** Properly delete a raw QuickMessage when the parent DMSAction is deleted */
 	@Override
 	public void deleteProxy(DmsAction p) {
 		QuickMessage q = p.getQuickMessage();
 		super.deleteProxy(p);
-		if (isRawQuickMessage(q) && session.canRemove(
-			QuickMessage.SONAR_TYPE, q.getName()))
+		if (isRawQuickMessage(q) && session.canRemove(QuickMessage.SONAR_TYPE, q.getName()))
 			q.destroy();
 	}
 }

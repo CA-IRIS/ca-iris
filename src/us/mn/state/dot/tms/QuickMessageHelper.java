@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2016       Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +20,9 @@ import us.mn.state.dot.tms.utils.MultiString;
 
 /**
  * Helper class for quick messages.
+ *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class QuickMessageHelper extends BaseHelper {
 
@@ -40,12 +43,9 @@ public class QuickMessageHelper extends BaseHelper {
 			QuickMessage.SONAR_TYPE));
 	}
 
-	/**
-	 * Find a quick message with the specified MULTI string.
+	/** Find a quick message with the specified MULTI string.
 	 * @param ms MULTI string.
-	 *
-	 * @return A matching quick message or null if no match is found.
-	 */
+	 * @return A matching quick message or null if no match is found. */
 	static public QuickMessage find(String ms) {
 		if (ms != null) {
 			MultiString multi = new MultiString(ms);
@@ -72,8 +72,7 @@ public class QuickMessageHelper extends BaseHelper {
 			Iterator<QuickMessage> it = iterator();
 			while (it.hasNext()) {
 				QuickMessage qm = it.next();
-				if (sg.equals(qm.getSignGroup())
-					&& multi.equals(qm.getMulti()))
+				if (sg.equals(qm.getSignGroup()) && multi.equals(qm.getMulti()))
 					return qm;
 			}
 		}
@@ -85,10 +84,8 @@ public class QuickMessageHelper extends BaseHelper {
 	 * to determine if the specified and deployed message are equal.
 	 * @param dms    DMS to check, may be null.
 	 * @param qmname Name of quick message, may be null.
-	 *
 	 * @return True if the specifed quick message is equivalent to the
-	 * deployed message on the specified DMS.
-	 */
+	 *         deployed message on the specified DMS.  */
 	static public boolean isQuickMsgDeployed(DMS dms, String qmname) {
 		if (dms == null || qmname == null)
 			return false;
@@ -106,9 +103,6 @@ public class QuickMessageHelper extends BaseHelper {
 
 	/** determine if quickmessage is a raw/temporary */
 	static public boolean isRawQuickMessage(final QuickMessage q) {
-		if (q != null && q.getName() != null
-			&& q.getName().startsWith(QuickMessage.RAW_PREFIX))
-			return true;
-		return false;
+		return (q != null && q.getName() != null && q.getName().startsWith(QuickMessage.RAW_PREFIX));
 	}
 }
