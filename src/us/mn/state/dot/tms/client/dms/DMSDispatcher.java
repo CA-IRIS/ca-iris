@@ -449,7 +449,7 @@ public class DMSDispatcher extends JPanel {
 	/** Set the fully composed message.  This will update all the widgets
 	 * on the dispatcher with the specified message. */
 	public void setMessage(String ms) {
-		if(ms != null) {
+		if(ms != null && !ms.equals(message)) {
 			message = ms;
 			singleTab.setMessage();
 			composer.setMessage(ms);
@@ -477,7 +477,11 @@ public class DMSDispatcher extends JPanel {
 
 	/** Get raster graphic array for the selected message */
 	public RasterGraphic[] getPixmaps() {
-		RasterBuilder b = builder;
+        return getPixmaps(builder);
+	}
+
+	/** Get raster graphic array for the selected message */
+	private RasterGraphic[] getPixmaps(RasterBuilder b) {
 		if (b != null) {
 			MultiString multi = new MultiString(message);
 			try {
@@ -495,26 +499,42 @@ public class DMSDispatcher extends JPanel {
 
 	/** Can a message be sent to all selected DMS? */
 	public boolean canSend() {
+	    return canSend(false);
+    }
+
+	/** Can a message be sent to all selected DMS? */
+	public boolean canSend(boolean checkMsg) {
 		Set<DMS> sel = getValidSelected();
 		if (sel.isEmpty())
 			return false;
 		for (DMS dms: sel) {
-			if (!canSend(dms))
+			if (!canSend(dms, checkMsg))
 				return false;
 		}
 		return true;
 	}
 
 	/** Can a message be sent to the specified DMS? */
-	public boolean canSend(DMS dms) {
+	private boolean canSend(DMS dms, boolean checkMsg) {
 		return creator.canCreate() &&
-		       isUpdatePermitted(dms, "ownerNext") &&
-		       isUpdatePermitted(dms, "messageNext");
+			isUpdatePermitted(dms, "ownerNext") &&
+			isUpdatePermitted(dms, "messageNext") &&
+			(!checkMsg || isMsgValidOnSign(dms));
 	}
 
 	/** Is DMS attribute update permitted? */
 	private boolean isUpdatePermitted(DMS dms, String a) {
 		return session.isUpdatePermitted(dms, a);
+	}
+
+	/** Determine whether given message is valid on given sign. */
+	private boolean isMsgValidOnSign(DMS dms) {
+		// NOTE: This could be optimized if rendering for each check
+		// becomes too expensive.
+		// This optimization would require decoupling the validation in
+		// RasterBuilder from the render process.
+		RasterBuilder builder = DMSHelper.createRasterBuilder(dms);
+		return getPixmaps(builder) != null;
 	}
 
 	/** Can a device request be sent to all selected DMS? */
@@ -537,6 +557,6 @@ public class DMSDispatcher extends JPanel {
 	/** Check if AWS is allowed and user has permission to change */
 	public boolean isAwsPermitted(DMS dms) {
 		return dms.getAwsAllowed() &&
-		       isUpdatePermitted(dms, "awsControlled");
+			isUpdatePermitted(dms, "awsControlled");
 	}
 }
