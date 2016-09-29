@@ -83,6 +83,15 @@ public class CameraShiftJob extends Job {
 	/** perform job */
 	@Override
 	public void perform() throws Exception {
+		int concurrent = CameraHelper.getConcurrentMovements();
+
+		if (concurrent < 1) {
+			log.log("Camera Shift disabled due to "
+				+ SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase()
+				+ " set to less than 1.");
+			return;
+		}
+
 		log.log("Begin performing camera shift job.");
 
 		if (ignoreStartup) {
@@ -102,12 +111,10 @@ public class CameraShiftJob extends Job {
 			return;
 		}
 
-		int concurrent = CameraHelper.getConcurrentMovements();
-		int movingNow = 0;
-
 		long started = TimeSteward.currentTimeMillis();
 		lastLogMessage = started;
 		int delay = CameraHelper.getShiftPause() * 1000;
+		int movingNow = 0;
 		long lastMovement = 0L;
 		long diff;
 
