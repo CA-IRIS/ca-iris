@@ -3,7 +3,6 @@
  * Copyright (C) 2007-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
  * Copyright (C) 2015 California Department of Transportation
- * Copyright (C) 2015-2016  Southwest Research Institute
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,11 +141,13 @@ public class ProxyListModel<T extends SonarObject>
 		int ret = -1;
 		if (check(proxy)) {
 			int sz = list.size();
+			ret = sz;
 			for (int i = 1; i < sz; i++) {
 				int c = comp.compare(proxy, list.get(i));
-				if (c == 0)
+				if (c == 0) {
+					ret = -1;
 					break;
-				if (c < 0) {
+				} else if (c < 0) {
 					ret = i;
 					break;
 				}
@@ -164,16 +165,15 @@ public class ProxyListModel<T extends SonarObject>
 						int i;
 						for (i = 0; i < sz; i++) {
 							int c = comp.compare(proxy, getProxy(i));
-							if (c < 0)
-								break;
+							if (c < 0) break;
 						}
 						indices.add(i, ret);
 						ret = i;
 
-							// increment indices after inserted
-							for (int j = i; j < indices.size(); j++) {
-								indices.set(j, indices.get(j) + 1);
-							}
+						// increment indices after inserted
+						for (int j = i; j < indices.size(); j++) {
+							indices.set(j, indices.get(j) + 1);
+						}
 					} else {
 						// not visible based on current filter
 						ret = -1;
@@ -187,9 +187,10 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Remove a proxy from the model */
 	protected int doProxyRemoved(T proxy) {
+		checkRemove(proxy);
 		int ret = -1;
 		for (int i = 0; i < list.size(); i++) {
-			if (proxy == list.get(i)) {
+			if (0 == comp.compare(proxy, list.get(i))) {
 				ret = i;
 				break;
 			}
@@ -282,7 +283,7 @@ public class ProxyListModel<T extends SonarObject>
 
 	/** Get the proxy at the specified index */
 	public T getProxy(int index) {
-		return getElementAt(index);
+		return (T)getElementAt(index);
 	}
 
 	/** Get the index of the given proxy */
