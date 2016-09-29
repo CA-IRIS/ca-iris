@@ -20,6 +20,7 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.CommLinkHelper;
 import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
+import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.MessagePoller;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -34,15 +35,14 @@ import us.mn.state.dot.tms.server.comm.SamplePoller;
  * @author Travis Swanston
  */
 public class SS125Poller extends MessagePoller<SS125Property>
-	implements SamplePoller
-{
+	implements SamplePoller {
 	/** SS 125 debug log */
 	static protected final DebugLog SS125_LOG = new DebugLog("ss125");
 
 	/** Create a new SS125 poller */
 	public SS125Poller(String n, Messenger m) {
 		super(n, m);
-		CommLinkImpl cli = (CommLinkImpl)CommLinkHelper.lookup(n);
+		CommLinkImpl cli = (CommLinkImpl) CommLinkHelper.lookup(n);
 		if (cli == null) {
 			SS125_LOG.log("Failed to find CommLink.");
 			return;
