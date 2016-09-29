@@ -189,7 +189,7 @@ public class ProxyListModel<T extends SonarObject>
 	protected int doProxyRemoved(T proxy) {
 		int ret = -1;
 		for (int i = 0; i < list.size(); i++) {
-			if (proxy == list.get(i)) {
+			if (0 == comp.compare(proxy, list.get(i))) {
 				ret = i;
 				break;
 			}
