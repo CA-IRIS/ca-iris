@@ -15,7 +15,6 @@
 package us.mn.state.dot.tms;
 
 import java.util.Iterator;
-import us.mn.state.dot.tms.SystemAttrEnum;
 
 
 /**
@@ -83,7 +82,7 @@ public class SiteDataHelper extends BaseHelper {
 
 	/** Get a SiteData iterator */
 	static public Iterator<SiteData> iterator() {
-		return new IteratorWrapper<SiteData>(namespace.iterator(
+		return new IteratorWrapper<>(namespace.iterator(
 			SiteData.SONAR_TYPE));
 	}
 
@@ -91,7 +90,7 @@ public class SiteDataHelper extends BaseHelper {
 	static public SiteData lookup(String n) {
 		if (n == null)
 			return null;
-		return (SiteData)namespace.lookupObject(SiteData.SONAR_TYPE,
+		return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE,
 			n);
 	}
 
@@ -114,8 +113,9 @@ public class SiteDataHelper extends BaseHelper {
 	/**
 	 * Build a site name string for a SiteData entity.
 	 * @param gn The GeoLoc name corresponding to the SiteData entity.
+	 *
 	 * @return A site name string, or null if entity not found or if
-	 *         entity doesn't contain a site name
+	 * entity doesn't contain a site name
 	 */
 	static public String getSiteName(String gn) {
 		if (gn == null)
@@ -139,7 +139,8 @@ public class SiteDataHelper extends BaseHelper {
 
 	/**
 	 * Find a GeoLoc name by site name.
-	 * @param gn The site name corresponding to the GeoLoc entity.
+	 * @param sn The site name corresponding to the GeoLoc entity.
+	 *
 	 * @return A GeoLoc name string, or null if site name not found.
 	 */
 	static public String getGeoLocNameBySiteName(String sn) {
@@ -231,12 +232,12 @@ public class SiteDataHelper extends BaseHelper {
 		fmt = fmt.replaceAll(TAG_XRDABBR, sanitize(xrdabbr));
 		fmt = fmt.replaceAll(TAG_XRDDIR, sanitize(xrddir));
 		fmt = fmt.replaceAll(TAG_XRDDIRFULL, sanitize(xrddirfull));
-		fmt = fmt.replaceAll(TAG_XMOD, xmod);	// don't sanitize
+		fmt = fmt.replaceAll(TAG_XMOD, xmod);        // don't sanitize
 		fmt = fmt.replaceAll(TAG_MILE, sanitize(mile));
 		fmt = fmt.replaceAll(TAG_CTY, sanitize(cty));
 		fmt = fmt.replaceAll(TAG_CTYFULL, sanitize(ctyfull));
 		fmt = fmt.replaceAll(TAG_GLNAME, sanitize(gl.getName()));
-		fmt = fmt.replaceAll("\\s+"," ");
+		fmt = fmt.replaceAll("\\s+", " ");
 		fmt = fmt.trim();
 		return fmt;
 	}
