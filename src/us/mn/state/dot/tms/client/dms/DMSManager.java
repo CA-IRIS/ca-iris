@@ -18,16 +18,23 @@ package us.mn.state.dot.tms.client.dms;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.ListCellRenderer;
+
+import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
+import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.RasterGraphic;
+import us.mn.state.dot.tms.SignMessageHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
@@ -46,6 +53,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Dan Rossiter
  */
 public class DMSManager extends ProxyManager<DMS> {
 
@@ -58,6 +66,82 @@ public class DMSManager extends ProxyManager<DMS> {
 	/** Action to blank the selected DMS */
 	private BlankDmsAction blankAction;
 
+	/** Detect transition to "power cycle" state for sign */
+	private final ProxyListener<Controller> controller_listener = new ProxyListener<Controller>() {
+
+		@Override
+		public void proxyAdded(Controller proxy) { }
+
+		@Override
+		public void enumerationComplete() { }
+
+		@Override
+		public void proxyRemoved(Controller proxy) { }
+
+		@Override
+		public void proxyChanged(Controller proxy, String a) {
+			String cname = proxy.getName();
+			String maint = proxy.getMaint();
+			if ("maint".equals(a) && cname != null && maint != null &&
+				maint.toLowerCase().contains("power cycle")) {
+				for (DMS dms : getCache()) {
+					String dcname = dms.getController().getName();
+					if (cname.equals(dcname)) {
+						JOptionPane.showMessageDialog(null,
+                            String.format(I18N.get("notification.attention_required"), I18N.get("dms"), dms.getName()));
+						break;
+					}
+				}
+			}
+		}
+
+	};
+
+	/** Detect transition from AWS message to blank sign */
+	private final ProxyListener<DMS> dms_listener = new ProxyListener<DMS>() {
+
+		/** All AWS-deployed signs */
+		private final Set<String> aws_signs = new HashSet<>();
+
+		{
+			for (DMS dms : getCache()) {
+				handleAwsChange(dms);
+			}
+		}
+
+		@Override
+		public void proxyAdded(DMS proxy) {
+			handleAwsChange(proxy);
+		}
+
+		@Override
+		public void enumerationComplete() { }
+
+		@Override
+		public synchronized void proxyRemoved(DMS proxy) {
+			aws_signs.remove(proxy.getName());
+		}
+
+		@Override
+		public void proxyChanged(DMS proxy, String a) {
+			if ("aws_controlled".equals(a)) {
+				handleAwsChange(proxy);
+			}
+		}
+
+		/** @param proxy The DMS where AWS state has changed. */
+		private synchronized void handleAwsChange(DMS proxy) {
+			if (DMSHelper.isAwsDeployed(proxy)) {
+				aws_signs.add(proxy.getName());
+			} else if (aws_signs.remove(proxy.getName()) &&
+				SignMessageHelper.isBlank(proxy.getMessageCurrent())) {
+				JOptionPane.showMessageDialog(null,
+					String.format(I18N.get("notification.attention_required"), I18N.get("dms"), proxy.getName()));
+			}
+		}
+
+	};
+
 	/** Set the blank DMS action */
 	public void setBlankAction(BlankDmsAction a) {
 		blankAction = a;
@@ -67,6 +151,12 @@ public class DMSManager extends ProxyManager<DMS> {
 	public DMSManager(Session s, GeoLocManager lm) {
 		super(s, lm, ItemStyle.ALL);
 		s_model.setAllowMultiple(true);
+
+		// if user can't do anything about these changes then don't bother them
+		if (SystemAttrEnum.DMS_NOTIFY_NEEDS_ATTENTION.getBoolean() && s.canUpdate(DMS.SONAR_TYPE)) {
+			getCache().addProxyListener(dms_listener);
+			session.getSonarState().getConCache().getControllers().addProxyListener(controller_listener);
+		}
 	}
 
 	/** Get the sonar type name */
@@ -227,5 +317,13 @@ public class DMSManager extends ProxyManager<DMS> {
 	@Override
 	protected int getZoomThreshold() {
 		return 12;
+	}
+
+	/** Dispose of the DMS manager */
+	@Override
+	public void dispose() {
+		super.dispose();
+		getCache().removeProxyListener(dms_listener);
+		session.getSonarState().getConCache().getControllers().removeProxyListener(controller_listener);
 	}
 }

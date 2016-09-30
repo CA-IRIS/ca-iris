@@ -258,7 +258,7 @@ CREATE VIEW dms_action_view AS
 	       beacon_enabled, a_priority, r_priority
 	FROM iris.dms_action;
 GRANT SELECT ON dms_action_view TO PUBLIC;
- -- migrate-4.30.sql\n\n
+\00-- migrate-4.30.sql\n\n
 \set ON_ERROR_STOP
 
 SET SESSION AUTHORIZATION 'tms';
@@ -612,6 +612,9 @@ INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_move_pause'
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_reinit', 'false');
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunrise_offset', -30);
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offset', -30);
+
+-- feature 571
+INSERT INTO iris.system_attribute(name, value) VALUES ('dms_notify_needs_attention', 'true');
 
 -- feature 592
 -- detector_event history table
