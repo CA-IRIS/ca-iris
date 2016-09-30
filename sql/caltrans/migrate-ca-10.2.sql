@@ -1,6 +1,5 @@
 -- current as of MnDOT 4.35.4
 
-
 -- updates required before rest of updates
 \set ON_ERROR_STOP
 
@@ -17,6 +16,10 @@ DELETE FROM iris.comm_protocol WHERE id IN (33, 34);
 ALTER TABLE event.tag_type OWNER TO tms;
 ALTER TABLE event.tag_read_event OWNER TO tms;
 ALTER VIEW tag_read_event_view OWNER TO tms;
+
+-- ADDITIONS for CA-IRIS v10.2 go at the bottom
+
+
 
 
 -- ============================================================================
@@ -156,11 +159,10 @@ CREATE TRIGGER tag_read_event_view_update_trig
     INSTEAD OF UPDATE ON tag_read_event_view
     FOR EACH ROW EXECUTE PROCEDURE event.tag_read_event_view_update();
 
-        
 
-        
-        
--- migrate-4.28.sqln
+
+
+-- migrate-4.28.sql
 \set ON_ERROR_STOP
 
 SET SESSION AUTHORIZATION 'tms';
@@ -234,11 +236,10 @@ CREATE TRIGGER tag_read_event_view_update_trig
     INSTEAD OF UPDATE ON tag_read_event_view
     FOR EACH ROW EXECUTE PROCEDURE event.tag_read_event_view_update();
 
-        
-        
-        
-        
--- migrate-4.29.sqln
+
+
+
+-- migrate-4.29.sql
 \set ON_ERROR_STOP
 
 SET SESSION AUTHORIZATION 'tms';
@@ -258,7 +259,11 @@ CREATE VIEW dms_action_view AS
 	       beacon_enabled, a_priority, r_priority
 	FROM iris.dms_action;
 GRANT SELECT ON dms_action_view TO PUBLIC;
-\00-- migrate-4.30.sql\n\n
+
+
+
+
+-- migrate-4.30.sql
 \set ON_ERROR_STOP
 
 SET SESSION AUTHORIZATION 'tms';
@@ -277,6 +282,10 @@ CREATE INDEX ON event.price_message_event(device_id);
 ALTER TABLE iris.sign_group ADD COLUMN hidden BOOLEAN;
 UPDATE iris.sign_group SET hidden = false;
 ALTER TABLE iris.sign_group ALTER COLUMN hidden SET NOT NULL;
+
+
+
+
 -- migrate-4.31.sql
 \set ON_ERROR_STOP
 
@@ -357,8 +366,6 @@ CREATE VIEW incident_view AS
     LEFT JOIN iris.direction d ON i.dir = d.id
     LEFT JOIN iris.lane_type ln ON i.lane_type = ln.id;
 GRANT SELECT ON incident_view TO PUBLIC;
-
-
 
 
 
@@ -457,7 +464,6 @@ CREATE VIEW beacon_view AS
 	LEFT JOIN geo_loc_view l ON b.geo_loc = l.name
 	LEFT JOIN controller_view ctr ON b.controller = ctr.name;
 GRANT SELECT ON beacon_view TO PUBLIC;
-
 
 
 
@@ -598,7 +604,8 @@ COPY iris.inc_range (id, description) FROM stdin;
 -- Add incident to sign_message
 ALTER TABLE iris.sign_message ADD COLUMN incident VARCHAR(16);
 
--- MnDOT 4.35.5 and up are still needed
+
+
 
 -- ============================================================================
 -- BEGIN 10.2 changes
@@ -639,6 +646,3 @@ INSERT INTO event.detector_event_hist (event_id, event_date, event_desc_id, devi
   WHERE event_id = (SELECT MIN(event_id) FROM event.detector_event);
 
 INSERT INTO iris.system_attribute (name, value) VALUES ('detector_reduce_malf_logging', 'false');
-
-
-
