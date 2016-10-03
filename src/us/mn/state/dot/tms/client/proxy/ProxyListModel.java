@@ -142,7 +142,7 @@ public class ProxyListModel<T extends SonarObject>
 		if (check(proxy)) {
 			int sz = list.size();
 			ret = sz;
-			for (int i = 1; i < sz; i++) {
+			for (int i = 0; i < sz; i++) {
 				int c = comp.compare(proxy, list.get(i));
 				if (c == 0) {
 					ret = -1;
