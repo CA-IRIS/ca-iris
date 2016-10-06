@@ -251,6 +251,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 	/** Filters combo box members based on typed text. */
 	private void applyFilter() {
+		adjusting++;
 		if (!isPopupVisible()) {
 			showPopup();
 		}
@@ -267,6 +268,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		if (model.getSize() == 1) {
 		    model.setSelectedItem(model.getElementAt(0));
         }
+        adjusting--;
 	}
 
 	/** Set the enabled status */
