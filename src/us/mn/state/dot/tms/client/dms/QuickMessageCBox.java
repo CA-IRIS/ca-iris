@@ -33,7 +33,7 @@ import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SystemAttrEnum;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
+import us.mn.state.dot.tms.utils.NaturalOrderComparator;
 import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
@@ -205,7 +205,7 @@ public class QuickMessageCBox extends JComboBox
 	/** Create a set of quick messages for the specified DMS */
 	private TreeSet<QuickMessage> createMessageSet(DMS dms) {
 		TreeSet<QuickMessage> msgs = new TreeSet<QuickMessage>(
-			new NumericAlphaComparator<QuickMessage>());
+			new NaturalOrderComparator<QuickMessage>());
 		Iterator<DmsSignGroup> it = DmsSignGroupHelper.iterator();
 		while (it.hasNext()) {
 			DmsSignGroup dsg = it.next();
@@ -215,6 +215,8 @@ public class QuickMessageCBox extends JComboBox
 					QuickMessageHelper.iterator();
 				while (qit.hasNext()) {
 					QuickMessage qm = qit.next();
+					if (qm.getName().startsWith(QuickMessage.RAW_PREFIX))
+						continue;
 					if (qm.getSignGroup() == sg)
 						msgs.add(qm);
 				}
