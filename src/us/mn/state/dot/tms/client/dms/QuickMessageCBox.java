@@ -140,11 +140,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		setPrototypeDisplayValue(PROTOTYPE_OBJ);
 		key_listener = new KeyAdapter() {
 			public void keyReleased(KeyEvent ke) {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						applyFilter();
-					}
-				});
+				applyFilter();
 			}
 		};
 		editor_component = (JTextField) getEditor().getEditorComponent();
