@@ -15,8 +15,8 @@
  */
 package us.mn.state.dot.tms.client.dms;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -25,7 +25,6 @@ import java.util.TreeSet;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.text.AbstractDocument;
 
 import us.mn.state.dot.tms.DMS;
@@ -114,8 +113,8 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	/** DMS dispatcher */
 	private final DMSDispatcher dispatcher;
 
-	/** Action listener for combo box */
-	private final ActionListener action_listener;
+	/** Item listener for combo box */
+	private final ItemListener item_listener;
 
 	/** Key listener for combo box */
 	private final KeyListener key_listener;
@@ -146,12 +145,14 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		editor_component = (JTextField) getEditor().getEditorComponent();
 		editor_component.addKeyListener(key_listener);
 		setEditable(true);
-		action_listener = new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				updateDispatcher();
+		item_listener = new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    updateDispatcher();
+                }
 			}
 		};
-		addActionListener(action_listener);
+		addItemListener(item_listener);
 
 		JTextField jtf = (JTextField)(getEditor()
 			.getEditorComponent());
@@ -256,18 +257,27 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 			showPopup();
 		}
 
+		QuickMessage selected = getSelectedProxy();
+        setSelectedIndex(-1);
+
+		// find all QM with names containing typed text (case insensitive)
 		String enteredText = editor_component.getText().toLowerCase();
 		for (QuickMessage msg : msgs) {
 			if (!msg.getName().toLowerCase().contains(enteredText)) {
 				model.removeElement(msg);
-			} else if (model.getIndexOf(msg) < 0) {
-				model.addElement(msg);
+			} else if (model.getIndexOf(msg) == -1) {
+			    // insert does not set selection if selection is null, unlike add.
+				model.insertElementAt(msg, model.getSize());
 			}
 		}
 
-		if (model.getSize() == 1) {
-		    model.setSelectedItem(model.getElementAt(0));
-        }
+		// if only one item, go ahead and select it
+		if (model.getSize() == 1)
+		    setSelectedIndex(0);
+
+        // if selection changed, trigger dispatcher update
+        if (selected != getSelectedProxy())
+            updateDispatcher();
         adjusting--;
 	}
 
@@ -283,7 +293,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 	/** Dispose */
 	public void dispose() {
-		removeActionListener(action_listener);
+		removeItemListener(item_listener);
 		editor_component.removeKeyListener(key_listener);
 	}
 }
