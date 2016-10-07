@@ -259,11 +259,13 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		QuickMessage selected = getSelectedProxy();
         setSelectedIndex(-1);
+        int caretPos = editor_component.getCaretPosition();
+        String enteredText = editor_component.getText();
 
 		// find all QM with names containing typed text (case insensitive)
-		String enteredText = editor_component.getText().toLowerCase();
+        String lowercase = enteredText.toLowerCase();
 		for (QuickMessage msg : msgs) {
-			if (!msg.getName().toLowerCase().contains(enteredText)) {
+			if (!msg.getName().toLowerCase().contains(lowercase)) {
 				model.removeElement(msg);
 			} else if (model.getIndexOf(msg) == -1) {
 			    // insert does not set selection if selection is null, unlike add.
@@ -282,6 +284,10 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
         // if selection changed, trigger dispatcher update
         if (selected != getSelectedProxy())
             updateDispatcher();
+
+        // popup operations clear entered text
+        editor_component.setText(enteredText);
+        editor_component.setCaretPosition(caretPos);
 	}
 
 	/** Set the enabled status */
