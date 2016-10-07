@@ -252,10 +252,10 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 	/** Filters combo box members based on typed text. */
 	private void applyFilter() {
-		adjusting++;
-		if (!isPopupVisible()) {
-			showPopup();
-		}
+		if (isPopupVisible())
+			hidePopup();
+
+        adjusting++;
 
 		QuickMessage selected = getSelectedProxy();
         setSelectedIndex(-1);
@@ -274,11 +274,14 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		// if only one item, go ahead and select it
 		if (model.getSize() == 1)
 		    setSelectedIndex(0);
+        else
+            showPopup();
+
+        adjusting--;
 
         // if selection changed, trigger dispatcher update
         if (selected != getSelectedProxy())
             updateDispatcher();
-        adjusting--;
 	}
 
 	/** Set the enabled status */
