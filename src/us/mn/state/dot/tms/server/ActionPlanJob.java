@@ -52,7 +52,7 @@ public class ActionPlanJob extends Job {
 
 	/** Seconds to offset each poll from start of interval */
 //	static protected final int OFFSET_SECS = 29;
-	static protected final int OFFSET_SECS = 14; // CA-only (slower network)
+	static protected final int OFFSET_SECS = 5; // CA-only (slower network)
 
 	/** Mapping of ramp meter operating states */
 	private final HashMap<RampMeterImpl, Boolean> meters =
