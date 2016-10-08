@@ -184,7 +184,7 @@ class OpQueryMsg extends OpDms {
 
 		// Note: PhaseGetConfig is executed prior via DmsXmlPoller if
 		// DMS is not configured.
-			return new PhaseQueryMsg();
+		return new PhaseQueryMsg();
 	}
 
 	/**
@@ -440,6 +440,14 @@ class OpQueryMsg extends OpDms {
 					m_dms.createMsg(msgtext, false, apri,
 					rpri, external, duramins);
 				if (sm != null)
+					// FIXME CALTRANS: updatePageOnTime causes problems with Plans and Scheduling.
+					// When the original scheduled sign does not contain a page on time field,
+					// [ptXo], the above will find it on the next query and reset the message here
+					// with the prepended page on time field.
+					// This can knock a DMS into User Deployed state for a bit and cause Scheduler
+					// to not un-deploy a sign at a given time.
+					// Perhaps Scheduler or this driver should fix the text prior to sending the
+					// initial sign request.
 					m_dms.setMessageCurrent(sm, irisUser);
 
 			// don't have text

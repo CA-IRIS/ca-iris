@@ -51,8 +51,7 @@ import us.mn.state.dot.tms.TMSException;
 public class ActionPlanJob extends Job {
 
 	/** Seconds to offset each poll from start of interval */
-//	static protected final int OFFSET_SECS = 29;
-	static protected final int OFFSET_SECS = 5; // CA-only (slower network)
+	static protected final int OFFSET_SECS = 29;
 
 	/** Mapping of ramp meter operating states */
 	private final HashMap<RampMeterImpl, Boolean> meters =
