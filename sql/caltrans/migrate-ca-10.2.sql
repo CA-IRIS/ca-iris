@@ -175,8 +175,10 @@ INSERT INTO iris.system_attribute (name, value) VALUES ('toll_min_price', '0.25'
 INSERT INTO iris.system_attribute (name, value) VALUES ('toll_max_price', '8');
 
 -- replace sign_message scheduled with source
-DELETE FROM iris.sign_message;
+-- DELETE FROM iris.sign_message;
 ALTER TABLE iris.sign_message ADD COLUMN source INTEGER;
+UPDATE iris.sign_message SET source = 0;
+UPDATE iris.sign_message SET source = 1 WHERE scheduled = true;
 ALTER TABLE iris.sign_message ALTER COLUMN source SET NOT NULL;
 ALTER TABLE iris.sign_message DROP COLUMN scheduled;
 
@@ -636,7 +638,7 @@ CREATE TABLE IF NOT EXISTS event.detector_event_hist (
 --	device_id VARCHAR(10) REFERENCES iris._detector(name) ON DELETE CASCADE
 	device_id VARCHAR(10)
 );
-ALTER TABLE event.detector_event_hist OWNER TO tms;
+-- ALTER TABLE event.detector_event_hist OWNER TO tms;
 
 -- add a single record to the history table, so that something is there for later
 -- MAX calls
