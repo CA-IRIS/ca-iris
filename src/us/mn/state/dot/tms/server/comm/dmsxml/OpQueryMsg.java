@@ -431,6 +431,16 @@ class OpQueryMsg extends OpDms {
 
 			// have text
 			if(txtavail) {
+				// NOTICE CALTRANS: updatePageOnTime causes problems with Plans and Scheduling if it
+				// alters the sign.
+				// When the original scheduled sign does not contain a page on time field, [ptXo], the
+				// regular poller will find it on the next query and reset the message here with the
+				// prepended page on time field. This will knock a DMS into User Deployed state for a
+				// bit and make the sign unavailable for Scheduler to un-deploy a scheduled sign at a
+				// time coinciding with the polling period.
+				// A fix has been added to MultiFormatter#createMulti to prepend a [pt0o] on single page
+				// signs that lack a [ptXo] tag.
+
 				// update page on-time in MULTI with value
 				// read from controller, which comes from
 				// the DisplayTimeMS XML field, not the
@@ -440,14 +450,6 @@ class OpQueryMsg extends OpDms {
 					m_dms.createMsg(msgtext, false, apri,
 					rpri, external, duramins);
 				if (sm != null)
-					// FIXME CALTRANS: updatePageOnTime causes problems with Plans and Scheduling.
-					// When the original scheduled sign does not contain a page on time field,
-					// [ptXo], the above will find it on the next query and reset the message here
-					// with the prepended page on time field.
-					// This can knock a DMS into User Deployed state for a bit and cause Scheduler
-					// to not un-deploy a sign at a given time.
-					// Perhaps Scheduler or this driver should fix the text prior to sending the
-					// initial sign request.
 					m_dms.setMessageCurrent(sm, irisUser);
 
 			// don't have text

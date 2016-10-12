@@ -69,7 +69,9 @@ public class MultiFormatter {
 
 	/** Create a MULTI string for a message.
 	 * @param qm Quick message MULTI string to parse.
-	 * @return MULTI string with travel, vsa and slow warnings resolved. */
+	 * @return MULTI string with travel, vsa, and slow warnings resolved;
+	 *         additionally a page-on-time field will be added, if needed.
+	 */
 	private String createMulti(String qm) {
 		String rv = travel_est.replaceTravelTimes(qm);
 		rv = (rv != null) ? advisory.replaceSpeedAdvisory(rv) : null;
