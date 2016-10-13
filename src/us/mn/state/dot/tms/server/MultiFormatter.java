@@ -17,6 +17,7 @@ package us.mn.state.dot.tms.server;
 import us.mn.state.dot.tms.DmsAction;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.QuickMessage;
+import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.utils.MultiString;
 
 /**
@@ -68,19 +69,16 @@ public class MultiFormatter {
 
 	/** Create a MULTI string for a message.
 	 * @param qm Quick message MULTI string to parse.
-	 * @return MULTI string with travel, vsa and slow warnings resolved. */
+	 * @return MULTI string with travel, vsa, and slow warnings resolved;
+	 *         additionally a page-on-time field will be added, if needed.
+	 */
 	private String createMulti(String qm) {
-		// FIXME: combine these into a single MULTI parse step.
-		String tm = travel_est.replaceTravelTimes(qm);
-		if (tm != null) {
-			String am = advisory.replaceSpeedAdvisory(tm);
-			if (am != null) {
-				String sm = slow_warn.replaceSlowWarning(am);
-				if (sm != null)
-					return toll_form.replaceTolling(sm);
-			}
-		}
-		return null;
+		String rv = travel_est.replaceTravelTimes(qm);
+		rv = (rv != null) ? advisory.replaceSpeedAdvisory(rv) : null;
+		rv = (rv != null) ? slow_warn.replaceSlowWarning(rv) : null;
+		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
+		rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(new MultiString(rv)) : null;
+		return rv;
 	}
 
 	/** Check if DMS action is tolling */

@@ -79,6 +79,13 @@ public class QuickMessageHelper extends BaseHelper {
 		return null;
 	}
 
+	/** if the MultiString lacks a page-on-time tag, prepend one. */
+	static public String prependPageOnTime(MultiString ms) {
+		if (ms.getNumPages() <= 1)
+			return ms.replacePageTime(0, null);
+		return ms.toString();
+	}
+
 	/**
 	 * Is the specified quick message deployed? Equivalence is used
 	 * to determine if the specified and deployed message are equal.
@@ -98,6 +105,10 @@ public class QuickMessageHelper extends BaseHelper {
 		SignMessage dsm = dms.getMessageCurrent();
 		if (dsm == null)
 			return false;
+
+//		MultiString potqm = new MultiString(prependPageOnTime(new MultiString(newms)));
+//		MultiString dsmms = new MultiString(dsm.getMulti());
+//		return dsmms.equals(newms) || dsmms.equals(potqm);
 		return new MultiString(dsm.getMulti()).equals(newms);
 	}
 

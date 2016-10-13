@@ -125,7 +125,7 @@ class OpReset extends OpDms
 			setErrorStatus("");
 			SignMessage sm = m_dms.createMsgBlank();
 			if (sm != null)
-                		m_dms.setMessageCurrent(sm, null);
+				m_dms.setMessageCurrent(sm, null);
 
 		// valid flag is false
 		} else {
@@ -160,15 +160,14 @@ class OpReset extends OpDms
 		{
 			updateInterStatus("Starting operation", false);
 
-			LOG.log(
-			    "OpReset.PhaseResetDms.poll(msg) called.");
+			LOG.log("OpReset.PhaseResetDms.poll(msg) called.");
 
 			Message mess = (Message) argmess;
 
 			// set message attributes as a function of the op
 			setMsgAttributes(mess);
 
-			// build xml request and expected response			
+			// build xml request and expected response
 			mess.setName(getOpName());
 			XmlElem xrr = buildReqRes("SetInitReqMsg", 
 				"SetInitRespMsg");
