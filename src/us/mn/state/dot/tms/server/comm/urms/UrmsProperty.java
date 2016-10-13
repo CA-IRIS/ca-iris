@@ -1,7 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2010-2015  AHMCT, University of California
- * Copyright (C) 2016       Southwest Research Institute
+ * Copyright (C) 2016       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

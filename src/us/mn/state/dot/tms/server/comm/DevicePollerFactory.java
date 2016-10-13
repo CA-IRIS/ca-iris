@@ -3,7 +3,7 @@
  * Copyright (C) 2011-2016  Minnesota Department of Transportation
  * Copyright (C) 2012       Iteris Inc.
  * Copyright (C) 2014-2015  AHMCT, University of California
- * Copyright (C) 2015-2016  Southwest Research Institute
+ * Copyright (C) 2015-2016  California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
