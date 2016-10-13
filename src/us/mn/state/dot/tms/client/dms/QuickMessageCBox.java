@@ -245,6 +245,8 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 					QuickMessageHelper.iterator();
 				while (qit.hasNext()) {
 					QuickMessage qm = qit.next();
+					if (qm.getName().startsWith(QuickMessage.RAW_PREFIX))
+						continue;
 					if (qm.getSignGroup() == sg)
 						msgs.add(qm);
 				}

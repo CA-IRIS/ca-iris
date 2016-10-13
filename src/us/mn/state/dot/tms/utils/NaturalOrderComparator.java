@@ -26,7 +26,7 @@ package us.mn.state.dot.tms.utils;
 
 import java.util.Comparator;
 
-public class NaturalOrderComparator implements Comparator
+public class NaturalOrderComparator<T> implements Comparator<T>
 {
 	int compareRight(String a, String b)
 	{
@@ -78,7 +78,7 @@ public class NaturalOrderComparator implements Comparator
 	 * compare objects, but respect case-sensitivity
 	 * over-ride if case-insensitive is needed
 	 */
-	public int compare(Object o1, Object o2) {
+	public int compare(T o1, T o2) {
 		return compare(o1, o2, true);
 	}
 
@@ -90,7 +90,7 @@ public class NaturalOrderComparator implements Comparator
 	 * @param cs compare case-sensitive? (uppercase before lowercase values)
 	 * @return
 	 */
-	public int compare(Object o1, Object o2, boolean cs) {
+	public int compare(T o1, T o2, boolean cs) {
 		String a = cs ? o1.toString() : o1.toString().toLowerCase();
 		String b = cs ? o2.toString() : o2.toString().toLowerCase();
 
