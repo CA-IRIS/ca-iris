@@ -1,7 +1,8 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2016  Minnesota Department of Transportation
- * Copyright (C) 2014  AHMCT, University of California
+ * Copyright (C) 2014       AHMCT, University of California
+ * Copyright (C) 2016       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +44,7 @@ import us.mn.state.dot.tms.server.comm.DevicePoller;
  * @author Douglas Lau
  * @author <a href="mailto:timothy.a.johnson@dot.state.mn.us">Tim Johnson</a>
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class CameraImpl extends DeviceImpl implements Camera {
 
@@ -50,7 +52,7 @@ public class CameraImpl extends DeviceImpl implements Camera {
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, CameraImpl.class);
 		store.query("SELECT name, geo_loc, controller, pin, notes, " +
-			"encoder, encoder_channel, encoder_type, publish " +
+			"encoder, encoder_channel, encoder_type, publish, shift_schedule " +
 			"FROM iris." + SONAR_TYPE + ";", new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
@@ -63,7 +65,8 @@ public class CameraImpl extends DeviceImpl implements Camera {
 					row.getString(6),	// encoder
 					row.getInt(7),	// encoder_channel
 					row.getInt(8),		// encoder_type
-					row.getBoolean(9)	// publish
+					row.getBoolean(9),	// publish
+					row.getInt(10) == 0 && row.wasNull() ? null : row.getInt(10) // shift schedule
 				));
 			}
 		});
@@ -81,6 +84,7 @@ public class CameraImpl extends DeviceImpl implements Camera {
 		map.put("encoder_channel", encoder_channel);
 		map.put("encoder_type", encoder_type.ordinal());
 		map.put("publish", publish);
+		map.put("shift_schedule", shift_schedule);
 		return map;
 	}
 
@@ -104,7 +108,7 @@ public class CameraImpl extends DeviceImpl implements Camera {
 
 	/** Create a camera */
 	protected CameraImpl(String n, GeoLocImpl l, ControllerImpl c, int p,
-		String nt, String e, int ec, int et, boolean pb)
+		String nt, String e, int ec, int et, boolean pb, Integer ss)
 	{
 		super(n, c, p, nt);
 		geo_loc = l;
@@ -112,16 +116,17 @@ public class CameraImpl extends DeviceImpl implements Camera {
 		encoder_channel = ec;
 		encoder_type = EncoderType.fromOrdinal(et);
 		publish = pb;
+		shift_schedule = ss;
 		initTransients();
 	}
 
 	/** Create a camera */
 	protected CameraImpl(Namespace ns, String n, String l, String c,
-		int p, String nt, String e, int ec, int et, boolean pb)
+		int p, String nt, String e, int ec, int et, boolean pb, Integer ss)
 	{
 		this(n, (GeoLocImpl)ns.lookupObject(GeoLoc.SONAR_TYPE, l),
 			(ControllerImpl)ns.lookupObject(Controller.SONAR_TYPE,
-			c), p, nt, e, ec, et, pb);
+			c), p, nt, e, ec, et, pb, ss);
 	}
 
 	/** Destroy an object */
@@ -218,6 +223,38 @@ public class CameraImpl extends DeviceImpl implements Camera {
 		setPublish(p);
 		if(!p)
 			blankRestrictedMonitors();
+	}
+
+	/** shift schedule for camera movement */
+	private Integer shift_schedule;
+
+	/** get camera-specific shift schedule after the hour */
+	@Override
+	public Integer getShiftSchedule() {
+		return shift_schedule;
+	}
+
+	/**
+	 * set camera-specific shift schedule after the hour
+	 * @param schedule
+	 */
+	public void setShiftSchedule(Integer schedule) {
+		shift_schedule = schedule;
+	}
+
+	/** set camera-specific shift schedule after the hour */
+	public void doSetShiftSchedule(Integer schedule) throws TMSException {
+		if ((schedule != null && schedule.equals(shift_schedule))
+			|| (shift_schedule != null && shift_schedule.equals(schedule)))
+			return;
+		store.update(this, "shift_schedule", schedule);
+		setShiftSchedule(schedule);
+	}
+
+
+	/** is set camera-specific shift schedule after the hour */
+	public boolean isShiftSchedule() {
+		return (shift_schedule != null);
 	}
 
 	/** Blank restricted video monitors viewing the camera */

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2000-2011  Minnesota Department of Transportation
+ * Copyright (C) 2016       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +19,7 @@ package us.mn.state.dot.tms;
  * CCTV Camera
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public interface Camera extends Device {
 
@@ -59,4 +61,13 @@ public interface Camera extends Device {
 
 	/** Recall the specified preset */
 	void setRecallPreset(int preset);
+
+	/** get camera-specific shift schedule after the hour */
+	Integer getShiftSchedule();
+
+	/** set camera-specific shift schedule after the hour */
+	void setShiftSchedule(Integer schedule);
+
+	/** is set camera-specific shift schedule after the hour */
+	boolean isShiftSchedule();
 }
