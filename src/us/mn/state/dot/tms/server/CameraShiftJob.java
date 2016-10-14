@@ -14,9 +14,11 @@
  */
 package us.mn.state.dot.tms.server;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.Job;
@@ -48,7 +50,10 @@ public class CameraShiftJob extends Job {
 	static final public DebugLog log = new DebugLog("camerashiftjob");
 
 	/** a map to track what cameras were moved (or attempted to do so) */
-	private Map<Camera, Boolean> camMoved = new HashMap<>();
+	private Map<Camera, Boolean> camMoved;
+
+	/** used to force movement of camera, typically for camera with schedule_shift defined */
+	private boolean forceMovement = false;
 
 	/** Preset Alias Name to move cameras to */
 	private PresetAliasName destPan = HOME;
@@ -61,16 +66,33 @@ public class CameraShiftJob extends Job {
 
 	/**
 	 * Create a camera shift job
-	 * @param s      the scheduler in charge of this job, used to add a
-	 *               new CameraShiftJob after completing this job.
-	 * @param pan    preset to move cameras to. if null, will move to the
-	 *               last shift's preset
+	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job.
+	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
 	 * @param offset offset in minutes
 	 */
 	public CameraShiftJob(Scheduler s, PresetAliasName pan, int offset) {
+		this(s, pan, offset, null);
+	}
+
+	/**
+	 * Create a camera shift job
+	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job.
+	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
+	 * @param offset offset in minutes
+	 * @param ctm    camera to move - this should only be used internally by this class. Specifically for cameras
+	 *               with shift_schedule's defined.
+	 */
+	private CameraShiftJob(Scheduler s, PresetAliasName pan, int offset, Camera ctm) {
 
 		super((offset * 60 * 1000)); // convert to milliseconds
+
 		scheduler = s;
+		camMoved = new HashMap<>();
+		if (ctm != null) {
+			forceMovement = true;
+			camMoved.put(ctm, false);
+		}
+
 		if (!SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean()
 			&& pan == null)
 			ignoreStartup = true;
@@ -102,8 +124,32 @@ public class CameraShiftJob extends Job {
 			return;
 		}
 
-		for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
-			camMoved.put(c, false);
+		List<Camera> camDeferred = new ArrayList<>();
+		if (camMoved.isEmpty()) {
+			for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
+				if (c.isShiftSchedule())
+					camDeferred.add(c);
+				else
+					camMoved.put(c, false);
+			}
+		}
+
+		for (Camera c : camDeferred) {
+			GregorianCalendar now = new GregorianCalendar();
+			now.setTimeInMillis(TimeSteward.currentTimeMillis());
+			now.set(Calendar.SECOND, 0);
+			now.set(Calendar.MILLISECOND, 0);
+
+			GregorianCalendar cal = new GregorianCalendar();
+			cal.setTimeInMillis(TimeSteward.currentTimeMillis());
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+
+			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
+				cal.add(Calendar.MINUTE, 1);
+
+			int offsetMinutes = (int)(cal.getTimeInMillis() - now.getTimeInMillis()) / 60000;
+			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMinutes, c));
 		}
 
 		if (camMoved.isEmpty()) {
@@ -119,20 +165,24 @@ public class CameraShiftJob extends Job {
 		long diff;
 
 		while (doJob(started)) {
-			if (movingNow >= concurrent) {
-				TimeSteward.sleep(delay);
-				movingNow = 0;
+			if (!forceMovement) {
+				if (movingNow >= concurrent) {
+					TimeSteward.sleep(delay);
+					movingNow = 0;
+				}
+
+				diff = (TimeSteward.currentTimeMillis() - lastMovement);
+				if (delay > 0 && delay > diff)
+					TimeSteward.sleep((delay - diff));
 			}
 
-			diff = (TimeSteward.currentTimeMillis() - lastMovement);
-			if (delay > 0 && delay > diff)
-				TimeSteward.sleep((delay - diff));
-
 			for (Camera c : camMoved.keySet()) {
-				if (camMoved.get(c))
-					continue;
-				if (movingNow >= concurrent)
-					break;
+				if (!forceMovement) {
+					if (camMoved.get(c))
+						continue;
+					if (movingNow >= concurrent)
+						break;
+				}
 
 				moveCamera(c, destPan);
 				movingNow++;
@@ -154,6 +204,14 @@ public class CameraShiftJob extends Job {
 				log.log("WARNING: Camera Shift Job was unable "
 					+ "to move camera '" + c.getName()
 					+ "'.");
+		}
+
+		if (forceMovement) {
+			// jobs with forced movement at specific times do not reschedule.
+			for (Camera c: camMoved.keySet())
+				log.log("Completed camera shift schedule job for camera '" + c.getName()
+					+ "' at scheduled time of " + c.getShiftSchedule() + " past the hour.");
+			return;
 		}
 
 		PresetAliasName nsp = (HOME.equals(destPan))
@@ -185,7 +243,6 @@ public class CameraShiftJob extends Job {
 			/ 1000 / 60;
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
-
 		log.log("Completed camera shift job.");
 	}
 
