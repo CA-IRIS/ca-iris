@@ -265,7 +265,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		QuickMessage selected = getSelectedProxy();
 		setSelectedIndex(-1);
-		int caret_pos = editor_component.getCaretPosition();
 
 		// find all QM with names containing typed text (case insensitive)
 		String uppercase = txt.toUpperCase();
@@ -284,7 +283,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		// popup operations clear entered text
 		editor_component.setText(txt);
-		editor_component.setCaretPosition(caret_pos);
 	}
 
 	/** Set the enabled status */
