@@ -127,16 +127,8 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 	/** Key listener for combo box */
 	private final KeyListener key_listener = new KeyAdapter() {
-		private final List<Character> allowable = Arrays.asList(' ', '-', '_');
-
 		public void keyReleased(KeyEvent ke) {
-			if (isValidKeystroke(ke))
-				applyFilter();
-		}
-
-		private boolean isValidKeystroke(KeyEvent ke) {
-			char c = ke.getKeyChar();
-			return Character.isLetterOrDigit(c) || allowable.contains(c);
+			applyFilter();
 		}
 	};
 
@@ -237,7 +229,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 	/** Create a set of quick messages for the specified DMS */
 	private TreeSet<QuickMessage> createMessageSet(DMS dms) {
-		TreeSet<QuickMessage> msgs = new TreeSet<QuickMessage>(
+		TreeSet<QuickMessage> msgs = new TreeSet<>(
 			new NumericAlphaComparator<QuickMessage>());
 		Iterator<DmsSignGroup> it = DmsSignGroupHelper.iterator();
 		while (it.hasNext()) {
@@ -256,8 +248,16 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		return msgs;
 	}
 
+	/** Previous txt from the editor component */
+	private String prev_txt = "";
+
 	/** Filters combo box members based on typed text. */
 	private void applyFilter() {
+		String txt = editor_component.getText();
+		if (prev_txt.equals(txt))
+			return;
+		prev_txt = txt;
+
 		if (isPopupVisible())
 			hidePopup();
 
@@ -265,11 +265,10 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		QuickMessage selected = getSelectedProxy();
 		setSelectedIndex(-1);
-		Caret caret = editor_component.getCaret();
-		String enteredText = editor_component.getText();
+		int caret_pos = editor_component.getCaretPosition();
 
 		// find all QM with names containing typed text (case insensitive)
-		String uppercase = enteredText.toUpperCase();
+		String uppercase = txt.toUpperCase();
 		for (QuickMessage msg : msgs) {
 			if (!msg.getName().toUpperCase().contains(uppercase)) {
 				model.removeElement(msg);
@@ -288,8 +287,8 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 			updateDispatcher();
 
 		// popup operations clear entered text
-		editor_component.setText(enteredText);
-		editor_component.setCaret(caret);
+		editor_component.setText(txt);
+		editor_component.setCaretPosition(caret_pos);
 	}
 
 	/** Set the enabled status */
