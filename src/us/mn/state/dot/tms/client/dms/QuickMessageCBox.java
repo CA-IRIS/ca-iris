@@ -139,9 +139,9 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	public void setSelectedIndex(int index) {
 		super.setSelectedIndex(index);
 
-		inputField.setText(getItemAt(index).toString());
-		inputField.setSelectionEnd(caret_pos + editor_component.getText().length());
-		inputField.moveCaretPosition(caret_pos);
+		editor_component.setText(getItemAt(index).toString());
+        editor_component.setSelectionEnd(caret_pos + editor_component.getText().length());
+        editor_component.moveCaretPosition(caret_pos);
 	}
 
 	/** Create a new quick message combo box */
@@ -167,8 +167,8 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 				}
 
 				for (int i = 0; i < getItemCount(); i++) {
-					String element = (String) getItemAt(i);
-					if (SString.containsIgnoreCase(element, text)) {
+					String element = getItemAt(i).toString();
+					if (SString.containsIgnoreCase(element, txt)) {
 						setSelectedIndex(i);
 						return;
 					}
