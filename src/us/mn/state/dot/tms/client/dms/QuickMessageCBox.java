@@ -27,6 +27,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
 
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DmsSignGroup;
@@ -36,6 +37,7 @@ import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.utils.NumericAlphaComparator;
+import us.mn.state.dot.tms.utils.SString;
 import us.mn.state.dot.tms.utils.UppercaseDocumentFilter;
 
 /**
@@ -131,6 +133,17 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	 * callbacks to this class.  This prevents infinite loops. */
 	protected int adjusting = 0;
 
+	/** The caret position in the editor component */
+	private int caret_pos = 0;
+
+	public void setSelectedIndex(int index) {
+		super.setSelectedIndex(index);
+
+		inputField.setText(getItemAt(index).toString());
+		inputField.setSelectionEnd(caret_pos + editor_component.getText().length());
+		inputField.moveCaretPosition(caret_pos);
+	}
+
 	/** Create a new quick message combo box */
 	public QuickMessageCBox(DMSDispatcher d) {
 		setModel(model);
@@ -139,9 +152,27 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		// unusable when quick messages with long names are used.
 		setPrototypeDisplayValue(PROTOTYPE_OBJ);
 		key_listener = new KeyAdapter() {
-			public void keyReleased(KeyEvent ke) {
-				if (isValidKeystroke(ke))
-					applyFilter();
+			public void keyReleased(KeyEvent ev) {
+				char key = ev.getKeyChar();
+				if (! (Character.isLetterOrDigit(key) || Character.isSpaceChar(key) )) return;
+
+				caret_pos = editor_component.getCaretPosition();
+				String txt = "";
+
+				try {
+					txt = editor_component.getText(0, caret_pos);
+				}
+				catch (BadLocationException e) {
+					e.printStackTrace();
+				}
+
+				for (int i = 0; i < getItemCount(); i++) {
+					String element = (String) getItemAt(i);
+					if (SString.containsIgnoreCase(element, text)) {
+						setSelectedIndex(i);
+						return;
+					}
+				}
 			}
 		};
 		editor_component = (JTextField) getEditor().getEditorComponent();
@@ -199,7 +230,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		adjusting--;
 	}
 
-	/** Set selected item, but only if it is different from the 
+	/** Set selected item, but only if it is different from the
 	 * currently selected item. Triggers a call to actionPerformed().
 	 * @param obj May be a String, or QuickMessage. */
 	public void setSelectedItem(Object obj) {
@@ -252,46 +283,6 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		return msgs;
 	}
 
-	/** Filters combo box members based on typed text. */
-	private void applyFilter() {
-		if (isPopupVisible())
-			hidePopup();
-
-		adjusting++;
-
-		QuickMessage selected = getSelectedProxy();
-		setSelectedIndex(-1);
-		int caretPos = editor_component.getCaretPosition();
-		String enteredText = editor_component.getText();
-
-		// find all QM with names containing typed text (case insensitive)
-		String lowercase = enteredText.toLowerCase();
-		for (QuickMessage msg : msgs) {
-			if (!msg.getName().toLowerCase().contains(lowercase)) {
-				model.removeElement(msg);
-			} else if (model.getIndexOf(msg) == -1) {
-				// insert does not set selection if selection is null, unlike add.
-				model.insertElementAt(msg, model.getSize());
-			}
-		}
-
-		// if only one item, go ahead and select it
-		if (model.getSize() == 1)
-			setSelectedIndex(0); // nicer without this
-		else
-			showPopup();
-
-		adjusting--;
-
-		// if selection changed, trigger dispatcher update
-		if (selected != getSelectedProxy())
-			updateDispatcher();
-
-		// popup operations clear entered text
-		editor_component.setText(enteredText);
-		editor_component.setCaretPosition(caretPos);
-	}
-
 	/** Set the enabled status */
 	@Override
 	public void setEnabled(boolean e) {
@@ -306,26 +297,5 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	public void dispose() {
 		removeItemListener(item_listener);
 		editor_component.removeKeyListener(key_listener);
-	}
-
-	private boolean isValidKeystroke(KeyEvent ke) {
-		if (ke.isActionKey() || ke.getKeyCode() == KeyEvent.CHAR_UNDEFINED) return false;
-
-		if ((ke.getKeyCode() >= 0x2C && ke.getKeyCode() < 0x7F)
-			|| (ke.getKeyCode() >= 0x80 && ke.getKeyCode() <= 0xA2)
-			|| (ke.getKeyCode() >= 0x0200 && ke.getKeyCode() <= 0x020B)
-			)
-			return true;
-
-		switch (ke.getKeyCode()) {
-		case KeyEvent.VK_SPACE:
-		case KeyEvent.VK_BACK_QUOTE:
-		case KeyEvent.VK_QUOTE:
-		case KeyEvent.VK_DELETE:
-		case KeyEvent.VK_BACK_SPACE:
-			return true;
-		}
-
-		return false;
 	}
 }
