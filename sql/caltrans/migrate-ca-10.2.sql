@@ -615,14 +615,12 @@ INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offs
 
 ALTER TABLE iris._camera ADD COLUMN shift_schedule INTEGER;
 
-DROP VIEW iris.camera;
-CREATE VIEW iris.camera AS SELECT
+CREATE OR REPLACE VIEW iris.camera AS SELECT
 	c.name, geo_loc, controller, pin, notes, encoder, encoder_channel,
 		encoder_type, publish, shift_schedule
 	FROM iris._camera c JOIN iris._device_io d ON c.name = d.name;
 
-DROP FUNCTION iris.camera_insert();
-CREATE FUNCTION iris.camera_insert() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION iris.camera_insert() RETURNS TRIGGER AS
 	$camera_insert$
 BEGIN
 	INSERT INTO iris._device_io (name, controller, pin)
@@ -635,8 +633,7 @@ BEGIN
 END;
 $camera_insert$ LANGUAGE plpgsql;
 
-DROP FUNCTION iris.camera_update();
-CREATE FUNCTION iris.camera_update() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION iris.camera_update() RETURNS TRIGGER AS
 	$camera_update$
 BEGIN
 	UPDATE iris._device_io
