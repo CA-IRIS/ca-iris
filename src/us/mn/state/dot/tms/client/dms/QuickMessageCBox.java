@@ -269,14 +269,10 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		// find all QM with names containing typed text (case insensitive)
 		String uppercase = txt.toUpperCase();
-		for (QuickMessage msg : msgs) {
-			if (!msg.getName().toUpperCase().contains(uppercase)) {
-				model.removeElement(msg);
-			} else if (model.getIndexOf(msg) == -1) {
-				// insert does not set selection if selection is null, unlike add.
-				model.insertElementAt(msg, model.getSize());
-			}
-		}
+		model.removeAllElements();
+		for (QuickMessage msg : msgs)
+			if (msg.getName().toUpperCase().contains(uppercase))
+				model.addElement(msg);
 
 		showPopup();
 
