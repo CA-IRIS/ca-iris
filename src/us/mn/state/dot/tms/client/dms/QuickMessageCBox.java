@@ -21,12 +21,15 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeSet;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.Caret;
 
 import us.mn.state.dot.tms.DMS;
 import us.mn.state.dot.tms.DmsSignGroup;
@@ -115,10 +118,27 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	private final DMSDispatcher dispatcher;
 
 	/** Item listener for combo box */
-	private final ItemListener item_listener;
+	private final ItemListener item_listener = new ItemListener() {
+		public void itemStateChanged(ItemEvent e) {
+			if (e.getStateChange() == ItemEvent.SELECTED)
+				updateDispatcher();
+		}
+	};
 
 	/** Key listener for combo box */
-	private final KeyListener key_listener;
+	private final KeyListener key_listener = new KeyAdapter() {
+		private final List<Character> allowable = Arrays.asList(' ', '-', '_');
+
+		public void keyReleased(KeyEvent ke) {
+			if (isValidKeystroke(ke))
+				applyFilter();
+		}
+
+		private boolean isValidKeystroke(KeyEvent ke) {
+			char c = ke.getKeyChar();
+			return Character.isLetterOrDigit(c) || allowable.contains(c);
+		}
+	};
 
 	/** The combo box editor component */
 	private final JTextField editor_component;
@@ -138,34 +158,18 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		// Use a prototype display value so that the UI doesn't become
 		// unusable when quick messages with long names are used.
 		setPrototypeDisplayValue(PROTOTYPE_OBJ);
-		key_listener = new KeyAdapter() {
-			public void keyReleased(KeyEvent ke) {
-				if (isValidKeystroke(ke))
-					applyFilter();
-			}
-		};
-		editor_component = (JTextField) getEditor().getEditorComponent();
+		editor_component = (JTextField)getEditor().getEditorComponent();
 		editor_component.addKeyListener(key_listener);
 		setEditable(true);
-		item_listener = new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					updateDispatcher();
-				}
-			}
-		};
 		addItemListener(item_listener);
 
-		JTextField jtf = (JTextField)(getEditor()
-			.getEditorComponent());
 		if (SystemAttrEnum.DMS_QUICKMSG_UPPERCASE_NAMES.getBoolean())
-			((AbstractDocument)jtf.getDocument())
-				.setDocumentFilter(
-				new UppercaseDocumentFilter());
+			((AbstractDocument)editor_component.getDocument())
+				.setDocumentFilter(new UppercaseDocumentFilter());
 	}
 
 	/** Update the dispatcher with the selected quick message */
-	protected void updateDispatcher() {
+	private void updateDispatcher() {
 		QuickMessage qm = getSelectedProxy();
 		if(qm != null)
 			updateDispatcher(qm);
@@ -181,7 +185,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	}
 
 	/** Update the dispatcher with the specified quick message */
-	protected void updateDispatcher(QuickMessage qm) {
+	private void updateDispatcher(QuickMessage qm) {
 		String ms = qm.getMulti();
 		if(adjusting == 0 && !ms.isEmpty()) {
 			dispatcher.setMessage(ms);
@@ -261,13 +265,13 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		QuickMessage selected = getSelectedProxy();
 		setSelectedIndex(-1);
-		int caretPos = editor_component.getCaretPosition();
+		Caret caret = editor_component.getCaret();
 		String enteredText = editor_component.getText();
 
 		// find all QM with names containing typed text (case insensitive)
-		String lowercase = enteredText.toLowerCase();
+		String uppercase = enteredText.toUpperCase();
 		for (QuickMessage msg : msgs) {
-			if (!msg.getName().toLowerCase().contains(lowercase)) {
+			if (!msg.getName().toUpperCase().contains(uppercase)) {
 				model.removeElement(msg);
 			} else if (model.getIndexOf(msg) == -1) {
 				// insert does not set selection if selection is null, unlike add.
@@ -275,11 +279,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 			}
 		}
 
-		// if only one item, go ahead and select it
-		if (model.getSize() == 1)
-			setSelectedIndex(0); // nicer without this
-		else
-			showPopup();
+		showPopup();
 
 		adjusting--;
 
@@ -289,7 +289,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 
 		// popup operations clear entered text
 		editor_component.setText(enteredText);
-		editor_component.setCaretPosition(caretPos);
+		editor_component.setCaret(caret);
 	}
 
 	/** Set the enabled status */
@@ -306,26 +306,5 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 	public void dispose() {
 		removeItemListener(item_listener);
 		editor_component.removeKeyListener(key_listener);
-	}
-
-	private boolean isValidKeystroke(KeyEvent ke) {
-		if (ke.isActionKey() || ke.getKeyCode() == KeyEvent.CHAR_UNDEFINED) return false;
-
-		if ((ke.getKeyCode() >= 0x2C && ke.getKeyCode() < 0x7F)
-			|| (ke.getKeyCode() >= 0x80 && ke.getKeyCode() <= 0xA2)
-			|| (ke.getKeyCode() >= 0x0200 && ke.getKeyCode() <= 0x020B)
-			)
-			return true;
-
-		switch (ke.getKeyCode()) {
-		case KeyEvent.VK_SPACE:
-		case KeyEvent.VK_BACK_QUOTE:
-		case KeyEvent.VK_QUOTE:
-		case KeyEvent.VK_DELETE:
-		case KeyEvent.VK_BACK_SPACE:
-			return true;
-		}
-
-		return false;
 	}
 }
