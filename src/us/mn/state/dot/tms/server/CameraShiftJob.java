@@ -98,8 +98,13 @@ public class CameraShiftJob extends Job {
 			ignoreStartup = true;
 		destPan = (pan != null)
 			? pan : CameraHelper.calculateLastShift(offset);
-		log.log("Camera shift job created, should execute in " + offset
-			+ " minutes for the " + destPan.name() + " preset.");
+
+		StringBuilder sb = new StringBuilder("Camera shift job created ");
+		if (ctm != null)
+			sb.append("('").append(ctm.getName()).append("')");
+		sb.append(", will execute in ").append(offset).append(" minutes for ").append("the ")
+			.append(destPan.name()).append(" preset.");
+		log.log(sb.toString());
 	}
 
 	/** perform job */
