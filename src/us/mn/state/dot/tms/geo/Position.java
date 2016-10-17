@@ -14,6 +14,8 @@
  */
 package us.mn.state.dot.tms.geo;
 
+import com.sun.javafx.binding.StringFormatter;
+
 /**
  * A position is a latitude / longitude pair.  With a geodetic datum, this
  * identifies a position on the Earth.
@@ -68,5 +70,10 @@ public class Position {
 		double a = sdlat2 * sdlat2 + coslat * sdlon2 * sdlon2;
 		double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
 		return MEAN_RADIUS * c;
+	}
+
+	@Override
+	public String toString() {
+		return StringFormatter.format("%1$.4d\u00B0 lat. %2$.4d\u00B0 long.", latitude, longitude).toString();
 	}
 }

@@ -29,6 +29,7 @@ import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.geo.Position;
 
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
@@ -104,8 +105,8 @@ public class CameraShiftJob extends Job {
 		StringBuilder sb = new StringBuilder("Camera shift job created");
 		if (ctm != null)
 			sb.append(" for camera ").append(ctm.getName());
-		sb.append(", will execute in about ").append(offset).append(" minutes for the ").append(destPan.name())
-			.append(" preset.");
+		sb.append(", will execute in about ").append((offset/60000)).append(" minutes for the ")
+			.append(destPan.name()).append(" preset.");
 		log.log(sb.toString());
 	}
 
@@ -150,6 +151,8 @@ public class CameraShiftJob extends Job {
 		long lastMovement = 0L;
 		long diff;
 
+		Position pos = CameraHelper.getGeographicCenter();
+		log.log("Sunrise/sunset event is calculated for GPS coordinates: " + pos.toString());
 		while (doJob(started)) {
 			if (!forceMovement) {
 				if (movingNow >= concurrent) {
