@@ -76,9 +76,6 @@ public class Position {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		Formatter formatter = new Formatter(sb);
-		formatter.format("%1$+.4d\u00B0 lat. %2$+.4d\u00B0 long.", latitude, longitude);
-		return sb.toString();
+		return String.format("%+.4d\u00B0 lat. %+.4d\u00B0 long.", latitude, longitude);
 	}
 }
