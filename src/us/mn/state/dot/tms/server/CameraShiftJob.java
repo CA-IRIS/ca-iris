@@ -28,7 +28,6 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
-import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.geo.Position;
 
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
@@ -151,8 +150,11 @@ public class CameraShiftJob extends Job {
 		long lastMovement = 0L;
 		long diff;
 
-		Position pos = CameraHelper.getGeographicCenter();
-		log.log("Sunrise/sunset event is calculated for GPS coordinates: " + pos.toString());
+		if(!forceMovement) {
+			Position pos = CameraHelper.getGeographicCenter();
+			log.log("Sunrise/sunset event is calculated for GPS coordinates: " + pos.toString());
+		}
+
 		while (doJob(started)) {
 			if (!forceMovement) {
 				if (movingNow >= concurrent) {
@@ -163,6 +165,17 @@ public class CameraShiftJob extends Job {
 				diff = (TimeSteward.currentTimeMillis() - lastMovement);
 				if (delay > 0 && delay > diff)
 					TimeSteward.sleep((delay - diff));
+			}
+
+			for (Camera c : camDeferred) {
+				GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
+				cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
+
+				while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
+					cal.add(Calendar.MINUTE, 1);
+
+				int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
+				scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
 			}
 
 			for (Camera c : camMoved.keySet()) {
@@ -178,17 +191,6 @@ public class CameraShiftJob extends Job {
 				lastMovement = TimeSteward.currentTimeMillis();
 				camMoved.put(c, true);
 			}
-		}
-
-		for (Camera c : camDeferred) {
-			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
-			cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
-
-			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
-				cal.add(Calendar.MINUTE, 1);
-
-			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
-			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
 		}
 	}
 
