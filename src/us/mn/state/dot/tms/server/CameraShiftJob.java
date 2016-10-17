@@ -178,19 +178,14 @@ public class CameraShiftJob extends Job {
 
 		for (Camera c : camDeferred) {
 			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
-			cal.set(Calendar.SECOND, 0);
-			cal.set(Calendar.MILLISECOND, 0);
-
-			//advanced one minute to prevent a potential job from executing right now.
-			cal.add(Calendar.MINUTE, 1);
+			cal.add(Calendar.MINUTE, 1); // exclude executing now.
 
 			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
 				cal.add(Calendar.MINUTE, 1);
 
-			int offsetMinutes = (int)(cal.getTimeInMillis() - TimeSteward.currentTimeMillis()) / 60000;
+			int offsetMinutes = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis()) / 60000;
 			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMinutes, c));
 		}
-
 	}
 
 	/** actions to perform upon completion of job */
@@ -207,7 +202,7 @@ public class CameraShiftJob extends Job {
 
 		if (forceMovement) {
 			// jobs with forced movement at specific times do not reschedule.
-			for (Camera c: camMoved.keySet())
+			for (Camera c : camMoved.keySet())
 				log.log("Completed camera shift schedule job for camera '" + c.getName()
 					+ "' at scheduled time of " + c.getShiftSchedule() + " past the hour.");
 			return;
@@ -275,6 +270,7 @@ public class CameraShiftJob extends Job {
 	/**
 	 * modify offset to execute at the specified offset second of the minute.
 	 * @param offset offset in minutes
+	 *
 	 * @return offset in milliseconds
 	 */
 	static private int convertToSubMinuteOffset(int offset) {
