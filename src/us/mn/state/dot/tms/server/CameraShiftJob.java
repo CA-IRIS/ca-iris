@@ -301,11 +301,11 @@ public class CameraShiftJob extends Job {
 	 * @return offset in milliseconds
 	 */
 	static private int convertToSubMinuteOffset(int offset) {
-		GregorianCalendar now = new GregorianCalendar();
-		now.setTimeInMillis(TimeSteward.currentTimeMillis());
-		now.add(Calendar.MINUTE, offset);
-		now.set(Calendar.SECOND, OFFSET_SECS);
-		now.set(Calendar.MILLISECOND, 0);
-		return (int) (TimeSteward.currentTimeMillis() - now.getTimeInMillis());
+		GregorianCalendar future = new GregorianCalendar();
+		future.setTimeInMillis(TimeSteward.currentTimeMillis());
+		future.add(Calendar.MINUTE, offset);
+		future.set(Calendar.SECOND, OFFSET_SECS);
+		future.set(Calendar.MILLISECOND, 0);
+		return (int) (future.getTimeInMillis() - TimeSteward.currentTimeMillis() );
 	}
 }
