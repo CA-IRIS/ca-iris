@@ -32,6 +32,8 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_REINIT;
 
 
 /**
@@ -71,7 +73,7 @@ public class CameraShiftJob extends Job {
 	 * Create a camera shift job
 	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job.
 	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
-	 * @param offset offset in minutes
+	 * @param offset offset in millis
 	 */
 	public CameraShiftJob(Scheduler s, PresetAliasName pan, int offset) {
 		this(s, pan, offset, null);
@@ -81,12 +83,12 @@ public class CameraShiftJob extends Job {
 	 * Create a camera shift job
 	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job.
 	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
-	 * @param offset offset in minutes
+	 * @param offset offset in millis
 	 * @param ctm    camera to move - this should only be used internally by this class. Specifically for cameras
 	 *               with shift_schedule's defined.
 	 */
 	private CameraShiftJob(Scheduler s, PresetAliasName pan, int offset, Camera ctm) {
-		super(convertToSubMinuteOffset((offset))); // convert to milliseconds
+		super(convertToSubMinuteOffset((offset)));
 
 		scheduler = s;
 		camMoved = new HashMap<>();
@@ -95,13 +97,13 @@ public class CameraShiftJob extends Job {
 			camMoved.put(ctm, false);
 		}
 
-		if (!SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean() && pan == null)
+		if (!CAMERA_SHIFT_REINIT.getBoolean() && pan == null)
 			ignoreStartup = true;
 		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift(offset);
 
 		StringBuilder sb = new StringBuilder("Camera shift job created");
 		if (ctm != null)
-			sb.append(" for camera '").append(ctm.getName()).append("'");
+			sb.append(" for camera ").append(ctm.getName());
 		sb.append(", will execute in about ").append(offset).append(" minutes for the ").append(destPan.name())
 			.append(" preset.");
 		log.log(sb.toString());
@@ -113,8 +115,7 @@ public class CameraShiftJob extends Job {
 		int concurrent = CameraHelper.getConcurrentMovements();
 
 		if (concurrent < 1) {
-			log.log("Camera Shift disabled due to "
-				+ SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase()
+			log.log("Camera Shift disabled due to " + CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase()
 				+ " set to less than 1.");
 			return;
 		}
@@ -122,8 +123,8 @@ public class CameraShiftJob extends Job {
 		log.log("Begin performing camera shift job.");
 
 		if (ignoreStartup) {
-			log.log("Not shifting cameras, as " + SystemAttrEnum.CAMERA_SHIFT_REINIT.name() + " is set to "
-				+ SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean());
+			log.log("Not shifting cameras, as " + CAMERA_SHIFT_REINIT.name() + " is set to "
+				+ CAMERA_SHIFT_REINIT.getBoolean() + ".");
 			return;
 		}
 
@@ -178,13 +179,13 @@ public class CameraShiftJob extends Job {
 
 		for (Camera c : camDeferred) {
 			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
-			cal.add(Calendar.MINUTE, 1); // exclude executing now.
+			cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
 
 			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
 				cal.add(Calendar.MINUTE, 1);
 
-			int offsetMinutes = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis()) / 60000;
-			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMinutes, c));
+			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
+			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
 		}
 	}
 
@@ -197,14 +198,14 @@ public class CameraShiftJob extends Job {
 
 		for (Camera c : camMoved.keySet()) {
 			if (!camMoved.get(c))
-				log.log("WARNING: Camera Shift Job was unable to move camera '" + c.getName() + "'.");
+				log.log("WARNING: Camera Shift Job was unable to move camera " + c.getName() + ".");
 		}
 
 		if (forceMovement) {
 			// jobs with forced movement at specific times do not reschedule.
 			for (Camera c : camMoved.keySet())
-				log.log("Completed camera shift schedule job for camera '" + c.getName()
-					+ "' at scheduled time of " + c.getShiftSchedule() + " past the hour.");
+				log.log("Completed camera shift schedule job for camera " + c.getName()
+					+ " at scheduled time of " + c.getShiftSchedule() + " past the hour.");
 			return;
 		}
 
@@ -225,7 +226,7 @@ public class CameraShiftJob extends Job {
 		else if (NIGHT_SHIFT.equals(nsp))
 			c = (offset == 0) ? tns : CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
 
-		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis()) / 1000 / 60;
+		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
 
 		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
 		log.log("Completed camera shift job.");
@@ -263,21 +264,20 @@ public class CameraShiftJob extends Job {
 
 		if (p != null) {
 			c.setRecallPreset(p);
-			log.log("Moved camera '" + c.getName() + "' to " + pan.name() + " position");
+			log.log("Moved camera '" + c.getName() + "' to " + pan.name() + " position.");
 		}
 	}
 
 	/**
-	 * modify offset to execute at the specified offset second of the minute.
-	 * @param offset offset in minutes
+	 * round to the nearest OFFSET_SEC second of the minute the offset calculates to.
+	 * @param offset offset in millis
 	 *
 	 * @return offset in milliseconds
 	 */
 	static private int convertToSubMinuteOffset(int offset) {
 		GregorianCalendar future = (GregorianCalendar) TimeSteward.getCalendarInstance();
-		future.add(Calendar.MINUTE, offset);
+		future.add(Calendar.MILLISECOND, offset); // add the offset
 		future.set(Calendar.SECOND, OFFSET_SECS);
-		future.set(Calendar.MILLISECOND, 0);
 		return (int) (future.getTimeInMillis() - TimeSteward.currentTimeMillis());
 	}
 }
