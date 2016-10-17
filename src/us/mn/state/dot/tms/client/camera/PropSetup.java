@@ -72,33 +72,10 @@ public class PropSetup extends IPanel {
 	});
 
 	/** camera shift schedule minutes past the hour */
-	private final SpinnerNumberModel shift_schedule_num_model = new SpinnerNumberModel(0, 0, 59, 1);
+	private final SpinnerNumberModel shift_schedule_num_model = new SpinnerNumberModel(0, -1, 59, 1);
 
 	/** Encoder channel spinner */
 	private final JSpinner shift_schedule_spn = new JSpinner(shift_schedule_num_model);
-
-	/** keep last schedule shift value available */
-	private int last_shift_schedule_value = 0;
-
-	/** checkbox to enable or disable shift schedule */
-	private final JCheckBox shift_schedule_chk = new JCheckBox(new IAction(null) {
-		protected void doActionPerformed(ActionEvent e) {
-			if (camera.isShiftSchedule())
-				last_shift_schedule_value = camera.getShiftSchedule();
-
-			if(canUpdate("shift_schedule")) {
-				if (!shift_schedule_chk.isSelected()) {
-					camera.setShiftSchedule(null);
-					shift_schedule_spn.setValue(0);
-					shift_schedule_spn.setEnabled(false);
-				} else {
-					camera.setShiftSchedule(last_shift_schedule_value);
-					shift_schedule_spn.setValue(last_shift_schedule_value);
-					shift_schedule_spn.setEnabled(true);
-				}
-			}
-		}
-	});
 
 	/** User session */
 	private final Session session;
@@ -126,8 +103,6 @@ public class PropSetup extends IPanel {
 		add("camera.publish");
 		add(publish_chk, Stretch.LAST);
 		add("camera.shift.schedule");
-		add(shift_schedule_chk, Stretch.LAST);
-		add("camera.shift.schedule.minute");
 		add(shift_schedule_spn, Stretch.LAST);
 		createJobs();
 	}
@@ -148,7 +123,7 @@ public class PropSetup extends IPanel {
 		shift_schedule_spn.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				Number c = (Number) shift_schedule_spn.getValue();
-				camera.setShiftSchedule(c.intValue());
+				camera.setShiftSchedule( (c.intValue() >= 0) ? c.intValue() : null);
 			}
 		});
 	}
@@ -173,9 +148,8 @@ public class PropSetup extends IPanel {
 		if (a == null || a.equals("publish"))
 			publish_chk.setSelected(camera.getPublish());
 		if (a == null || a.equals("shift_schedule")) {
-			shift_schedule_chk.setSelected(camera.isShiftSchedule());
-			if(camera.isShiftSchedule())
-				shift_schedule_spn.setValue(camera.getShiftSchedule());
+			Integer v = camera.getShiftSchedule();
+			shift_schedule_spn.setValue( (v == null) ? -1 : v);
 		}
 	}
 
