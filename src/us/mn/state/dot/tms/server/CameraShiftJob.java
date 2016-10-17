@@ -40,6 +40,9 @@ import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
  */
 public class CameraShiftJob extends Job {
 
+	/** seconds offset from the minute to perform this job */
+	static final private int OFFSET_SECS = 30;
+
 	/** maximum amount of time in minutes to run this job */
 	static final private int MAX_RUNTIME = 720; // 12 hours
 
@@ -83,8 +86,7 @@ public class CameraShiftJob extends Job {
 	 *               with shift_schedule's defined.
 	 */
 	private CameraShiftJob(Scheduler s, PresetAliasName pan, int offset, Camera ctm) {
-
-		super((offset * 60 * 1000)); // convert to milliseconds
+		super(convertToSubMinuteOffset((offset))); // convert to milliseconds
 
 		scheduler = s;
 		camMoved = new HashMap<>();
@@ -93,17 +95,15 @@ public class CameraShiftJob extends Job {
 			camMoved.put(ctm, false);
 		}
 
-		if (!SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean()
-			&& pan == null)
+		if (!SystemAttrEnum.CAMERA_SHIFT_REINIT.getBoolean() && pan == null)
 			ignoreStartup = true;
-		destPan = (pan != null)
-			? pan : CameraHelper.calculateLastShift(offset);
+		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift(offset);
 
-		StringBuilder sb = new StringBuilder("Camera shift job created ");
+		StringBuilder sb = new StringBuilder("Camera shift job created");
 		if (ctm != null)
-			sb.append("('").append(ctm.getName()).append("')");
-		sb.append(", will execute in ").append(offset).append(" minutes for ").append("the ")
-			.append(destPan.name()).append(" preset.");
+			sb.append(" for camera '").append(ctm.getName()).append("'");
+		sb.append(", will execute in about ").append(offset).append(" minutes for the ").append(destPan.name())
+			.append(" preset.");
 		log.log(sb.toString());
 	}
 
@@ -137,24 +137,6 @@ public class CameraShiftJob extends Job {
 				else
 					camMoved.put(c, false);
 			}
-		}
-
-		for (Camera c : camDeferred) {
-			GregorianCalendar now = new GregorianCalendar();
-			now.setTimeInMillis(TimeSteward.currentTimeMillis());
-			now.set(Calendar.SECOND, 0);
-			now.set(Calendar.MILLISECOND, 0);
-
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis(TimeSteward.currentTimeMillis());
-			cal.set(Calendar.SECOND, 0);
-			cal.set(Calendar.MILLISECOND, 0);
-
-			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
-				cal.add(Calendar.MINUTE, 1);
-
-			int offsetMinutes = (int)(cal.getTimeInMillis() - now.getTimeInMillis()) / 60000;
-			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMinutes, c));
 		}
 
 		if (camMoved.isEmpty()) {
@@ -195,6 +177,29 @@ public class CameraShiftJob extends Job {
 				camMoved.put(c, true);
 			}
 		}
+
+		for (Camera c : camDeferred) {
+			GregorianCalendar now = new GregorianCalendar();
+			now.setTimeInMillis(TimeSteward.currentTimeMillis());
+			now.set(Calendar.SECOND, 0);
+			now.set(Calendar.MILLISECOND, 0);
+
+			GregorianCalendar cal = new GregorianCalendar();
+			cal.setTimeInMillis(TimeSteward.currentTimeMillis());
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+
+			//advanced one minute to prevent a potential job from executing right now.
+			now.add(Calendar.MINUTE, 1);
+			cal.add(Calendar.MINUTE, 1);
+
+			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
+				cal.add(Calendar.MINUTE, 1);
+
+			int offsetMinutes = (int)(cal.getTimeInMillis() - now.getTimeInMillis()) / 60000;
+			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMinutes, c));
+		}
+
 	}
 
 	/** actions to perform upon completion of job */
@@ -288,5 +293,19 @@ public class CameraShiftJob extends Job {
 			log.log("Moved camera '" + c.getName() + "' to "
 				+ pan.name() + " position");
 		}
+	}
+
+	/**
+	 * modify offset to execute at the specified offset second of the minute.
+	 * @param offset offset in minutes
+	 * @return offset in milliseconds
+	 */
+	static private int convertToSubMinuteOffset(int offset) {
+		GregorianCalendar now = new GregorianCalendar();
+		now.setTimeInMillis(TimeSteward.currentTimeMillis());
+		now.add(Calendar.MINUTE, offset);
+		now.set(Calendar.SECOND, OFFSET_SECS);
+		now.set(Calendar.MILLISECOND, 0);
+		return (int) (TimeSteward.currentTimeMillis() - now.getTimeInMillis());
 	}
 }
