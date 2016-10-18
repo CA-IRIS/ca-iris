@@ -114,7 +114,7 @@ public class MainServer {
 			scheduleTimerJobs();
 			scheduleFlushJobs();
 			aws_scheduler.addJob(new AwsJob());
-			shift_scheduler.addJob(new CameraShiftJob(shift_scheduler, null, 60000));
+			shift_scheduler.addJob(new CameraShiftJob(shift_scheduler, null, 600000));
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);

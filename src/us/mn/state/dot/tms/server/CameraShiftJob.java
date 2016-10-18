@@ -155,18 +155,6 @@ public class CameraShiftJob extends Job {
 			log.log("Sunrise/sunset event is calculated for GPS coordinates: " + pos.toString());
 		}
 
-		for (Camera c : camDeferred) {
-			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
-			if (cal.get(Calendar.SECOND) > 45)
-				cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
-
-			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
-				cal.add(Calendar.MINUTE, 1);
-
-			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
-			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
-		}
-
 		while (doJob(started)) {
 			if (!forceMovement) {
 				if (movingNow >= concurrent) {
@@ -192,6 +180,18 @@ public class CameraShiftJob extends Job {
 				lastMovement = TimeSteward.currentTimeMillis();
 				camMoved.put(c, true);
 			}
+		}
+
+		for (Camera c : camDeferred) {
+			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
+			if (cal.get(Calendar.SECOND) > 50)   // if too late in the current minute
+				cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
+
+			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
+				cal.add(Calendar.MINUTE, 1);
+
+			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
+			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
 		}
 	}
 
