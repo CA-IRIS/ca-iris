@@ -89,9 +89,12 @@ public class SignTextComboBoxModel extends AbstractListModel<SignText>
 
 	/**
 	 * Set the selected item. This method is called by the combobox when:
-	 * 	-the focus leaves the combobox with a String arg when editable.
-	 *      -a combobox item is clicked on via the mouse.
-	 *      -a combobox item is moved to via the cursor keys.
+	 * <ul>
+	 *   <li> focus leaves the combobox with a String arg when editable.
+	 *   <li> a combobox item is clicked on via the mouse.
+	 *   <li> a combobox item is moved to via the cursor keys.
+	 *   <li> if dms_preview_instant sysattr true: entry/edit keystrokes (CA-ONLY)
+	 * </ul>
 	 */
 	@Override
 	public void setSelectedItem(Object s) {
@@ -107,7 +110,9 @@ public class SignTextComboBoxModel extends AbstractListModel<SignText>
 
 	/** Get or create a sign text for the given string */
 	private SignText getSignText(String s) {
-		String m = new MultiString(s.trim()).normalize();
+		// FIXME CA-MN: CA does not trim here. Trimmed elsewhere
+		//String m = new MultiString(s.trim()).normalize();
+		String m = new MultiString(s).normalize();
 		if (m.length() == 0)
 			return BLANK_SIGN_TEXT;
 		SignText st = lookupMessage(m);
