@@ -157,7 +157,8 @@ public class CameraShiftJob extends Job {
 
 		for (Camera c : camDeferred) {
 			GregorianCalendar cal = (GregorianCalendar) TimeSteward.getCalendarInstance();
-			cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
+			if (cal.get(Calendar.SECOND) > 45)
+				cal.add(Calendar.MINUTE, 1); // exclude executing current minute.
 
 			while (cal.get(Calendar.MINUTE) != c.getShiftSchedule())
 				cal.add(Calendar.MINUTE, 1);
