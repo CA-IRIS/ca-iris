@@ -1,5 +1,6 @@
 -- current as of MnDOT 4.35.4
 
+
 -- updates required before rest of updates
 \set ON_ERROR_STOP
 
@@ -622,6 +623,46 @@ INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_reinit', 'f
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunrise_offset', -30);
 INSERT INTO iris.system_attribute(name, value) VALUES ('camera_shift_sunset_offset', -30);
 
+ALTER TABLE iris._camera ADD COLUMN shift_schedule INTEGER;
+
+CREATE OR REPLACE VIEW iris.camera AS SELECT
+	c.name, geo_loc, controller, pin, notes, encoder, encoder_channel,
+		encoder_type, publish, shift_schedule
+	FROM iris._camera c JOIN iris._device_io d ON c.name = d.name;
+
+CREATE OR REPLACE FUNCTION iris.camera_insert() RETURNS TRIGGER AS
+	$camera_insert$
+BEGIN
+	INSERT INTO iris._device_io (name, controller, pin)
+	     VALUES (NEW.name, NEW.controller, NEW.pin);
+	INSERT INTO iris._camera (name, geo_loc, notes, encoder,
+	                          encoder_channel, encoder_type, publish, shift_schedule)
+	     VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.encoder,
+	             NEW.encoder_channel, NEW.encoder_type, NEW.publish, NEW.shift_schedule);
+	RETURN NEW;
+END;
+$camera_insert$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION iris.camera_update() RETURNS TRIGGER AS
+	$camera_update$
+BEGIN
+	UPDATE iris._device_io
+	   SET controller = NEW.controller,
+	       pin = NEW.pin
+	 WHERE name = OLD.name;
+	UPDATE iris._camera
+	   SET geo_loc = NEW.geo_loc,
+	       notes = NEW.notes,
+	       encoder = NEW.encoder,
+	       encoder_channel = NEW.encoder_channel,
+	       encoder_type = NEW.encoder_type,
+	       publish = NEW.publish,
+	       shift_schedule = NEW.shift_schedule
+	 WHERE name = OLD.name;
+	RETURN NEW;
+END;
+$camera_update$ LANGUAGE plpgsql;
+
 -- feature 571
 INSERT INTO iris.system_attribute(name, value) VALUES ('dms_notify_needs_attention', 'true');
 
@@ -648,3 +689,6 @@ INSERT INTO event.detector_event_hist (event_id, event_date, event_desc_id, devi
   WHERE event_id = (SELECT MIN(event_id) FROM event.detector_event);
 
 INSERT INTO iris.system_attribute (name, value) VALUES ('detector_reduce_malf_logging', 'false');
+
+
+

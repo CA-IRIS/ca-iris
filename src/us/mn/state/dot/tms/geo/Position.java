@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2016       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +15,14 @@
  */
 package us.mn.state.dot.tms.geo;
 
+import java.util.Formatter;
+
 /**
  * A position is a latitude / longitude pair.  With a geodetic datum, this
  * identifies a position on the Earth.
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class Position {
 
@@ -68,5 +72,10 @@ public class Position {
 		double a = sdlat2 * sdlat2 + coslat * sdlon2 * sdlon2;
 		double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
 		return MEAN_RADIUS * c;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%+.4f\u00B0 lat. %+.4f\u00B0 long.", latitude, longitude);
 	}
 }

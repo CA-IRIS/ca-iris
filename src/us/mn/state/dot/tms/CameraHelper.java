@@ -206,7 +206,7 @@ public class CameraHelper extends BaseHelper {
 
 	/**
 	 * calculate what the last shift was.
-	 * @param offset offset in minutes from now to calculate this for.
+	 * @param offset offset in millis from now to calculate this for.
 	 *               should always be 0. only server start-up should use any
 	 *               other value.
 	 */
@@ -214,7 +214,7 @@ public class CameraHelper extends BaseHelper {
 		PresetAliasName rv = HOME; // default
 		GregorianCalendar today =
 			(GregorianCalendar) TimeSteward.getCalendarInstance();
-		today.setTimeInMillis((today.getTimeInMillis() + offset * 60 * 1000));
+		today.setTimeInMillis((today.getTimeInMillis() + offset));
 		GregorianCalendar nightshift =
 			(GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
 		GregorianCalendar dayshift =

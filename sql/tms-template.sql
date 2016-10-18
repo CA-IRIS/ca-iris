@@ -588,7 +588,8 @@ CREATE TABLE iris._camera (
 	encoder text NOT NULL,
 	encoder_channel integer NOT NULL,
 	encoder_type integer NOT NULL REFERENCES iris.encoder_type(id),
-	publish boolean NOT NULL
+	publish boolean NOT NULL,
+	shift_schedule integer
 );
 
 ALTER TABLE iris._camera ADD CONSTRAINT _camera_fkey
@@ -596,7 +597,7 @@ ALTER TABLE iris._camera ADD CONSTRAINT _camera_fkey
 
 CREATE VIEW iris.camera AS SELECT
 	c.name, geo_loc, controller, pin, notes, encoder, encoder_channel,
-		encoder_type, publish
+		encoder_type, publish, shift_schedule
 	FROM iris._camera c JOIN iris._device_io d ON c.name = d.name;
 
 CREATE FUNCTION iris.camera_insert() RETURNS TRIGGER AS
@@ -605,9 +606,9 @@ BEGIN
 	INSERT INTO iris._device_io (name, controller, pin)
 	     VALUES (NEW.name, NEW.controller, NEW.pin);
 	INSERT INTO iris._camera (name, geo_loc, notes, encoder,
-	                          encoder_channel, encoder_type, publish)
+	                          encoder_channel, encoder_type, publish, shift_schedule)
 	     VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.encoder,
-	             NEW.encoder_channel, NEW.encoder_type, NEW.publish);
+	             NEW.encoder_channel, NEW.encoder_type, NEW.publish, NEW.shift_schedule);
 	RETURN NEW;
 END;
 $camera_insert$ LANGUAGE plpgsql;
@@ -629,7 +630,8 @@ BEGIN
 	       encoder = NEW.encoder,
 	       encoder_channel = NEW.encoder_channel,
 	       encoder_type = NEW.encoder_type,
-	       publish = NEW.publish
+	       publish = NEW.publish,
+	       shift_schedule = NEW.shift_schedule
 	 WHERE name = OLD.name;
 	RETURN NEW;
 END;
