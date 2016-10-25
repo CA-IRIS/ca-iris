@@ -789,7 +789,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 			if (no_hits > getNoHitThreshold().seconds()) {
 				malfunction(EventType.DET_NO_HITS);
 				if (isDetectorReducedLogging())
-					locked_on = 0;
+					no_hits = 0;
 			}
 		} else
 			no_hits = 0;
