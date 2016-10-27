@@ -32,6 +32,7 @@ import us.mn.state.dot.tms.BaseHelper;
 import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.VideoServerCoupler;
 import us.mn.state.dot.tms.server.aws.AwsJob;
 import us.mn.state.dot.tms.server.event.BaseEvent;
 import us.mn.state.dot.tms.utils.HTTPProxySelector;
@@ -114,7 +115,8 @@ public class MainServer {
 			scheduleTimerJobs();
 			scheduleFlushJobs();
 			aws_scheduler.addJob(new AwsJob());
-			shift_scheduler.addJob(new CameraShiftJob(shift_scheduler, null, 600000));
+			shift_scheduler.addJob(
+				new CameraShiftJob(shift_scheduler, new VideoServerCoupler(props), null, 600000));
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);
