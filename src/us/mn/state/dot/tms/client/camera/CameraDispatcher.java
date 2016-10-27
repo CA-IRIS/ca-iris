@@ -392,7 +392,8 @@ public class CameraDispatcher extends JPanel {
 		if (!PresetAliasHelper.hasShiftPreset(c, pan))
 			return;
 
-		TimeSteward.sleep_well(250);        // kludge to avoid race
+		vw_manager.getCamerasInUse(); // updates the camera counts now.
+		TimeSteward.sleep_well(250);  // kludge to avoid race
 		int numConns = vw_manager.getNumConns(c.getName());
 		// were we the last connection to this camera?
 		if (numConns == 0)
