@@ -190,7 +190,7 @@ public class CameraShiftJob extends Job {
 						break;
 				}
 
-				if (inuse.containsKey(c.getNotes())) {
+				if (inuse.containsKey(c.getName())) {
 					camMoved.put(c, true);
 					log.log("WARNING: Not moving camera " + c.getName() + ", as it is in use.");
 					continue;
