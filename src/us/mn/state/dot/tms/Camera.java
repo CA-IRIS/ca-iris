@@ -67,7 +67,4 @@ public interface Camera extends Device {
 
 	/** set camera-specific shift schedule after the hour */
 	void setShiftSchedule(Integer schedule);
-
-	/** is set camera-specific shift schedule after the hour */
-	boolean isShiftSchedule();
 }
