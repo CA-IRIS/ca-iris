@@ -135,7 +135,8 @@ public class CameraShiftJob extends Job {
 
 		List<Camera> camDeferred = new ArrayList<>();
 		if (camMoved.isEmpty()) {
-			for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
+			// only load cameras with Home and Night-shift Home preset aliases enabled.
+			for (Camera c : CameraHelper.getCamerasForShift()) {
 				if (c.isShiftSchedule())
 					camDeferred.add(c);
 				else
