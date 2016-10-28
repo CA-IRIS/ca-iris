@@ -45,6 +45,7 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.GeoLocHelper;
+import us.mn.state.dot.tms.PresetAlias;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
@@ -309,8 +310,8 @@ public class CameraDispatcher extends JPanel {
 
 			@Override
 			public void onStreamFinished(Camera c) {
-				maybeReturnHome(c);
 				updateCamControls();
+				maybeReturnHome(c);
 			}
 		};
 	}
@@ -392,12 +393,15 @@ public class CameraDispatcher extends JPanel {
 		if (!PresetAliasHelper.hasShiftPreset(c, pan))
 			return;
 
+		Integer p = PresetAliasHelper.getPreset(c, pan);
+
+		// FIXME this needs to happen in a call-back or thread
 		vw_manager.getCamerasInUse(); // updates the camera counts now.
-		TimeSteward.sleep_well(250);  // kludge to avoid race
+		TimeSteward.sleep_well(5000);  // kludge to avoid race
 		int numConns = vw_manager.getNumConns(c.getName());
 		// were we the last connection to this camera?
-		if (numConns == 0)
-			c.setRecallPreset(pan.ordinal());
+		if (numConns == 0 && p != null)
+			c.setRecallPreset(p);
 	}
 
 	/**
