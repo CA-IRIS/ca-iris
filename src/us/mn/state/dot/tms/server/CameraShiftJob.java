@@ -28,6 +28,7 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
+import us.mn.state.dot.tms.VideoServerCoupler;
 import us.mn.state.dot.tms.geo.Position;
 
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
@@ -63,6 +64,9 @@ public class CameraShiftJob extends Job {
 	/** Preset Alias Name to move cameras to */
 	private PresetAliasName destPan = HOME;
 
+	/** VideoServerCoupler to query cameras for their in-use status */
+	private VideoServerCoupler videoServerCoupler;
+
 	/** last time a log message was issued warning of excessive time */
 	private long lastLogMessage;
 
@@ -75,8 +79,8 @@ public class CameraShiftJob extends Job {
 	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
 	 * @param offset offset in millis
 	 */
-	public CameraShiftJob(Scheduler s, PresetAliasName pan, int offset) {
-		this(s, pan, offset, null);
+	public CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset) {
+		this(s, vsc, pan, offset, null);
 	}
 
 	/**
@@ -87,10 +91,11 @@ public class CameraShiftJob extends Job {
 	 * @param ctm    camera to move - this should only be used internally by this class. Specifically for cameras
 	 *               with shift_schedule's defined.
 	 */
-	private CameraShiftJob(Scheduler s, PresetAliasName pan, int offset, Camera ctm) {
+	private CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset, Camera ctm) {
 		super(convertToSubMinuteOffset((offset)));
 
 		scheduler = s;
+		videoServerCoupler = vsc;
 		camMoved = new HashMap<>();
 		if (ctm != null) {
 			forceMovement = true;
@@ -130,8 +135,9 @@ public class CameraShiftJob extends Job {
 
 		List<Camera> camDeferred = new ArrayList<>();
 		if (camMoved.isEmpty()) {
-			for (Camera c : CameraHelper.getCamerasByShift(destPan)) {
-				if (c.isShiftSchedule())
+			// only load cameras with Home and Night-shift Home preset aliases enabled.
+			for (Camera c : CameraHelper.getCamerasForShift()) {
+				if (null != c.getShiftSchedule())
 					camDeferred.add(c);
 				else
 					camMoved.put(c, false);
@@ -148,6 +154,7 @@ public class CameraShiftJob extends Job {
 		int delay = CameraHelper.getShiftPause() * 1000;
 		int movingNow = 0;
 		long lastMovement = 0L;
+		long iuLastUpdate = 0L;
 		long diff;
 
 		if(!forceMovement) {
@@ -155,6 +162,7 @@ public class CameraShiftJob extends Job {
 			log.log("Sunrise/sunset event is calculated for GPS coordinates: " + pos.toString());
 		}
 
+		Map<String, Integer> inuse = null;
 		while (doJob(started)) {
 			if (!forceMovement) {
 				if (movingNow >= concurrent) {
@@ -167,12 +175,25 @@ public class CameraShiftJob extends Job {
 					TimeSteward.sleep((delay - diff));
 			}
 
+			// inuse updated every 5 seconds so as not to overwhelm video server
+			diff = (TimeSteward.currentTimeMillis() - iuLastUpdate);
+			if (diff > 5000) {
+				inuse = videoServerCoupler.getCamerasInUse();
+				iuLastUpdate = TimeSteward.currentTimeMillis();
+			}
+
 			for (Camera c : camMoved.keySet()) {
 				if (!forceMovement) {
 					if (camMoved.get(c))
 						continue;
 					if (movingNow >= concurrent)
 						break;
+				}
+
+				if (inuse.containsKey(c.getName())) {
+					camMoved.put(c, true);
+					log.log("WARNING: Not moving camera " + c.getName() + ", as it is in use.");
+					continue;
 				}
 
 				moveCamera(c, destPan);
@@ -190,7 +211,7 @@ public class CameraShiftJob extends Job {
 				cal.add(Calendar.MINUTE, 1);
 
 			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
-			scheduler.addJob(new CameraShiftJob(scheduler, destPan, offsetMillis, c));
+			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, destPan, offsetMillis, c));
 		}
 	}
 
@@ -233,7 +254,7 @@ public class CameraShiftJob extends Job {
 
 		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
 
-		scheduler.addJob(new CameraShiftJob(scheduler, nsp, offset));
+		scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset));
 		log.log("Completed camera shift job.");
 	}
 

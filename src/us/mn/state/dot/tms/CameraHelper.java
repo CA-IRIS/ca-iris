@@ -132,16 +132,16 @@ public class CameraHelper extends BaseHelper {
 	}
 
 	/**
-	 * Retrieve a list of cameras with night-shift
-	 * change time
+	 * Retrieve a list of cameras with both day and night-shift preset aliases enabled
 	 * @return
 	 */
-	static public List<Camera> getCamerasByShift(PresetAliasName pan) {
+	static public List<Camera> getCamerasForShift() {
 		List<Camera> rv = new ArrayList<>();
 		Iterator<Camera> it = iterator();
 		while (it.hasNext()) {
 			Camera cam = it.next();
-			if (PresetAliasHelper.hasShiftPreset(cam, pan))
+			if (PresetAliasHelper.hasShiftPreset(cam, PresetAliasName.HOME)
+				&& PresetAliasHelper.hasShiftPreset(cam, PresetAliasName.NIGHT_SHIFT))
 				rv.add(cam);
 		}
 		return rv;

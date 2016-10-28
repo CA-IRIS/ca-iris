@@ -252,11 +252,6 @@ public class CameraImpl extends DeviceImpl implements Camera {
 	}
 
 
-	/** is set camera-specific shift schedule after the hour */
-	public boolean isShiftSchedule() {
-		return (shift_schedule != null);
-	}
-
 	/** Blank restricted video monitors viewing the camera */
 	private void blankRestrictedMonitors() throws TMSException {
 		Iterator<VideoMonitor> it = VideoMonitorHelper.iterator();
