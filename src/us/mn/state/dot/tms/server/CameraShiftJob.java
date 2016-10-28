@@ -154,6 +154,7 @@ public class CameraShiftJob extends Job {
 		int delay = CameraHelper.getShiftPause() * 1000;
 		int movingNow = 0;
 		long lastMovement = 0L;
+		long iuLastUpdate = 0L;
 		long diff;
 
 		if(!forceMovement) {
@@ -174,7 +175,13 @@ public class CameraShiftJob extends Job {
 					TimeSteward.sleep((delay - diff));
 			}
 
-			inuse = videoServerCoupler.getCamerasInUse();
+			// inuse updated every 5 seconds so as not to overwhelm video server
+			diff = (TimeSteward.currentTimeMillis() - iuLastUpdate);
+			if (diff > 5000) {
+				inuse = videoServerCoupler.getCamerasInUse();
+				iuLastUpdate = TimeSteward.currentTimeMillis();
+			}
+
 			for (Camera c : camMoved.keySet()) {
 				if (!forceMovement) {
 					if (camMoved.get(c))
