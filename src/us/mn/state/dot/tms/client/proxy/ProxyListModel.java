@@ -278,12 +278,18 @@ public class ProxyListModel<T extends SonarObject>
 	/** Get the element at the specified index (for ListModel) */
 	@Override
 	public T getElementAt(int index) {
-		return list.get((filter != null) ? indices.get(index) : index);
+		T rv = null;
+		if (filter != null) {
+			if (index >= 0 && index < indices.size())
+				rv = list.get(indices.get(index));
+		} else
+			rv = list.get(index);
+		return rv;
 	}
 
 	/** Get the proxy at the specified index */
 	public T getProxy(int index) {
-		return (T)getElementAt(index);
+		return getElementAt(index);
 	}
 
 	/** Get the index of the given proxy */

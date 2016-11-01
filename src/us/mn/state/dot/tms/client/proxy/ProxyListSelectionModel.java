@@ -133,4 +133,12 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		sel_model.setSelected(proxies);
 		adjusting--;
 	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void clearSelection() {
+		super.clearSelection();
+		// overridden to clear out the proxy selection from the UI
+		sel_model.clearSelection();
+	}
 }
