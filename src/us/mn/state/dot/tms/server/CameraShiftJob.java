@@ -267,11 +267,9 @@ public class CameraShiftJob extends Job {
 				rv = true;
 		}
 
-		int mxrt = MAX_RUNTIME * 60 * 1000;
+		int mxrt = MAX_RUNTIME * 60000;
 
-		if ((TimeSteward.currentTimeMillis() - lastLogMessage)
-			> (3600 * 1000)) {
-
+		if ((TimeSteward.currentTimeMillis() - lastLogMessage) > 3600000) {
 			log.log("WARNING: Camera Shift Job is taking more than an hour.");
 			lastLogMessage = TimeSteward.currentTimeMillis();
 		}

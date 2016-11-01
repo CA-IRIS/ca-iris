@@ -171,20 +171,16 @@ public class CameraHelper extends BaseHelper {
 	/** get the shift pause system attribute */
 	static public int getShiftPause() {
 		int delay = 0;
-
 		if (null != CAMERA_SHIFT_MOVE_PAUSE)
 			delay = CAMERA_SHIFT_MOVE_PAUSE.getInt();
-
 		return delay;
 	}
 
 	/** get the shift concurrent movements system attribute */
 	static public int getConcurrentMovements() {
 		int concurrent = 1;
-
 		if (null != CAMERA_SHIFT_CONCUR_MOVE)
 			concurrent = CAMERA_SHIFT_CONCUR_MOVE.getInt();
-
 		return concurrent;
 	}
 
@@ -212,13 +208,12 @@ public class CameraHelper extends BaseHelper {
 	 */
 	static public PresetAliasName calculateLastShift(int offset) {
 		PresetAliasName rv = HOME; // default
-		GregorianCalendar today =
-			(GregorianCalendar) TimeSteward.getCalendarInstance();
+		GregorianCalendar today = (GregorianCalendar) TimeSteward.getCalendarInstance();
 		today.setTimeInMillis((today.getTimeInMillis() + offset));
-		GregorianCalendar nightshift =
-			(GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
-		GregorianCalendar dayshift =
-			(GregorianCalendar) getShiftTime(HOME, 0);
+
+		GregorianCalendar nightshift = (GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
+		GregorianCalendar dayshift = (GregorianCalendar) getShiftTime(HOME, 0);
+
 		if (today.getTimeInMillis() > nightshift.getTimeInMillis()
 			|| today.getTimeInMillis() < dayshift.getTimeInMillis())
 			rv = NIGHT_SHIFT;
@@ -228,10 +223,8 @@ public class CameraHelper extends BaseHelper {
 
 	/**
 	 * calculate the shift time
-	 * @param pan       preset alias name. HOME for dayshift, NIGHT_SHIFT
-	 *                  for nightshift
-	 * @param dayOffset day offset. -1 for yesterday, 0 for today,
-	 *                  1 for tomorrow. other values discarded, 0 is used
+	 * @param pan       preset alias name. HOME for dayshift, NIGHT_SHIFT for nightshift
+	 * @param dayOffset day offset. -1 for yesterday, 0 for today, 1 for tomorrow. other values discarded, 0 is used
 	 *
 	 * @return
 	 */
@@ -241,14 +234,12 @@ public class CameraHelper extends BaseHelper {
 		int off = dayOffset;
 		if (dayOffset < -1 || dayOffset > 1)
 			off = 0;
-		GregorianCalendar di =
-			(GregorianCalendar) TimeSteward.getCalendarInstance();
-		di.roll(Calendar.DAY_OF_MONTH, off);
+		GregorianCalendar di = (GregorianCalendar) TimeSteward.getCalendarInstance();
+		di.add(Calendar.DAY_OF_MONTH, off);
 
 		if (off != 0) {
-			/* if there is a day offset, set date instance time to
-			 * 03:01 (3:01 AM) to account for possible Daylight
-			 * Savings Time changes. */
+			/* if there is a day offset, set date instance time to 03:01 (3:01 AM) to account for possible
+			 * Daylight Savings Time changes. */
 			di.set(Calendar.HOUR_OF_DAY, 3);
 			di.set(Calendar.MINUTE, 1);
 			di.set(Calendar.SECOND, 0);
@@ -259,25 +250,16 @@ public class CameraHelper extends BaseHelper {
 
 		boolean dst = di.getTimeZone().inDaylightTime(di.getTime());
 		if (NIGHT_SHIFT.equals(pan))
-			twilight = Sun.sunsetTime(di, center, di.getTimeZone(),
-				dst);
+			twilight = Sun.sunsetTime(di, center, di.getTimeZone(), dst);
 		else
-			twilight = Sun.sunriseTime(di, center, di.getTimeZone(),
-				dst);
+			twilight = Sun.sunriseTime(di, center, di.getTimeZone(), dst);
 
-		GregorianCalendar diTwilight = (GregorianCalendar)
-			setTimeToCalendar(di, twilight);
+		GregorianCalendar diTwilight = (GregorianCalendar) setTimeToCalendar(di, twilight);
 
 		if (NIGHT_SHIFT.equals(pan))
-			diTwilight.setTimeInMillis(
-				(diTwilight.getTimeInMillis()
-					+ getSunsetOffset() * 60
-					* 1000));
+			diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunsetOffset() * 60000));
 		else
-			diTwilight.setTimeInMillis(
-				(diTwilight.getTimeInMillis()
-					+ getSunriseOffset() * 60
-					* 1000));
+			diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunriseOffset() * 60000));
 
 		return diTwilight;
 	}
