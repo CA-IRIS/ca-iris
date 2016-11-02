@@ -134,11 +134,14 @@ public class ProxyListSelectionModel<T extends SonarObject>
 		adjusting--;
 	}
 
-	/** {@inheritDoc} */
-	@Override
-	public void clearSelection() {
+	/**
+	 * Clear the list selection, ensuring the selection model is clear if needed.
+	 * @param force clear out the selection model as well.
+	 */
+	public void clearSelection(boolean force) {
 		super.clearSelection();
 		// overridden to clear out the proxy selection from the UI
-		sel_model.clearSelection();
+		if (force)
+			sel_model.clearSelection();
 	}
 }

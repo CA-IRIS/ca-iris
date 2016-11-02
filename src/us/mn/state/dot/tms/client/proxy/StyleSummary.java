@@ -141,7 +141,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 					return description != null && description.toLowerCase().contains(txt.toLowerCase());
 				}
 			});
-			model.getSelectionModel().clearSelection();
+			model.getSelectionModel().clearSelection(true);
 		}
 	};
 
@@ -372,7 +372,7 @@ public class StyleSummary<T extends SonarObject> extends JPanel {
 //		filter_text_field.setText("");
 		if (mdl != null) {
 			model.setFilter(mdl.getFilter());
-			model.getSelectionModel().clearSelection();
+			model.getSelectionModel().clearSelection(true);
 			mdl.dispose();
 		}
 		fireSelectionChanged();
