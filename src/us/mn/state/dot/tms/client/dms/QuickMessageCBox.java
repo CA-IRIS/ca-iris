@@ -106,8 +106,7 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 			return (String) obj;
 		else if (obj instanceof QuickMessage)
 			return ((QuickMessage) obj).getName();
-		else
-			return "";
+		return "";
 	}
 
 	/** Combo box model for quick messages */
