@@ -449,7 +449,7 @@ public class DMSDispatcher extends JPanel {
 	/** Set the fully composed message.  This will update all the widgets
 	 * on the dispatcher with the specified message. */
 	public void setMessage(String ms) {
-		if(ms != null && !ms.equals(message)) {
+		if (ms != null) {
 			message = ms;
 			singleTab.setMessage();
 			composer.setMessage(ms);
@@ -477,7 +477,7 @@ public class DMSDispatcher extends JPanel {
 
 	/** Get raster graphic array for the selected message */
 	public RasterGraphic[] getPixmaps() {
-        return getPixmaps(builder);
+		return getPixmaps(builder);
 	}
 
 	/** Get raster graphic array for the selected message */
