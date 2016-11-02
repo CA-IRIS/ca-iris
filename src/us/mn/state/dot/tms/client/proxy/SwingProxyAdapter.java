@@ -50,8 +50,9 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 	@Override
 	public final void proxyAdded(final T proxy) {
 		if (notify) {
-			runSwing(new Runnable() {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "proxyAdded: " + proxy.getTypeName() + " (" + proxy.getName() + ")";
 					proxyAddedSwing(proxy);
 				}
 			});
@@ -64,8 +65,10 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 	@Override
 	public final void enumerationComplete() {
 		notify = true;
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				if (proxies != null && !proxies.isEmpty())
+					customMessage = "enumerationComplete: " + proxies.first().getTypeName() + " (count:" + proxies.size() + ")";
 				enumerationCompleteSwing(proxies);
 				proxies.clear();
 			}
@@ -77,8 +80,9 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 	@Override
 	public final void proxyRemoved(final T proxy) {
 		if (notify) {
-			runSwing(new Runnable() {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "proxyRemoved: " + proxy.getTypeName() + " (" + proxy.getName() + ")";
 					proxyRemovedSwing(proxy);
 				}
 			});
@@ -90,8 +94,9 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 	@Override
 	public final void proxyChanged(final T proxy, final String attr) {
 		if (notify && checkAttributeChange(attr)) {
-			runSwing(new Runnable() {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "proxyChanged: " + proxy.getTypeName() + " (" + proxy.getName() + "), attr=" + attr;
 					proxyChangedSwing(proxy, attr);
 				}
 			});
@@ -137,5 +142,9 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 	/** Check if an attribute change is interesting */
 	protected boolean checkAttributeChange(String attr) {
 		return true;
+	}
+
+	abstract public class IrisRunnable implements Runnable {
+		public String customMessage;
 	}
 }
