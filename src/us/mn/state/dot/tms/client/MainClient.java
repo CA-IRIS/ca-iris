@@ -14,7 +14,9 @@
  */
 package us.mn.state.dot.tms.client;
 
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ProxySelector;
 import java.nio.file.Files;
 import java.nio.file.Path;
