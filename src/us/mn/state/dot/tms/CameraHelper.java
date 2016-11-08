@@ -214,8 +214,8 @@ public class CameraHelper extends BaseHelper {
 		GregorianCalendar nightshift = (GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
 		GregorianCalendar dayshift = (GregorianCalendar) getShiftTime(HOME, 0);
 
-		if (today.getTimeInMillis() > nightshift.getTimeInMillis()
-			|| today.getTimeInMillis() < dayshift.getTimeInMillis())
+		if ((nightshift != null && dayshift != null) && ((today.getTimeInMillis() > nightshift.getTimeInMillis()
+			|| today.getTimeInMillis() < dayshift.getTimeInMillis())))
 			rv = NIGHT_SHIFT;
 
 		return rv;
@@ -228,8 +228,7 @@ public class CameraHelper extends BaseHelper {
 	 *
 	 * @return
 	 */
-	static public Calendar getShiftTime(PresetAliasName pan,
-		int dayOffset) {
+	static public Calendar getShiftTime(PresetAliasName pan, int dayOffset) {
 
 		int off = dayOffset;
 		if (dayOffset < -1 || dayOffset > 1)
@@ -245,21 +244,24 @@ public class CameraHelper extends BaseHelper {
 			di.set(Calendar.SECOND, 0);
 		}
 
+		GregorianCalendar diTwilight = null;
 		Position center = getGeographicCenter();
-		Time twilight;
+		if (center != null) {
+			Time twilight;
 
-		boolean dst = di.getTimeZone().inDaylightTime(di.getTime());
-		if (NIGHT_SHIFT.equals(pan))
-			twilight = Sun.sunsetTime(di, center, di.getTimeZone(), dst);
-		else
-			twilight = Sun.sunriseTime(di, center, di.getTimeZone(), dst);
+			boolean dst = di.getTimeZone().inDaylightTime(di.getTime());
+			if (NIGHT_SHIFT.equals(pan))
+				twilight = Sun.sunsetTime(di, center, di.getTimeZone(), dst);
+			else
+				twilight = Sun.sunriseTime(di, center, di.getTimeZone(), dst);
 
-		GregorianCalendar diTwilight = (GregorianCalendar) setTimeToCalendar(di, twilight);
+			diTwilight = (GregorianCalendar) setTimeToCalendar(di, twilight);
 
-		if (NIGHT_SHIFT.equals(pan))
-			diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunsetOffset() * 60000));
-		else
-			diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunriseOffset() * 60000));
+			if (NIGHT_SHIFT.equals(pan))
+				diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunsetOffset() * 60000));
+			else
+				diTwilight.setTimeInMillis((diTwilight.getTimeInMillis() + getSunriseOffset() * 60000));
+		}
 
 		return diTwilight;
 	}

@@ -241,20 +241,23 @@ public class CameraShiftJob extends Job {
 		int offset = 0;
 		Calendar tds = CameraHelper.getShiftTime(HOME, 0);
 		Calendar tns = CameraHelper.getShiftTime(NIGHT_SHIFT, 0);
-		if (HOME.equals(nsp) && now.getTimeInMillis() > tds.getTimeInMillis())
+		if (tds != null && HOME.equals(nsp) && now.getTimeInMillis() > tds.getTimeInMillis())
 			offset = 1;
-		else if (NIGHT_SHIFT.equals(nsp) && now.getTimeInMillis() > tns.getTimeInMillis())
+		else if (tns != null && NIGHT_SHIFT.equals(nsp) && now.getTimeInMillis() > tns.getTimeInMillis())
 			offset = 1;
 
-		Calendar c = tds;
-		if (HOME.equals(nsp))
+		Calendar c = null;
+		if (tds != null && HOME.equals(nsp))
 			c = (offset == 0) ? tds : CameraHelper.getShiftTime(HOME, offset);
-		else if (NIGHT_SHIFT.equals(nsp))
+		else if (tns != null && NIGHT_SHIFT.equals(nsp))
 			c = (offset == 0) ? tns : CameraHelper.getShiftTime(NIGHT_SHIFT, offset);
 
-		offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
+		if (c != null) {
+			offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
+			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset));
+		} else
+			log.log("ERROR: unable to compute next shift. Unable to schedule next shift.");
 
-		scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset));
 		log.log("Completed camera shift job.");
 	}
 
