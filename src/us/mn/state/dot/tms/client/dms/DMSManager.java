@@ -67,6 +67,9 @@ public class DMSManager extends ProxyManager<DMS> {
 	/** Action to blank the selected DMS */
 	private BlankDmsAction blankAction;
 
+	/** Action to query config the selected DMS */
+	private QueryConfigDmsAction queryConfigAction;
+
 	/** Detect transition to "power cycle" state for sign */
 	private final ProxyListener<Controller> controller_listener = new ProxyListener<Controller>() {
 
@@ -148,6 +151,11 @@ public class DMSManager extends ProxyManager<DMS> {
 	/** Set the blank DMS action */
 	public void setBlankAction(BlankDmsAction a) {
 		blankAction = a;
+	}
+
+	/** Set the query DMS action */
+	public void setQueryConfigAction(QueryConfigDmsAction a) {
+		queryConfigAction = a;
 	}
 
 	/** Create a new DMS manager */
@@ -281,6 +289,8 @@ public class DMSManager extends ProxyManager<DMS> {
 		p.addSeparator();
 		if (blankAction != null)
 			p.add(blankAction);
+		if (queryConfigAction != null)
+			p.add(queryConfigAction);
 		if (TeslaAction.isConfigured())
 			p.add(new TeslaAction<>(dms));
 		p.add(new PropertiesAction<>(this, dms));
@@ -296,6 +306,8 @@ public class DMSManager extends ProxyManager<DMS> {
 		p.addSeparator();
 		if (blankAction != null)
 			p.add(blankAction);
+		if (queryConfigAction != null)
+			p.add(queryConfigAction);
 		return p;
 	}
 
