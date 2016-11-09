@@ -27,40 +27,23 @@ import java.util.Map;
  */
 public class SiteDataHelper extends BaseHelper {
 
-	// [RDFULL]     full road name
-	// [RDABBR]     road abbreviation
-	// [RD]         equivalent to [RDABBR] if exists, else [RDFULL]
-	// [RDDIRFULL]  road direction
-	// [RDDIR]      road direction abbreviation
-	// [XRDFULL]    full road name of cross-road
-	// [XRDABBR]    road abbreviation of cross-road
-	// [XRD]        equivalent to [XRDABBR] if exists, else [XRDFULL]
-	// [XRDDIRFULL] road direction of cross-road
-	// [XRDDIR]     road direction abbreviation of cross-road
-	// [XMOD]       prepositional relation of road to cross-road
-	// [MILE]       milepoint
-	// [CTY]        county code
-	// [CTYFULL]    county name
-	// [GLNAME]     GeoLoc name
+	public final static String TAG_RDFULL = "\\[RDFULL\\]";         // full road name
+	public final static String TAG_RDABBR = "\\[RDABBR\\]";         // road abbreviation
+	public final static String TAG_RD = "\\[RD\\]";                 // same as [RDABBR] if exists, else [RDFULL]
+	public final static String TAG_RDDIR = "\\[RDDIR\\]";           // road direction
+	public final static String TAG_RDDIRFULL = "\\[RDDIRFULL\\]";   // road direction abbreviation
+	public final static String TAG_XRDFULL = "\\[XRDFULL\\]";       // full road name of cross-road
+	public final static String TAG_XRDABBR = "\\[XRDABBR\\]";       // road abbreviation of cross-road
+	public final static String TAG_XRD = "\\[XRD\\]";               // same as [XRDABBR] if exists, else [XRDFULL]
+	public final static String TAG_XRDDIR = "\\[XRDDIR\\]";         // road direction abbreviation of cross-road
+	public final static String TAG_XRDDIRFULL = "\\[XRDDIRFULL\\]"; // road direction of cross-road
+	public final static String TAG_XMOD = "\\[XMOD\\]";             // prepositional relation of road to cross-road
+	public final static String TAG_MILE = "\\[MILE\\]";             // milepoint
+	public final static String TAG_CTY = "\\[CTY\\]";               // county code
+	public final static String TAG_CTYFULL = "\\[CTYFULL\\]";       // county name
+	public final static String TAG_GLNAME = "\\[GLNAME\\]";         // GeoLoc name
 
-	public final static String TAG_RDFULL = "\\[RDFULL\\]";
-	public final static String TAG_RDABBR = "\\[RDABBR\\]";
-	public final static String TAG_RD = "\\[RD\\]";
-	public final static String TAG_RDDIR = "\\[RDDIR\\]";
-	public final static String TAG_RDDIRFULL = "\\[RDDIRFULL\\]";
-	public final static String TAG_XRDFULL = "\\[XRDFULL\\]";
-	public final static String TAG_XRDABBR = "\\[XRDABBR\\]";
-	public final static String TAG_XRD = "\\[XRD\\]";
-	public final static String TAG_XRDDIR = "\\[XRDDIR\\]";
-	public final static String TAG_XRDDIRFULL = "\\[XRDDIRFULL\\]";
-	public final static String TAG_XMOD = "\\[XMOD\\]";
-	public final static String TAG_MILE = "\\[MILE\\]";
-	public final static String TAG_CTY = "\\[CTY\\]";
-	public final static String TAG_CTYFULL = "\\[CTYFULL\\]";
-	public final static String TAG_GLNAME = "\\[GLNAME\\]";
-
-	static public final String DESCFMT_DEFAULT =
-		"[RDFULL] [RDDIR] [XMOD] [XRDFULL] [XRDDIR]";
+	static public final String DESCFMT_DEFAULT = "[RDFULL] [RDDIR] [XMOD] [XRDFULL] [XRDDIR]";
 
 	private final static Map<String, String> geoLocToSite = new HashMap<>();
 
@@ -87,16 +70,14 @@ public class SiteDataHelper extends BaseHelper {
 
 	/** Get a SiteData iterator */
 	static public Iterator<SiteData> iterator() {
-		return new IteratorWrapper<>(namespace.iterator(
-			SiteData.SONAR_TYPE));
+		return new IteratorWrapper<>(namespace.iterator(SiteData.SONAR_TYPE));
 	}
 
 	/** Lookup a SiteData entity */
 	static public SiteData lookup(String n) {
 		if (n == null)
 			return null;
-		return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE,
-			n);
+		return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE, n);
 	}
 
 	/** Lookup a SiteData entity by GeoLoc */
@@ -104,6 +85,7 @@ public class SiteDataHelper extends BaseHelper {
 		return gl != null ? lookupByGeoLoc(gl.getName()) : null;
 	}
 
+	/** Lookup a site data. if it is not in the cache, query sonar for it. */
 	static public SiteData lookupByGeoLoc(String gn) {
 		SiteData sd = null;
 
@@ -149,12 +131,11 @@ public class SiteDataHelper extends BaseHelper {
 	 * Build a site name string for a SiteData entity.
 	 * @param gn The GeoLoc name corresponding to the SiteData entity.
 	 *
-	 * @return A site name string, or null if entity not found or if
-	 * entity doesn't contain a site name
+	 * @return A site name string, or null if entity not found or if entity doesn't contain a site name
 	 */
 	static public String getSiteName(String gn) {
 		SiteData sd = lookupByGeoLoc(gn);
-		String sn = sd != null ? sd.getName() : null;
+		String sn = sd != null ? sd.getSiteName() : null;
 
 		return !sanitize(sn).equals("") ? sn : null;
 	}
@@ -189,12 +170,8 @@ public class SiteDataHelper extends BaseHelper {
 			rdfull = r.getName();
 			rdabbr = r.getAbbrev();
 			rddir = Direction.fromOrdinal(gl.getRoadDir()).abbrev;
-			rddirfull = Direction.fromOrdinal(gl.getRoadDir())
-				.toString();
-			if ("".equals(sanitize(rdabbr)))
-				rd = rdfull;
-			else
-				rd = rdabbr;
+			rddirfull = Direction.fromOrdinal(gl.getRoadDir()).toString();
+			rd = "".equals(sanitize(rdabbr)) ? rdfull : rdabbr;
 		}
 		// build [X.*] values
 		String xrdfull = null;
@@ -207,19 +184,12 @@ public class SiteDataHelper extends BaseHelper {
 			xrdfull = x.getName();
 			xrdabbr = x.getAbbrev();
 			xrddir = Direction.fromOrdinal(gl.getRoadDir()).abbrev;
-			xrddirfull = Direction.fromOrdinal(gl.getRoadDir())
-				.toString();
-			if ("".equals(sanitize(xrdabbr)))
-				xrd = xrdfull;
-			else
-				xrd = xrdabbr;
-			if (connect != null)
-				xmod = connect;
-			else
-				xmod = sanitize(GeoLocHelper.getModifier(gl));
+			xrddirfull = Direction.fromOrdinal(gl.getRoadDir()).toString();
+			xrd = "".equals(sanitize(xrdabbr)) ? xrdfull : xrdabbr;
+			xmod = connect != null ? connect : sanitize(GeoLocHelper.getModifier(gl));
 		}
 		// build the rest
-		xmod = ((xmod != null) ? xmod : "");
+		xmod = xmod != null ? xmod : "";
 		String mile = gl.getMilepoint();
 		String cty = null;
 		String ctyfull = null;
@@ -253,9 +223,7 @@ public class SiteDataHelper extends BaseHelper {
 
 	/** Trim a string, or convert it to an empty string if null */
 	static private String sanitize(String s) {
-		if (s == null)
-			return "";
-		return s.trim();
+		return (s != null) ? s.trim() : "";
 	}
 
 }
