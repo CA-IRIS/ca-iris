@@ -51,6 +51,7 @@ import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.VideoMonitor;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
@@ -118,13 +119,15 @@ public class CameraDispatcher extends JPanel {
 		public void proxyAdded(Camera proxy) {}
 		public void enumerationComplete() {}
 		public void proxyRemoved(Camera proxy) {}
-		public void proxyChanged(Camera proxy, String a) {
+		public void proxyChanged(final Camera proxy, final String a) {
 			if (proxy != selected)
 				return;
 			if ((a == null) || ("opStatus".equals(a))) {
 				final String stat = proxy.getOpStatus();
-				runSwing(new Runnable() {
+				runSwing(new IrisRunnable() {
 					public void run() {
+						customMessage = "proxyChanged, " + proxy.getTypeName() + ": "
+							+ proxy.getName() + ", attr=" + a;
 						updateOpStatus(stat);
 					}
 				});

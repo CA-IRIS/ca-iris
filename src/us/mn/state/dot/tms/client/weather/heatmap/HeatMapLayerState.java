@@ -25,6 +25,7 @@ import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.geo.SphericalMercatorPosition;
@@ -89,9 +90,11 @@ public class HeatMapLayerState extends LayerState {
 		}
 
 		@Override
-		public void proxyChanged(WeatherSensor proxy, String a) {
-			runSwing(new Runnable() {
+		public void proxyChanged(final WeatherSensor proxy, final String a) {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "weather sensor (heatmap layer state) proxyChanged, "
+						+ proxy.getTypeName() + ": " + proxy.getName() + ", attr=" + a;
 					refreshDataSet(current_style);
 					fireLayerChanged(LayerChange.status);
 				}

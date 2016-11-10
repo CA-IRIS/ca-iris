@@ -32,6 +32,7 @@ import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.R_Node;
 import us.mn.state.dot.tms.R_NodeHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
@@ -117,8 +118,9 @@ public class SegmentBuilder implements Iterable<Segment> {
 
 	/** Update the layer status */
 	public void updateStatus() {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "SegmentBuilder.updateStatus";
 				manager.getLayer().updateStatus();
 			}
 		});

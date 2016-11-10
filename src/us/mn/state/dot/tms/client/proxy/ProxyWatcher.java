@@ -100,7 +100,7 @@ public class ProxyWatcher<T extends SonarObject> {
 
 	/** Update attribute on view (on EDT) */
 	private void update(final T p, final String a) {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
 				view.update(p, a);
 			}
@@ -109,8 +109,9 @@ public class ProxyWatcher<T extends SonarObject> {
 
 	/** Clear the view (on EDT) */
 	private void clear() {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "proxyRemoved, " + proxy.getTypeName() + ": " + proxy.getName();
 				view.clear();
 			}
 		});

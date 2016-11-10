@@ -19,7 +19,7 @@ import javax.swing.SwingUtilities;
 import us.mn.state.dot.sched.ExceptionHandler;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.client.MainClient;
-import us.mn.state.dot.tms.client.proxy.SwingProxyAdapter;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 
 /**
  * SwingRunner is a simple utility class for running code on the Swing thread.
@@ -53,8 +53,8 @@ public final class SwingRunner {
 			finally {
 				long e = TimeSteward.currentTimeMillis() - st;
 				if (e > MAX_ELAPSED) {
-					if (r instanceof SwingProxyAdapter.IrisRunnable)
-						log(r.getClass().toString() + " " + ((SwingProxyAdapter.IrisRunnable) r).customMessage, e);
+					if (r instanceof IrisRunnable)
+						log(r.getClass().toString() + " " + ((IrisRunnable) r).customMessage, e);
 					else
 						log(r.getClass().toString(), e);
 				}

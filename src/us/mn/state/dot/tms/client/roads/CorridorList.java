@@ -37,6 +37,7 @@ import us.mn.state.dot.tms.client.EditModeListener;
 import us.mn.state.dot.tms.client.IrisClient;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.map.PointSelector;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
 import us.mn.state.dot.tms.client.widget.IAction;
@@ -269,13 +270,15 @@ public class CorridorList extends IPanel {
 	}
 
 	/** Called when an r_node attribute has changed */
-	private void nodeChanged(final R_Node n, String a) {
+	private void nodeChanged(final R_Node n, final String a) {
 		if (checkCorridor(n)) {
 			if (a.equals("abandoned"))
 				updateListModel();
 			else {
-				runSwing(new Runnable() {
+				runSwing(new IrisRunnable() {
 					public void run() {
+						customMessage = "CorridorList rnode changed, " + n.getTypeName() + ": "
+							+ n.getName() + ", attr=" + a;
 						node_mdl.updateItem(n);
 					}
 				});
