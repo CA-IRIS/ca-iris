@@ -102,6 +102,7 @@ public class ProxyWatcher<T extends SonarObject> {
 	private void update(final T p, final String a) {
 		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "ProxyWatcher.update, " + proxy.getTypeName() + ": " + proxy.getName() + ", attr=" + a;
 				view.update(p, a);
 			}
 		});
