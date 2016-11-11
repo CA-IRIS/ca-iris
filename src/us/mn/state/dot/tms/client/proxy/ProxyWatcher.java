@@ -111,7 +111,7 @@ public class ProxyWatcher<T extends SonarObject> {
 	private void clear() {
 		runSwing(new IrisRunnable() {
 			public void run() {
-				customMessage = "proxyRemoved, " + proxy.getTypeName() + ": " + proxy.getName();
+				customMessage = "ProxyWatcher.clear(), ";
 				view.clear();
 			}
 		});
