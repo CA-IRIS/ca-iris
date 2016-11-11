@@ -70,6 +70,9 @@ public class RwisRec {
 		catch (ParseException e) {
 			return null;
 		}
+		catch (NullPointerException ex) {
+			return null;
+		}
 	}
 
 	/** Parse temperature.
