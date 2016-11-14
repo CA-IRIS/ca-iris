@@ -39,7 +39,8 @@ public final class SwingRunner {
 
 	/** Log a message */
 	static private void log(String msg, long e) {
-		System.err.println("SwingRunner took " + e + " ms");
+		String ts = TimeSteward.currentDateTimeString(true);
+		System.err.println(ts + ": SwingRunner took " + e + " ms");
 		System.err.println("  from: " + msg);
 	}
 
