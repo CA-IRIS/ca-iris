@@ -24,6 +24,7 @@ import java.util.Map;
  * SiteDataHelper has static methods for dealing with SiteData entities.
  * @author Travis Swanston
  * @author Dan Rossiter
+ * @author Jacob Barde
  */
 public class SiteDataHelper extends BaseHelper {
 
@@ -60,7 +61,7 @@ public class SiteDataHelper extends BaseHelper {
 		}
 		// return format from system attributes if present
 		String lf = SystemAttrEnum.LOCATION_FORMAT.getString();
-		if (!("".equals(sanitize(lf))))
+		if (!"".equals(sanitize(lf)))
 			return lf.trim();
 		// return default
 		return DESCFMT_DEFAULT;
@@ -77,41 +78,49 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/** Lookup a SiteData entity */
-	static public SiteData lookup(String n) {
-		if (n == null)
+	static public SiteData lookup(String name) {
+		if (name == null)
 			return null;
-		return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE, n);
+		return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE, name);
 	}
 
 	/** Lookup a SiteData entity */
-	static public SiteData lookupBySiteName(String sn) {
-		if (sn == null)
+	static public SiteData lookupBySiteName(String site_name) {
+		if (site_name == null)
 			return null;
-		String gl;
-		String n = null;
-		synchronized (hashLock) {
-			gl = siteName2geoLoc.get(sn);
-			if (gl != null)
-				n = geoLocToSD_name.get(gl);
-		}
-		if (n != null)
-			return (SiteData) namespace.lookupObject(SiteData.SONAR_TYPE, n);
 
-		SiteData sd = null;
-		Iterator<SiteData> it = iterator();
-		while(it.hasNext()) {
-			SiteData tmp = it.next();
-			if(sn.equals(tmp.getSiteName())) {
-				sd = tmp;
-				synchronized (hashLock) {
-					geoLocToSD_name.put(sd.getGeoLoc(), sd.getName());
-					geoLocToSD_site_name.put(sd.getGeoLoc(), sd.getSiteName());
-					siteName2geoLoc.put(sd.getSiteName(), sd.getGeoLoc());
+		String geoloc_name;
+		String name = getCachedNameBySiteName(site_name);
+		SiteData sd = validateCached(name, null, site_name);
+
+		if (sd == null) {
+			geoloc_name = null;
+			name = null;
+			Iterator<SiteData> it = iterator();
+			while(it.hasNext()) {
+				SiteData tmp = it.next();
+				if(site_name.equals(tmp.getSiteName())) {
+					sd = tmp;
+					geoloc_name = sd.getGeoLoc();
+					name = sd.getName();
+					break;
 				}
-				break;
 			}
+
+			populateCache(geoloc_name, name, site_name);
 		}
+
 		return sd;
+	}
+
+	/** get the cache name for a site-name */
+	static private String getCachedNameBySiteName(String site_name) {
+		synchronized (hashLock) {
+			String geoloc_name = siteName2geoLoc.get(site_name);
+			if (geoloc_name != null)
+				return geoLocToSD_name.get(geoloc_name);
+		}
+		return null;
 	}
 
 	/** Lookup a SiteData entity by GeoLoc */
@@ -120,22 +129,16 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/** Lookup a site data. if it is not in the cache, query sonar for it. */
-	static private SiteData lookupByGeoLoc(String gn) {
-		SiteData sd = null;
-
-		if (gn == null)
+	static private SiteData lookupByGeoLoc(String geoloc_name) {
+		if (geoloc_name == null)
 			return null;
 
-		System.out.println("lookupByGeoLoc('" + gn + "')");
+		System.out.println("lookupByGeoLoc('" + geoloc_name + "')");
 
 		// try to find cached value first
-		String name = null;
-		String site_name = null;
-		synchronized (hashLock) {
-			name = geoLocToSD_name.get(gn);
-		}
-
-		sd = validateCached(gn, name);
+		String site_name;
+		String name = getCachedNameByGeoLoc(geoloc_name);
+		SiteData sd = validateCached(name, geoloc_name, null);
 
 		// perform the expensive operation (and cache the result)
 		if (sd == null) {
@@ -144,7 +147,7 @@ public class SiteDataHelper extends BaseHelper {
 			site_name = null;
 			while (it.hasNext()) {
 				SiteData tmp = it.next();
-				if (gn.equals(tmp.getGeoLoc())) {
+				if (geoloc_name.equals(tmp.getGeoLoc())) {
 					sd = tmp;
 					name = sd.getName();
 					site_name = sd.getSiteName();
@@ -152,44 +155,73 @@ public class SiteDataHelper extends BaseHelper {
 				}
 			}
 
-			synchronized (hashLock) {
-				System.out.println("++ geoLocToSD_name.putting '" + gn + "' => '" + (name==null?"<<null>>":name) + "'");
-				geoLocToSD_name.put(gn, name);
-				System.out.println("   geoLocToSD_name.size=" + geoLocToSD_name.size());
-				System.out.println("++ geoLocToSD_site_name.putting '" + gn + "' => '" + (site_name==null?"<<null>>":site_name) + "'");
-				geoLocToSD_site_name.put(gn, site_name);
-				System.out.println("   geoLocToSD_site_name.size=" + geoLocToSD_site_name.size());
-				if (null != site_name) {
-					System.out.println("++ siteName2geoLoc.putting '" + site_name + "' => '" + gn + "'");
-					siteName2geoLoc.put(sd.getSiteName(), gn);
-					System.out.println("  siteName2geoLoc.size=" + siteName2geoLoc.size());
-				}
-			}
+			populateCache(geoloc_name, name, site_name);
 		}
 
 		return sd;
 	}
 
+	/** get the name by geoloc name */
+	static private String getCachedNameByGeoLoc(String geoloc_name) {
+		synchronized (hashLock) {
+			return geoLocToSD_name.get(geoloc_name);
+		}
+	}
+
+	/** populate the cache with the values */
+	static private void populateCache(String geoloc_name, String name, String site_name) {
+		synchronized (hashLock) {
+			System.out.println("++ geoLocToSD_name.putting '" + geoloc_name + "' => '" + (name==null?"<<null>>":name) + "'");
+			geoLocToSD_name.put(geoloc_name, name);
+			System.out.println("   geoLocToSD_name.size=" + geoLocToSD_name.size());
+
+			System.out.println("++ geoLocToSD_site_name.putting '" + geoloc_name + "' => '" + (site_name==null?"<<null>>":site_name) + "'");
+			geoLocToSD_site_name.put(geoloc_name, site_name);
+			System.out.println("   geoLocToSD_site_name.size=" + geoLocToSD_site_name.size());
+
+			if (null != site_name) {
+				System.out.println("++ siteName2geoLoc.putting '" + site_name + "' => '" + geoloc_name + "'");
+				siteName2geoLoc.put(site_name, geoloc_name);
+				System.out.println("  siteName2geoLoc.size=" + siteName2geoLoc.size());
+			}
+		}
+
+	}
 	/**
 	 * validate a cached value set
 	 *
-	 * @param gn    name of GeoLoc
-	 * @param name  name of SiteData
-	 * @return      corresponding valid SiteData object or null if invalid
+	 * @param name          SiteData name string (required)
+	 * @param geoloc_name   SiteData geoloc string
+	 * @param site_name     SiteData site-name string
+	 * @return              corresponding valid SiteData object or null if invalid
 	 */
-	static private SiteData validateCached(String gn, String name) {
+	static private SiteData validateCached(String name, String geoloc_name, String site_name) {
+		if (name == null || (geoloc_name == null && site_name == null))
+			return null;
 
-		SiteData sd = null;
-		String site_name = null;
+		String sn = null;
+		String gn = null;
+
 		// verify hasn't changed since cached value was added
-		if (name != null) {
-			sd = lookup(name);
-			if (sd == null || !gn.equals(sd.getGeoLoc())) {
+		SiteData sd = lookup(name);
+		if (geoloc_name != null) {
+			if (sd == null || !geoloc_name.equals(sd.getGeoLoc())) {
 				synchronized (hashLock) {
-					geoLocToSD_name.remove(gn);
-					site_name = geoLocToSD_site_name.remove(gn);
-					if (site_name != null)
-						siteName2geoLoc.remove(site_name);
+					geoLocToSD_name.remove(geoloc_name);
+					sn = geoLocToSD_site_name.remove(geoloc_name);
+					if (sn != null)
+						siteName2geoLoc.remove(sn);
+				}
+				sd = null;
+			}
+		} else if (site_name != null) {
+			if (sd == null || !site_name.equals(sd.getSiteName())) {
+				synchronized (hashLock) {
+					gn = siteName2geoLoc.remove(site_name);
+					if (gn != null) {
+						geoLocToSD_name.remove(gn);
+						geoLocToSD_site_name.remove(gn);
+					}
 				}
 				sd = null;
 			}
@@ -199,26 +231,31 @@ public class SiteDataHelper extends BaseHelper {
 
 	/**
 	 * Build a site name string for a SiteData entity.
-	 * @param gn The GeoLoc name corresponding to the SiteData entity.
+	 * @param geoloc_name The GeoLoc name corresponding to the SiteData entity.
 	 *
 	 * @return A site name string, or null if entity not found or if entity doesn't contain a site name
 	 */
-	static public String getSiteName(String gn) {
-		if (gn == null)
+	static public String getSiteName(String geoloc_name) {
+		if (geoloc_name == null)
 			return null;
 
-		String sn;
-		// TODO: need to validate via validateCached
+		SiteData sd = null;
+		String site_name = null;
 		boolean exists;
 		synchronized (hashLock) {
-			exists = geoLocToSD_site_name.containsKey(gn);
-			sn = geoLocToSD_site_name.get(gn);
+			exists = geoLocToSD_site_name.containsKey(geoloc_name);
+			site_name = geoLocToSD_site_name.get(geoloc_name);
 		}
-		if (sn == null && !exists) {
-			SiteData sd = lookupByGeoLoc(gn);
-			sn = sd != null ? sd.getSiteName() : null;
+
+		// TODO: need to validate via validateCached
+//		String name = getCachedNameByGeoLoc(geoloc_name);
+//		sd = validateCached(name, geoloc_name, null);
+//		if (sd == null) {
+		if (site_name == null && !exists) {
+			sd = lookupByGeoLoc(geoloc_name);
+			site_name = sd != null ? sd.getSiteName() : null;
 		}
-		return !sanitize(sn).equals("") ? sn : null;
+		return !"".equals(sanitize(site_name)) ? site_name : null;
 	}
 
 	/**
@@ -231,7 +268,7 @@ public class SiteDataHelper extends BaseHelper {
 		SiteData sd = lookupBySiteName(sn);
 		String gl = sd != null ? sd.getGeoLoc() : null;
 
-		return !sanitize(gl).equals("") ? gl : null;
+		return !"".equals(sanitize(gl)) ? gl : null;
 	}
 
 	/** Build a string to describe a GeoLoc */
