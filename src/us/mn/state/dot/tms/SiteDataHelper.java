@@ -45,7 +45,8 @@ public class SiteDataHelper extends BaseHelper {
 
 	static public final String DESCFMT_DEFAULT = "[RDFULL] [RDDIR] [XMOD] [XRDFULL] [XRDDIR]";
 
-	private final static Map<String, String> geoLocToSite = new HashMap<>();
+	private final static Map<String, String> geoLocToSiteData = new HashMap<>();
+	private final static Map<String, String> geoLocToSiteName = new HashMap<>();
 
 	static private String getFormatString(GeoLoc gl) {
 		// return format from SiteData if present
@@ -86,24 +87,27 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/** Lookup a site data. if it is not in the cache, query sonar for it. */
-	static public SiteData lookupByGeoLoc(String gn) {
+	static private SiteData lookupByGeoLoc(String gn) {
 		SiteData sd = null;
 
 		if (gn == null)
 			return null;
 
 		// try to find cached value first
-		String sn;
-		synchronized (geoLocToSite) {
-			sn = geoLocToSite.get(gn);
+		String name;
+		synchronized (geoLocToSiteData) {
+			name = geoLocToSiteData.get(gn);
 		}
 
 		// verify hasn't changed since cached value was added
-		if (sn != null) {
-			sd = lookup(sn);
+		if (name != null) {
+			sd = lookup(name);
 			if (sd == null || !gn.equals(sd.getGeoLoc())) {
-				synchronized (geoLocToSite) {
-					geoLocToSite.remove(gn);
+				synchronized (geoLocToSiteData) {
+					geoLocToSiteData.remove(gn);
+				}
+				synchronized (geoLocToSiteName) {
+					geoLocToSiteName.remove(gn);
 				}
 				sd = null;
 			}
@@ -116,8 +120,11 @@ public class SiteDataHelper extends BaseHelper {
 				SiteData tmp = it.next();
 				if (gn.equals(tmp.getGeoLoc())) {
 					sd = tmp;
-					synchronized (geoLocToSite) {
-						geoLocToSite.put(gn, sd.getName());
+					synchronized (geoLocToSiteData) {
+						geoLocToSiteData.put(gn, sd.getName());
+					}
+					synchronized (geoLocToSiteName) {
+						geoLocToSiteName.put(gn, sd.getSiteName());
 					}
 					break;
 				}
@@ -134,9 +141,14 @@ public class SiteDataHelper extends BaseHelper {
 	 * @return A site name string, or null if entity not found or if entity doesn't contain a site name
 	 */
 	static public String getSiteName(String gn) {
-		SiteData sd = lookupByGeoLoc(gn);
-		String sn = sd != null ? sd.getSiteName() : null;
-
+		String sn;
+		synchronized (geoLocToSiteName) {
+			sn = geoLocToSiteName.get(gn);
+		}
+		if (sn == null) {
+			SiteData sd = lookupByGeoLoc(gn);
+			sn = sd != null ? sd.getSiteName() : null;
+		}
 		return !sanitize(sn).equals("") ? sn : null;
 	}
 
