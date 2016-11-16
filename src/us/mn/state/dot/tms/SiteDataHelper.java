@@ -45,8 +45,9 @@ public class SiteDataHelper extends BaseHelper {
 
 	static public final String DESCFMT_DEFAULT = "[RDFULL] [RDDIR] [XMOD] [XRDFULL] [XRDDIR]";
 
-	private final static Map<String, String> geoLocToSiteData = new HashMap<>();
-	private final static Map<String, String> geoLocToSiteName = new HashMap<>();
+	private final static Map<String, String> geoLocToSD_name = new HashMap<>();
+	private final static Map<String, String> geoLocToSD_site_name = new HashMap<>();
+	private final static Map<String, String> siteName2geoLoc = new HashMap<>();
 
 	static private String getFormatString(GeoLoc gl) {
 		// return format from SiteData if present
@@ -94,20 +95,24 @@ public class SiteDataHelper extends BaseHelper {
 			return null;
 
 		// try to find cached value first
+		String site_name;
 		String name;
-		synchronized (geoLocToSiteData) {
-			name = geoLocToSiteData.get(gn);
+		synchronized (geoLocToSD_name) {
+			name = geoLocToSD_name.get(gn);
 		}
 
 		// verify hasn't changed since cached value was added
 		if (name != null) {
 			sd = lookup(name);
 			if (sd == null || !gn.equals(sd.getGeoLoc())) {
-				synchronized (geoLocToSiteData) {
-					geoLocToSiteData.remove(gn);
+				synchronized (geoLocToSD_name) {
+					geoLocToSD_name.remove(gn);
 				}
-				synchronized (geoLocToSiteName) {
-					geoLocToSiteName.remove(gn);
+				synchronized (geoLocToSD_site_name) {
+					site_name = geoLocToSD_site_name.remove(gn);
+				}
+				synchronized (siteName2geoLoc) {
+					siteName2geoLoc.remove(site_name);
 				}
 				sd = null;
 			}
@@ -120,11 +125,11 @@ public class SiteDataHelper extends BaseHelper {
 				SiteData tmp = it.next();
 				if (gn.equals(tmp.getGeoLoc())) {
 					sd = tmp;
-					synchronized (geoLocToSiteData) {
-						geoLocToSiteData.put(gn, sd.getName());
+					synchronized (geoLocToSD_name) {
+						geoLocToSD_name.put(gn, sd.getName());
 					}
-					synchronized (geoLocToSiteName) {
-						geoLocToSiteName.put(gn, sd.getSiteName());
+					synchronized (geoLocToSD_site_name) {
+						geoLocToSD_site_name.put(gn, sanitize(sd.getSiteName()));
 					}
 					break;
 				}
@@ -141,9 +146,12 @@ public class SiteDataHelper extends BaseHelper {
 	 * @return A site name string, or null if entity not found or if entity doesn't contain a site name
 	 */
 	static public String getSiteName(String gn) {
+		if (gn == null)
+			return null;
+
 		String sn;
-		synchronized (geoLocToSiteName) {
-			sn = geoLocToSiteName.get(gn);
+		synchronized (geoLocToSD_site_name) {
+			sn = geoLocToSD_site_name.get(gn);
 		}
 		if (sn == null) {
 			SiteData sd = lookupByGeoLoc(gn);
