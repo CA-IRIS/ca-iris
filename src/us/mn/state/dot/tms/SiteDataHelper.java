@@ -131,28 +131,11 @@ public class SiteDataHelper extends BaseHelper {
 		// try to find cached value first
 		String name = null;
 		String site_name = null;
-		String v;
 		synchronized (hashLock) {
 			name = geoLocToSD_name.get(gn);
-			System.out.println("  geoLocToSD_name='" + (!geoLocToSD_name.containsKey(gn) ? "<<null>>" : name) + "'");
 		}
 
-		// verify hasn't changed since cached value was added
-		if (name != null) {
-			sd = lookup(name);
-			if (sd == null || !gn.equals(sd.getGeoLoc())) {
-				System.out.println("   !gn.equals(sd.getGeoLoc())=" + !gn.equals(sd.getGeoLoc()));
-				synchronized (hashLock) {
-					v = geoLocToSD_name.remove(gn);
-					System.out.println("  geoLocToSD_name.removing '" + gn + "' => '" + (v==null?"<<null>>":v) + "'");
-					site_name = geoLocToSD_site_name.remove(gn);
-					System.out.println("  geoLocToSD_site_name.removing '" + gn + "' => '" + (site_name==null?"<<null>>":site_name) + "'");
-					v = siteName2geoLoc.remove(site_name);
-					System.out.println("  siteName2geoLoc.removing '" + site_name + "' => '" + (v==null?"<<null>>":v) + "'");
-				}
-				sd = null;
-			}
-		}
+		sd = validateCached(gn, name);
 
 		// perform the expensive operation (and cache the result)
 		if (sd == null) {
@@ -168,7 +151,6 @@ public class SiteDataHelper extends BaseHelper {
 					break;
 				}
 			}
-			boolean isnull = sd==null;
 
 			synchronized (hashLock) {
 				System.out.println("++ geoLocToSD_name.putting '" + gn + "' => '" + (name==null?"<<null>>":name) + "'");
@@ -189,6 +171,33 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/**
+	 * validate a cached value set
+	 *
+	 * @param gn    name of GeoLoc
+	 * @param name  name of SiteData
+	 * @return      corresponding valid SiteData object or null if invalid
+	 */
+	static private SiteData validateCached(String gn, String name) {
+
+		SiteData sd = null;
+		String site_name = null;
+		// verify hasn't changed since cached value was added
+		if (name != null) {
+			sd = lookup(name);
+			if (sd == null || !gn.equals(sd.getGeoLoc())) {
+				synchronized (hashLock) {
+					geoLocToSD_name.remove(gn);
+					site_name = geoLocToSD_site_name.remove(gn);
+					if (site_name != null)
+						siteName2geoLoc.remove(site_name);
+				}
+				sd = null;
+			}
+		}
+		return sd;
+	}
+
+	/**
 	 * Build a site name string for a SiteData entity.
 	 * @param gn The GeoLoc name corresponding to the SiteData entity.
 	 *
@@ -199,6 +208,7 @@ public class SiteDataHelper extends BaseHelper {
 			return null;
 
 		String sn;
+		// TODO: need to validate via validateCached
 		boolean exists;
 		synchronized (hashLock) {
 			exists = geoLocToSD_site_name.containsKey(gn);
