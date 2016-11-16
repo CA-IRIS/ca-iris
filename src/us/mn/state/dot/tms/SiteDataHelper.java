@@ -91,7 +91,7 @@ public class SiteDataHelper extends BaseHelper {
 		String n = null;
 		synchronized (hashLock) {
 			gl = siteName2geoLoc.get(sn);
-			if (gl == null)
+			if (gl != null)
 				n = geoLocToSD_name.get(gl);
 		}
 		if (n != null)
