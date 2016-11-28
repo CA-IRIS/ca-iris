@@ -34,8 +34,8 @@ import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.IrisUserHelper;
 import us.mn.state.dot.tms.RasterGraphic;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.proxy.CellRendererSize;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
@@ -198,7 +198,7 @@ public class DmsCellRenderer extends JPanel implements ListCellRenderer<DMS> {
 	/** Set the DMS to render */
 	private void setDMS(DMS dms) {
 		String name = dms.getName();
-		String sn = SiteDataHelper.getSiteName(name);
+		String sn = SiteDataHelperClient.getSiteName(name);
 		if (sn != null)
 			name = sn;
 		name_lbl.setText(name);

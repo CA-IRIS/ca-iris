@@ -449,6 +449,7 @@ public class SonarState extends Client {
 	{
 		super(props, h);
 		handler = h;
+		site_data.addProxyListener(SiteDataHelperClient.sdListener);
 		road_model = new ProxyListModel<>(roads);
 		road_model.initialize();
 		toll_zone_model = new ProxyListModel<>(toll_zones);

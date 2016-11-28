@@ -20,11 +20,10 @@ import java.util.regex.Pattern;
 import us.mn.state.dot.sonar.SonarObject;
 import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.WeatherSensor;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.utils.NaturalOrderComparator;
-import us.mn.state.dot.tms.utils.NumericAlphaComparator;
 
 /**
  * Comparator for SONAR proxy objects.
@@ -113,7 +112,7 @@ public class ProxyComparator<T extends SonarObject> implements Comparator<T> {
 	 */
 	private String getProxyString(SonarObject a) {
 		String proxyName = a.getName();
-		String siteName = SiteDataHelper.getSiteName(proxyName);
+		String siteName = SiteDataHelperClient.getSiteName(proxyName);
 		if (siteName != null)
 			return siteName;
 		return proxyName;
