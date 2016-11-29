@@ -24,6 +24,8 @@ import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.SignText;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.SonarState;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
+
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
@@ -124,8 +126,9 @@ public class SignTextModel {
 		//       swing thread, because getLastLine is called
 		//       before the Runnables get a chance to run.
 		last_line = (short)Math.max(last_line, st.getLine());
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "doAddSignText";
 				addSignText(st);
 			}
 		});
@@ -138,8 +141,9 @@ public class SignTextModel {
 
 	/** Remove a SignText from the model */
 	private void doRemoveSignText(final SignText st) {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "doRemoveSignText";
 				removeSignText(st);
 			}
 		});
@@ -152,8 +156,9 @@ public class SignTextModel {
 
 	/** Change a SignText in the model */
 	private void doChangeSignText(final SignText st) {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "doChangeSignText";
 				changeSignText(st);
 			}
 		});

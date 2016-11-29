@@ -31,6 +31,7 @@ import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.MapAction;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
@@ -220,8 +221,10 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 			public void proxyChanged(final WeatherSensor proxy,
 				final String a) {
-				runSwing(new Runnable() {
+				runSwing(new IrisRunnable() {
 					public void run() {
+						customMessage = "weather sensor proxyChanged, "
+							+ proxy.getTypeName() + ": " + proxy.getName() + ", attr=" + a;
 						proxyChangedSwing(proxy, a);
 					}
 				});
