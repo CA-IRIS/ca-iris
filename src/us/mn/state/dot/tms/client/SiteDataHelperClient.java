@@ -45,7 +45,6 @@ public class SiteDataHelperClient extends SiteDataHelper {
 	static final public ProxyListener<SiteData> sdListener = new ProxyListener<SiteData>() {
 		@Override
 		public void proxyAdded(final SiteData proxy) {
-			System.out.println("sdListener('" + proxy.getName() + "')");
 			populateCache(proxy.getGeoLoc(), proxy.getName(), proxy.getSiteName());
 		}
 
@@ -56,13 +55,11 @@ public class SiteDataHelperClient extends SiteDataHelper {
 
 		@Override
 		public void proxyRemoved(final SiteData proxy) {
-			System.out.println("sdListener('" + proxy.getName() + "')");
 			depopulateCache(proxy.getGeoLoc(), proxy.getName(), proxy.getSiteName());
 		}
 
 		@Override
 		public void proxyChanged(final SiteData proxy, final String a) {
-			System.out.println("sdListener('" + proxy.getName() + "')");
 			populateCache(proxy.getGeoLoc(), proxy.getName(), proxy.getSiteName());
 		}
 	};
@@ -73,7 +70,6 @@ public class SiteDataHelperClient extends SiteDataHelper {
 		public void proxyAdded(final GeoLoc proxy) {
 			SiteData sd = lookupByGeoLoc(proxy);
 			if (null == sd) {
-				System.out.println("glListener('" + proxy.getName() + "')");
 				populateCache(proxy.getName(), null, null);
 			}
 		}
@@ -85,7 +81,6 @@ public class SiteDataHelperClient extends SiteDataHelper {
 
 		@Override
 		public void proxyRemoved(final GeoLoc proxy) {
-			System.out.println("glListener('" + proxy.getName() + "')");
 			SiteData sd = lookupByGeoLoc(proxy.getName());
 			sd.destroy();
 		}
@@ -134,8 +129,8 @@ public class SiteDataHelperClient extends SiteDataHelper {
 
 	/** get the name by geoloc name */
 	static private String getCachedNameByGeoLoc(String geoloc_name) {
-		System.out.println("getCachedNameByGeoLoc('" + geoloc_name + "')");
-
+		if (null == geoloc_name)
+			return null;
 		synchronized (hashLock) {
 			return geoLocToSD_name.get(geoloc_name);
 		}
@@ -145,21 +140,11 @@ public class SiteDataHelperClient extends SiteDataHelper {
 	static private void populateCache(String geoloc_name, String name, String site_name) {
 		synchronized (hashLock) {
 			if (null != geoloc_name && !"".equals(geoloc_name.trim())) {
-				System.out.println(
-					"++ geoLocToSD_name.putting '" + geoloc_name + "' => '" + (name == null
-						? "<<null>>" : name) + "'");
 				geoLocToSD_name.put(geoloc_name, name);
-				System.out.println("   geoLocToSD_name.size=" + geoLocToSD_name.size());
-
-				System.out.println("++ geoLocToSD_site_name.putting '" + geoloc_name + "' => '" + (
-					site_name == null ? "<<null>>" : site_name) + "'");
 				geoLocToSD_site_name.put(geoloc_name, site_name);
-				System.out.println("   geoLocToSD_site_name.size=" + geoLocToSD_site_name.size());
 			}
 			if (null != site_name && !"".equals(site_name.trim())) {
-				System.out.println("++ siteName2geoLoc.putting '" + site_name + "' => '" + geoloc_name + "'");
 				siteName2geoLoc.put(site_name, geoloc_name);
-				System.out.println("   siteName2geoLoc.size=" + siteName2geoLoc.size());
 			}
 		}
 
@@ -169,27 +154,18 @@ public class SiteDataHelperClient extends SiteDataHelper {
 	static private void depopulateCache(String geoloc_name, String name, String site_name) {
 		synchronized (hashLock) {
 			if (null != geoloc_name && !"".equals(geoloc_name.trim())) {
-				System.out.println("-- geoLocToSD_name.removing '" + geoloc_name + "' => '" + (name == null?"<<null>>":name) + "'");
 				geoLocToSD_name.remove(geoloc_name);
-				System.out.println("   geoLocToSD_name.size=" + geoLocToSD_name.size());
-
-				System.out.println("-- geoLocToSD_site_name.removing '" + geoloc_name + "' => '" + (site_name==null?"<<null>>":site_name) + "'");
 				geoLocToSD_site_name.remove(geoloc_name);
-				System.out.println("   geoLocToSD_site_name.size=" + geoLocToSD_site_name.size());
 			}
 
 			if (null != site_name && !"".equals(site_name.trim())) {
-				System.out.println("-- siteName2geoLoc.removing '" + site_name + "' => '" + geoloc_name + "'");
 				siteName2geoLoc.remove(site_name);
-				System.out.println("   siteName2geoLoc.size=" + siteName2geoLoc.size());
 			}
 		}
 		if ((null == site_name || "".equals(site_name)) && null != geoloc_name) {
 			for (String s : siteName2geoLoc.keySet()) {
 				if (geoloc_name.equals(siteName2geoLoc.get(s))) {
-					System.out.println("-- siteName2geoLoc.removing keys with geoloc_name values '<<unknown>>' => '" + geoloc_name + "'");
 					synchronized (hashLock) { siteName2geoLoc.remove(s); }
-					System.out.println("   siteName2geoLoc.size=" + siteName2geoLoc.size());
 					break;
 				}
 			}
