@@ -17,9 +17,9 @@ package us.mn.state.dot.tms.client.weather;
 
 import java.util.ArrayList;
 import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
 
@@ -39,7 +39,7 @@ public class WeatherSensorModel extends ProxyTableModel<WeatherSensor> {
 		cols.add(new ProxyColumn<WeatherSensor>("weather_sensor", 120) {
 			public Object getValueAt(WeatherSensor ws) {
 				String pn = ws.getName();
-				String sn = SiteDataHelper.getSiteName(pn);
+				String sn = SiteDataHelperClient.getSiteName(pn);
 				return ( (sn != null) ? sn : pn );
 			}
 		});

@@ -33,10 +33,10 @@ import us.mn.state.dot.tms.Direction;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
@@ -384,7 +384,7 @@ public class CameraManager extends ProxyManager<Camera> {
 	@Override
 	public String getDescription(Camera c) {
 		String pn = c.getName();
-		String sn = SiteDataHelper.getSiteName(pn);
+		String sn = SiteDataHelperClient.getSiteName(pn);
 		String geoDesc = GeoLocHelper.getDescription(getGeoLoc(c));
 		String ret = ((sn != null) ? sn : pn);
 		if (SystemAttrEnum.CAMERA_MANAGER_SHOW_LOCATION.getBoolean())
