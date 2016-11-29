@@ -449,7 +449,6 @@ public class SonarState extends Client {
 	{
 		super(props, h);
 		handler = h;
-		site_data.addProxyListener(SiteDataHelperClient.sdListener);
 		road_model = new ProxyListModel<>(roads);
 		road_model.initialize();
 		toll_zone_model = new ProxyListModel<>(toll_zones);
@@ -472,6 +471,8 @@ public class SonarState extends Client {
 		beacon_model.initialize();
 		// FIXME: this is an ugly hack
 		BaseHelper.namespace = getNamespace();
+		// CA-only
+		initializeSiteDataListeners();
 	}
 
 	/** Logged-in user name */
@@ -580,5 +581,20 @@ public class SonarState extends Client {
 	/** Lookup the current connection */
 	public Connection lookupConnection() {
 		return lookupConnection(getConnection());
+	}
+
+	/** populate sitedata listeners */
+	private void initializeSiteDataListeners() {
+		site_data.addProxyListener(SiteDataHelperClient.sdListener);
+		geo_locs.addProxyListener(SiteDataHelperClient.glListener);
+	}
+
+	/** Disconnect the client conduit */
+	@Override
+	public void disconnect() {
+		geo_locs.removeProxyListener(SiteDataHelperClient.glListener);
+		site_data.removeProxyListener(SiteDataHelperClient.sdListener);
+		SiteDataHelperClient.clearCache();
+		super.disconnect();
 	}
 }
