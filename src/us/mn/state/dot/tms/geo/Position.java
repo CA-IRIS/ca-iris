@@ -76,6 +76,6 @@ public class Position {
 
 	@Override
 	public String toString() {
-		return String.format("%+.4f\u00B0 lat. %+.4f\u00B0 long.", latitude, longitude);
+		return String.format("%+.4f lat. %+.4f long.", latitude, longitude);
 	}
 }
