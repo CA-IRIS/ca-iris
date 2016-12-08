@@ -383,7 +383,7 @@ public class CameraShiftJob extends Job {
 			.append(CAMERA_SHIFT_MOVE_PAUSE.name().toLowerCase())
 			.append(": ... ").append(getShiftPause());
 		if (getShiftPause() > 180)
-			sb.append("   <=== LARGE values may cause issues with camera-shift jobs.");
+			sb.append("   <=== LARGE values, particularly when combined with a large number of cameras, may cause time-related issues with camera-shift jobs.");
 		log.log(sb.toString());
 		sb = new StringBuilder()
 			.append("    ")
