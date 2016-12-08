@@ -95,6 +95,7 @@ public class CameraShiftJob extends Job {
 	static final private String LOG_SCHEDULED_SHIFT = "Successfully scheduled next camera-shift job.";
 	static final private String ERROR_COMPUTE_SHIFT = "ERROR: Unable to compute and schedule next camera-shift job.";
 	static final private String NOTICE_MT_HOUR = "NOTICE: Camera Shift Job is taking more than an hour.";
+	static final private String WARN_CAMERA_IN_USE = "WARNING: Not moving camera, as it is in use: ";
 	static final private String WARN_NO_CAMERAS = new StringBuilder("WARNING: no cameras found with requisite '").append(HOME.alias).append("' and '").append(NIGHT_SHIFT.alias).append("' presets enabled.").toString();
 	static final private String WARN_TERMINATING = new StringBuilder("WARNING: Terminating job, as it has taken more than ").append(MAX_RUNTIME).append(" hours.").toString();
 
@@ -174,6 +175,8 @@ public class CameraShiftJob extends Job {
 	/** perform job */
 	@Override
 	public void perform() throws Exception {
+		if (!forceMovement && !isIrisServerStart)
+			log.log("");
 		log.log(LOG_JOB_BEGIN);
 
 		logSettings();
@@ -247,7 +250,7 @@ public class CameraShiftJob extends Job {
 
 				if (inuse.containsKey(c.getName())) {
 					camMoved.put(c, true);
-					log.log("WARNING: Not moving camera " + c.getName() + ", as it is in use.");
+					log.log(WARN_CAMERA_IN_USE + c.getName());
 					continue;
 				}
 
