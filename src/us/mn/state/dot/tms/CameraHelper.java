@@ -35,6 +35,7 @@ import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.PresetAliasName.NIGHT_SHIFT;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_CONCUR_MOVE;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_MOVE_PAUSE;
+import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_REINIT;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_SUNRISE_OFFSET;
 import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_SUNSET_OFFSET;
 
@@ -168,6 +169,13 @@ public class CameraHelper extends BaseHelper {
 		return GPSutil.getGeographicCenter(pl);
 	}
 
+	/** get the shift reinit system attribute */
+	static public boolean isShiftReinit() {
+		boolean rv = false;
+		if (null != CAMERA_SHIFT_REINIT)
+			rv = CAMERA_SHIFT_REINIT.getBoolean();
+		return rv;
+	}
 	/** get the shift pause system attribute */
 	static public int getShiftPause() {
 		int delay = 0;
