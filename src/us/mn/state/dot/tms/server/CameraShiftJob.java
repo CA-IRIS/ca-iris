@@ -377,16 +377,13 @@ public class CameraShiftJob extends Job {
 			.append("    ")
 			.append(CAMERA_SHIFT_REINIT.name().toLowerCase())
 			.append(": ....... ").append(isShiftReinit());
-		if (ignoreStartup)
-			sb.append("   <=== value DISABLES camera-shift job");
 		log.log(sb.toString());
 		sb = new StringBuilder()
 			.append("    ")
 			.append(CAMERA_SHIFT_MOVE_PAUSE.name().toLowerCase())
 			.append(": ... ").append(getShiftPause());
 		if (getShiftPause() > 180)
-			sb.append("   <=== LARGE values may cause issues with")
-				.append(" camera-shift jobs.");
+			sb.append("   <=== LARGE values may cause issues with camera-shift jobs.");
 		log.log(sb.toString());
 		sb = new StringBuilder()
 			.append("    ")
