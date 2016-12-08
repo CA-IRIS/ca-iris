@@ -39,20 +39,16 @@ import static us.mn.state.dot.tms.client.weather.WeatherSensorTheme.MCOLOR;
 public class WeatherMeasurementDataSet {
 
 	/** opacity for colors */
-	public static final int OPACITY = (int) (
-		RWIS_OPACITY_PERCENTAGE.getInt() * (0xFF / 100));
+	public static final int OPACITY = (int) (RWIS_OPACITY_PERCENTAGE.getInt() * (0xFF / 100));
 
 	/** low-threshold color, with opacity applied */
-	public static final Color LOCOLOR = new Color(LCOLOR.getRed(),
-		LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
+	public static final Color LOCOLOR = new Color(LCOLOR.getRed(), LCOLOR.getGreen(), LCOLOR.getBlue(), OPACITY);
 
 	/** medium-threshold color, with opacity applied */
-	public static final Color MOCOLOR = new Color(MCOLOR.getRed(),
-		MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
+	public static final Color MOCOLOR = new Color(MCOLOR.getRed(), MCOLOR.getGreen(), MCOLOR.getBlue(), OPACITY);
 
 	/** high-threshold color, with opacity applied */
-	public static final Color HOCOLOR = new Color(HCOLOR.getRed(),
-		HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
+	public static final Color HOCOLOR = new Color(HCOLOR.getRed(), HCOLOR.getGreen(), HCOLOR.getBlue(), OPACITY);
 
 	/** measurement type of the dataset */
 	private ItemStyle measurementType = ItemStyle.WIND_SPEED;
@@ -74,12 +70,9 @@ public class WeatherMeasurementDataSet {
 
 	/** initialize the internal data set */
 	public void init() {
-		color_data.put(LOCOLOR,
-			new ArrayList<WeatherMeasurementSample>());
-		color_data.put(MOCOLOR,
-			new ArrayList<WeatherMeasurementSample>());
-		color_data.put(HOCOLOR,
-			new ArrayList<WeatherMeasurementSample>());
+		color_data.put(LOCOLOR, new ArrayList<WeatherMeasurementSample>());
+		color_data.put(MOCOLOR, new ArrayList<WeatherMeasurementSample>());
+		color_data.put(HOCOLOR, new ArrayList<WeatherMeasurementSample>());
 	}
 
 	/**
@@ -100,9 +93,7 @@ public class WeatherMeasurementDataSet {
 
 		Color c = getMeasurementColor(measurementType, ws);
 		if (c != null)
-			color_data.get(c)
-				.add(new WeatherMeasurementSample(ws, c,
-					measurementType));
+			color_data.get(c).add(new WeatherMeasurementSample(ws, c, measurementType));
 	}
 
 	/** get a list of data for a given threshold color */
@@ -121,8 +112,7 @@ public class WeatherMeasurementDataSet {
 	}
 
 	/** get threshold color for the measurement type and measurement value */
-	public static Color getMeasurementColor(ItemStyle mtype,
-		WeatherSensor ws) {
+	public static Color getMeasurementColor(ItemStyle mtype, WeatherSensor ws) {
 
 		if (isSampleExpired(ws) || isCrazyState(ws))
 			return null;
