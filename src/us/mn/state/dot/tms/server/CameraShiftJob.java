@@ -57,11 +57,14 @@ import static us.mn.state.dot.tms.SystemAttrEnum.CAMERA_SHIFT_SUNSET_OFFSET;
  */
 public class CameraShiftJob extends Job {
 
+	/** log for messages relating to this job */
+	static final public DebugLog log = new DebugLog("camerashiftjob");
+
 	/** seconds offset from the minute to perform this job */
 	static final private int OFFSET_SECS = 30;
 
-	/** maximum amount of time in minutes to run this job */
-	static final private int MAX_RUNTIME = 720; // 12 hours
+	/** maximum amount of time to run this job (hours) */
+	static final private int MAX_RUNTIME = 12;
 
 	/** milliseconds in an hour */
 	static final private int HOUR = 3600000;
@@ -69,11 +72,34 @@ public class CameraShiftJob extends Job {
 	/** milliseconds in an minute */
 	static final private int MINUTE = 60000;
 
+	/** camera comparator */
+	static final private Comparator<Camera> comp = new Comparator<Camera>() {
+		@Override
+		public int compare(Camera o1, Camera o2) {
+			return o1.getName().compareTo(o2.getName());
+		}
+	};
+
+	/** date format for some logging */
+	static final private SimpleDateFormat time_format = new SimpleDateFormat("dd MMM yyyy h:mm a z");
+
+	/** various boilerplate log messages */
+	static final private String LOG_COMPUTED_INFO = "Computed astronomical and geographical information...";
+	static final private String LOG_CAMERA_SETTINGS = "Camera Shift Settings...";
+	static final private String LOG_CAMERAS_FOUND_START = "Cameras found at server start-up that may be shifted, an asterisk (*) denotes a camera with a scheduled shift...";
+	static final private String LOG_JOB_BEGIN = "Camera shift job begin...";
+	static final private String LOG_JOB_COMPLETED = "Camera shift job completed.";
+	static final private String LOG_BEGIN_SHIFT = "Begin performing camera shift...";
+	static final private String LOG_COMPLETED_SHIFT = "Completed camera shift.";
+	static final private String LOG_SCHEDULING_SHIFT = "Scheduling next camera-shift job.";
+	static final private String LOG_SCHEDULED_SHIFT = "Successfully scheduled next camera-shift job.";
+	static final private String ERROR_COMPUTE_SHIFT = "ERROR: Unable to compute and schedule next camera-shift job.";
+	static final private String NOTICE_MT_HOUR = "NOTICE: Camera Shift Job is taking more than an hour.";
+	static final private String WARN_NO_CAMERAS = new StringBuilder("WARNING: no cameras found with requisite '").append(HOME.alias).append("' and '").append(NIGHT_SHIFT.alias).append("' presets enabled.").toString();
+	static final private String WARN_TERMINATING = new StringBuilder("WARNING: Terminating job, as it has taken more than ").append(MAX_RUNTIME).append(" hours.").toString();
+
 	/** instance of the scheduler controlling this job */
 	private final Scheduler scheduler;
-
-	/** log for messages relating to this job */
-	static final public DebugLog log = new DebugLog("camerashiftjob");
 
 	/** a map to track what cameras were moved (or attempted to do so) */
 	private Map<Camera, Boolean> camMoved;
@@ -133,7 +159,7 @@ public class CameraShiftJob extends Job {
 		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift(offset);
 
 		StringBuilder sb = new StringBuilder("Camera shift");
-		if (null == ctm && isShiftReinit())
+		if (null == ctm && isIrisServerStart)
 			sb.append(" re-initialization");
 		sb.append(" job created");
 		if (null != ctm)
@@ -148,6 +174,7 @@ public class CameraShiftJob extends Job {
 	/** perform job */
 	@Override
 	public void perform() throws Exception {
+		log.log(LOG_JOB_BEGIN);
 
 		logSettings();
 
@@ -161,7 +188,7 @@ public class CameraShiftJob extends Job {
 			// only load cameras with Home and Night-shift Home preset aliases enabled.
 			List<Camera> shiftCams = getCamerasForShift();
 			if (shiftCams.isEmpty()) {
-				log.log("WARNING: no cameras found with requisite '" + HOME.alias + "' and '" + NIGHT_SHIFT.alias + "' presets enabled.");
+				log.log(WARN_NO_CAMERAS);
 				return;
 			}
 			log.log("Found " + shiftCams.size() + " cameras eligible for shift.");
@@ -185,9 +212,12 @@ public class CameraShiftJob extends Job {
 
 		logComputedInformation();
 
-		log.log("Begin performing camera shift...");
+		log.log(LOG_BEGIN_SHIFT);
 
 		Map<String, Integer> inuse = null;
+		List<Camera> camSortedList = new ArrayList<>(camMoved.keySet());
+		Collections.sort(camSortedList, comp);
+
 		while (doJob(started)) {
 			if (!forceMovement) {
 				if (movingNow >= concurrent) {
@@ -207,7 +237,7 @@ public class CameraShiftJob extends Job {
 				iuLastUpdate = TimeSteward.currentTimeMillis();
 			}
 
-			for (Camera c : camMoved.keySet()) {
+			for (Camera c : camSortedList) {
 				if (!forceMovement) {
 					if (camMoved.get(c))
 						continue;
@@ -239,7 +269,6 @@ public class CameraShiftJob extends Job {
 			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, destPan, offsetMillis, c));
 		}
 
-		log.log("Completed camera shift(s).");
 	}
 
 	/** actions to perform upon completion of job */
@@ -255,18 +284,20 @@ public class CameraShiftJob extends Job {
 		if (forceMovement) {
 			// jobs with forced movement at specific times do not reschedule.
 			for (Camera c : camMoved.keySet())
-				log.log("Completed camera shift schedule job for camera " + c.getName()
-					+ " at scheduled time of " + c.getShiftSchedule() + " past the hour.");
+				log.log("Completed scheduled camera shift job for " + c.getName()
+					+ " at " + c.getShiftSchedule() + " past the hour.");
 			return;
-		}
+		} else
+			log.log(LOG_COMPLETED_SHIFT);
 
 		scheduleNextJob();
 
-		log.log("Completed camera shift job.");
+		log.log(LOG_JOB_COMPLETED);
 	}
 
 	/** schedule the next camera-shift job */
 	private void scheduleNextJob() {
+		log.log(LOG_SCHEDULING_SHIFT);
 		PresetAliasName nsp = (HOME.equals(destPan)) ? NIGHT_SHIFT : HOME;
 		GregorianCalendar now = (GregorianCalendar) TimeSteward.getCalendarInstance();
 
@@ -287,8 +318,9 @@ public class CameraShiftJob extends Job {
 		if (c != null) {
 			offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
 			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset));
+			log.log(LOG_SCHEDULED_SHIFT);
 		} else
-			log.log("ERROR: unable to compute next shift. Unable to schedule next shift.");
+			log.log(ERROR_COMPUTE_SHIFT);
 	}
 
 	/** determine if the job should continue executing at this point */
@@ -300,16 +332,16 @@ public class CameraShiftJob extends Job {
 				rv = true;
 		}
 
-		int mxrt = MAX_RUNTIME * MINUTE;
+		int mxrt = MAX_RUNTIME * HOUR;
 
 		if ((TimeSteward.currentTimeMillis() - lastLogMessage) > HOUR) {
-			log.log("WARNING: Camera Shift Job is taking more than an hour.");
+			log.log(NOTICE_MT_HOUR);
 			lastLogMessage = TimeSteward.currentTimeMillis();
 		}
 
 		if ((TimeSteward.currentTimeMillis() - started) > mxrt) {
 			rv = false;
-			log.log("Terminating job, as it has taken more than 12 hours.");
+			log.log(WARN_TERMINATING);
 		}
 
 		return rv;
@@ -330,7 +362,7 @@ public class CameraShiftJob extends Job {
 		if (forceMovement)
 			return;
 
-		log.log("Camera Shift Settings...");
+		log.log(LOG_CAMERA_SETTINGS);
 		StringBuilder sb = new StringBuilder()
 			.append("    ")
 			.append(CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase())
@@ -375,31 +407,21 @@ public class CameraShiftJob extends Job {
 
 		List<Camera> shiftCams = getCamerasForShift();
 		if (shiftCams.isEmpty()) {
-			log.log("WARNING: no cameras found with requisite '" + HOME.alias + "' and '" + NIGHT_SHIFT.alias + "' presets enabled.");
+			log.log(WARN_NO_CAMERAS);
 			return;
 		} else
-			log.log("Found " + shiftCams.size() + " cameras eligible for shift.");
+			log.log("Cameras found eligible for shift: " + shiftCams.size());
 
-		log.log("Cameras found at server start-up that may be shifted, an asterisk (*) denotes a camera with a scheduled shift...");
+		log.log(LOG_CAMERAS_FOUND_START);
 		Collections.sort(shiftCams, comp);
+		StringBuilder sb;
 		for (Camera c : shiftCams) {
+			sb = new StringBuilder("    ").append(c.getName());
 			if (null != c.getShiftSchedule())
-				log.log("    " + c.getName() + "*");
-			else
-				log.log("    " + c.getName());
+				sb.append(" *");
+			log.log(sb.toString());
 		}
 	}
-
-	/** camera comparator */
-	static final private Comparator<Camera> comp = new Comparator<Camera>() {
-		@Override
-		public int compare(Camera o1, Camera o2) {
-			return o1.getName().compareTo(o2.getName());
-		}
-	};
-
-	/** date format for some logging */
-	static final private SimpleDateFormat time_format = new SimpleDateFormat("dd MMM yyyy h:mm a z");
 
 	/** log some computed information */
 	private void logComputedInformation() {
@@ -407,7 +429,7 @@ public class CameraShiftJob extends Job {
 			return;
 
 		Position pos = getGeographicCenter();
-		log.log("Computed astronomical and geographical information...");
+		log.log(LOG_COMPUTED_INFO);
 		log.log("    Geographical center: " + pos.toString());
 		Calendar c = getShiftTime(HOME, 0);
 		Calendar s = (Calendar)c.clone();
