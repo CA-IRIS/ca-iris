@@ -261,6 +261,17 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		updateHeatmapLayer();
 	}
 
+	/**
+	 * Check if a given attribute affects a proxy style
+	 *
+	 * @param a
+	 */
+	@Override
+	public boolean isStyleAttrib(String a) {
+		// needed to to update style summary counts and lists
+		return true;
+	}
+
 	/** Update a proxy marker (e.g., to reflect orientation change) */
 	private void updateMarker(WeatherSensor p) {
 		MapGeoLoc loc = findGeoLoc(p);
