@@ -109,176 +109,182 @@ public class FeedParser {
 		Element eData =(Element)dataList.item(0);
 		NodeList nRwisList = eData.getElementsByTagName("rwis");
 		for (int ri = 0; ri < nRwisList.getLength(); ++ri) {
-			Node n = nRwisList.item(ri);
-			if (n.getNodeType() != Node.ELEMENT_NODE)
-				continue;
+            RwisRec rec = null;
+		    try {
+                Node n = nRwisList.item(ri);
+                if (n.getNodeType() != Node.ELEMENT_NODE)
+                    continue;
 
-			// stationId
-			NodeList nlsid = getElements(n ,"index");
-			ensure((nlsid.getLength() == 1), 2);
+                // stationId
+                NodeList nlsid = getElements(n ,"index");
+                ensure((nlsid.getLength() == 1), 2);
 
-			NodeList nlsid1 = getKids(nlsid.item(0));
-			ensure((nlsid1.getLength() == 1), 3);
-			String sid = trimAndNullEmpty((nlsid1.item(0)).getNodeValue());
-			RwisRec rec = new RwisRec(sid);
+                NodeList nlsid1 = getKids(nlsid.item(0));
+                ensure((nlsid1.getLength() == 1), 3);
+                String sid = trimAndNullEmpty((nlsid1.item(0)).getNodeValue());
+                rec = new RwisRec(sid);
 
-			// timestamp
-			NodeList nlts = getElements(n,"recordTimestamp");
-			ensure((nlts.getLength() == 1), 4);
-			NodeList nlDate = getElements(nlts.item(0),"recordDate");
-			ensure((nlDate.getLength() == 1), 5);
-			NodeList nlDateCN = getKids(nlDate.item(0));
-			ensure((nlDateCN.getLength() == 1), 6);
-			String date = (nlDateCN.item(0)).getNodeValue();
-			NodeList nlTime = getElements(nlts.item(0),"recordTime");
-			ensure((nlTime.getLength() == 1), 7);
-			NodeList nlTimeCN = getKids(nlTime.item(0));
-			ensure((nlTimeCN.getLength() == 1), 8);
-			String time = (nlTimeCN.item(0)).getNodeValue();
+                // timestamp
+                NodeList nlts = getElements(n,"recordTimestamp");
+                ensure((nlts.getLength() == 1), 4);
+                NodeList nlDate = getElements(nlts.item(0),"recordDate");
+                ensure((nlDate.getLength() == 1), 5);
+                NodeList nlDateCN = getKids(nlDate.item(0));
+                ensure((nlDateCN.getLength() == 1), 6);
+                String date = (nlDateCN.item(0)).getNodeValue();
+                NodeList nlTime = getElements(nlts.item(0),"recordTime");
+                ensure((nlTime.getLength() == 1), 7);
+                NodeList nlTimeCN = getKids(nlTime.item(0));
+                ensure((nlTimeCN.getLength() == 1), 8);
+                String time = (nlTimeCN.item(0)).getNodeValue();
 
-			rec.obs_time = translateTimestamp(date + " " + time,
-				TimeZone.getTimeZone("America/Los_Angeles"),
-				"yyyy-MM-dd HH:mm:ss");
+                rec.obs_time = translateTimestamp(date + " " + time,
+                        TimeZone.getTimeZone("America/Los_Angeles"),
+                        "yyyy-MM-dd HH:mm:ss");
 
-			// rwisData
-			NodeList nlrd = getElements(n,"rwisData");
-			ensure((nlrd.getLength() == 1), 9);
+                // rwisData
+                NodeList nlrd = getElements(n,"rwisData");
+                ensure((nlrd.getLength() == 1), 9);
 
-			// airTemp
-			NodeList nlTempData = getElements(nlrd.item(0),"temperatureData");
-			ensure((nlTempData.getLength() == 1), 10);
+                // airTemp
+                NodeList nlTempData = getElements(nlrd.item(0),"temperatureData");
+                ensure((nlTempData.getLength() == 1), 10);
 
-			NodeList nlTempSensEntry = getElements(nlTempData.item(0),"essTemperatureSensorEntry");
-			if ((nlTempSensEntry.getLength() > 0)) {
+                NodeList nlTempSensEntry = getElements(nlTempData.item(0),"essTemperatureSensorEntry");
+                if ((nlTempSensEntry.getLength() > 0)) {
 
-				// only using first essTemperatureSensorEntry.
-				NodeList nlAirTemp = getElements(nlTempSensEntry.item(0),"essAirTemperature");
-				ensure((nlAirTemp.getLength() == 1), 12);
-				NodeList nlAirTempCN = getKids(nlAirTemp.item(0));
-				if (nlAirTempCN.getLength() != 1)
-					rec.air_temp = null;
-				else
-					rec.air_temp = parseAirTemperature((nlAirTempCN.item(0)).getNodeValue());
+                    // only using first essTemperatureSensorEntry.
+                    NodeList nlAirTemp = getElements(nlTempSensEntry.item(0),"essAirTemperature");
+                    ensure((nlAirTemp.getLength() == 1), 12);
+                    NodeList nlAirTempCN = getKids(nlAirTemp.item(0));
+                    if (nlAirTempCN.getLength() != 1)
+                        rec.air_temp = null;
+                    else
+                        rec.air_temp = parseAirTemperature((nlAirTempCN.item(0)).getNodeValue());
 
-			}
+                }
 
-			// windData
-			NodeList nlWindData = getElements(nlrd.item(0),"windData");
-			ensure((nlWindData.getLength() == 1), 13);
+                // windData
+                NodeList nlWindData = getElements(nlrd.item(0),"windData");
+                ensure((nlWindData.getLength() == 1), 13);
 
-			// windSpeed
-			NodeList nlAvgWindSpeed = getElements(nlWindData.item(0),"essAvgWindSpeed");
-			ensure((nlAvgWindSpeed.getLength() == 1), 14);
-			NodeList nlAvgWindSpeedCN = getKids(nlAvgWindSpeed.item(0));
-			if (nlAvgWindSpeedCN.getLength() != 1)
-				rec.wind_speed_avg = null;	// allow empty
-			else
-				rec.wind_speed_avg = parseAvgWindSpeed((nlAvgWindSpeedCN.item(0)).getNodeValue());
+                // windSpeed
+                NodeList nlAvgWindSpeed = getElements(nlWindData.item(0),"essAvgWindSpeed");
+                ensure((nlAvgWindSpeed.getLength() == 1), 14);
+                NodeList nlAvgWindSpeedCN = getKids(nlAvgWindSpeed.item(0));
+                if (nlAvgWindSpeedCN.getLength() != 1)
+                    rec.wind_speed_avg = null;	// allow empty
+                else
+                    rec.wind_speed_avg = parseAvgWindSpeed((nlAvgWindSpeedCN.item(0)).getNodeValue());
 
-			// windDir
-			NodeList nlAvgWindDirection = getElements(nlWindData.item(0),"essAvgWindDirection");
-			ensure((nlAvgWindDirection.getLength() == 1), 15);
-			NodeList nlAvgWindDirectionCN = getKids(nlAvgWindDirection.item(0));
-			if (nlAvgWindDirectionCN.getLength() != 1)
-				rec.wind_dir_avg = null;	// allow empty
-			else
-				rec.wind_dir_avg = parseAvgWindDir((nlAvgWindDirectionCN.item(0)).getNodeValue());
+                // windDir
+                NodeList nlAvgWindDirection = getElements(nlWindData.item(0),"essAvgWindDirection");
+                ensure((nlAvgWindDirection.getLength() == 1), 15);
+                NodeList nlAvgWindDirectionCN = getKids(nlAvgWindDirection.item(0));
+                if (nlAvgWindDirectionCN.getLength() != 1)
+                    rec.wind_dir_avg = null;	// allow empty
+                else
+                    rec.wind_dir_avg = parseAvgWindDir((nlAvgWindDirectionCN.item(0)).getNodeValue());
 
-			// gustSpeed
-			NodeList nlMaxWindGustSpeed = getElements(nlWindData.item(0),"essMaxWindGustSpeed");
-			ensure((nlMaxWindGustSpeed.getLength() == 1), 16);
-			NodeList nlMaxWindGustSpeedCN = getKids(nlMaxWindGustSpeed.item(0));
-			if (nlMaxWindGustSpeedCN.getLength() != 1)
-				rec.wind_speed_gust = null;	// allow empty
-			else
-				rec.wind_speed_gust = parseGustSpeed((nlMaxWindGustSpeedCN.item(0)).getNodeValue());
+                // gustSpeed
+                NodeList nlMaxWindGustSpeed = getElements(nlWindData.item(0),"essMaxWindGustSpeed");
+                ensure((nlMaxWindGustSpeed.getLength() == 1), 16);
+                NodeList nlMaxWindGustSpeedCN = getKids(nlMaxWindGustSpeed.item(0));
+                if (nlMaxWindGustSpeedCN.getLength() != 1)
+                    rec.wind_speed_gust = null;	// allow empty
+                else
+                    rec.wind_speed_gust = parseGustSpeed((nlMaxWindGustSpeedCN.item(0)).getNodeValue());
 
-			// gustDir
-			NodeList nlMaxWindGustDir = getElements(nlWindData.item(0),"essMaxWindGustDir");
-			ensure((nlMaxWindGustDir.getLength() == 1), 17);
-			NodeList nlMaxWindGustDirCN = getKids(nlMaxWindGustDir.item(0));
-			if (nlMaxWindGustDirCN.getLength() != 1)
-				rec.wind_dir_gust = null;
-			else
-				rec.wind_dir_gust = parseGustDir((nlMaxWindGustDirCN.item(0)).getNodeValue());
+                // gustDir
+                NodeList nlMaxWindGustDir = getElements(nlWindData.item(0),"essMaxWindGustDir");
+                ensure((nlMaxWindGustDir.getLength() == 1), 17);
+                NodeList nlMaxWindGustDirCN = getKids(nlMaxWindGustDir.item(0));
+                if (nlMaxWindGustDirCN.getLength() != 1)
+                    rec.wind_dir_gust = null;
+                else
+                    rec.wind_dir_gust = parseGustDir((nlMaxWindGustDirCN.item(0)).getNodeValue());
 
-			// humidityPrecipData
-			NodeList nlHPData = getElements(nlrd.item(0),"humidityPrecipData");
-			ensure((nlHPData.getLength() == 1), 18);
+                // humidityPrecipData
+                NodeList nlHPData = getElements(nlrd.item(0),"humidityPrecipData");
+                ensure((nlHPData.getLength() == 1), 18);
 
-			// precipRate
-			NodeList nlEssPrecipRate = getElements(nlHPData.item(0),"essPrecipRate");
-			ensure((nlEssPrecipRate.getLength() == 1), 19);
-			NodeList nlEssPrecipRateCN = getKids(nlEssPrecipRate.item(0));
-			if (nlEssPrecipRateCN.getLength() != 1)
-				rec.precip_rate = null;		// allow empty
-			else
-				rec.precip_rate = parsePrecipRate((nlEssPrecipRateCN.item(0)).getNodeValue());
+                // precipRate
+                NodeList nlEssPrecipRate = getElements(nlHPData.item(0),"essPrecipRate");
+                ensure((nlEssPrecipRate.getLength() == 1), 19);
+                NodeList nlEssPrecipRateCN = getKids(nlEssPrecipRate.item(0));
+                if (nlEssPrecipRateCN.getLength() != 1)
+                    rec.precip_rate = null;		// allow empty
+                else
+                    rec.precip_rate = parsePrecipRate((nlEssPrecipRateCN.item(0)).getNodeValue());
 
-			// visibilityData
-			NodeList nlVisData = getElements(nlrd.item(0),"visibilityData");
-			ensure((nlVisData.getLength() == 1), 20);
+                // visibilityData
+                NodeList nlVisData = getElements(nlrd.item(0),"visibilityData");
+                ensure((nlVisData.getLength() == 1), 20);
 
-			// visib
-			NodeList nlEssVisibility = getElements(nlVisData.item(0),"essVisibility");
-			ensure((nlEssVisibility.getLength() == 1), 21);
-			NodeList nlEssVisibilityCN = getKids(nlEssVisibility.item(0));
-			if (nlEssVisibilityCN.getLength() != 1)
-				rec.visibility = null;		// allow empty
-			else
-				rec.visibility = parseVisibility((nlEssVisibilityCN.item(0)).getNodeValue());
+                // visib
+                NodeList nlEssVisibility = getElements(nlVisData.item(0),"essVisibility");
+                ensure((nlEssVisibility.getLength() == 1), 21);
+                NodeList nlEssVisibilityCN = getKids(nlEssVisibility.item(0));
+                if (nlEssVisibilityCN.getLength() != 1)
+                    rec.visibility = null;		// allow empty
+                else
+                    rec.visibility = parseVisibility((nlEssVisibilityCN.item(0)).getNodeValue());
 
-			// pavmentSensorData (sic)
-			NodeList nlPSData = getElements(nlrd.item(0),"pavmentSensorData");	// (sic)
-			ensure((nlPSData.getLength() <= 1), 22);	// allow 0
-			if (nlPSData.getLength() > 0) {
+                // pavmentSensorData (sic)
+                NodeList nlPSData = getElements(nlrd.item(0),"pavmentSensorData");	// (sic)
+                ensure((nlPSData.getLength() <= 1), 22);	// allow 0
+                if (nlPSData.getLength() > 0) {
 
-				// essPavementSensorEntry
-				NodeList nlPSEntry = getElements(nlPSData.item(0),"essPavementSensorEntry");
-				int numPSE = nlPSEntry.getLength();	// don't trust <numEssPavementSensors>
-				for (int i=0; i<numPSE; ++i) {		// allow 0
-					NodeList nlEssSensId = getElements(nlPSEntry.item(i),"essPavementSensorIndex");
-					ensure((nlEssSensId.getLength() == 1), 23);
-					NodeList nlEssSensIdCN = getKids(nlEssSensId.item(0));
-					if (nlEssSensIdCN.getLength() != 1) {
-						// skipping essPavementSensorEntry with no index (workaround for bug in the feed source)
-						continue;
-					}
-					String sensorId = trimAndNullEmpty((nlEssSensIdCN.item(0)).getNodeValue());
+                    // essPavementSensorEntry
+                    NodeList nlPSEntry = getElements(nlPSData.item(0),"essPavementSensorEntry");
+                    int numPSE = nlPSEntry.getLength();	// don't trust <numEssPavementSensors>
+                    for (int i=0; i<numPSE; ++i) {		// allow 0
+                        NodeList nlEssSensId = getElements(nlPSEntry.item(i),"essPavementSensorIndex");
+                        ensure((nlEssSensId.getLength() == 1), 23);
+                        NodeList nlEssSensIdCN = getKids(nlEssSensId.item(0));
+                        if (nlEssSensIdCN.getLength() != 1) {
+                            // skipping essPavementSensorEntry with no index (workaround for bug in the feed source)
+                            continue;
+                        }
+                        String sensorId = trimAndNullEmpty((nlEssSensIdCN.item(0)).getNodeValue());
 
-					NodeList nlEssSurfTemp = getElements(nlPSEntry.item(i),"essSurfaceTemperature");
-					ensure((nlEssSurfTemp.getLength() == 1), 24);
-					NodeList nlEssSurfTempCN = getKids(nlEssSurfTemp.item(0));
-					if (nlEssSurfTempCN.getLength() != 1)
-						rec.addSurfaceTemp(null);	// allow empty
-					else
-						rec.addSurfaceTemp(parseSurfaceTemperature((nlEssSurfTempCN.item(0)).getNodeValue()));
-				}
+                        NodeList nlEssSurfTemp = getElements(nlPSEntry.item(i),"essSurfaceTemperature");
+                        ensure((nlEssSurfTemp.getLength() == 1), 24);
+                        NodeList nlEssSurfTempCN = getKids(nlEssSurfTemp.item(0));
+                        if (nlEssSurfTempCN.getLength() != 1)
+                            rec.addSurfaceTemp(null);	// allow empty
+                        else
+                            rec.addSurfaceTemp(parseSurfaceTemperature((nlEssSurfTempCN.item(0)).getNodeValue()));
+                    }
 
-				// essSubSurfaceSensortEntry (sic)
-				NodeList nlSSSEntry = getElements(nlPSData.item(0),"essSubSurfaceSensortEntry");	// (sic)
-				int numSSSE = nlSSSEntry.getLength();	// don't trust <numEssSubSurfaceSensors>
-				for (int i=0; i<numSSSE; ++i) {		// allow 0
-					NodeList nlEssSSSensId = getElements(nlSSSEntry.item(i),"essSubSurfaceSensorIndex");
-					ensure((nlEssSSSensId.getLength() == 1), 25);
-					NodeList nlEssSSSensIdCN = getKids(nlEssSSSensId.item(0));
-					if (nlEssSSSensIdCN.getLength() != 1) {
-						// skipping essSubSurfaceSensortEntry with no index (workaround for bug in the feed source)
-						continue;
-					}
-					String sensorId = trimAndNullEmpty((nlEssSSSensIdCN.item(0)).getNodeValue());
+                    // essSubSurfaceSensortEntry (sic)
+                    NodeList nlSSSEntry = getElements(nlPSData.item(0),"essSubSurfaceSensortEntry");	// (sic)
+                    int numSSSE = nlSSSEntry.getLength();	// don't trust <numEssSubSurfaceSensors>
+                    for (int i=0; i<numSSSE; ++i) {		// allow 0
+                        NodeList nlEssSSSensId = getElements(nlSSSEntry.item(i),"essSubSurfaceSensorIndex");
+                        ensure((nlEssSSSensId.getLength() == 1), 25);
+                        NodeList nlEssSSSensIdCN = getKids(nlEssSSSensId.item(0));
+                        if (nlEssSSSensIdCN.getLength() != 1) {
+                            // skipping essSubSurfaceSensortEntry with no index (workaround for bug in the feed source)
+                            continue;
+                        }
+                        String sensorId = trimAndNullEmpty((nlEssSSSensIdCN.item(0)).getNodeValue());
 
-					NodeList nlEssSubSurfTemp = getElements(nlSSSEntry.item(i),"essSubSurfaceTemperature");
-					ensure((nlEssSubSurfTemp.getLength() == 1), 26);
-					NodeList nlEssSubSurfTempCN = getKids(nlEssSubSurfTemp.item(0));
-					if (nlEssSubSurfTempCN.getLength() != 1)
-						rec.addSubsurfaceTemp(null);	// allow empty
-					else
-						rec.addSubsurfaceTemp(parseSubSurfaceTemperature((nlEssSubSurfTempCN.item(0)).getNodeValue()));
-				}
-			}
-			recs.put(rec.getSiteId(), rec);
-			CaRwisPoller.log("FeedParser: put rec for " + rec.getSiteId() + " into recs.");
+                        NodeList nlEssSubSurfTemp = getElements(nlSSSEntry.item(i),"essSubSurfaceTemperature");
+                        ensure((nlEssSubSurfTemp.getLength() == 1), 26);
+                        NodeList nlEssSubSurfTempCN = getKids(nlEssSubSurfTemp.item(0));
+                        if (nlEssSubSurfTempCN.getLength() != 1)
+                            rec.addSubsurfaceTemp(null);	// allow empty
+                        else
+                            rec.addSubsurfaceTemp(parseSubSurfaceTemperature((nlEssSubSurfTempCN.item(0)).getNodeValue()));
+                    }
+                }
+                recs.put(rec.getSiteId(), rec);
+                CaRwisPoller.log("FeedParser: put rec for " + rec.getSiteId() + " into recs.");
+            } catch (Exception e) {
+                String recId = rec != null ? " for " + rec.getSiteId() : "";
+                CaRwisPoller.log("FeedParser: failed to parse rec" + recId + ": " + e.getMessage());
+            }
 		}
 
 		already_parsed = true;
