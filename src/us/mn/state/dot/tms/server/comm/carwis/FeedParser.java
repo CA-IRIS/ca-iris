@@ -149,16 +149,18 @@ public class FeedParser {
 			ensure((nlTempData.getLength() == 1), 10);
 
 			NodeList nlTempSensEntry = getElements(nlTempData.item(0),"essTemperatureSensorEntry");
-			ensure((nlTempSensEntry.getLength() > 0), 11);
-			// only using first essTemperatureSensorEntry.
+			if ((nlTempSensEntry.getLength() > 0)) {
 
-			NodeList nlAirTemp = getElements(nlTempSensEntry.item(0),"essAirTemperature");
-			ensure((nlAirTemp.getLength() == 1), 12);
-			NodeList nlAirTempCN = getKids(nlAirTemp.item(0));
-			if (nlAirTempCN.getLength() != 1)
-				rec.air_temp = null;
-			else
-				rec.air_temp = parseAirTemperature((nlAirTempCN.item(0)).getNodeValue());
+				// only using first essTemperatureSensorEntry.
+				NodeList nlAirTemp = getElements(nlTempSensEntry.item(0),"essAirTemperature");
+				ensure((nlAirTemp.getLength() == 1), 12);
+				NodeList nlAirTempCN = getKids(nlAirTemp.item(0));
+				if (nlAirTempCN.getLength() != 1)
+					rec.air_temp = null;
+				else
+					rec.air_temp = parseAirTemperature((nlAirTempCN.item(0)).getNodeValue());
+
+			}
 
 			// windData
 			NodeList nlWindData = getElements(nlrd.item(0),"windData");
