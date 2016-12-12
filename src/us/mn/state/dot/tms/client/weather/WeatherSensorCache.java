@@ -57,9 +57,7 @@ public class WeatherSensorCache {
 	public void populate(SonarState client) {
 		client.populateReadable(weatherSensors);
 		if(client.canRead(WeatherSensor.SONAR_TYPE)) {
-			weatherSensors.ignoreAttribute("operation");
-			weatherSensors.ignoreAttribute("stamp");
-
+			// operation and stamp are not ignored like others due to need for refreshing
 			// attributes not used at the moment
 			weatherSensors.ignoreAttribute("surfaceTemps");
 			weatherSensors.ignoreAttribute("subsurfaceTemps");

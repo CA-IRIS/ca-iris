@@ -207,11 +207,11 @@ public class WeatherSensorTheme extends ProxyTheme<WeatherSensor> {
 		ItemStyle is = manager.getStyleSummary().getStyle();
 		Style[] base = null;
 
-		if (EXPIRED.equals(is) && isSampleExpired(ws))
+		if (EXPIRED.equals(is) || isSampleExpired(ws))
 			return super.getStyle(ws);
-		if (CRAZY.equals(is) && isCrazyState(ws))
+		if (CRAZY.equals(is) || isCrazyState(ws))
 			return super.getStyle(ws);
-		if (AWS.equals(is) && isAwsState(ws))
+		if (AWS.equals(is) || isAwsState(ws))
 			return super.getStyle(ws);
 
 		switch (is) {
