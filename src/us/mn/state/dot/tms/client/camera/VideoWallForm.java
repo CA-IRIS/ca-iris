@@ -38,8 +38,8 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.widget.AbstractForm;
 
 /**
@@ -178,7 +178,7 @@ public class VideoWallForm extends AbstractForm {
 		int row = 0;
 		for (String did : keys) {
 			String cid = map.get(did);
-			String sn = SiteDataHelper.getSiteName(cid);
+			String sn = SiteDataHelperClient.getSiteName(cid);
 			String cam = (sn != null ? sn : cid);
 			data[row][0] = did;
 			data[row][1] = cam;
@@ -195,7 +195,7 @@ public class VideoWallForm extends AbstractForm {
 		// populate cameraBox
 		cameraBox.addItem("");
 		for (String cid : cams) {
-			String sn = SiteDataHelper.getSiteName(cid);
+			String sn = SiteDataHelperClient.getSiteName(cid);
 			String cam = (sn != null ? sn : cid);
 			cameraBox.addItem(cam);
 		}
@@ -240,7 +240,7 @@ public class VideoWallForm extends AbstractForm {
 				if ((camDesc != null)
 					&& (!("".equals(camDesc.trim()))))
 				{
-					String cid = SiteDataHelper
+					String cid = SiteDataHelperClient
 						.getGeoLocNameBySiteName(camDesc);
 					if (cid == null)
 						cid = camDesc;

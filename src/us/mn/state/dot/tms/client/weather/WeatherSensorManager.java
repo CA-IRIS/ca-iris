@@ -18,6 +18,7 @@ package us.mn.state.dot.tms.client.weather;
 
 import javax.swing.JPopupMenu;
 
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.map.Marker;
 import us.mn.state.dot.tms.client.map.MapObject;
 import us.mn.state.dot.tms.client.map.MapSearcher;
@@ -26,11 +27,11 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.Angle;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.MapAction;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.PropertiesAction;
@@ -220,8 +221,10 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 
 			public void proxyChanged(final WeatherSensor proxy,
 				final String a) {
-				runSwing(new Runnable() {
+				runSwing(new IrisRunnable() {
 					public void run() {
+						customMessage = "weather sensor proxyChanged, "
+							+ proxy.getTypeName() + ": " + proxy.getName() + ", attr=" + a;
 						proxyChangedSwing(proxy, a);
 					}
 				});
@@ -256,6 +259,17 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 		super.proxyChangedSwing(proxy, attr);
 		updateMarker(proxy);
 		updateHeatmapLayer();
+	}
+
+	/**
+	 * Check if a given attribute affects a proxy style
+	 *
+	 * @param a
+	 */
+	@Override
+	public boolean isStyleAttrib(String a) {
+		// needed to to update style summary counts and lists
+		return true;
 	}
 
 	/** Update a proxy marker (e.g., to reflect orientation change) */
@@ -313,7 +327,7 @@ public class WeatherSensorManager extends ProxyManager<WeatherSensor> {
 	@Override
 	public String getDescription(WeatherSensor proxy) {
 		String pn = proxy.getName();
-		String sn = SiteDataHelper.getSiteName(pn);
+		String sn = SiteDataHelperClient.getSiteName(pn);
 		return ((sn != null) ? sn : pn);
 	}
 

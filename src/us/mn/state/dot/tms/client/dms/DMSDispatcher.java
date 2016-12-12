@@ -356,6 +356,14 @@ public class DMSDispatcher extends JPanel {
 		selectPreview(false);
 	}
 
+	/** Query the current message on all selected signs */
+	public void queryConfigMessage() {
+		for (DMS dms: sel_model.getSelected()) {
+			dms.setDeviceRequest(DeviceRequest.QUERY_CONFIGURATION.ordinal());
+		}
+		selectPreview(false);
+	}
+
 	/** Called whenever the selection is changed */
 	private void doSelectionChanged() {
 		if (!areBuilderAndComposerValid()) {

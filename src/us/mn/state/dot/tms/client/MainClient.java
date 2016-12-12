@@ -14,8 +14,13 @@
  */
 package us.mn.state.dot.tms.client;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ProxySelector;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import us.mn.state.dot.sched.ExceptionHandler;
 import us.mn.state.dot.sched.Scheduler;
@@ -87,6 +92,10 @@ public class MainClient {
 	static private IrisClient createClient(String loc,
 		ExceptionHandler handler) throws IOException
 	{
+		Path logFile = Paths.get(System.getProperty("user.home"), "iris", "client.log");
+		if (Files.exists(logFile))
+			System.setErr(new PrintStream(new FileOutputStream(logFile.toFile())));
+
 		Properties props = UserProperty.load(PropertyLoader.load(loc));
 		updateProxySelector(props);
 		I18N.initialize(props);

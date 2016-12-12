@@ -17,6 +17,7 @@ package us.mn.state.dot.tms.client;
 import us.mn.state.dot.sched.ExceptionHandler;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 import us.mn.state.dot.tms.client.help.ExceptionDialog;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 
 /**
  * An exception handler which displays a dialog.
@@ -30,8 +31,9 @@ public class DialogHandler implements ExceptionHandler {
 
 	/** Handle an exception */
 	public boolean handle(final Exception e) {
-		runSwing(new Runnable() {
+		runSwing(new IrisRunnable() {
 			public void run() {
+				customMessage = "DialogHandler";
 				dialog.show(e);
 			}
 		});

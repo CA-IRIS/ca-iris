@@ -38,6 +38,7 @@ import us.mn.state.dot.tms.RasterGraphic;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.camera.CameraPresetAction;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
@@ -243,8 +244,10 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 	/** A proxy has been changed */
 	public void proxyChanged(final DMS proxy, final String a) {
 		if(proxy == watching) {
-			runSwing(new Runnable() {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "proxyChanged, " + proxy.getTypeName() + ": "
+						+ proxy.getName() + ", attr=" + a;
 					updateAttribute(proxy, a);
 				}
 			});

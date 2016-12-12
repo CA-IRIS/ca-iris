@@ -27,9 +27,9 @@ import us.mn.state.dot.tms.utils.I18N;
  * A layer specific to heatmap related objects.
  * Since traditional vector markers are not used (like most layers), most of
  * the functionality for this layer is handled by its corresponding LayerState
- * @see HeatMapLayerState
  *
  * @author Jacob Barde
+ * @see HeatMapLayerState
  */
 public class HeatMapLayer extends Layer {
 
@@ -52,6 +52,7 @@ public class HeatMapLayer extends Layer {
 
 	/**
 	 * Constructor to create the heatmap layer
+	 *
 	 * @param s session
 	 * @param m manager
 	 */
@@ -64,7 +65,7 @@ public class HeatMapLayer extends Layer {
 	/** Create a new layer state */
 	@Override
 	public LayerState createState(MapBean mb) {
-		if(layerState == null)
+		if (layerState == null)
 			layerState = new HeatMapLayerState(this, mb);
 		return layerState;
 	}
@@ -78,6 +79,4 @@ public class HeatMapLayer extends Layer {
 	public void updateStatus() {
 		fireLayerChanged(LayerChange.status);
 	}
-
-
 }

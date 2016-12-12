@@ -19,7 +19,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JTextField;
 import java.util.HashMap;
 import us.mn.state.dot.sched.TimeSteward;
@@ -27,9 +26,9 @@ import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.County;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.SiteData;
-import us.mn.state.dot.tms.SiteDataHelper;
 import us.mn.state.dot.tms.client.IrisClient;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.SiteDataHelperClient;
 import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.proxy.ProxyView;
 import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
@@ -65,7 +64,7 @@ public class SiteDataPanel extends IPanel implements ProxyView<SiteData> {
 	public void setGeoLoc(GeoLoc gl) {
 		SiteData sd = null;
 		if (gl != null) {
-			sd = SiteDataHelper.lookupByGeoLoc(gl);
+			sd = SiteDataHelperClient.lookupByGeoLoc(gl);
 			if (sd == null) {
 				sd = createObject(gl);
 			}

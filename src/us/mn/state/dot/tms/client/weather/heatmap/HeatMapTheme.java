@@ -40,6 +40,7 @@ public class HeatMapTheme extends ProxyTheme {
 
 	/** required shape of a rectangle of zero width and height */
 	private static class DummyShape extends Marker {
+
 		public DummyShape(int c) {
 
 			super(c);

@@ -33,69 +33,71 @@ import java.awt.*;
  */
 public class WeatherPanel extends JPanel {
 
-    private final ProxySelectionModel<WeatherSensor> sel_model;
+	private final ProxySelectionModel<WeatherSensor> sel_model;
 
-    /** Proxy watcher */
-    private final ProxyWatcher<WeatherSensor> watcher;
+	/** Proxy watcher */
+	private final ProxyWatcher<WeatherSensor> watcher;
 
-    /** Tabbed pane */
-    private final JTabbedPane tab = new JTabbedPane();
+	/** Tabbed pane */
+	private final JTabbedPane tab = new JTabbedPane();
 
-    /** Location panel */
-    private final WeatherLocationPanel loc_pnl;
+	/** Location panel */
+	private final WeatherLocationPanel loc_pnl;
 
-    /** Proxy view */
-    private final ProxyView<WeatherSensor> view = new ProxyView<WeatherSensor>() {
-        public void update(WeatherSensor n, String a) {
-            loc_pnl.update(n, a);
-        }
-        public void clear() {
-            loc_pnl.clear();
-        }
-    };
+	/** Proxy view */
+	private final ProxyView<WeatherSensor> view = new ProxyView<WeatherSensor>() {
+		public void update(WeatherSensor n, String a) {
+			loc_pnl.update(n, a);
+		}
 
-    /** Selection listener */
-    private final ProxySelectionListener sel_listener = new ProxySelectionListener() {
-        @Override
-        public void selectionChanged() {
-            setWeatherSensor(sel_model.getSingleSelection());
-        }
-    };
+		public void clear() {
+			loc_pnl.clear();
+		}
+	};
 
-    /** Set a new weather sensor */
-    public void setWeatherSensor(WeatherSensor n) {
-        if(n != null)
-            loc_pnl.setGeoLoc(n.getGeoLoc());
-        else
-            loc_pnl.setGeoLoc(null);
-        watcher.setProxy(n);
-    }
+	/** Selection listener */
+	private final ProxySelectionListener sel_listener = new
+                ProxySelectionListener() {
+		@Override
+		public void selectionChanged() {
+			setWeatherSensor(sel_model.getSingleSelection());
+		}
+	};
 
-    /** Create a new weather sensor panel */
-    public WeatherPanel(Session s, ProxySelectionModel<WeatherSensor> sm) {
-        super(new BorderLayout());
-        sel_model = sm;
-        loc_pnl = new WeatherLocationPanel(s);
-        TypeCache<WeatherSensor> cache =
-            s.getSonarState().getWeatherSensorsCache().getWeatherSensors();
-        watcher = new ProxyWatcher<WeatherSensor>(cache, view, false);
-        setBorder(BorderFactory.createTitledBorder(I18N.get(
-            "weather.selected")));
-    }
+	/** Set a new weather sensor */
+	public void setWeatherSensor(WeatherSensor n) {
+		if (n != null)
+			loc_pnl.setGeoLoc(n.getGeoLoc());
+		else
+			loc_pnl.setGeoLoc(null);
+		watcher.setProxy(n);
+	}
 
-    /** Initialize the widgets on the panel */
-    public void initialize() {
-        watcher.initialize();
-        loc_pnl.initialize();
-        tab.add(I18N.get("location"), loc_pnl);
-        add(tab, BorderLayout.CENTER);
-        sel_model.addProxySelectionListener(sel_listener);
-    }
+	/** Create a new weather sensor panel */
+	public WeatherPanel(Session s, ProxySelectionModel<WeatherSensor> sm) {
+		super(new BorderLayout());
+		sel_model = sm;
+		loc_pnl = new WeatherLocationPanel(s);
+		TypeCache<WeatherSensor> cache = s.getSonarState()
+			.getWeatherSensorsCache().getWeatherSensors();
+		watcher = new ProxyWatcher<>(cache, view, false);
+		setBorder(BorderFactory
+			.createTitledBorder(I18N.get("weather.selected")));
+	}
 
-    /** Dispose of the panel */
-    public void dispose() {
-        loc_pnl.dispose();
-        watcher.dispose();
-        sel_model.removeProxySelectionListener(sel_listener);
-    }
+	/** Initialize the widgets on the panel */
+	public void initialize() {
+		watcher.initialize();
+		loc_pnl.initialize();
+		tab.add(I18N.get("location"), loc_pnl);
+		add(tab, BorderLayout.CENTER);
+		sel_model.addProxySelectionListener(sel_listener);
+	}
+
+	/** Dispose of the panel */
+	public void dispose() {
+		loc_pnl.dispose();
+		watcher.dispose();
+		sel_model.removeProxySelectionListener(sel_listener);
+	}
 }

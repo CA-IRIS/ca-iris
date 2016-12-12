@@ -76,6 +76,9 @@ public class ComposerButtonPanel extends JPanel {
 	/** Action to blank selected DMS */
 	private final BlankDmsAction blank_msg;
 
+	/** Action to query config selected DMS */
+	private final QueryConfigDmsAction query_cfg;
+
 	/** Button to blank the selected message */
 	private final JButton blank_btn;
 
@@ -100,6 +103,8 @@ public class ComposerButtonPanel extends JPanel {
 		blank_msg = new BlankDmsAction(dispatcher);
 		manager.setBlankAction(blank_msg);
 		blank_btn = new JButton(blank_msg);
+		query_cfg = new QueryConfigDmsAction(dispatcher);
+		manager.setQueryConfigAction(query_cfg);
 		layoutPanel();
 		initializeWidgets();
 	}

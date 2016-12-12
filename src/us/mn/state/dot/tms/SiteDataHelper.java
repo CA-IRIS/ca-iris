@@ -76,7 +76,7 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/** Constructor (do not instantiate). */
-	private SiteDataHelper() {
+	protected SiteDataHelper() {
 		assert false;
 	}
 
@@ -243,7 +243,7 @@ public class SiteDataHelper extends BaseHelper {
 	}
 
 	/** Trim a string, or convert it to an empty string if null */
-	static private String sanitize(String s) {
+	static protected String sanitize(String s) {
 		if (s == null)
 			return "";
 		return s.trim();

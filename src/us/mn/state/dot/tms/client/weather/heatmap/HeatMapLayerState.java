@@ -25,6 +25,7 @@ import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.ItemStyle;
 import us.mn.state.dot.tms.WeatherSensor;
 import us.mn.state.dot.tms.WeatherSensorHelper;
+import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.proxy.MapGeoLoc;
 import us.mn.state.dot.tms.client.proxy.ProxyManager;
 import us.mn.state.dot.tms.geo.SphericalMercatorPosition;
@@ -49,49 +50,51 @@ import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
  */
 public class HeatMapLayerState extends LayerState {
 
+	/** color array */
+	static final private Color[] COLOR_ARRAY = new Color[] { WeatherMeasurementDataSet.LOCOLOR, WeatherMeasurementDataSet.MOCOLOR,
+		WeatherMeasurementDataSet.HOCOLOR };
+
 	/** radius of circles (meters) */
-	private static final float RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
+	static final private float RADIUS_METERS = RWIS_MEASUREMENT_RADIUS.getFloat();
 
 	/** heatmap layer */
-	private final HeatMapLayer heatMapLayer;
+	final private HeatMapLayer heatMapLayer;
 
 	/** manager */
-	private final ProxyManager<WeatherSensor> manager;
+	final private ProxyManager<WeatherSensor> manager;
 
 	/** weather measurement data set */
-	private final WeatherMeasurementDataSet dataSet;
+	final private WeatherMeasurementDataSet dataSet;
 
 	private ItemStyle current_style = null;
 
 	/** Listener to handle the style selection changing */
-	private final ActionListener style_listener = new ActionListener() {
+	final private ActionListener style_listener = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			ItemStyle s = ItemStyle.lookupStyle(e.getActionCommand());
 			current_style = s;
-
 			refreshDataSet(s);
 		}
 	};
 
-	private final ProxyListener<WeatherSensor> sensor_listener =
-		new ProxyListener<WeatherSensor>() {
+	final private ProxyListener<WeatherSensor> sensor_listener = new ProxyListener<WeatherSensor>() {
 
 		@Override
-		public void proxyAdded(WeatherSensor proxy) {
-		}
+		public void proxyAdded(WeatherSensor proxy) { }
 
 		@Override
-		public void enumerationComplete() {}
+		public void enumerationComplete() { }
 
 		@Override
-		public void proxyRemoved(WeatherSensor proxy) {
-		}
+		public void proxyRemoved(WeatherSensor proxy) { }
 
 		@Override
-		public void proxyChanged(WeatherSensor proxy, String a) {
-			runSwing(new Runnable() {
+		public void proxyChanged(final WeatherSensor proxy, final String a) {
+			runSwing(new IrisRunnable() {
 				public void run() {
+					customMessage = "weather sensor (heatmap layer state) proxyChanged, " +
+						proxy.getTypeName() + ": " + proxy.getName() + ", attr=" + a;
 					refreshDataSet(current_style);
 					fireLayerChanged(LayerChange.status);
 				}
@@ -103,7 +106,7 @@ public class HeatMapLayerState extends LayerState {
 	 * Create a new Heatmap LayerState
 	 *
 	 * @param layer heatmap layer
-	 * @param mb mapbean
+	 * @param mb    mapbean
 	 */
 	public HeatMapLayerState(HeatMapLayer layer, MapBean mb) {
 		super(layer, mb, new HeatMapTheme(layer.getManager()));
@@ -134,19 +137,16 @@ public class HeatMapLayerState extends LayerState {
 		dataSet.changeDataType(s);
 
 		Iterator<WeatherSensor> wi = WeatherSensorHelper.iterator();
-		while(wi.hasNext()) {
-			WeatherSensor ws = wi.next();
-			dataSet.add(ws);
-		}
+		while (wi.hasNext())
+			dataSet.add(wi.next());
 	}
 
 	/** Paint the layer */
 	@Override
 	public void paint(final Graphics2D g) {
 		super.paint(g);
-		if(isVisible()) {
+		if (isVisible())
 			paintRadii(g);
-		}
 	}
 
 	/**
@@ -155,16 +155,13 @@ public class HeatMapLayerState extends LayerState {
 	 */
 	private void paintRadii(final Graphics2D g) {
 		Composite origComposite = g.getComposite();
-		for (Color c : new Color[] {WeatherMeasurementDataSet.LOCOLOR,
-			WeatherMeasurementDataSet.MOCOLOR,
-			WeatherMeasurementDataSet.HOCOLOR}) {
-
-			//FIXME fix compositing so later drawings disregard any overlap from previous drawing so as not to affect transparency nor color.
-			//AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
-			//g.setComposite(ac);
-
+		//FIXME fix compositing so later drawings disregard any overlap from previous drawing so as
+		// not to affect transparency nor color.
+		//AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
+		//g.setComposite(ac);
+		for (Color c : COLOR_ARRAY)
 			refreshRadii(g, c);
-		}
+
 		g.setComposite(origComposite);
 	}
 
@@ -181,16 +178,15 @@ public class HeatMapLayerState extends LayerState {
 		int x;
 		int y;
 		List<WeatherMeasurementSample> samples = dataSet.getList(c);
-		for(WeatherMeasurementSample sample : samples) {
+		for (WeatherMeasurementSample sample : samples) {
 			WeatherSensor ws = sample.getWeatherSensor();
 			mloc = getManager().findGeoLoc(ws);
-			SphericalMercatorPosition pos = GeoLocHelper
-				.getPosition(mloc.getGeoLoc());
+			SphericalMercatorPosition pos = GeoLocHelper.getPosition(mloc.getGeoLoc());
 
 			x = (int) pos.getX() - r;
 			y = (int) pos.getY() - r;
 
-			g.fillOval(x, y, 2*r, 2*r);
+			g.fillOval(x, y, 2 * r, 2 * r);
 		}
 	}
 
