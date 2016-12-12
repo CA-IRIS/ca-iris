@@ -24,7 +24,8 @@ import us.mn.state.dot.tms.SiteData;
 import us.mn.state.dot.tms.SiteDataHelper;
 
 /**
- * SiteDataHelperClient is for...
+ * SiteDataHelperClient is for client-side site-data lookup. Intended as a means of looking up cached data.
+ *
  * @author Jacob Barde
  */
 public class SiteDataHelperClient extends SiteDataHelper {
