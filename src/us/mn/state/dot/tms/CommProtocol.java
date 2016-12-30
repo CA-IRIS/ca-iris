@@ -15,8 +15,6 @@
  */
 package us.mn.state.dot.tms;
 
-import java.util.LinkedList;
-
 /**
  * Communication protocol enumeration.  The ordinal values correspond to the
  * records in the iris.comm_protocol look-up table.

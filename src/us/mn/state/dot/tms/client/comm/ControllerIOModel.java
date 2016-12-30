@@ -389,9 +389,9 @@ public class ControllerIOModel extends AbstractTableModel {
 
 	/** Set the device IO */
 	private void setDeviceIO(int pin, ControllerIO cio) {
-			cio.setPin(pin);
-			cio.setController(controller);
-		}
+		cio.setPin(pin);
+		cio.setController(controller);
+	}
 
 	/** Clear the device at the specified pin */
 	private void clearDevice(int pin) {

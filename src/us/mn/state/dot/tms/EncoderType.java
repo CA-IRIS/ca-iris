@@ -16,8 +16,6 @@
  */
 package us.mn.state.dot.tms;
 
-import java.util.LinkedList;
-
 /**
  * Encoder type enumeration.   The ordinal values correspond to the records
  * in the iris.encoder_type look-up table.
