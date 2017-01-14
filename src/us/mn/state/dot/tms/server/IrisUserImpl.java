@@ -156,9 +156,10 @@ public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** Check a password */
 	private void checkPassword(String pwd) throws ChangeVetoException {
-		if (pwd.length() < SystemAttrEnum.SYSTEM_MIN_PASSWORD_LENGTH.getInt()) {
+		int min = SystemAttrEnum.SYSTEM_MIN_PASSWORD_LENGTH.getInt();
+		if (pwd.length() < min) {
 			throw new ChangeVetoException(
-				"Must be at least 8 characters");
+				"Must be at least " + min + " characters");
 		}
 		String lpwd = pwd.toLowerCase();
 		String c = longestCommonSubstring(name.toLowerCase(), lpwd);
