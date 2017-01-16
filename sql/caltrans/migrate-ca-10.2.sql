@@ -664,7 +664,7 @@ END;
 $camera_update$ LANGUAGE plpgsql;
 
 -- feature 571
-INSERT INTO iris.system_attribute(name, value) VALUES ('dms_notify_needs_attention', 'true');
+INSERT INTO iris.system_attribute(name, value) VALUES ('dms_notify_needs_attention', 'false');
 
 -- feature 592
 -- detector_event history table
