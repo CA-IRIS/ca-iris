@@ -2554,6 +2554,7 @@ msg_feed_verify	true
 operation_retry_threshold	3
 rtms_read_margin_sec	5
 route_max_legs	8
+route_max_link_miles  0.6
 route_max_miles	16
 rwis_color_high	FF0000
 rwis_color_low	00FFFF

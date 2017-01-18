@@ -23,5 +23,6 @@ SET SESSION AUTHORIZATION 'tms';
 -- BEGIN 10.2 changes
 -- ============================================================================
 
-
+-- feature 587 travel time
+INSERT INTO iris.system_attribute(name, value) VALUES ('route_max_link_miles', 0.6);
 
