@@ -2574,6 +2574,8 @@ sample_archive_enable	true
 speed_limit_min_mph	45
 speed_limit_default_mph	55
 speed_limit_max_mph	75
+system_min_password_length	8
+system_protected_user_role	administrator
 tesla_host	
 toll_min_price	0.25
 toll_max_price	8
