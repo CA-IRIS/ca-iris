@@ -8,7 +8,7 @@ SET SESSION AUTHORIZATION 'tms';
 
 -- updates CA-only protocols (that haven't been given to MnDOT)
 
--- ADDITIONS for CA-IRIS v10.2 go at the bottom
+-- ADDITIONS for CA-IRIS v10.3 go at the bottom
 
 
 
@@ -20,7 +20,7 @@ SET SESSION AUTHORIZATION 'tms';
 
 
 -- ============================================================================
--- BEGIN 10.2 changes
+-- BEGIN 10.3 changes
 -- ============================================================================
 
 -- feature 587 travel time
