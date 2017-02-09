@@ -69,4 +69,7 @@ public interface DmsAction extends SonarObject {
 	 * @return Priority ranging from 1 (low) to 255 (high).
 	 * @see us.mn.state.dot.tms.DMSMessagePriority */
 	int getRunTimePriority();
+
+	/** get the sign duration (aka auto-blanking) */
+	int getDurationMinutes();
 }

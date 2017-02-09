@@ -49,7 +49,8 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 					row.getString(5),	// quick_message
 					row.getBoolean(6),	//beacon_enabled
 					row.getInt(7),		// a_priority
-					row.getInt(8)		// r_priority
+					row.getInt(8),		// r_priority
+					row.getInt(9)		// duration_minutes
 				));
 			}
 		});
@@ -66,6 +67,7 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 		map.put("beacon_enabled", beacon_enabled);
 		map.put("a_priority", a_priority);
 		map.put("r_priority", r_priority);
+		map.put("duration_minutes", duration_minutes);
 		return map;
 	}
 
@@ -86,18 +88,19 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 
 	/** Create a new DMS action */
 	protected DmsActionImpl(Namespace ns, String n, String a, String sg,
-		String p, String qm, boolean be, int ap, int rp)
+		String p, String qm, boolean be, int ap, int rp, int dm)
 	{
 		this(n, (ActionPlan)ns.lookupObject(ActionPlan.SONAR_TYPE, a),
 		    (SignGroup)ns.lookupObject(SignGroup.SONAR_TYPE, sg),
 		    (PlanPhase)ns.lookupObject(PlanPhase.SONAR_TYPE, p),
 		    (QuickMessage)ns.lookupObject(QuickMessage.SONAR_TYPE, qm),
-		    be, ap, rp);
+		    be, ap, rp, dm);
 	}
 
 	/** Create a new DMS action */
 	protected DmsActionImpl(String n, ActionPlan a, SignGroup sg,
-		PlanPhase p, QuickMessage qm, boolean be, int ap, int rp)
+		PlanPhase p, QuickMessage qm, boolean be, int ap, int rp,
+		int dm)
 	{
 		this(n);
 		action_plan = a;
@@ -107,6 +110,7 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 		beacon_enabled = be;
 		a_priority = ap;
 		r_priority = rp;
+		duration_minutes = dm;
 	}
 
 	/** Action plan */
@@ -239,4 +243,27 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 	public int getRunTimePriority() {
 		return r_priority;
 	}
+
+	/** Message duration (in minutes) */
+	protected int duration_minutes;
+
+	/** Get the duration */
+	public int getDurationMinutes() {
+		return duration_minutes;
+	}
+
+	/** Set the duration
+	 * @param dm duration in minutes */
+	public void setDurationMinutes(int dm) {
+		this.duration_minutes = dm;
+	}
+
+	/** Set the run-time priority */
+	public void doSetDurationMinutes(int dm) throws TMSException {
+		if(dm == duration_minutes)
+			return;
+		store.update(this, "duration_minutes", dm);
+		setDurationMinutes(dm);
+	}
+
 }

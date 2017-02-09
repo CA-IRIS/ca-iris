@@ -80,8 +80,11 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** DMS schedule debug log */
 	static private final DebugLog SCHED_LOG = new DebugLog("sched");
 
-	/** DMS name, e.g. CMS or DMS */
-	static private final String DMSABBR = I18N.get("dms");
+	/** Minimum duration of a DMS action (minutes) */
+	static private final int DURATION_MINIMUM_MINS = 1;
+
+	/** Number of polling periods for DMS action duration */
+	static private final int DURATION_PERIODS = 3;
 
 	/** Track AWS Action history */
 	public AwsActionHistory aws_action_history = new AwsActionHistory();
@@ -1639,14 +1642,30 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	private Integer getDuration(DmsAction da) {
 		return da.getActionPlan().getSticky()
 		     ? null
-		     : getUnstickyDuration();
+		     : getConfiguredUnstickyDuration(da);
+	}
+
+	/** Get the default duration (California)
+	 * @param da DMS action
+	 * @return Duration (minutes) */
+	private Integer getConfiguredUnstickyDuration(DmsAction da) {
+		assert da != null;
+		Integer rv = da.getDurationMinutes();
+		if (rv < 1)
+			rv = SystemAttrEnum.DMS_ACTION_DURATION_MINUTES.getInt();
+		if (rv < 1)
+			rv = getUnstickyDuration();
+		return rv;
 	}
 
 	/** Get the duration of an unsticky action */
 	private int getUnstickyDuration() {
-		/** FIXME: this should be twice the polling period for the
-		 *         sign.  Modem signs should have a longer duration. */
-		return 1;
+		return Math.max(DURATION_MINIMUM_MINS, getDurationMins());
+	}
+
+	/** Get the default duration of a DMS action */
+	private int getDurationMins() {
+		return getPollPeriod() * DURATION_PERIODS / 60;
 	}
 
 	/** Log a schedule message */
