@@ -2501,7 +2501,7 @@ dms_composer_uppercase	false
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
-dms_action_duration_minutes	-1
+dms_action_duration_minutes	0
 dms_font_selection_enable	false
 dms_form	1
 dms_high_temp_cutoff	60

@@ -85,7 +85,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	@Override
 	protected ArrayList<ProxyColumn<DmsAction>> createColumns() {
 		ArrayList<ProxyColumn<DmsAction>> cols =
-			new ArrayList<ProxyColumn<DmsAction>>(6);
+			new ArrayList<ProxyColumn<DmsAction>>(7);
 		cols.add(new ProxyColumn<DmsAction>("action.plan.dms.group",
 			120)
 		{
@@ -250,6 +250,25 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 				JComboBox<DMSMessagePriority> cbx =new JComboBox
 					<DMSMessagePriority>(R_PRIORITIES);
 				return new DefaultCellEditor(cbx);
+			}
+		});
+		cols.add(new ProxyColumn<DmsAction>("dms.action.duration", 100) {
+			@Override
+			public Object getValueAt(DmsAction da) {
+				return da.getDurationMinutes();
+			}
+			public boolean isEditable(DmsAction da) {
+				return canUpdate(da);
+			}
+			public void setValueAt(DmsAction da, Object value) {
+				try {
+					String v = value.toString().trim();
+					int i = Integer.parseInt(v);
+					if (i >= 0)
+						da.setDurationMinutes(i);
+				}
+				catch (NumberFormatException e) {
+				}
 			}
 		});
 		return cols;

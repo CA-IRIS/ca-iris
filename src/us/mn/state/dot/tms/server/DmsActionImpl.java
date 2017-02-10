@@ -37,7 +37,7 @@ public class DmsActionImpl extends BaseObjectImpl implements DmsAction {
 		namespace.registerType(SONAR_TYPE, DmsActionImpl.class);
 		store.query("SELECT name, action_plan, sign_group, " +
 			"phase, quick_message, beacon_enabled, a_priority, " +
-			"r_priority FROM iris." + SONAR_TYPE  +";",
+			"r_priority, duration_minutes FROM iris." + SONAR_TYPE  +";",
 			new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {

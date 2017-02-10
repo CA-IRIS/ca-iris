@@ -72,4 +72,7 @@ public interface DmsAction extends SonarObject {
 
 	/** get the sign duration (aka auto-blanking) */
 	int getDurationMinutes();
+
+	/** Set the sign duration (aka auto-blanking) */
+	void setDurationMinutes(int v);
 }
