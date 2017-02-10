@@ -1556,7 +1556,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Set the scheduled sign message.
 	 * @param sm New scheduled sign message */
 	private void setMessageSched(SignMessage sm) {
-		if (!SignMessageHelper.isEquivalent(messageSched, sm)) {
+		if (!SignMessageHelper.isEquivalent(messageSched, sm) ||
+			isCurrentMsgExpiring()) {
 			messageSched = sm;
 			notifyAttribute("messageSched");
 		}
@@ -1582,7 +1583,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	public void performAction(DmsAction da) {
 		SignMessage sm = createMsgSched(da);
 		if (sm != null) {
-			if (shouldReplaceScheduled(sm)) {
+			if (isCurrentMsgExpiring() || shouldReplaceScheduled(sm)) {
 				setMessageSched(sm);
 				sched_action = da;
 			}
@@ -1595,8 +1596,22 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	private boolean shouldReplaceScheduled(SignMessage sm) {
 		SignMessage s = messageSched;	// Avoid NPE
 		return s == null ||
+		       sm.getDuration() != s.getDuration() ||
 		       sm.getActivationPriority() > s.getActivationPriority() ||
 		       sm.getRunTimePriority() >= s.getRunTimePriority();
+	}
+
+	/** Test if the current scheduled message is already or will go blank
+	 *  within the next minute */
+	private boolean isCurrentMsgExpiring() {
+		if (getMessageCurrent().getDuration() == null)
+			return false;
+		long now = TimeSteward.currentTimeMillis();
+		long next_poll = now + 60000; //this.getPollPeriod() * 1000;
+		long expired_time = getDeployTime() + getMessageCurrent().getDuration() * 60000;
+		if (now > expired_time || next_poll > expired_time)
+			return true;
+		return false;
 	}
 
 	/** Create a scheduled message.

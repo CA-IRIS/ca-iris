@@ -130,7 +130,7 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 		activationPriority = ap;
 		runTimePriority = rp;
 		source = s;
-		duration = d;		
+		duration = d;
 	}
 
 	/** Create a new sign message (by IRIS) */
