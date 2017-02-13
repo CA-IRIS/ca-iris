@@ -1666,6 +1666,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	private Integer getConfiguredUnstickyDuration(DmsAction da) {
 		assert da != null;
 		Integer rv = da.getDurationMinutes();
+		if (rv == null || rv < 0)
+			return null;
 		if (rv < 1)
 			rv = SystemAttrEnum.DMS_ACTION_DURATION_MINUTES.getInt();
 		if (rv < 1)
