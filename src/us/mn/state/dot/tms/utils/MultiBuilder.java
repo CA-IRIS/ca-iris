@@ -187,9 +187,9 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Set the page background color for color24bit color scheme.
-	 * @param r Red component (0-255).
-	 * @param g Green component (0-255).
-	 * @param b Blue component (0-255). */
+	 * @param red Red component (0-255).
+	 * @param green Green component (0-255).
+	 * @param blue Blue component (0-255). */
 	@Override
 	public void setPageBackground(int red, int green, int blue) {
 		multi.append("[pb");
@@ -214,9 +214,9 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Set the foreground color for color24bit color scheme.
-	 * @param r Red component (0-255).
-	 * @param g Green component (0-255).
-	 * @param b Blue component (0-255). */
+	 * @param red Red component (0-255).
+	 * @param green Green component (0-255).
+	 * @param blue Blue component (0-255). */
 	@Override
 	public void setColorForeground(int red, int green, int blue) {
 		multi.append("[cf");
@@ -298,7 +298,7 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Add a travel time destination.
-	 * @param stat_id Destination station ID.
+	 * @param sid Destination station ID.
 	 * @param mode Over limit mode.
 	 * @param o_txt Over limit text. */
 	@Override

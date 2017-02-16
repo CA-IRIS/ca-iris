@@ -65,13 +65,13 @@ public class BackupFinder implements Corridor.StationFinder {
 	@Override
 	public boolean check(Float m, StationImpl s) {
 		assert m != null;
-			float spd = s.getRollingAverageSpeed();
+		float spd = s.getRollingAverageSpeed();
 		if (spd > 0 && spd < spd_thresh.round(MPH)) {
 			if (isNearUpstream(m))
 				back_upstream = true;
 			else if (isNearDownstream(m)) {
 				if (back_mp == null || back_mp > m) {
-				back_mp = m;
+					back_mp = m;
 					back_spd = spd;
 				}
 			}

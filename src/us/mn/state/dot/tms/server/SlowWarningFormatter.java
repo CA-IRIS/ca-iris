@@ -92,7 +92,7 @@ public class SlowWarningFormatter {
 	 * @return Matching speed. */
 	private Speed createSpeed(int v) {
 		// FIXME: use system attribute for units
-			return new Speed(v, Speed.Units.MPH);
+		return new Speed(v, Speed.Units.MPH);
 	}
 
 	/** Create a distance.

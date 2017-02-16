@@ -277,9 +277,6 @@ public class MultiString {
 		return OverLimitMode.prepend;
 	}
 
-	/** Parse slow traffic warning from a [slows,b], [slows,b,u] or
-	 * [slows,b,u,dist] tag.
-	 * @param v Slow traffic tag value (s,b, s,b,u, s,b,u,dist from tag).
 	/** Parse slow traffic warning from a [slows,d] or [slows,d,m] tag.
 	 * @param v Slow traffic tag value (s,d or s,d,m from tag).
 	 * @param cb Callback to set slow warning. */
