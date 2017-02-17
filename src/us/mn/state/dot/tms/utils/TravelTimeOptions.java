@@ -25,8 +25,10 @@ import static us.mn.state.dot.tms.utils.SString.isBlank;
  * @author Jacob Barde
  */
 public class TravelTimeOptions {
-	static public final String DEF_LOW_TEXT = "OVER ";
-	static public final Multi.OverLimitMode DEF_LOW_MODE = Multi.OverLimitMode.prepend;
+	static public final String DEF_LOWER_TEXT = "OVER ";
+	static public final Multi.OverLimitMode DEF_LOWER_MODE = Multi.OverLimitMode.prepend;
+	static public final String DEF_UPPER_TEXT = "UNDER ";
+	static public final Multi.OverLimitMode DEF_UPPER_MODE = Multi.OverLimitMode.blank;
 
 	/** origin station id */
 	private String argOriginStationId;
@@ -61,8 +63,10 @@ public class TravelTimeOptions {
 	/** Constructor */
 	public TravelTimeOptions(String d_sid) {
 		this.argDestStationId = d_sid;
-		argLowerMode = Multi.OverLimitMode.prepend;
-		argLowerText = DEF_LOW_TEXT;
+		argLowerMode = DEF_LOWER_MODE;
+		argLowerText = DEF_LOWER_TEXT;
+		argUpperMode = DEF_UPPER_MODE;
+		argUpperText = DEF_UPPER_TEXT;
 	}
 
 	/** Constructor */
@@ -204,15 +208,15 @@ public class TravelTimeOptions {
 		StringBuilder rv = new StringBuilder("");
 		if (!tt.isExtended()) {
 			rv.append(tt.getArgDestStationId());
-			if (tt.getArgLowerMode() != DEF_LOW_MODE)
+			if (tt.getArgLowerMode() != DEF_LOWER_MODE)
 				rv.append(",").append(tt.getArgLowerMode());
-			if (DEF_LOW_TEXT.equals(tt.getArgLowerText()))
+			if (DEF_LOWER_TEXT.equals(tt.getArgLowerText()))
 				rv.append(",").append(tt.getArgLowerText());
 		} else {
 			rv.append("d_sid=").append(tt.getArgDestStationId());
-			if (tt.getArgLowerMode() != DEF_LOW_MODE)
+			if (tt.getArgLowerMode() != DEF_LOWER_MODE)
 				rv.append(",l_mode=").append(tt.getArgLowerMode());
-			if (DEF_LOW_TEXT.equals(tt.getArgLowerText()))
+			if (DEF_LOWER_TEXT.equals(tt.getArgLowerText()))
 				rv.append(",l_txt=").append(tt.getArgLowerText());
 			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
 				rv.append(",o_sid=").append(tt.getArgOriginStationId());
@@ -231,8 +235,8 @@ public class TravelTimeOptions {
 		if (args.length <= 3) {
 			rv = new TravelTimeOptions(
 				((args.length > 0) ? args[0] : null));
-			rv.setArgLowerMode(DEF_LOW_MODE);
-			rv.setArgLowerText(DEF_LOW_TEXT);
+			rv.setArgLowerMode(DEF_LOWER_MODE);
+			rv.setArgLowerText(DEF_LOWER_TEXT);
 			if (args.length > 1)
 				rv.setArgLowerMode(parseOverMode(args[1]));
 			if (args.length > 2)
@@ -266,6 +270,6 @@ public class TravelTimeOptions {
 			if (mode.equals(m.toString()))
 				return m;
 		}
-		return DEF_LOW_MODE;
+		return DEF_LOWER_MODE;
 	}
 }
