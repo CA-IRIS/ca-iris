@@ -303,14 +303,9 @@ public class MultiBuilder implements Multi {
 	/** Add a travel time destination.
 	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(Map<String,Object> tt) {
+	public void addTravelTime(TravelTimeOptions tt) {
 		multi.append("[tt");
-		multi.append("d_sid").append("=").append(tt.get("d_sid"));
-		for (String k : tt.keySet()) {
-			if ("d_sit".equals(k))
-				continue;
-			multi.append(",").append(k).append("=").append(tt.get(k));
-		}
+		multi.append(TravelTimeOptions.mapToArgs(tt));
 		multi.append("]");
 	}
 

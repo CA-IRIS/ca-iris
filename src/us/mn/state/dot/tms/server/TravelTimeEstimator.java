@@ -28,6 +28,7 @@ import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
 import us.mn.state.dot.tms.utils.MultiBuilder;
 import us.mn.state.dot.tms.utils.MultiString;
+import us.mn.state.dot.tms.utils.TravelTimeOptions;
 
 /**
  * Travel time estimator
@@ -101,15 +102,15 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(Map<String,Object> tt)
+		public void addTravelTime(TravelTimeOptions tt)
 		{
-			Route r = (tt.get("o_sid") != null)
-				? lookupRoute((String)tt.get("d_sid"), (String)tt.get("o_sid"))
-				: lookupRoute((String)tt.get("d_sid"));
+			Route r = (tt.hasOrigin())
+				? lookupRoute(tt.getDestinationStationId(), tt.getOriginStationId())
+				: lookupRoute(tt.getDestinationStationId());
 			if (r != null)
-				addTravelTime(r, (OverLimitMode) tt.get("mode"), (String)tt.get("o_txt"));
+				addTravelTime(r, tt.getLowerMode(), tt.getLowerText());
 			else {
-				logTravel("NO ROUTE TO " + (String)tt.get("d_sid"));
+				logTravel("NO ROUTE TO " + tt.getDestinationStationId());
 				valid = false;
 			}
 		}

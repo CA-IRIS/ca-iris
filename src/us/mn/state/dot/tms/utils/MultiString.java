@@ -17,16 +17,11 @@ package us.mn.state.dot.tms.utils;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.units.Interval;
-import us.mn.state.dot.tms.utils.Multi.OverLimitMode;
 
 /**
  * MULTI String (MarkUp Language for Transportation Information), as specified
@@ -262,46 +257,10 @@ public class MultiString {
 	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
-		String[] args = v.split(",", 7);
-		Map<String,Object> tt = mapTTarguments(args);
-		if (tt.containsKey("d_set"))
+		String[] args = v.split(",", 6);
+		TravelTimeOptions tt = TravelTimeOptions.mapTo(args);
+		if (tt.isValid())
 			cb.addTravelTime(tt);
-	}
-
-	/** create a travel time arguments map object from the string arguments. */
-	static private Map<String, Object> mapTTarguments(String[] args) {
-		Map<String,Object> rv = new HashMap<>();
-		rv.put("mode", OverLimitMode.prepend);
-		rv.put("o_txt", "OVER ");
-		if (args.length <= 3) {
-			rv.put("d_sid", ((args.length > 0)
-				? args[0] : null));
-			rv.put("mode", ((args.length > 1)
-				? parseOverMode(args[1])
-				: OverLimitMode.prepend));
-			rv.put("o_txt", ((args.length > 2)
-				? args[2] : "OVER "));
-		} else {
-			for (String s : args) {
-				String[] kv = s.split("=",2);
-				if (null != kv[0] && !"".equals(kv[0])) {
-					if ("mode".equals(kv[0]))
-						rv.put(kv[0], parseOverMode(kv[1]));
-					else
-						rv.put(kv[0], kv[1]);
-				}
-			}
-		}
-		return rv;
-	}
-
-	/** Parse a over limit mode value */
-	static private OverLimitMode parseOverMode(String mode) {
-		for (OverLimitMode m : OverLimitMode.values()) {
-			if (mode.equals(m.toString()))
-				return m;
-		}
-		return OverLimitMode.prepend;
 	}
 
 	/** Parse slow traffic warning from a [slows,b], [slows,b,u] or
