@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +28,13 @@ import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
 import us.mn.state.dot.tms.utils.MultiBuilder;
 import us.mn.state.dot.tms.utils.MultiString;
-import us.mn.state.dot.tms.utils.TravelTimeOptions;
+import us.mn.state.dot.tms.utils.TravelTimeValue;
 
 /**
  * Travel time estimator
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class TravelTimeEstimator {
 
@@ -110,7 +112,7 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(TravelTimeOptions tt)
+		public void addTravelTime(TravelTimeValue tt)
 		{
 			Route r = (tt.hasOrigin())
 				? lookupRoute(tt.getArgDestStationId(), tt.getArgOriginStationId())
@@ -125,7 +127,7 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add a travel time for a route */
-		private void addTravelTimeOverUnder(Route r, TravelTimeOptions tt)
+		private void addTravelTimeOverUnder(Route r, TravelTimeValue tt)
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
@@ -143,7 +145,7 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add a travel time */
-		private void addTravelTimeOverUnder(TravelTimeOptions tt)
+		private void addTravelTimeOverUnder(TravelTimeValue tt)
 		{
 			boolean over = tt.getCalculatedTime() > tt.getSlowestTime();
 			boolean under = tt.getCalculatedTime() < tt.getFastestTime();
@@ -164,7 +166,7 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add over limit travel time */
-		private void addOverLimit(TravelTimeOptions tt)
+		private void addOverLimit(TravelTimeValue tt)
 		{
 			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime()));
 			switch (tt.getArgLowerMode()) {
@@ -181,7 +183,7 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add over limit travel time */
-		private void addUnderLimit(TravelTimeOptions tt)
+		private void addUnderLimit(TravelTimeValue tt)
 		{
 			if (tt.getArgUpperMode() == null || tt.getArgUpperText() == null)
 				return;

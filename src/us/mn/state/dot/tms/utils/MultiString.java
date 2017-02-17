@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +31,7 @@ import us.mn.state.dot.tms.units.Interval;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class MultiString {
 
@@ -258,7 +260,7 @@ public class MultiString {
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
 		String[] args = v.split(",", 6);
-		TravelTimeOptions tt = TravelTimeOptions.mapTo(args);
+		TravelTimeValue tt = TravelTimeValue.mapTo(args);
 		if (tt.isValid())
 			cb.addTravelTime(tt);
 	}

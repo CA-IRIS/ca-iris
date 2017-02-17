@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +21,7 @@ package us.mn.state.dot.tms.utils;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Jacob Barde
  */
 public class MultiAdapter implements Multi {
 
@@ -134,7 +136,7 @@ public class MultiAdapter implements Multi {
 	/** Add a travel time destination.
 	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(TravelTimeOptions tt) { }
+	public void addTravelTime(TravelTimeValue tt) { }
 
 	/** Add a speed advisory */
 	@Override

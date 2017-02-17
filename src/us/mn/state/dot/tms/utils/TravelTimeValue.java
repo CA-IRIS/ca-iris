@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2015-2017  California Department of Transporation
+ * Copyright (C) 2017  California Department of Transporation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,12 @@ import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 import static us.mn.state.dot.tms.utils.SString.isBlank;
 
 /**
- * TravelTimeOptions is for...
+ * TravelTimeValue is for holding values pertaining to Travel Times that are
+ * frequently passed around.
  *
  * @author Jacob Barde
  */
-public class TravelTimeOptions {
+public class TravelTimeValue {
 	static public final String DEF_LOWER_TEXT = "OVER ";
 	static public final Multi.OverLimitMode DEF_LOWER_MODE = Multi.OverLimitMode.prepend;
 	static public final String DEF_UPPER_TEXT = "UNDER ";
@@ -61,7 +62,7 @@ public class TravelTimeOptions {
 	private int calculatedTime;
 
 	/** Constructor */
-	public TravelTimeOptions(String d_sid) {
+	public TravelTimeValue(String d_sid) {
 		this.argDestStationId = d_sid;
 		argLowerMode = DEF_LOWER_MODE;
 		argLowerText = DEF_LOWER_TEXT;
@@ -70,7 +71,7 @@ public class TravelTimeOptions {
 	}
 
 	/** Constructor */
-	public TravelTimeOptions(String d_sid, Multi.OverLimitMode l_mode, String l_txt) {
+	public TravelTimeValue(String d_sid, Multi.OverLimitMode l_mode, String l_txt) {
 		this(d_sid);
 		argLowerMode = l_mode;
 		argLowerText = l_txt;
@@ -201,7 +202,7 @@ public class TravelTimeOptions {
 	}
 
 	/** create a string for use as arguments in a tag */
-	static public String mapToArgs(TravelTimeOptions tt) {
+	static public String mapToArgs(TravelTimeValue tt) {
 		if (!tt.isValid())
 			return null;
 
@@ -229,11 +230,11 @@ public class TravelTimeOptions {
 		return rv.toString();
 	}
 
-	/** map tag string arguments to a new TravelTimeOptions object */
-	static public TravelTimeOptions mapTo(String[] args) {
-		TravelTimeOptions rv;
+	/** map tag string arguments to a new TravelTimeValue object */
+	static public TravelTimeValue mapTo(String[] args) {
+		TravelTimeValue rv;
 		if (args.length <= 3) {
-			rv = new TravelTimeOptions(
+			rv = new TravelTimeValue(
 				((args.length > 0) ? args[0] : null));
 			rv.setArgLowerMode(DEF_LOWER_MODE);
 			rv.setArgLowerText(DEF_LOWER_TEXT);
@@ -242,7 +243,7 @@ public class TravelTimeOptions {
 			if (args.length > 2)
 				rv.setArgLowerText(args[2]);
 		} else {
-			rv = new TravelTimeOptions(null);
+			rv = new TravelTimeValue(null);
 			for (String s : args) {
 				String[] kv = s.split("=",2);
 				if (null != kv[0] && !"".equals(kv[0])) {

@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +15,12 @@
  */
 package us.mn.state.dot.tms.utils;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  * MULTI string builder (MarkUp Language for Transportation Information), as
  * specified in NTCIP 1203.
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class MultiBuilder implements Multi {
 
@@ -303,9 +302,9 @@ public class MultiBuilder implements Multi {
 	/** Add a travel time destination.
 	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(TravelTimeOptions tt) {
+	public void addTravelTime(TravelTimeValue tt) {
 		multi.append("[tt");
-		multi.append(TravelTimeOptions.mapToArgs(tt));
+		multi.append(TravelTimeValue.mapToArgs(tt));
 		multi.append("]");
 	}
 
