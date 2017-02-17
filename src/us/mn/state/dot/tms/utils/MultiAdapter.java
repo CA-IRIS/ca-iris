@@ -14,6 +14,8 @@
  */
 package us.mn.state.dot.tms.utils;
 
+import java.util.Map;
+
 /**
  * MULTI string state adapter.
  *
@@ -131,13 +133,9 @@ public class MultiAdapter implements Multi {
 	public void addGraphic(int g_num, Integer x, Integer y, String g_id) { }
 
 	/** Add a travel time destination.
-	 * @param d_sid Destination station ID.
-	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text.
-	 * @param o_sid Origin station ID.*/
+	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(String d_sid, OverLimitMode mode,
-		String o_txt, String o_sid) { }
+	public void addTravelTime(Map<String,Object> tt) { }
 
 	/** Add a speed advisory */
 	@Override

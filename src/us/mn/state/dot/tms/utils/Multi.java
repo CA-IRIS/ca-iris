@@ -14,6 +14,8 @@
  */
 package us.mn.state.dot.tms.utils;
 
+import java.util.Map;
+
 /**
  * MULTI string state interface.
  *
@@ -146,11 +148,8 @@ public interface Multi {
 	};
 
 	/** Add a travel time destination.
-	 * @param d_sid Destination station ID.
-	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text.
-	 * @param o_sid Origin station ID.*/
-	void addTravelTime(String d_sid, OverLimitMode mode, String o_txt, String o_sid);
+	 * @param tt Map of travel time arguments. */
+	void addTravelTime(Map<String,Object> tt);
 
 	/** Add a speed advisory */
 	void addSpeedAdvisory();

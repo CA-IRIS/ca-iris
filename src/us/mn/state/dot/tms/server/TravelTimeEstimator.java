@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms.server;
 
 import java.util.HashMap;
+import java.util.Map;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.Station;
@@ -100,16 +101,15 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(String d_sid, OverLimitMode mode,
-			String o_txt, String o_sid)
+		public void addTravelTime(Map<String,Object> tt)
 		{
-			Route r = (o_sid != null)
-				? lookupRoute(d_sid, o_sid)
-				: lookupRoute(d_sid);
+			Route r = (tt.get("o_sid") != null)
+				? lookupRoute((String)tt.get("d_sid"), (String)tt.get("o_sid"))
+				: lookupRoute((String)tt.get("d_sid"));
 			if (r != null)
-				addTravelTime(r, mode, o_txt);
+				addTravelTime(r, (OverLimitMode) tt.get("mode"), (String)tt.get("o_txt"));
 			else {
-				logTravel("NO ROUTE TO " + d_sid);
+				logTravel("NO ROUTE TO " + (String)tt.get("d_sid"));
 				valid = false;
 			}
 		}

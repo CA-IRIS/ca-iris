@@ -14,6 +14,9 @@
  */
 package us.mn.state.dot.tms.utils;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * MULTI string builder (MarkUp Language for Transportation Information), as
  * specified in NTCIP 1203.
@@ -298,25 +301,15 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Add a travel time destination.
-	 * @param d_sid Destination station ID.
-	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text. */
+	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(String d_sid, OverLimitMode mode,
-		String o_txt, String o_sid) {
+	public void addTravelTime(Map<String,Object> tt) {
 		multi.append("[tt");
-		multi.append(d_sid);
-		if (mode != null) {
-			multi.append(',');
-			multi.append(mode);
-			if (o_txt != null) {
-				multi.append(',');
-				multi.append(o_txt);
-				if (o_sid != null) {
-					multi.append(',');
-					multi.append(o_sid);
-				}
-			}
+		multi.append("d_sid").append("=").append(tt.get("d_sid"));
+		for (String k : tt.keySet()) {
+			if ("d_sit".equals(k))
+				continue;
+			multi.append(",").append(k).append("=").append(tt.get(k));
 		}
 		multi.append("]");
 	}
