@@ -27,3 +27,5 @@ SET SESSION AUTHORIZATION 'tms';
 INSERT INTO iris.system_attribute(name, value) VALUES ('route_max_link_miles', 0.6);
 
 INSERT INTO iris.system_attribute (name, value) VALUES ('system_min_password_length', 8);
+
+INSERT INTO iris.system_attribute (name, value) VALUES ('travel_time_max_mph', 65);

@@ -14,6 +14,8 @@
  */
 package us.mn.state.dot.tms.utils;
 
+import us.mn.state.dot.tms.server.Route;
+
 import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 import static us.mn.state.dot.tms.utils.SString.isBlank;
 
@@ -27,117 +29,169 @@ public class TravelTimeOptions {
 	static public final Multi.OverLimitMode DEF_LOW_MODE = Multi.OverLimitMode.prepend;
 
 	/** origin station id */
-	private String originStationId;
+	private String argOriginStationId;
 
 	/** destination station id */
-	private String destinationStationId;
+	private String argDestStationId;
 
 	/** OverLimitMode for lower threshold */
-	private Multi.OverLimitMode lowerMode;
+	private Multi.OverLimitMode argLowerMode;
 
 	/** lower threshold text */
-	private String lowerText;
+	private String argLowerText;
 
 	/** OverLimitMode for upper threshold */
-	private Multi.OverLimitMode upperMode;
+	private Multi.OverLimitMode argUpperMode;
 
 	/** upper threshold text */
-	private String upperText;
+	private String argUpperText;
+
+	/** route */
+	private Route route;
+
+	/** slowest time allowed */
+	private int slowestTime;
+
+	/** fastest time allowed */
+	private int fastestTime;
+
+	/** calculated time */
+	private int calculatedTime;
 
 	/** Constructor */
 	public TravelTimeOptions(String d_sid) {
-		this.destinationStationId = d_sid;
-		lowerMode = Multi.OverLimitMode.prepend;
-		lowerText = DEF_LOW_TEXT;
+		this.argDestStationId = d_sid;
+		argLowerMode = Multi.OverLimitMode.prepend;
+		argLowerText = DEF_LOW_TEXT;
 	}
 
 	/** Constructor */
 	public TravelTimeOptions(String d_sid, Multi.OverLimitMode l_mode, String l_txt) {
 		this(d_sid);
-		lowerMode = l_mode;
-		lowerText = l_txt;
+		argLowerMode = l_mode;
+		argLowerText = l_txt;
 	}
 
-	/** Set the originStationId field value. */
-	public String getOriginStationId() {
-		return originStationId;
+	/** Set the argOriginStationId field value. */
+	public String getArgOriginStationId() {
+		return argOriginStationId;
 	}
 
-	/** Set the originStationId field value. */
-	public void setOriginStationId(String originStationId) {
-		this.originStationId = originStationId;
+	/** Set the argOriginStationId field value. */
+	public void setArgOriginStationId(String argOriginStationId) {
+		this.argOriginStationId = argOriginStationId;
 	}
 
-	/** Set the destinationStationId field value. */
-	public String getDestinationStationId() {
-		return destinationStationId;
+	/** Set the argDestStationId field value. */
+	public String getArgDestStationId() {
+		return argDestStationId;
 	}
 
-	/** Set the destinationStationId field value. */
-	public void setDestinationStationId(String destinationStationId) {
-		this.destinationStationId = destinationStationId;
+	/** Set the argDestStationId field value. */
+	public void setArgDestStationId(String argDestStationId) {
+		this.argDestStationId = argDestStationId;
 	}
 
-	/** Set the lowerMode field value. */
-	public Multi.OverLimitMode getLowerMode() {
-		return lowerMode;
+	/** Set the argLowerMode field value. */
+	public Multi.OverLimitMode getArgLowerMode() {
+		return argLowerMode;
 	}
 
-	/** Set the lowerMode field value. */
-	public void setLowerMode(Multi.OverLimitMode lowerMode) {
-		this.lowerMode = lowerMode;
+	/** Set the argLowerMode field value. */
+	public void setArgLowerMode(Multi.OverLimitMode argLowerMode) {
+		this.argLowerMode = argLowerMode;
 	}
 
-	/** Set the lowerText field value. */
-	public String getLowerText() {
-		return lowerText;
+	/** Set the argLowerText field value. */
+	public String getArgLowerText() {
+		return argLowerText;
 	}
 
-	/** Set the lowerText field value. */
-	public void setLowerText(String lowerText) {
-		this.lowerText = lowerText;
+	/** Set the argLowerText field value. */
+	public void setArgLowerText(String argLowerText) {
+		this.argLowerText = argLowerText;
 	}
 
-	/** Set the upperMode field value. */
-	public Multi.OverLimitMode getUpperMode() {
-		return upperMode;
+	/** Set the argUpperMode field value. */
+	public Multi.OverLimitMode getArgUpperMode() {
+		return argUpperMode;
 	}
 
-	/** Set the upperMode field value. */
-	public void setUpperMode(Multi.OverLimitMode upperMode) {
-		this.upperMode = upperMode;
+	/** Set the argUpperMode field value. */
+	public void setArgUpperMode(Multi.OverLimitMode argUpperMode) {
+		this.argUpperMode = argUpperMode;
 	}
 
-	/** Set the upperText field value. */
-	public String getUpperText() {
-		return upperText;
+	/** Set the argUpperText field value. */
+	public String getArgUpperText() {
+		return argUpperText;
 	}
 
-	/** Set the upperText field value. */
-	public void setUpperText(String upperText) {
-		this.upperText = upperText;
+	/** Set the argUpperText field value. */
+	public void setArgUpperText(String argUpperText) {
+		this.argUpperText = argUpperText;
+	}
+
+	/** Set the route field value. */
+	public Route getRoute() {
+		return route;
+	}
+
+	/** Set the route field value. */
+	public void setRoute(Route route) {
+		this.route = route;
+	}
+
+	/** Set the slowestTime field value. */
+	public int getSlowestTime() {
+		return slowestTime;
+	}
+
+	/** Set the slowestTime field value. */
+	public void setSlowestTime(int slowestTime) {
+		this.slowestTime = slowestTime;
+	}
+
+	/** Set the fastestTime field value. */
+	public int getFastestTime() {
+		return fastestTime;
+	}
+
+	/** Set the fastestTime field value. */
+	public void setFastestTime(int fastestTime) {
+		this.fastestTime = fastestTime;
+	}
+
+	/** Set the calculatedTime field value. */
+	public int getCalculatedTime() {
+		return calculatedTime;
+	}
+
+	/** Set the calculatedTime field value. */
+	public void setCalculatedTime(int calculatedTime) {
+		this.calculatedTime = calculatedTime;
 	}
 
 	/** is this object valid? */
 	public boolean isValid() {
-		if (isBlank(emptyBecomesNull(destinationStationId)))
+		if (isBlank(emptyBecomesNull(argDestStationId)))
 			return false;
-		if (null == lowerMode)
+		if (null == argLowerMode)
 			return false;
-		if (null == lowerText)
+		if (null == argLowerText)
 			return false;
 		return true;
 	}
 
 	/** is extended tag arguments */
 	public boolean isExtended() {
-		if (hasOrigin() || (null != upperMode && null != upperText))
+		if (hasOrigin() || (null != argUpperMode && null != argUpperText))
 			return true;
 		return false;
 	}
 
 	public boolean hasOrigin() {
-		if (!isBlank(emptyBecomesNull(originStationId)))
+		if (!isBlank(emptyBecomesNull(argOriginStationId)))
 			return true;
 		return false;
 	}
@@ -149,23 +203,23 @@ public class TravelTimeOptions {
 
 		StringBuilder rv = new StringBuilder("");
 		if (!tt.isExtended()) {
-			rv.append(tt.getDestinationStationId());
-			if (tt.getLowerMode() != DEF_LOW_MODE)
-				rv.append(",").append(tt.getLowerMode());
-			if (DEF_LOW_TEXT.equals(tt.getLowerText()))
-				rv.append(",").append(tt.getLowerText());
+			rv.append(tt.getArgDestStationId());
+			if (tt.getArgLowerMode() != DEF_LOW_MODE)
+				rv.append(",").append(tt.getArgLowerMode());
+			if (DEF_LOW_TEXT.equals(tt.getArgLowerText()))
+				rv.append(",").append(tt.getArgLowerText());
 		} else {
-			rv.append("d_sid=").append(tt.getDestinationStationId());
-			if (tt.getLowerMode() != DEF_LOW_MODE)
-				rv.append(",l_mode=").append(tt.getLowerMode());
-			if (DEF_LOW_TEXT.equals(tt.getLowerText()))
-				rv.append(",l_txt=").append(tt.getLowerText());
-			if (!isBlank(emptyBecomesNull(tt.getOriginStationId())))
-				rv.append(",o_sid=").append(tt.getOriginStationId());
-			if (tt.getUpperMode() != null)
-				rv.append(",u_mode=").append(tt.getUpperMode());
-			if (tt.getUpperText() != null)
-				rv.append(",u_txt").append(tt.getUpperText());
+			rv.append("d_sid=").append(tt.getArgDestStationId());
+			if (tt.getArgLowerMode() != DEF_LOW_MODE)
+				rv.append(",l_mode=").append(tt.getArgLowerMode());
+			if (DEF_LOW_TEXT.equals(tt.getArgLowerText()))
+				rv.append(",l_txt=").append(tt.getArgLowerText());
+			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
+				rv.append(",o_sid=").append(tt.getArgOriginStationId());
+			if (tt.getArgUpperMode() != null)
+				rv.append(",u_mode=").append(tt.getArgUpperMode());
+			if (tt.getArgUpperText() != null)
+				rv.append(",u_txt").append(tt.getArgUpperText());
 		}
 
 		return rv.toString();
@@ -177,29 +231,29 @@ public class TravelTimeOptions {
 		if (args.length <= 3) {
 			rv = new TravelTimeOptions(
 				((args.length > 0) ? args[0] : null));
-			rv.setLowerMode(DEF_LOW_MODE);
-			rv.setLowerText(DEF_LOW_TEXT);
+			rv.setArgLowerMode(DEF_LOW_MODE);
+			rv.setArgLowerText(DEF_LOW_TEXT);
 			if (args.length > 1)
-				rv.setLowerMode(parseOverMode(args[1]));
+				rv.setArgLowerMode(parseOverMode(args[1]));
 			if (args.length > 2)
-				rv.setLowerText(args[2]);
+				rv.setArgLowerText(args[2]);
 		} else {
 			rv = new TravelTimeOptions(null);
 			for (String s : args) {
 				String[] kv = s.split("=",2);
 				if (null != kv[0] && !"".equals(kv[0])) {
 					if ("d_sid".equals(kv[0]))
-						rv.setDestinationStationId(kv[1]);
+						rv.setArgDestStationId(kv[1]);
 					else if ("o_sid".equals(kv[0]))
-						rv.setOriginStationId(kv[1]);
+						rv.setArgOriginStationId(kv[1]);
 					else if ("l_mode".equals(kv[0]))
-						rv.setLowerMode(parseOverMode(kv[1]));
+						rv.setArgLowerMode(parseOverMode(kv[1]));
 					else if ("l_txt".equals(kv[0]))
-						rv.setLowerText(kv[1]);
+						rv.setArgLowerText(kv[1]);
 					else if ("u_mode".equals(kv[0]))
-						rv.setUpperMode(parseOverMode(kv[1]));
+						rv.setArgUpperMode(parseOverMode(kv[1]));
 					else if ("u_txt".equals(kv[0]))
-						rv.setUpperText(kv[1]);
+						rv.setArgUpperText(kv[1]);
 				}
 			}
 		}
