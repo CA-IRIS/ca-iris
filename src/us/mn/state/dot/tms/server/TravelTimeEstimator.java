@@ -100,14 +100,16 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(String sid, OverLimitMode mode,
-			String o_txt)
+		public void addTravelTime(String d_sid, OverLimitMode mode,
+			String o_txt, String o_sid)
 		{
-			Route r = lookupRoute(sid);
+			Route r = (o_sid != null)
+				? lookupRoute(d_sid, o_sid)
+				: lookupRoute(d_sid);
 			if (r != null)
 				addTravelTime(r, mode, o_txt);
 			else {
-				logTravel("NO ROUTE TO " + sid);
+				logTravel("NO ROUTE TO " + d_sid);
 				valid = false;
 			}
 		}
@@ -178,11 +180,31 @@ public class TravelTimeEstimator {
 		return s_routes.get(sid);
 	}
 
+	/** Lookup a route by station ID */
+	private Route lookupRoute(String sid, String o_sid) {
+		if (!s_routes.containsKey(sid)) {
+			Route r = createRoute(sid, o_sid);
+			if (r != null)
+				s_routes.put(sid, r);
+		}
+		return s_routes.get(sid);
+	}
+
 	/** Create one route to a travel time destination */
 	private Route createRoute(String sid) {
 		Station s = StationHelper.lookup(sid);
 		if (s != null)
 			return createRoute(s);
+		else
+			return null;
+	}
+
+	/** Create one route to a travel time destination from an origin */
+	private Route createRoute(String sid, String o_sid) {
+		Station s = StationHelper.lookup(sid);
+		Station os = StationHelper.lookup(o_sid);
+		if (s != null && os != null)
+			return createRoute(s, os);
 		else
 			return null;
 	}
@@ -193,17 +215,34 @@ public class TravelTimeEstimator {
 		return createRoute(dest);
 	}
 
+	/** Create one route to a travel time destination from an origin */
+	private Route createRoute(Station s, Station os) {
+		GeoLoc dest = s.getR_Node().getGeoLoc();
+		GeoLoc orig = os.getR_Node().getGeoLoc();
+		return createRoute(dest, orig, os.getName());
+	}
+
 	/** Create one route to a travel time destination */
 	private Route createRoute(GeoLoc dest) {
-		RouteBuilder builder = new RouteBuilder(TRAVEL_LOG, name,
+		return createRoute(dest, origin, name);
+	}
+
+	/** Create one route to a travel time destination from an origin */
+	private Route createRoute(GeoLoc dest, GeoLoc orig, String n) {
+		RouteBuilder builder = new RouteBuilder(TRAVEL_LOG, n,
 			BaseObjectImpl.corridors);
-		return builder.findBestRoute(origin, dest);
+		return builder.findBestRoute(orig, dest);
 	}
 
 	/** Log a travel time error */
 	private void logTravel(String m) {
+		logTravel(m, name);
+	}
+
+	/** Log a travel time error */
+	private void logTravel(String m, String n) {
 		if (TRAVEL_LOG.isOpen())
-			TRAVEL_LOG.log(name + ": " + m);
+			TRAVEL_LOG.log(n + ": " + m);
 	}
 
 	/** Check if the given route is a final destination */

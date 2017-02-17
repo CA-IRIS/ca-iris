@@ -2774,8 +2774,8 @@ FIXME
 
 <h3 id="travel_time">Travel Time Estimation</h3>
 <p>
-	The current <b>travel time</b> from a <a href="#dms">DMS</a> to a
-	downstream station can be estimated and displayed on the sign.
+	The current <b>travel time</b> from a <a href="#dms">DMS</a> (or origin
+	station) to a downstream station can be estimated and displayed on the sign.
 	A new estimate is made every 30 seconds, based on speed data from
 	<a href="#vds">vehicle detection systems</a>.
 </p>
@@ -2798,6 +2798,7 @@ FIXME
 	    </ul>
 	</li>
 	<li>Over limit text ("OVER " if omitted)</li>
+	<li>Origin station</li>
 </ol>
 <aside>
 	NOTE: multiple destinations can be included on the same message by
@@ -2811,6 +2812,7 @@ FIXME
 	</li>
 	<li>TIME TO[nl][jl2]I-35W[jl4]<b>[ttS200,append,+]</b> MIN</li>
 	<li>DOWNTN[nl]<b>[ttS300,blank]</b> MIN</li>
+	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[ttS100,prepend,OVER ,S392]</b> MIN</li>
 </ul>
 <h4>Route Pathfinding</h4>
 <p>

@@ -258,14 +258,15 @@ public class MultiString {
 	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
-		String[] args = v.split(",", 3);
+		String[] args = v.split(",", 4);
 		String sid = (args.length > 0) ? args[0] : null;
 		OverLimitMode mode = (args.length > 1)
 		                   ? parseOverMode(args[1])
 		                   : OverLimitMode.prepend;
 		String o_txt = (args.length > 2) ? args[2] : "OVER ";
-		if (sid != null)
-			cb.addTravelTime(sid, mode, o_txt);
+		String o_sid = (args.length > 3) ? args[3] : null;
+		if (sid != null && !sid.equals(o_sid))
+			cb.addTravelTime(sid, mode, o_txt, o_sid);
 	}
 
 	/** Parse a over limit mode value */

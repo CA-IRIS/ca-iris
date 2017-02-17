@@ -298,19 +298,24 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Add a travel time destination.
-	 * @param stat_id Destination station ID.
+	 * @param d_sid Destination station ID.
 	 * @param mode Over limit mode.
 	 * @param o_txt Over limit text. */
 	@Override
-	public void addTravelTime(String sid, OverLimitMode mode, String o_txt){
+	public void addTravelTime(String d_sid, OverLimitMode mode,
+		String o_txt, String o_sid) {
 		multi.append("[tt");
-		multi.append(sid);
+		multi.append(d_sid);
 		if (mode != null) {
 			multi.append(',');
 			multi.append(mode);
 			if (o_txt != null) {
 				multi.append(',');
 				multi.append(o_txt);
+				if (o_sid != null) {
+					multi.append(',');
+					multi.append(o_sid);
+				}
 			}
 		}
 		multi.append("]");
