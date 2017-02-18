@@ -181,8 +181,10 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add under limit travel time */
-		private void addUnderLimit(TravelTimeValue tt)
-		{
+		private void addUnderLimit(TravelTimeValue tt) {
+			if (tt.getArgUnderMode() == null)
+				return;
+
 			String lim = String.valueOf(roundUp5Min(tt.getFastestTime()));
 			switch (tt.getArgUnderMode()) {
 			case prepend:

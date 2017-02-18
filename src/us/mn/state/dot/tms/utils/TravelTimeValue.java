@@ -88,7 +88,7 @@ public class TravelTimeValue {
 		this.argDestStationId = d_sid;
 		argOverMode = DEF_OVER_MODE;
 		argOverText = DEF_OVER_TEXT;
-		argUnderMode = DEF_UNDER_MODE;
+		argUnderMode = null;
 		argUnderText = DEF_UNDER_TEXT;
 	}
 
