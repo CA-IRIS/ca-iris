@@ -275,9 +275,10 @@ public class TravelTimeValue {
 	}
 
 	/** map tag string arguments to a new TravelTimeValue object */
-	static public TravelTimeValue mapTo(String[] args) {
+	static public TravelTimeValue mapTo(String v) {
+		String[] args = v.split(ARG_DELIM, 6);
 		TravelTimeValue rv;
-		if (args.length <= 3) {
+		if (!v.contains("=") && args.length <= 3) {
 			rv = new TravelTimeValue(
 				((args.length > 0) ? args[0] : null));
 			rv.setArgOverMode(DEF_OVER_MODE);

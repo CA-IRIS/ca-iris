@@ -259,8 +259,7 @@ public class MultiString {
 	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
-		String[] args = v.split(TravelTimeValue.ARG_DELIM, 6);
-		TravelTimeValue tt = TravelTimeValue.mapTo(args);
+		TravelTimeValue tt = TravelTimeValue.mapTo(v);
 		if (tt.isValid())
 			cb.addTravelTime(tt);
 	}
