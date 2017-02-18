@@ -26,10 +26,32 @@ import static us.mn.state.dot.tms.utils.SString.isBlank;
  * @author Jacob Barde
  */
 public class TravelTimeValue {
-	static public final String DEF_LOWER_TEXT = "OVER ";
-	static public final Multi.OverLimitMode DEF_LOWER_MODE = Multi.OverLimitMode.prepend;
-	static public final String DEF_UPPER_TEXT = "UNDER ";
-	static public final Multi.OverLimitMode DEF_UPPER_MODE = Multi.OverLimitMode.blank;
+	/** default over mode */
+	static public final Multi.OverLimitMode DEF_OVER_MODE = Multi.OverLimitMode.prepend;
+	/** default over text */
+	static public final String DEF_OVER_TEXT = "OVER ";
+	/** default under mode */
+	static public final Multi.OverLimitMode DEF_UNDER_MODE = Multi.OverLimitMode.prepend;
+	/** default under text */
+	static public final String DEF_UNDER_TEXT = "UNDER ";
+
+	/** argument delimiter */
+	static public final String ARG_DELIM = ",";
+	/** key-value delimiter */
+	static public final String KV_DELIM = "=";
+
+	/** dest sid key */
+	static public final String DEST_SID = "d_sid";
+	/** origin sid key */
+	static public final String ORIG_SID = "o_sid";
+	/** over mode key */
+	static public final String OVER_MODE = "o_mode";
+	/** over text key */
+	static public final String OVER_TEXT = "o_txt";
+	/** under mode key */
+	static public final String UNDER_MODE = "u_mode";
+	/** under text key */
+	static public final String UNDER_TEXT = "u_txt";
 
 	/** origin station id */
 	private String argOriginStationId;
@@ -37,17 +59,17 @@ public class TravelTimeValue {
 	/** destination station id */
 	private String argDestStationId;
 
-	/** OverLimitMode for lower threshold */
-	private Multi.OverLimitMode argLowerMode;
+	/** OverLimitMode for over threshold */
+	private Multi.OverLimitMode argOverMode;
 
-	/** lower threshold text */
-	private String argLowerText;
+	/** over threshold text */
+	private String argOverText;
 
-	/** OverLimitMode for upper threshold */
-	private Multi.OverLimitMode argUpperMode;
+	/** OverLimitMode for under threshold */
+	private Multi.OverLimitMode argUnderMode;
 
-	/** upper threshold text */
-	private String argUpperText;
+	/** under threshold text */
+	private String argUnderText;
 
 	/** route */
 	private Route route;
@@ -64,17 +86,17 @@ public class TravelTimeValue {
 	/** Constructor */
 	public TravelTimeValue(String d_sid) {
 		this.argDestStationId = d_sid;
-		argLowerMode = DEF_LOWER_MODE;
-		argLowerText = DEF_LOWER_TEXT;
-		argUpperMode = DEF_UPPER_MODE;
-		argUpperText = DEF_UPPER_TEXT;
+		argOverMode = DEF_OVER_MODE;
+		argOverText = DEF_OVER_TEXT;
+		argUnderMode = DEF_UNDER_MODE;
+		argUnderText = DEF_UNDER_TEXT;
 	}
 
 	/** Constructor */
-	public TravelTimeValue(String d_sid, Multi.OverLimitMode l_mode, String l_txt) {
+	public TravelTimeValue(String d_sid, Multi.OverLimitMode o_mode, String o_txt) {
 		this(d_sid);
-		argLowerMode = l_mode;
-		argLowerText = l_txt;
+		argOverMode = o_mode;
+		argOverText = o_txt;
 	}
 
 	/** Set the argOriginStationId field value. */
@@ -97,44 +119,44 @@ public class TravelTimeValue {
 		this.argDestStationId = argDestStationId;
 	}
 
-	/** Set the argLowerMode field value. */
-	public Multi.OverLimitMode getArgLowerMode() {
-		return argLowerMode;
+	/** Set the argOverMode field value. */
+	public Multi.OverLimitMode getArgOverMode() {
+		return argOverMode;
 	}
 
-	/** Set the argLowerMode field value. */
-	public void setArgLowerMode(Multi.OverLimitMode argLowerMode) {
-		this.argLowerMode = argLowerMode;
+	/** Set the argOverMode field value. */
+	public void setArgOverMode(Multi.OverLimitMode argOverMode) {
+		this.argOverMode = argOverMode;
 	}
 
-	/** Set the argLowerText field value. */
-	public String getArgLowerText() {
-		return argLowerText;
+	/** Set the argOverText field value. */
+	public String getArgOverText() {
+		return argOverText;
 	}
 
-	/** Set the argLowerText field value. */
-	public void setArgLowerText(String argLowerText) {
-		this.argLowerText = argLowerText;
+	/** Set the argOverText field value. */
+	public void setArgOverText(String argOverText) {
+		this.argOverText = argOverText;
 	}
 
-	/** Set the argUpperMode field value. */
-	public Multi.OverLimitMode getArgUpperMode() {
-		return argUpperMode;
+	/** Set the argUnderMode field value. */
+	public Multi.OverLimitMode getArgUnderMode() {
+		return argUnderMode;
 	}
 
-	/** Set the argUpperMode field value. */
-	public void setArgUpperMode(Multi.OverLimitMode argUpperMode) {
-		this.argUpperMode = argUpperMode;
+	/** Set the argUnderMode field value. */
+	public void setArgUnderMode(Multi.OverLimitMode argUnderMode) {
+		this.argUnderMode = argUnderMode;
 	}
 
-	/** Set the argUpperText field value. */
-	public String getArgUpperText() {
-		return argUpperText;
+	/** Set the argUnderText field value. */
+	public String getArgUnderText() {
+		return argUnderText;
 	}
 
-	/** Set the argUpperText field value. */
-	public void setArgUpperText(String argUpperText) {
-		this.argUpperText = argUpperText;
+	/** Set the argUnderText field value. */
+	public void setArgUnderText(String argUnderText) {
+		this.argUnderText = argUnderText;
 	}
 
 	/** Set the route field value. */
@@ -181,16 +203,16 @@ public class TravelTimeValue {
 	public boolean isValid() {
 		if (isBlank(emptyBecomesNull(argDestStationId)))
 			return false;
-		if (null == argLowerMode)
+		if (null == argOverMode)
 			return false;
-		if (null == argLowerText)
+		if (null == argOverText)
 			return false;
 		return true;
 	}
 
 	/** is extended tag arguments */
 	public boolean isExtended() {
-		if (hasOrigin() || (null != argUpperMode && null != argUpperText))
+		if (hasOrigin() || (null != argUnderMode && null != argUnderText))
 			return true;
 		return false;
 	}
@@ -209,22 +231,37 @@ public class TravelTimeValue {
 		StringBuilder rv = new StringBuilder("");
 		if (!tt.isExtended()) {
 			rv.append(tt.getArgDestStationId());
-			if (tt.getArgLowerMode() != DEF_LOWER_MODE)
-				rv.append(",").append(tt.getArgLowerMode());
-			if (DEF_LOWER_TEXT.equals(tt.getArgLowerText()))
-				rv.append(",").append(tt.getArgLowerText());
+			if (tt.getArgOverMode() != DEF_OVER_MODE)
+				rv.append(ARG_DELIM).append(tt.getArgOverMode());
+			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
+				rv.append(ARG_DELIM).append(tt.getArgOverText());
 		} else {
 			rv.append("d_sid=").append(tt.getArgDestStationId());
-			if (tt.getArgLowerMode() != DEF_LOWER_MODE)
-				rv.append(",l_mode=").append(tt.getArgLowerMode());
-			if (DEF_LOWER_TEXT.equals(tt.getArgLowerText()))
-				rv.append(",l_txt=").append(tt.getArgLowerText());
+			if (tt.getArgOverMode() != DEF_OVER_MODE)
+				rv.append(ARG_DELIM)
+					.append(OVER_MODE)
+					.append(KV_DELIM)
+					.append(tt.getArgOverMode());
+			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
+				rv.append(ARG_DELIM)
+					.append(OVER_TEXT)
+					.append(KV_DELIM)
+					.append(tt.getArgOverText());
 			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
-				rv.append(",o_sid=").append(tt.getArgOriginStationId());
-			if (tt.getArgUpperMode() != null)
-				rv.append(",u_mode=").append(tt.getArgUpperMode());
-			if (tt.getArgUpperText() != null)
-				rv.append(",u_txt").append(tt.getArgUpperText());
+				rv.append(ARG_DELIM)
+					.append(ORIG_SID)
+					.append(KV_DELIM)
+					.append(tt.getArgOriginStationId());
+			if (tt.getArgUnderMode() != null)
+				rv.append(ARG_DELIM)
+					.append(UNDER_MODE)
+					.append(KV_DELIM)
+					.append(tt.getArgUnderMode());
+			if (tt.getArgUnderText() != null)
+				rv.append(ARG_DELIM)
+					.append(UNDER_TEXT)
+					.append(KV_DELIM)
+					.append(tt.getArgUnderText());
 		}
 
 		return rv.toString();
@@ -236,29 +273,29 @@ public class TravelTimeValue {
 		if (args.length <= 3) {
 			rv = new TravelTimeValue(
 				((args.length > 0) ? args[0] : null));
-			rv.setArgLowerMode(DEF_LOWER_MODE);
-			rv.setArgLowerText(DEF_LOWER_TEXT);
+			rv.setArgOverMode(DEF_OVER_MODE);
+			rv.setArgOverText(DEF_OVER_TEXT);
 			if (args.length > 1)
-				rv.setArgLowerMode(parseOverMode(args[1]));
+				rv.setArgOverMode(parseMode(args[1], DEF_OVER_MODE));
 			if (args.length > 2)
-				rv.setArgLowerText(args[2]);
+				rv.setArgOverText(args[2]);
 		} else {
 			rv = new TravelTimeValue(null);
 			for (String s : args) {
-				String[] kv = s.split("=",2);
+				String[] kv = s.split(KV_DELIM,2);
 				if (null != kv[0] && !"".equals(kv[0])) {
-					if ("d_sid".equals(kv[0]))
+					if (DEST_SID.equals(kv[0]))
 						rv.setArgDestStationId(kv[1]);
-					else if ("o_sid".equals(kv[0]))
+					else if (ORIG_SID.equals(kv[0]))
 						rv.setArgOriginStationId(kv[1]);
-					else if ("l_mode".equals(kv[0]))
-						rv.setArgLowerMode(parseOverMode(kv[1]));
-					else if ("l_txt".equals(kv[0]))
-						rv.setArgLowerText(kv[1]);
-					else if ("u_mode".equals(kv[0]))
-						rv.setArgUpperMode(parseOverMode(kv[1]));
-					else if ("u_txt".equals(kv[0]))
-						rv.setArgUpperText(kv[1]);
+					else if (OVER_MODE.equals(kv[0]))
+						rv.setArgOverMode(parseMode(kv[1], DEF_OVER_MODE));
+					else if (OVER_TEXT.equals(kv[0]))
+						rv.setArgOverText(kv[1]);
+					else if (UNDER_MODE.equals(kv[0]))
+						rv.setArgUnderMode(parseMode(kv[1], DEF_UNDER_MODE));
+					else if (UNDER_TEXT.equals(kv[0]))
+						rv.setArgUnderText(kv[1]);
 				}
 			}
 		}
@@ -266,11 +303,11 @@ public class TravelTimeValue {
 	}
 
 	/** Parse a over limit mode value */
-	static private Multi.OverLimitMode parseOverMode(String mode) {
+	static private Multi.OverLimitMode parseMode(String mode, Multi.OverLimitMode def) {
 		for (Multi.OverLimitMode m : Multi.OverLimitMode.values()) {
 			if (mode.equals(m.toString()))
 				return m;
 		}
-		return DEF_LOWER_MODE;
+		return def;
 	}
 }
