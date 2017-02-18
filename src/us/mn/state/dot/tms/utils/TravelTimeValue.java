@@ -100,16 +100,6 @@ public class TravelTimeValue {
 		argOverText = o_txt;
 	}
 
-	/** Set the argOriginStationId field value. */
-	public String getArgOriginStationId() {
-		return argOriginStationId;
-	}
-
-	/** Set the argOriginStationId field value. */
-	public void setArgOriginStationId(String osid) {
-		argOriginStationId = osid;
-	}
-
 	/** Set the argDestStationId field value. */
 	public String getArgDestStationId() {
 		return argDestStationId;
@@ -118,6 +108,13 @@ public class TravelTimeValue {
 	/** Set the argDestStationId field value. */
 	public void setArgDestStationId(String dsid) {
 		argDestStationId = dsid;
+	}
+
+	/** do we have an destination sid */
+	public boolean hasDest() {
+		if (!isBlank(emptyBecomesNull(argDestStationId)))
+			return true;
+		return false;
 	}
 
 	/** Set the argOverMode field value. */
@@ -140,6 +137,23 @@ public class TravelTimeValue {
 		argOverText = ot;
 	}
 
+	/** Set the argOriginStationId field value. */
+	public String getArgOriginStationId() {
+		return argOriginStationId;
+	}
+
+	/** Set the argOriginStationId field value. */
+	public void setArgOriginStationId(String osid) {
+		argOriginStationId = osid;
+	}
+
+	/** do we have an origin sid */
+	public boolean hasOrigin() {
+		if (!isBlank(emptyBecomesNull(argOriginStationId)))
+			return true;
+		return false;
+	}
+
 	/** Set the argUnderMode field value. */
 	public Multi.OverLimitMode getArgUnderMode() {
 		return argUnderMode;
@@ -152,6 +166,11 @@ public class TravelTimeValue {
 			argUnderText = DEF_UNDER_TEXT;
 	}
 
+	/** use under mode? */
+	public boolean useUnderMode() {
+		return argUnderMode != null;
+	}
+
 	/** Set the argUnderText field value. */
 	public String getArgUnderText() {
 		return argUnderText;
@@ -160,6 +179,11 @@ public class TravelTimeValue {
 	/** Set the argUnderText field value. */
 	public void setArgUnderText(String ut) {
 		argUnderText = ut;
+	}
+
+	/** has under text */
+	public boolean hasUnderText() {
+		return argUnderText != null;
 	}
 
 	/** Set the route field value. */
@@ -204,7 +228,7 @@ public class TravelTimeValue {
 
 	/** is this object valid? */
 	public boolean isValid() {
-		if (isBlank(emptyBecomesNull(argDestStationId)))
+		if (!hasDest())
 			return false;
 		if (null == argOverMode)
 			return false;
@@ -215,13 +239,7 @@ public class TravelTimeValue {
 
 	/** is extended tag arguments */
 	public boolean isExtended() {
-		if (hasOrigin() || (null != argUnderMode && null != argUnderText))
-			return true;
-		return false;
-	}
-
-	public boolean hasOrigin() {
-		if (!isBlank(emptyBecomesNull(argOriginStationId)))
+		if (hasOrigin() || (useUnderMode() && hasUnderText()))
 			return true;
 		return false;
 	}
@@ -232,13 +250,7 @@ public class TravelTimeValue {
 			return null;
 
 		StringBuilder rv = new StringBuilder("");
-		if (!tt.isExtended()) {
-			rv.append(tt.getArgDestStationId());
-			if (tt.getArgOverMode() != DEF_OVER_MODE)
-				rv.append(ARG_DELIM).append(tt.getArgOverMode());
-			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
-				rv.append(ARG_DELIM).append(tt.getArgOverText());
-		} else {
+		if (tt.isExtended()) {
 			rv.append(DEST_SID).append(KV_DELIM).append(tt.getArgDestStationId());
 			if (tt.getArgOverMode() != DEF_OVER_MODE)
 				rv.append(ARG_DELIM).append(OVER_MODE).append(KV_DELIM).append(tt.getArgOverMode());
@@ -246,11 +258,17 @@ public class TravelTimeValue {
 				rv.append(ARG_DELIM).append(OVER_TEXT).append(KV_DELIM).append(tt.getArgOverText());
 			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
 				rv.append(ARG_DELIM).append(ORIG_SID).append(KV_DELIM).append(tt.getArgOriginStationId());
-			if (tt.getArgUnderMode() != null) {
+			if (tt.useUnderMode()) {
 				rv.append(ARG_DELIM).append(UNDER_MODE).append(KV_DELIM).append(tt.getArgUnderMode());
-				if (tt.getArgUnderText() != null)
+				if (tt.hasUnderText() && !DEF_UNDER_TEXT.equals(tt.getArgUnderText()))
 					rv.append(ARG_DELIM).append(UNDER_TEXT).append(KV_DELIM).append(tt.getArgUnderText());
 			}
+		} else {
+			rv.append(tt.getArgDestStationId());
+			if (tt.getArgOverMode() != DEF_OVER_MODE)
+				rv.append(ARG_DELIM).append(tt.getArgOverMode());
+			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
+				rv.append(ARG_DELIM).append(tt.getArgOverText());
 		}
 
 		return rv.toString();
@@ -272,7 +290,7 @@ public class TravelTimeValue {
 			rv = new TravelTimeValue(null);
 			for (String s : args) {
 				String[] kv = s.split(KV_DELIM,2);
-				if (null != kv[0] && !"".equals(kv[0])) {
+				if (null != kv[0] && !"".equals(kv[0].trim())) {
 					if (DEST_SID.equals(kv[0]))
 						rv.setArgDestStationId(kv[1]);
 					else if (ORIG_SID.equals(kv[0]))

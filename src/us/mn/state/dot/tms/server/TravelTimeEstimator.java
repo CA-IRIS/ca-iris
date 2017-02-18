@@ -131,11 +131,9 @@ public class TravelTimeEstimator {
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
-				int mn = calculateTravelTime(r, final_dest);
-				int slow = maximumTripMinutes(r.getDistance());
-				int fast = minimumTripMinutes(r.getDistance());
-				tt.setSlowestTime(slow);
-				tt.setFastestTime(fast);
+				tt.setCalculatedTime(calculateTravelTime(r, final_dest));
+				tt.setSlowestTime(maximumTripMinutes(r.getDistance()));
+				tt.setFastestTime(minimumTripMinutes(r.getDistance()));
 				addTravelTimeOverUnder(tt);
 			}
 			catch (BadRouteException e) {
@@ -148,7 +146,7 @@ public class TravelTimeEstimator {
 		private void addTravelTimeOverUnder(TravelTimeValue tt)
 		{
 			boolean over = tt.getCalculatedTime() > tt.getSlowestTime();
-			boolean under = tt.getCalculatedTime() < tt.getFastestTime();
+			boolean under = tt.useUnderMode() && tt.getCalculatedTime() < tt.getFastestTime();
 
 			if (over)
 				any_over = true;
@@ -182,7 +180,7 @@ public class TravelTimeEstimator {
 
 		/** Add under limit travel time */
 		private void addUnderLimit(TravelTimeValue tt) {
-			if (tt.getArgUnderMode() == null)
+			if (!tt.useUnderMode())
 				return;
 
 			String lim = String.valueOf(roundUp5Min(tt.getFastestTime()));
