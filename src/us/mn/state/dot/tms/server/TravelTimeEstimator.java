@@ -183,7 +183,7 @@ public class TravelTimeEstimator {
 			if (!tt.useUnderMode())
 				return;
 
-			String lim = String.valueOf(roundUp5Min(tt.getFastestTime()));
+			String lim = String.valueOf(tt.getFastestTime());
 			switch (tt.getArgUnderMode()) {
 			case prepend:
 				addSpan(tt.getArgUnderText() + lim);

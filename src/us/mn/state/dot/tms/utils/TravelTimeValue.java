@@ -88,9 +88,9 @@ public class TravelTimeValue {
 		argDestStationId = d_sid;
 		argOverMode = DEF_OVER_MODE;
 		argOverText = DEF_OVER_TEXT;
+		argOriginStationId = null;
 		argUnderMode = null;
 		argUnderText = null;
-		argOriginStationId = null;
 	}
 
 	/** Constructor */

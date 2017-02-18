@@ -2798,11 +2798,10 @@ FIXME
 	    </ul>
 	</li>
 	<li>Over limit text ("OVER " if omitted)</li>
-	<strong>If using the following addtional arguments, you must use key=value pairs (see examples).</strong>
+	<strong>If using the following additional arguments, you must use key=value pairs (see examples).</strong>
 	<li>Origin station</li>
-	<li>Over speed limit value</li>
-	<li>Over speed limit mode (see <a href="#travel_time_limit">Over limit</a>) </li>
-	<li>Over speed limit text</li>
+	<li>Under limit mode (see <a href="#travel_time_limit">Over limit</a>) </li>
+	<li>Under limit text</li>
 </ol>
 <aside>
 	NOTE: multiple destinations can be included on the same message by
@@ -2816,7 +2815,8 @@ FIXME
 	</li>
 	<li>TIME TO[nl][jl2]I-35W[jl4]<b>[ttS200,append,+]</b> MIN</li>
 	<li>DOWNTN[nl]<b>[ttS300,blank]</b> MIN</li>
-	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[tto_sid=S392,d_S100,mode=prepend,o_txt=OVER ,o_speed=65,os_mode=prepend,os_txt=UNDER ]</b> MIN</li>
+	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[tto_sid=S392,d_sid=S100]</b> MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]SR 120[jl4][ttd_sid=1001710,o_mode=append,o_txt=+,u_mode=prepend,u_txt=<] MIN</li>
 </ul>
 <h4>Route Pathfinding</h4>
 <p>
