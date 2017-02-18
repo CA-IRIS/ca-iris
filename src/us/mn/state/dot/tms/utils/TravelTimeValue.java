@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2017  California Department of Transporation
+ * Copyright (C) 2017  California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,11 +85,12 @@ public class TravelTimeValue {
 
 	/** Constructor */
 	public TravelTimeValue(String d_sid) {
-		this.argDestStationId = d_sid;
+		argDestStationId = d_sid;
 		argOverMode = DEF_OVER_MODE;
 		argOverText = DEF_OVER_TEXT;
 		argUnderMode = null;
-		argUnderText = DEF_UNDER_TEXT;
+		argUnderText = null;
+		argOriginStationId = null;
 	}
 
 	/** Constructor */
@@ -105,8 +106,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argOriginStationId field value. */
-	public void setArgOriginStationId(String argOriginStationId) {
-		this.argOriginStationId = argOriginStationId;
+	public void setArgOriginStationId(String osid) {
+		argOriginStationId = osid;
 	}
 
 	/** Set the argDestStationId field value. */
@@ -115,8 +116,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argDestStationId field value. */
-	public void setArgDestStationId(String argDestStationId) {
-		this.argDestStationId = argDestStationId;
+	public void setArgDestStationId(String dsid) {
+		argDestStationId = dsid;
 	}
 
 	/** Set the argOverMode field value. */
@@ -125,8 +126,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argOverMode field value. */
-	public void setArgOverMode(Multi.OverLimitMode argOverMode) {
-		this.argOverMode = argOverMode;
+	public void setArgOverMode(Multi.OverLimitMode om) {
+		argOverMode = om;
 	}
 
 	/** Set the argOverText field value. */
@@ -135,8 +136,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argOverText field value. */
-	public void setArgOverText(String argOverText) {
-		this.argOverText = argOverText;
+	public void setArgOverText(String ot) {
+		argOverText = ot;
 	}
 
 	/** Set the argUnderMode field value. */
@@ -145,8 +146,10 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argUnderMode field value. */
-	public void setArgUnderMode(Multi.OverLimitMode argUnderMode) {
-		this.argUnderMode = argUnderMode;
+	public void setArgUnderMode(Multi.OverLimitMode um) {
+		argUnderMode = um;
+		if (um != null && argUnderText == null)
+			argUnderText = DEF_UNDER_TEXT;
 	}
 
 	/** Set the argUnderText field value. */
@@ -155,8 +158,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the argUnderText field value. */
-	public void setArgUnderText(String argUnderText) {
-		this.argUnderText = argUnderText;
+	public void setArgUnderText(String ut) {
+		argUnderText = ut;
 	}
 
 	/** Set the route field value. */
@@ -165,8 +168,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the route field value. */
-	public void setRoute(Route route) {
-		this.route = route;
+	public void setRoute(Route r) {
+		route = r;
 	}
 
 	/** Set the slowestTime field value. */
@@ -175,8 +178,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the slowestTime field value. */
-	public void setSlowestTime(int slowestTime) {
-		this.slowestTime = slowestTime;
+	public void setSlowestTime(int st) {
+		slowestTime = st;
 	}
 
 	/** Set the fastestTime field value. */
@@ -185,8 +188,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the fastestTime field value. */
-	public void setFastestTime(int fastestTime) {
-		this.fastestTime = fastestTime;
+	public void setFastestTime(int ft) {
+		fastestTime = ft;
 	}
 
 	/** Set the calculatedTime field value. */
@@ -195,8 +198,8 @@ public class TravelTimeValue {
 	}
 
 	/** Set the calculatedTime field value. */
-	public void setCalculatedTime(int calculatedTime) {
-		this.calculatedTime = calculatedTime;
+	public void setCalculatedTime(int ct) {
+		calculatedTime = ct;
 	}
 
 	/** is this object valid? */
@@ -236,32 +239,18 @@ public class TravelTimeValue {
 			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
 				rv.append(ARG_DELIM).append(tt.getArgOverText());
 		} else {
-			rv.append("d_sid=").append(tt.getArgDestStationId());
+			rv.append(DEST_SID).append(KV_DELIM).append(tt.getArgDestStationId());
 			if (tt.getArgOverMode() != DEF_OVER_MODE)
-				rv.append(ARG_DELIM)
-					.append(OVER_MODE)
-					.append(KV_DELIM)
-					.append(tt.getArgOverMode());
+				rv.append(ARG_DELIM).append(OVER_MODE).append(KV_DELIM).append(tt.getArgOverMode());
 			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
-				rv.append(ARG_DELIM)
-					.append(OVER_TEXT)
-					.append(KV_DELIM)
-					.append(tt.getArgOverText());
+				rv.append(ARG_DELIM).append(OVER_TEXT).append(KV_DELIM).append(tt.getArgOverText());
 			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
-				rv.append(ARG_DELIM)
-					.append(ORIG_SID)
-					.append(KV_DELIM)
-					.append(tt.getArgOriginStationId());
-			if (tt.getArgUnderMode() != null)
-				rv.append(ARG_DELIM)
-					.append(UNDER_MODE)
-					.append(KV_DELIM)
-					.append(tt.getArgUnderMode());
-			if (tt.getArgUnderText() != null)
-				rv.append(ARG_DELIM)
-					.append(UNDER_TEXT)
-					.append(KV_DELIM)
-					.append(tt.getArgUnderText());
+				rv.append(ARG_DELIM).append(ORIG_SID).append(KV_DELIM).append(tt.getArgOriginStationId());
+			if (tt.getArgUnderMode() != null) {
+				rv.append(ARG_DELIM).append(UNDER_MODE).append(KV_DELIM).append(tt.getArgUnderMode());
+				if (tt.getArgUnderText() != null)
+					rv.append(ARG_DELIM).append(UNDER_TEXT).append(KV_DELIM).append(tt.getArgUnderText());
+			}
 		}
 
 		return rv.toString();
