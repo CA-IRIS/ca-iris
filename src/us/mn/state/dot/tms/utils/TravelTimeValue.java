@@ -252,9 +252,9 @@ public class TravelTimeValue {
 		StringBuilder rv = new StringBuilder("");
 		if (tt.isExtended()) {
 			rv.append(DEST_SID).append(KV_DELIM).append(tt.getArgDestStationId());
-			if (tt.getArgOverMode() != DEF_OVER_MODE)
+			if (!DEF_OVER_MODE.equals(tt.getArgOverMode()))
 				rv.append(ARG_DELIM).append(OVER_MODE).append(KV_DELIM).append(tt.getArgOverMode());
-			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
+			if (!DEF_OVER_TEXT.equals(tt.getArgOverText()))
 				rv.append(ARG_DELIM).append(OVER_TEXT).append(KV_DELIM).append(tt.getArgOverText());
 			if (!isBlank(emptyBecomesNull(tt.getArgOriginStationId())))
 				rv.append(ARG_DELIM).append(ORIG_SID).append(KV_DELIM).append(tt.getArgOriginStationId());
@@ -265,9 +265,9 @@ public class TravelTimeValue {
 			}
 		} else {
 			rv.append(tt.getArgDestStationId());
-			if (tt.getArgOverMode() != DEF_OVER_MODE)
+			if (!DEF_OVER_MODE.equals(tt.getArgOverMode()))
 				rv.append(ARG_DELIM).append(tt.getArgOverMode());
-			if (DEF_OVER_TEXT.equals(tt.getArgOverText()))
+			if (!DEF_OVER_TEXT.equals(tt.getArgOverText()))
 				rv.append(ARG_DELIM).append(tt.getArgOverText());
 		}
 
