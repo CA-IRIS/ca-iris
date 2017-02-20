@@ -149,7 +149,7 @@ public interface Multi {
 
 	/** Add a travel time destination.
 	 * @param tt Map of travel time arguments. */
-	void addTravelTime(TravelTimeValue tt);
+	void addTravelTime(TravelTimeTag tt);
 
 	/** Add a speed advisory */
 	void addSpeedAdvisory();

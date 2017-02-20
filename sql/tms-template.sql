@@ -366,7 +366,7 @@ CREATE TABLE iris.sign_group (
 CREATE TABLE iris.quick_message (
 	name VARCHAR(20) PRIMARY KEY,
 	sign_group VARCHAR(16) REFERENCES iris.sign_group,
-	multi VARCHAR(256) NOT NULL
+	multi VARCHAR(2048) NOT NULL
 );
 
 CREATE TABLE iris.comm_protocol (
@@ -2581,6 +2581,7 @@ toll_min_price	0.25
 toll_max_price	8
 travel_time_max_legs	8
 travel_time_max_miles	16
+travel_time_max_mph	65
 travel_time_min_mph	15
 uptime_log_enable	false
 urms_read_margin_sec	5

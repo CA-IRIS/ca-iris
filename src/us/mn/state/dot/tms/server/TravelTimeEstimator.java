@@ -28,7 +28,7 @@ import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
 import us.mn.state.dot.tms.utils.MultiBuilder;
 import us.mn.state.dot.tms.utils.MultiString;
-import us.mn.state.dot.tms.utils.TravelTimeValue;
+import us.mn.state.dot.tms.utils.TravelTimeTag;
 
 /**
  * Travel time estimator
@@ -112,22 +112,22 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(TravelTimeValue tt)
+		public void addTravelTime(TravelTimeTag tt)
 		{
 			Route r = (tt.hasOrigin())
-				? lookupRoute(tt.getArgDestStationId(), tt.getArgOriginStationId())
-				: lookupRoute(tt.getArgDestStationId());
+				? lookupRoute(tt.getDestinationStation(), tt.getOriginStation())
+				: lookupRoute(tt.getDestinationStation());
 			tt.setRoute(r);
 			if (r != null)
 				addTravelTimeOverUnder(r, tt);
 			else {
-				logTravel("NO ROUTE TO " + tt.getArgDestStationId());
+				logTravel("NO ROUTE TO " + tt.getDestinationStation());
 				valid = false;
 			}
 		}
 
 		/** Add a travel time for a route */
-		private void addTravelTimeOverUnder(Route r, TravelTimeValue tt)
+		private void addTravelTimeOverUnder(Route r, TravelTimeTag tt)
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
@@ -143,7 +143,7 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add a travel time */
-		private void addTravelTimeOverUnder(TravelTimeValue tt)
+		private void addTravelTimeOverUnder(TravelTimeTag tt)
 		{
 			boolean over = tt.getCalculatedTime() > tt.getSlowestTime();
 			boolean under = tt.useUnderMode() && tt.getCalculatedTime() < tt.getFastestTime();
@@ -162,15 +162,15 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add over limit travel time */
-		private void addOverLimit(TravelTimeValue tt)
+		private void addOverLimit(TravelTimeTag tt)
 		{
 			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime()));
-			switch (tt.getArgOverMode()) {
+			switch (tt.getOverMode()) {
 			case prepend:
-				addSpan(tt.getArgOverText() + lim);
+				addSpan(tt.getOverText() + lim);
 				break;
 			case append:
-				addSpan(lim + tt.getArgOverText());
+				addSpan(lim + tt.getOverText());
 				break;
 			default:
 				valid = false;
@@ -179,17 +179,17 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add under limit travel time */
-		private void addUnderLimit(TravelTimeValue tt) {
+		private void addUnderLimit(TravelTimeTag tt) {
 			if (!tt.useUnderMode())
 				return;
 
 			String lim = String.valueOf(tt.getFastestTime());
-			switch (tt.getArgUnderMode()) {
+			switch (tt.getUnderMode()) {
 			case prepend:
-				addSpan(tt.getArgUnderText() + lim);
+				addSpan(tt.getUnderText() + lim);
 				break;
 			case append:
-				addSpan(lim + tt.getArgUnderText());
+				addSpan(lim + tt.getUnderText());
 				break;
 			default:
 				valid = false;

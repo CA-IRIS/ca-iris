@@ -136,7 +136,7 @@ public class MultiAdapter implements Multi {
 	/** Add a travel time destination.
 	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(TravelTimeValue tt) { }
+	public void addTravelTime(TravelTimeTag tt) { }
 
 	/** Add a speed advisory */
 	@Override
