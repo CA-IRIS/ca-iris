@@ -16,6 +16,7 @@
 package us.mn.state.dot.tms.server;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.Station;
@@ -114,13 +115,46 @@ public class TravelTimeEstimator {
 		@Override
 		public void addTravelTime(TravelTimeTag tt)
 		{
-			Route r = (tt.hasOrigin())
-				? lookupRoute(tt.getDestinationStation(), tt.getOriginStation())
-				: lookupRoute(tt.getDestinationStation());
-			tt.setRoute(r);
-			if (r != null)
+			int travel_time = 0;
+			int slow_time = 0;
+			int fast_time = 0;
+
+			String wp1, wp2 = null;
+			Route r;
+			if (!tt.isExtended() && tt.isValid()) {
+				r = lookupRoute(tt.getDestinationStation());
 				addTravelTimeOverUnder(r, tt);
-			else {
+				if (valid)
+					tt.addRoute(r);
+			} else if (tt.isExtended()) {
+				Iterator<String> i = tt.getWayPointStations().iterator();
+				do {
+					wp1 = wp2;
+					wp2 = i.next();
+					if (wp1 == null || wp2 == null)
+						continue;
+					r = lookupRoute(wp1, wp2);
+					addTravelTimeOverUnder(r, tt);
+					if (valid) {
+						travel_time += tt.getCalculatedTime();
+						slow_time += tt.getSlowestTime();
+						fast_time += tt.getFastestTime();
+						tt.addRoute(r);
+					}
+				} while (i.hasNext());
+
+				float dist = 0;
+				for (Route rt : tt.getRoutes()) {
+					dist += rt.getDistance().asFloat(Distance.Units.MILES);
+				}
+				if (dist > SystemAttrEnum.TRAVEL_TIME_MAX_MILES.getFloat()) {
+					logTravel("NO ROUTE TO " + tt.getDestinationStation());
+					valid = false;
+				}
+				tt.setCalculatedTime(travel_time);
+				tt.setSlowestTime(slow_time);
+				tt.setFastestTime(fast_time);
+			} else {
 				logTravel("NO ROUTE TO " + tt.getDestinationStation());
 				valid = false;
 			}
@@ -228,10 +262,7 @@ public class TravelTimeEstimator {
 	/** Create one route to a travel time destination */
 	private Route createRoute(String sid) {
 		Station s = StationHelper.lookup(sid);
-		if (s != null)
-			return createRoute(s);
-		else
-			return null;
+		return (s != null) ? createRoute(s) : null;
 	}
 
 	/** Create one route to a travel time destination from an origin */
@@ -284,7 +315,7 @@ public class TravelTimeEstimator {
 	private boolean isFinalDest(Route r) {
 		for (Route ro: s_routes.values()) {
 			if (ro != r && isSameCorridor(r, ro) &&
-				r.getDistance().m() < ro.getDistance().m())
+			   (r.getDistance().m() < ro.getDistance().m()))
 			{
 				return false;
 			}
@@ -316,9 +347,9 @@ public class TravelTimeEstimator {
 		Corridor cor = null;
 		for (Route r: s_routes.values()) {
 			Corridor c = r.getOnlyCorridor();
-			if (c == null)
+			if (null == c)
 				return false;
-			if (cor == null)
+			if (null == cor)
 				cor = c;
 			else if (c != cor)
 				return false;

@@ -74,8 +74,8 @@ public class TravelTimeTag {
 	/** under threshold text */
 	private String underText;
 
-	/** route */
-	private Route route;
+	/** routes */
+	private List<Route> routes;
 
 	/** slowest time allowed */
 	private int slowestTime;
@@ -96,6 +96,10 @@ public class TravelTimeTag {
 		overText = DEF_OVER_TEXT;
 		underMode = null;
 		underText = null;
+		routes = new ArrayList<>();
+		slowestTime = 0;
+		fastestTime = 0;
+		calculatedTime = 0;
 	}
 
 	/** Constructor */
@@ -199,14 +203,18 @@ public class TravelTimeTag {
 		return underText != null;
 	}
 
-	/** Set the route field value. */
-	public Route getRoute() {
-		return route;
+	/** Set the routes field value. */
+	public List<Route> getRoutes() {
+		return routes;
 	}
 
-	/** Set the route field value. */
-	public void setRoute(Route r) {
-		route = r;
+	/** Set the routes field value. */
+	public void setRoutes(List<Route> r) {
+		routes = r;
+	}
+
+	public void addRoute(Route r) {
+		routes.add(r);
 	}
 
 	/** Set the slowestTime field value. */
