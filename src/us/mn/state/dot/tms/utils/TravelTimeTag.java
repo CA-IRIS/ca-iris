@@ -31,35 +31,43 @@ import static us.mn.state.dot.tms.utils.SString.isBlank;
 public class TravelTimeTag {
 	/** default over mode */
 	static public final Multi.OverLimitMode DEF_OVER_MODE = Multi.OverLimitMode.prepend;
+
 	/** default over text */
 	static public final String DEF_OVER_TEXT = "OVER ";
+
 	/** default under mode */
 	static public final Multi.OverLimitMode DEF_UNDER_MODE = Multi.OverLimitMode.prepend;
+
 	/** default under text */
 	static public final String DEF_UNDER_TEXT = "UNDER ";
 
 	/** argument delimiter */
 	static public final String ARG_DELIM = ",";
+
 	/** key-value delimiter */
 	static public final String KV_DELIM = "=";
+
 	/** way-point delimiter */
 	static public final String WP_DELIM = "\\s+";
 
 	/** dest sid key */
 	static public final String WAY_POINTS = "wp";
+
 	/** over mode key */
 	static public final String OVER_MODE = "om";
+
 	/** over text key */
 	static public final String OVER_TEXT = "ot";
+
 	/** under mode key */
 	static public final String UNDER_MODE = "um";
+
 	/** under text key */
 	static public final String UNDER_TEXT = "ut";
 
 	/** way-point station ids.
 	 * last station id is always the destination.
-	 * if 2 or more way points, first is considered origin station
-	 */
+	 * if 2 or more way points, first is considered origin station */
 	private List<String> wayPointStations;
 
 	/** OverLimitMode for over threshold */
@@ -80,11 +88,20 @@ public class TravelTimeTag {
 	/** slowest time allowed */
 	private int slowestTime;
 
+	/** accumulated slowest time allowed */
+	private List<Integer> accSlow = new ArrayList<>();
+
 	/** fastest time allowed */
 	private int fastestTime;
 
+	/** accumulated fastest time allowed */
+	private List<Integer> accFast = new ArrayList<>();
+
 	/** calculated time */
 	private int calculatedTime;
+
+	/** accumulated calculated time */
+	private List<Integer> accCalc = new ArrayList<>();
 
 	/** Constructor */
 	public TravelTimeTag(String d_sid) {
@@ -114,6 +131,7 @@ public class TravelTimeTag {
 		return wayPointStations.get((wayPointStations.size()-1));
 	}
 
+	/** get way-points as a string */
 	private String getWayPointStationsStr() {
 		StringBuilder rv = new StringBuilder();
 		for (String s : getWayPointStations()) {
@@ -121,6 +139,7 @@ public class TravelTimeTag {
 		}
 		return rv.toString().trim();
 	}
+
 	/** get a list of way-point stations. */
 	public List<String> getWayPointStations() {
 		return wayPointStations;
@@ -196,6 +215,8 @@ public class TravelTimeTag {
 	/** Set the underText field value. */
 	private void setUnderText(String ut) {
 		underText = ut;
+		if (ut != null && underMode == null)
+			underMode = DEF_UNDER_MODE;
 	}
 
 	/** has under text */
@@ -222,9 +243,32 @@ public class TravelTimeTag {
 		return slowestTime;
 	}
 
+	/** get the slowest time
+	 * @param accumulated boolean.
+	 *                    true to get accumulated time,
+	 *                    false to get the regular [latest] value.
+	 * @return integer value
+	 */
+	public int getSlowestTime(boolean accumulated) {
+		if (!accumulated)
+			return getSlowestTime();
+
+		Integer rv = 0;
+		for (Integer i : accSlow)
+			if (i != null)
+				rv += i;
+		return rv;
+	}
+
 	/** Set the slowestTime field value. */
-	public void setSlowestTime(int st) {
+	private void setSlowestTime(int st) {
 		slowestTime = st;
+	}
+
+	/** add and set slowest time */
+	public void addSlowestTime(int ft) {
+		accSlow.add(ft);
+		setSlowestTime(ft);
 	}
 
 	/** Set the fastestTime field value. */
@@ -232,9 +276,32 @@ public class TravelTimeTag {
 		return fastestTime;
 	}
 
+	/** get the fastest time
+	 * @param accumulated boolean.
+	 *                    true to get accumulated time,
+	 *                    false to get the regular [latest] value.
+	 * @return integer value
+	 */
+	public int getFastestTime(boolean accumulated) {
+		if (!accumulated)
+			return getFastestTime();
+
+		Integer rv = 0;
+		for (Integer i : accFast)
+			if (i != null)
+				rv += i;
+		return rv;
+	}
+
 	/** Set the fastestTime field value. */
-	public void setFastestTime(int ft) {
+	private void setFastestTime(int ft) {
 		fastestTime = ft;
+	}
+
+	/** add and set the fastest time */
+	public void addFastestTime(int ft) {
+		accFast.add(ft);
+		setFastestTime(ft);
 	}
 
 	/** Set the calculatedTime field value. */
@@ -242,25 +309,49 @@ public class TravelTimeTag {
 		return calculatedTime;
 	}
 
+	/** get the calculated time time
+	 * @param accumulated boolean.
+	 *                    true to get accumulated time,
+	 *                    false to get the regular [latest] value.
+	 * @return integer value
+	 */
+	public int getCalculatedTime(boolean accumulated) {
+		if (!accumulated)
+			return getCalculatedTime();
+
+		Integer rv = 0;
+		for (Integer i : accCalc)
+			if (i != null)
+				rv += i;
+		return rv;
+	}
+
+
 	/** Set the calculatedTime field value. */
-	public void setCalculatedTime(int ct) {
+	private void setCalculatedTime(int ct) {
 		calculatedTime = ct;
+	}
+
+	/** add and set calculated time */
+	public void addCalculatedTime(int ct) {
+		accCalc.add(ct);
+		setCalculatedTime(ct);
 	}
 
 	/** is this object valid? */
 	public boolean isValid() {
 		if (!hasDest())
 			return false;
-		if (null == overMode)
+		if (null == overMode || null == overText)
 			return false;
-		if (null == overText)
+		if ((underMode != null && underText == null) || (underText != null && underMode == null))
 			return false;
 		return true;
 	}
 
 	/** is extended tag arguments */
 	public boolean isExtended() {
-		return (hasOrigin() || (useUnderMode() && hasUnderText()));
+		return (isValid() && (hasOrigin() || (useUnderMode() && hasUnderText())));
 	}
 
 	/** create a string for use as arguments in a tag */

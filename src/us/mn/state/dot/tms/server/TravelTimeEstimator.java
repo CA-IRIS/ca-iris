@@ -115,18 +115,11 @@ public class TravelTimeEstimator {
 		@Override
 		public void addTravelTime(TravelTimeTag tt)
 		{
-			int travel_time = 0;
-			int slow_time = 0;
-			int fast_time = 0;
+			float dist = 0;
 
 			String wp1, wp2 = null;
 			Route r;
-			if (!tt.isExtended() && tt.isValid()) {
-				r = lookupRoute(tt.getDestinationStation());
-				addTravelTimeOverUnder(r, tt);
-				if (valid)
-					tt.addRoute(r);
-			} else if (tt.isExtended()) {
+			if (tt.isExtended()) {
 				Iterator<String> i = tt.getWayPointStations().iterator();
 				do {
 					wp1 = wp2;
@@ -135,26 +128,24 @@ public class TravelTimeEstimator {
 						continue;
 					r = lookupRoute(wp1, wp2);
 					addTravelTimeOverUnder(r, tt);
-					if (valid) {
-						travel_time += tt.getCalculatedTime();
-						slow_time += tt.getSlowestTime();
-						fast_time += tt.getFastestTime();
-						tt.addRoute(r);
+					if (!valid)
+						break;
+					dist += r.getDistance().asFloat(Distance.Units.MILES);
+					if (dist > SystemAttrEnum.TRAVEL_TIME_MAX_MILES.getFloat()) {
+						valid = false;
+						break;
 					}
+					tt.addRoute(r);
 				} while (i.hasNext());
 
-				float dist = 0;
-				for (Route rt : tt.getRoutes()) {
-					dist += rt.getDistance().asFloat(Distance.Units.MILES);
-				}
-				if (dist > SystemAttrEnum.TRAVEL_TIME_MAX_MILES.getFloat()) {
-					logTravel("NO ROUTE TO " + tt.getDestinationStation());
-					valid = false;
-				}
-				tt.setCalculatedTime(travel_time);
-				tt.setSlowestTime(slow_time);
-				tt.setFastestTime(fast_time);
-			} else {
+			} else if (tt.isValid()) {
+				r = lookupRoute(tt.getDestinationStation());
+				addTravelTimeOverUnder(r, tt);
+				if (valid)
+					tt.addRoute(r);
+			}
+
+			if (!valid || !tt.isValid()) {
 				logTravel("NO ROUTE TO " + tt.getDestinationStation());
 				valid = false;
 			}
@@ -165,9 +156,9 @@ public class TravelTimeEstimator {
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
-				tt.setCalculatedTime(calculateTravelTime(r, final_dest));
-				tt.setSlowestTime(maximumTripMinutes(r.getDistance()));
-				tt.setFastestTime(minimumTripMinutes(r.getDistance()));
+				tt.addCalculatedTime(calculateTravelTime(r, final_dest));
+				tt.addSlowestTime(maximumTripMinutes(r.getDistance()));
+				tt.addFastestTime(minimumTripMinutes(r.getDistance()));
 				addTravelTimeOverUnder(tt);
 			}
 			catch (BadRouteException e) {
