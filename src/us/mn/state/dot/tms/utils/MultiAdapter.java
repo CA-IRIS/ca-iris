@@ -131,7 +131,7 @@ public class MultiAdapter implements Multi {
 	public void addGraphic(int g_num, Integer x, Integer y, String g_id) { }
 
 	/** Add a travel time destination.
-	 * @param stat_id Destination station ID.
+	 * @param sid Destination station ID.
 	 * @param mode Over limit mode.
 	 * @param o_txt Over limit text. */
 	@Override
@@ -144,11 +144,10 @@ public class MultiAdapter implements Multi {
 
 	/** Add a slow traffic warning.
 	 * @param spd Highest speed to activate warning.
-	 * @param b Distance to end of backup (negative indicates upstream).
-	 * @param units Units for speed (mph or kph).
-	 * @param dist If true, replace tag with distance to slow station. */
+	 * @param dist Distance to search for slow traffic (1/10 mile).
+	 * @param mode Tag replacement mode (none, dist or speed). */
 	@Override
-	public void addSlowWarning(int spd, int b, String units, boolean dist){}
+	public void addSlowWarning(int spd, int dist, String mode) { }
 
 	/** Add a feed message */
 	@Override
