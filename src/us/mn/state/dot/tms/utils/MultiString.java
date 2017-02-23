@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.units.Interval;
-import us.mn.state.dot.tms.utils.Multi.OverLimitMode;
 
 /**
  * MULTI String (MarkUp Language for Transportation Information), as specified
@@ -31,6 +31,7 @@ import us.mn.state.dot.tms.utils.Multi.OverLimitMode;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class MultiString {
 
@@ -258,24 +259,9 @@ public class MultiString {
 	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
-		String[] args = v.split(",", 4);
-		String sid = (args.length > 0) ? args[0] : null;
-		OverLimitMode mode = (args.length > 1)
-		                   ? parseOverMode(args[1])
-		                   : OverLimitMode.prepend;
-		String o_txt = (args.length > 2) ? args[2] : "OVER ";
-		String o_sid = (args.length > 3) ? args[3] : null;
-		if (sid != null && !sid.equals(o_sid))
-			cb.addTravelTime(sid, mode, o_txt, o_sid);
-	}
-
-	/** Parse a over limit mode value */
-	static private OverLimitMode parseOverMode(String mode) {
-		for (OverLimitMode m : OverLimitMode.values()) {
-			if (mode.equals(m.toString()))
-				return m;
-		}
-		return OverLimitMode.prepend;
+		TravelTimeValue tt = TravelTimeValue.mapTo(v);
+		if (tt.isValid())
+			cb.addTravelTime(tt);
 	}
 
 	/** Parse slow traffic warning from a [slows,d] or [slows,d,m] tag.

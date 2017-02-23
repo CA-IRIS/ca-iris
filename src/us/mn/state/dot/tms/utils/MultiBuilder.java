@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ package us.mn.state.dot.tms.utils;
  * specified in NTCIP 1203.
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class MultiBuilder implements Multi {
 
@@ -298,26 +300,11 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Add a travel time destination.
-	 * @param d_sid Destination station ID.
-	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text. */
+	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(String d_sid, OverLimitMode mode,
-		String o_txt, String o_sid) {
+	public void addTravelTime(TravelTimeValue tt) {
 		multi.append("[tt");
-		multi.append(d_sid);
-		if (mode != null) {
-			multi.append(',');
-			multi.append(mode);
-			if (o_txt != null) {
-				multi.append(',');
-				multi.append(o_txt);
-				if (o_sid != null) {
-					multi.append(',');
-					multi.append(o_sid);
-				}
-			}
-		}
+		multi.append(TravelTimeValue.mapToArgs(tt));
 		multi.append("]");
 	}
 

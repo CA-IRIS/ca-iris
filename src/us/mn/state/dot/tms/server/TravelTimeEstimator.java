@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +28,13 @@ import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
 import us.mn.state.dot.tms.utils.MultiBuilder;
 import us.mn.state.dot.tms.utils.MultiString;
+import us.mn.state.dot.tms.utils.TravelTimeValue;
 
 /**
  * Travel time estimator
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class TravelTimeEstimator {
 
@@ -43,6 +46,13 @@ public class TravelTimeEstimator {
 		Speed min_trip = new Speed(
 			SystemAttrEnum.TRAVEL_TIME_MIN_MPH.getInt(), MPH);
 		Interval e_trip = min_trip.elapsed(d);
+		return e_trip.round(MINUTES);
+	}
+
+	/** Calculate the minimum trip minute to display on the sign */
+	static private int minimumTripMinutes(Distance d) {
+		Speed max_trip = new Speed(SystemAttrEnum.TRAVEL_TIME_MAX_MPH.getInt(), MPH);
+		Interval e_trip = max_trip.elapsed(d);
 		return e_trip.round(MINUTES);
 	}
 
@@ -95,34 +105,36 @@ public class TravelTimeEstimator {
 		 * time tags with the selected values. */
 		private boolean any_over = false;
 		private boolean all_over = false;
+		private boolean any_under = false;
+		private boolean all_under = false;
 
 		private boolean valid = true;
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(String d_sid, OverLimitMode mode,
-			String o_txt, String o_sid)
+		public void addTravelTime(TravelTimeValue tt)
 		{
-			Route r = (o_sid != null)
-				? lookupRoute(d_sid, o_sid)
-				: lookupRoute(d_sid);
+			Route r = (tt.hasOrigin())
+				? lookupRoute(tt.getArgDestStationId(), tt.getArgOriginStationId())
+				: lookupRoute(tt.getArgDestStationId());
+			tt.setRoute(r);
 			if (r != null)
-				addTravelTime(r, mode, o_txt);
+				addTravelTimeOverUnder(r, tt);
 			else {
-				logTravel("NO ROUTE TO " + d_sid);
+				logTravel("NO ROUTE TO " + tt.getArgDestStationId());
 				valid = false;
 			}
 		}
 
 		/** Add a travel time for a route */
-		private void addTravelTime(Route r, OverLimitMode mode,
-			String o_txt)
+		private void addTravelTimeOverUnder(Route r, TravelTimeValue tt)
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
-				int mn = calculateTravelTime(r, final_dest);
-				int slow = maximumTripMinutes(r.getDistance());
-				addTravelTime(mn, slow, mode, o_txt);
+				tt.setCalculatedTime(calculateTravelTime(r, final_dest));
+				tt.setSlowestTime(maximumTripMinutes(r.getDistance()));
+				tt.setFastestTime(minimumTripMinutes(r.getDistance()));
+				addTravelTimeOverUnder(tt);
 			}
 			catch (BadRouteException e) {
 				logTravel("BAD ROUTE, " + e.getMessage());
@@ -131,31 +143,53 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add a travel time */
-		private void addTravelTime(int mn, int slow, OverLimitMode mode,
-			String o_txt)
+		private void addTravelTimeOverUnder(TravelTimeValue tt)
 		{
-			boolean over = mn > slow;
-			if (over) {
+			boolean over = tt.getCalculatedTime() > tt.getSlowestTime();
+			boolean under = tt.useUnderMode() && tt.getCalculatedTime() < tt.getFastestTime();
+
+			if (over)
 				any_over = true;
-				mn = slow;
-			}
+			else if (under)
+				any_under = true;
+
 			if (over || all_over)
-				addOverLimit(mn, mode, o_txt);
+				addOverLimit(tt);
+			else if (under || all_under)
+				addUnderLimit(tt);
 			else
-				addSpan(String.valueOf(mn));
+				addSpan(String.valueOf(tt.getCalculatedTime()));
 		}
 
 		/** Add over limit travel time */
-		private void addOverLimit(int mn, OverLimitMode mode,
-			String o_txt)
+		private void addOverLimit(TravelTimeValue tt)
 		{
-			String lim = String.valueOf(roundUp5Min(mn));
-			switch (mode) {
+			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime()));
+			switch (tt.getArgOverMode()) {
 			case prepend:
-				addSpan(o_txt + lim);
+				addSpan(tt.getArgOverText() + lim);
 				break;
 			case append:
-				addSpan(lim + o_txt);
+				addSpan(lim + tt.getArgOverText());
+				break;
+			default:
+				valid = false;
+				break;
+			}
+		}
+
+		/** Add under limit travel time */
+		private void addUnderLimit(TravelTimeValue tt) {
+			if (!tt.useUnderMode())
+				return;
+
+			String lim = String.valueOf(tt.getFastestTime());
+			switch (tt.getArgUnderMode()) {
+			case prepend:
+				addSpan(tt.getArgUnderText() + lim);
+				break;
+			case append:
+				addSpan(lim + tt.getArgUnderText());
 				break;
 			default:
 				valid = false;
@@ -166,7 +200,8 @@ public class TravelTimeEstimator {
 		/** Check if the callback has changed formatting mode */
 		private boolean isChanged() {
 			all_over = any_over && isSingleCorridor();
-			return all_over;
+			all_under = any_under && isSingleCorridor();
+			return all_over || all_under;
 		}
 	}
 
