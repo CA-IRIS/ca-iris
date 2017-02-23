@@ -302,9 +302,9 @@ public class MultiBuilder implements Multi {
 	/** Add a travel time destination.
 	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(TravelTimeValue tt) {
+	public void addTravelTime(TravelTimeTag tt) {
 		multi.append("[tt");
-		multi.append(TravelTimeValue.mapToArgs(tt));
+		multi.append(TravelTimeTag.mapToArgs(tt));
 		multi.append("]");
 	}
 

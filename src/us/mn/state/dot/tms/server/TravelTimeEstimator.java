@@ -16,6 +16,7 @@
 package us.mn.state.dot.tms.server;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.Station;
@@ -23,12 +24,14 @@ import us.mn.state.dot.tms.StationHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Interval;
+
+import static us.mn.state.dot.tms.SystemAttrEnum.TRAVEL_TIME_MAX_MILES;
 import static us.mn.state.dot.tms.units.Interval.Units.MINUTES;
 import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
 import us.mn.state.dot.tms.utils.MultiBuilder;
 import us.mn.state.dot.tms.utils.MultiString;
-import us.mn.state.dot.tms.utils.TravelTimeValue;
+import us.mn.state.dot.tms.utils.TravelTimeTag;
 
 /**
  * Travel time estimator
@@ -112,29 +115,52 @@ public class TravelTimeEstimator {
 
 		/** Add a travel time destination */
 		@Override
-		public void addTravelTime(TravelTimeValue tt)
+		public void addTravelTime(TravelTimeTag tt)
 		{
-			Route r = (tt.hasOrigin())
-				? lookupRoute(tt.getArgDestStationId(), tt.getArgOriginStationId())
-				: lookupRoute(tt.getArgDestStationId());
-			tt.setRoute(r);
-			if (r != null)
-				addTravelTimeOverUnder(r, tt);
-			else {
-				logTravel("NO ROUTE TO " + tt.getArgDestStationId());
+			String wp1 = null;
+			String wp2 = null;
+			Route r;
+			if (tt.isExtended()) {
+				Iterator<String> i = tt.getWayPointStations().iterator();
+				do {
+					wp1 = wp2;
+					wp2 = i.next();
+					if (wp1 == null || wp2 == null)
+						continue;
+					r = lookupRoute(wp1, wp2);
+					testRouteLeg(r, tt);
+					if (!valid)
+						break;
+					if (tt.getCalculatedTime(true) > TRAVEL_TIME_MAX_MILES.getFloat()) {
+						valid = false;
+						break;
+					}
+					tt.addRoute(r);
+				} while (i.hasNext());
+
+			} else if (tt.isValid()) {
+				r = lookupRoute(tt.getDestinationStation());
+				testRouteLeg(r, tt);
+				if (valid)
+					tt.addRoute(r);
+			}
+
+			if (!valid || !tt.isValid()) {
+				logTravel("NO ROUTE TO " + tt.getDestinationStation());
 				valid = false;
+			} else {
+				addTravelTimeOverUnder(tt);
 			}
 		}
 
 		/** Add a travel time for a route */
-		private void addTravelTimeOverUnder(Route r, TravelTimeValue tt)
+		private void testRouteLeg(Route r, TravelTimeTag tt)
 		{
 			boolean final_dest = isFinalDest(r);
 			try {
-				tt.setCalculatedTime(calculateTravelTime(r, final_dest));
-				tt.setSlowestTime(maximumTripMinutes(r.getDistance()));
-				tt.setFastestTime(minimumTripMinutes(r.getDistance()));
-				addTravelTimeOverUnder(tt);
+				tt.addCalculatedTime(calculateTravelTime(r, final_dest));
+				tt.addSlowestTime(maximumTripMinutes(r.getDistance()));
+				tt.addFastestTime(minimumTripMinutes(r.getDistance()));
 			}
 			catch (BadRouteException e) {
 				logTravel("BAD ROUTE, " + e.getMessage());
@@ -143,10 +169,10 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add a travel time */
-		private void addTravelTimeOverUnder(TravelTimeValue tt)
+		private void addTravelTimeOverUnder(TravelTimeTag tt)
 		{
-			boolean over = tt.getCalculatedTime() > tt.getSlowestTime();
-			boolean under = tt.useUnderMode() && tt.getCalculatedTime() < tt.getFastestTime();
+			boolean over = tt.getCalculatedTime(true) > tt.getSlowestTime(true);
+			boolean under = tt.useUnderMode() && tt.getCalculatedTime(true) < tt.getFastestTime(true);
 
 			if (over)
 				any_over = true;
@@ -162,15 +188,15 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add over limit travel time */
-		private void addOverLimit(TravelTimeValue tt)
+		private void addOverLimit(TravelTimeTag tt)
 		{
 			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime()));
-			switch (tt.getArgOverMode()) {
+			switch (tt.getOverMode()) {
 			case prepend:
-				addSpan(tt.getArgOverText() + lim);
+				addSpan(tt.getOverText() + lim);
 				break;
 			case append:
-				addSpan(lim + tt.getArgOverText());
+				addSpan(lim + tt.getOverText());
 				break;
 			default:
 				valid = false;
@@ -179,17 +205,17 @@ public class TravelTimeEstimator {
 		}
 
 		/** Add under limit travel time */
-		private void addUnderLimit(TravelTimeValue tt) {
+		private void addUnderLimit(TravelTimeTag tt) {
 			if (!tt.useUnderMode())
 				return;
 
 			String lim = String.valueOf(tt.getFastestTime());
-			switch (tt.getArgUnderMode()) {
+			switch (tt.getUnderMode()) {
 			case prepend:
-				addSpan(tt.getArgUnderText() + lim);
+				addSpan(tt.getUnderText() + lim);
 				break;
 			case append:
-				addSpan(lim + tt.getArgUnderText());
+				addSpan(lim + tt.getUnderText());
 				break;
 			default:
 				valid = false;
@@ -228,10 +254,7 @@ public class TravelTimeEstimator {
 	/** Create one route to a travel time destination */
 	private Route createRoute(String sid) {
 		Station s = StationHelper.lookup(sid);
-		if (s != null)
-			return createRoute(s);
-		else
-			return null;
+		return (s != null) ? createRoute(s) : null;
 	}
 
 	/** Create one route to a travel time destination from an origin */
@@ -284,7 +307,7 @@ public class TravelTimeEstimator {
 	private boolean isFinalDest(Route r) {
 		for (Route ro: s_routes.values()) {
 			if (ro != r && isSameCorridor(r, ro) &&
-				r.getDistance().m() < ro.getDistance().m())
+			   (r.getDistance().m() < ro.getDistance().m()))
 			{
 				return false;
 			}
@@ -316,9 +339,9 @@ public class TravelTimeEstimator {
 		Corridor cor = null;
 		for (Route r: s_routes.values()) {
 			Corridor c = r.getOnlyCorridor();
-			if (c == null)
+			if (null == c)
 				return false;
-			if (cor == null)
+			if (null == cor)
 				cor = c;
 			else if (c != cor)
 				return false;
