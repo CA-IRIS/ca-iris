@@ -1482,7 +1482,8 @@ CREATE TABLE iris.dms_action (
 	quick_message VARCHAR(20) REFERENCES iris.quick_message,
 	beacon_enabled BOOLEAN NOT NULL,
 	a_priority INTEGER NOT NULL,
-	r_priority INTEGER NOT NULL
+	r_priority INTEGER NOT NULL,
+	duration_minutes INTEGER NOT NULL DEFAULT -1
 );
 
 CREATE TABLE iris.beacon_action (
@@ -2500,6 +2501,7 @@ dms_composer_uppercase	false
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
+dms_action_duration_minutes	0
 dms_font_selection_enable	false
 dms_form	1
 dms_high_temp_cutoff	60
@@ -2574,6 +2576,8 @@ sample_archive_enable	true
 speed_limit_min_mph	45
 speed_limit_default_mph	55
 speed_limit_max_mph	75
+system_min_password_length	8
+system_protected_user_role	administrator
 tesla_host	
 toll_min_price	0.25
 toll_max_price	8

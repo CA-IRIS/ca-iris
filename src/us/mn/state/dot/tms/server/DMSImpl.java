@@ -80,8 +80,11 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** DMS schedule debug log */
 	static private final DebugLog SCHED_LOG = new DebugLog("sched");
 
-	/** DMS name, e.g. CMS or DMS */
-	static private final String DMSABBR = I18N.get("dms");
+	/** Minimum duration of a DMS action (minutes) */
+	static private final int DURATION_MINIMUM_MINS = 1;
+
+	/** Number of polling periods for DMS action duration */
+	static private final int DURATION_PERIODS = 3;
 
 	/** Track AWS Action history */
 	public AwsActionHistory aws_action_history = new AwsActionHistory();
@@ -1553,7 +1556,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Set the scheduled sign message.
 	 * @param sm New scheduled sign message */
 	private void setMessageSched(SignMessage sm) {
-		if (!SignMessageHelper.isEquivalent(messageSched, sm)) {
+		if (!SignMessageHelper.isEquivalent(messageSched, sm) ||
+			isCurrentMsgExpiring()) {
 			messageSched = sm;
 			notifyAttribute("messageSched");
 		}
@@ -1579,7 +1583,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	public void performAction(DmsAction da) {
 		SignMessage sm = createMsgSched(da);
 		if (sm != null) {
-			if (shouldReplaceScheduled(sm)) {
+			if (isCurrentMsgExpiring() || shouldReplaceScheduled(sm)) {
 				setMessageSched(sm);
 				sched_action = da;
 			}
@@ -1592,8 +1596,22 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	private boolean shouldReplaceScheduled(SignMessage sm) {
 		SignMessage s = messageSched;	// Avoid NPE
 		return s == null ||
+		       sm.getDuration() != s.getDuration() ||
 		       sm.getActivationPriority() > s.getActivationPriority() ||
 		       sm.getRunTimePriority() >= s.getRunTimePriority();
+	}
+
+	/** Test if the current scheduled message is already or will go blank
+	 *  within the next minute */
+	private boolean isCurrentMsgExpiring() {
+		if (getMessageCurrent().getDuration() == null)
+			return false;
+		long now = TimeSteward.currentTimeMillis();
+		long next_poll = now + 60000; //this.getPollPeriod() * 1000;
+		long expired_time = getDeployTime() + getMessageCurrent().getDuration() * 60000;
+		if (now > expired_time || next_poll > expired_time)
+			return true;
+		return false;
 	}
 
 	/** Create a scheduled message.
@@ -1639,14 +1657,32 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	private Integer getDuration(DmsAction da) {
 		return da.getActionPlan().getSticky()
 		     ? null
-		     : getUnstickyDuration();
+		     : getConfiguredUnstickyDuration(da);
+	}
+
+	/** Get the default duration (California)
+	 * @param da DMS action
+	 * @return Duration (minutes) */
+	private Integer getConfiguredUnstickyDuration(DmsAction da) {
+		assert da != null;
+		Integer rv = da.getDurationMinutes();
+		if (rv == null || rv < 0)
+			return null;
+		if (rv < 1)
+			rv = SystemAttrEnum.DMS_ACTION_DURATION_MINUTES.getInt();
+		if (rv < 1)
+			rv = getUnstickyDuration();
+		return rv;
 	}
 
 	/** Get the duration of an unsticky action */
 	private int getUnstickyDuration() {
-		/** FIXME: this should be twice the polling period for the
-		 *         sign.  Modem signs should have a longer duration. */
-		return 1;
+		return Math.max(DURATION_MINIMUM_MINS, getDurationMins());
+	}
+
+	/** Get the default duration of a DMS action */
+	private int getDurationMins() {
+		return getPollPeriod() * DURATION_PERIODS / 60;
 	}
 
 	/** Log a schedule message */

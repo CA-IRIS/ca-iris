@@ -19,9 +19,9 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 import us.mn.state.dot.tms.ChangeVetoException;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.sonar.Role;
-import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.sonar.server.ServerNamespace;
 import us.mn.state.dot.sonar.server.UserImpl;
 import static us.mn.state.dot.tms.utils.SString.*;
@@ -156,9 +156,10 @@ public class IrisUserImpl extends UserImpl implements Storable {
 
 	/** Check a password */
 	private void checkPassword(String pwd) throws ChangeVetoException {
-		if (pwd.length() < 8) {
+		int min = SystemAttrEnum.SYSTEM_MIN_PASSWORD_LENGTH.getInt();
+		if (pwd.length() < min) {
 			throw new ChangeVetoException(
-				"Must be at least 8 characters");
+				"Must be at least " + min + " characters");
 		}
 		String lpwd = pwd.toLowerCase();
 		String c = longestCommonSubstring(name.toLowerCase(), lpwd);
