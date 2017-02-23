@@ -146,10 +146,11 @@ public interface Multi {
 	};
 
 	/** Add a travel time destination.
-	 * @param stat_id Destination station ID.
+	 * @param d_sid Destination station ID.
 	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text. */
-	void addTravelTime(String sid, OverLimitMode mode, String o_txt);
+	 * @param o_txt Over limit text.
+	 * @param o_sid Origin station ID.*/
+	void addTravelTime(String d_sid, OverLimitMode mode, String o_txt, String o_sid);
 
 	/** Add a speed advisory */
 	void addSpeedAdvisory();

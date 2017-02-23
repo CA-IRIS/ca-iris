@@ -131,12 +131,13 @@ public class MultiAdapter implements Multi {
 	public void addGraphic(int g_num, Integer x, Integer y, String g_id) { }
 
 	/** Add a travel time destination.
-	 * @param sid Destination station ID.
+	 * @param d_sid Destination station ID.
 	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text. */
+	 * @param o_txt Over limit text.
+	 * @param o_sid Origin station ID.*/
 	@Override
-	public void addTravelTime(String sid, OverLimitMode mode, String o_txt)
-	{ }
+	public void addTravelTime(String d_sid, OverLimitMode mode,
+		String o_txt, String o_sid) { }
 
 	/** Add a speed advisory */
 	@Override
