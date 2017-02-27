@@ -120,7 +120,9 @@ public class TravelTimeEstimator {
 			String wp1 = null;
 			String wp2 = null;
 			Route r;
-			if (tt.isExtended()) {
+			valid = tt.isValid();
+
+			if (tt.hasOrigin()) {
 				Iterator<String> i = tt.getWayPointStations().iterator();
 				do {
 					wp1 = wp2;

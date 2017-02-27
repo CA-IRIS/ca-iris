@@ -190,9 +190,7 @@ public class TravelTimeTag {
 
 	/** do we have an origin sid */
 	public boolean hasOrigin() {
-		if (wayPointStations.size() > 1)
-			return true;
-		return false;
+		return (wayPointStations.size() > 1);
 	}
 
 	/** Set the underMode field value. */
