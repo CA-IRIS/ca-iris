@@ -133,8 +133,10 @@ public class TravelTimeEstimator {
 					testRouteLeg(r, tt);
 					if (!valid)
 						break;
-					if ((tt.getDistance(Distance.Units.MILES) + r.getDistance().asFloat(
-						Distance.Units.MILES) > TRAVEL_TIME_MAX_MILES.getFloat())) {
+					float d = tt.getDistance(Distance.Units.MILES)
+						+ r.getDistance().asFloat(Distance.Units.MILES);
+					float m = TRAVEL_TIME_MAX_MILES.getFloat();
+					if (d > m) {
 						valid = false;
 						break;
 					}
