@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import us.mn.state.dot.tms.server.Route;
+import us.mn.state.dot.tms.units.Distance;
 
 import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 import static us.mn.state.dot.tms.utils.SString.isBlank;
@@ -227,6 +228,14 @@ public class TravelTimeTag {
 		return underText != null;
 	}
 
+	/** get route(s) combined distance */
+	public float getDistance(Distance.Units units) {
+		float rv = 0.0F;
+		for (Route r : routes) {
+			rv += r.getDistance().asFloat(units);
+		}
+		return rv;
+	}
 	/** Set the routes field value. */
 	public List<Route> getRoutes() {
 		return routes;
