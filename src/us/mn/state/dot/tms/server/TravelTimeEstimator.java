@@ -25,7 +25,7 @@ import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Interval;
 
-import static us.mn.state.dot.tms.SystemAttrEnum.TRAVEL_TIME_MAX_MILES;
+import static us.mn.state.dot.tms.SystemAttrEnum.ROUTE_MAX_MILES;
 import static us.mn.state.dot.tms.units.Interval.Units.MINUTES;
 import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
@@ -135,7 +135,7 @@ public class TravelTimeEstimator {
 						break;
 					float d = tt.getDistance(Distance.Units.MILES)
 						+ r.getDistance().asFloat(Distance.Units.MILES);
-					float m = TRAVEL_TIME_MAX_MILES.getFloat();
+					int m = ROUTE_MAX_MILES.getInt();
 					if (d > m) {
 						valid = false;
 						break;
