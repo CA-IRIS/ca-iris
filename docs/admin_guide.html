@@ -2795,28 +2795,35 @@ FIXME
 	        <li><b>prepend</b>: prepend over limit text before travel
 	            time</li>
 	        <li><b>append</b>: append over limit text after travel time</li>
+			<li><b>replace</b>: use only text in over limit text. No numerical computations or other arguments will appear.</li>
 	    </ul>
 	</li>
-	<li>Over limit text ("OVER " if omitted)</li>
+	<li>Over limit text ("OVER " if omitted) &mdash; used for slow traffic.</li>
+</ol>
 	<strong>If using the following additional arguments, you must use key=value pairs (see examples).</strong>
-	<li>Origin station</li>
-	<li>Under limit mode (see <a href="#travel_time_limit">Over limit</a>) </li>
-	<li>Under limit text</li>
+<ol start="4">
+	<li>Under limit mode (see <a href="#travel_time_limit">Over limit</a>)</li>
+	<li>Under limit text &mdash; used for fast traffic. Must be specified, but may be blank.</li>
+	<li>Unit text &mdash; defaults to an empty string or what is specified in TRAVEL_TIME_UNIT_TEXT system attribute.</li>
 </ol>
 <aside>
 	NOTE: multiple destinations can be included on the same message by
-	specifying multiple <b>[tt…]</b> tags.
+	specifying multiple <b>[tt…]</b> tags.<br/>
+	Over-limit modes and text take precedence over under-limit modes/ text …that's just how it's done.<br/>
+	Also multiple way-points can be specified to tailor the travel time route for construction detours, etc. by inserting
+	multiple stations in the way-point list. The first is always considered the origin, the last is always considered the destination.<br/>
 </aside>
 <p>
 	Examples:
 </p>
 <ul>
-	<li>FREEWAY TIME TO[nl][jl2]I-94[jl4]<b>[ttS100,prepend,OVER ]</b> MIN
-	</li>
+	<li>FREEWAY TIME TO[nl][jl2]I-94[jl4]<b>[ttS100,prepend,OVER ]</b> MIN</li>
 	<li>TIME TO[nl][jl2]I-35W[jl4]<b>[ttS200,append,+]</b> MIN</li>
 	<li>DOWNTN[nl]<b>[ttS300,blank]</b> MIN</li>
-	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[tto_sid=S392,d_sid=S100]</b> MIN</li>
-	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]SR 120[jl4][ttd_sid=1001710,o_mode=append,o_txt=+,u_mode=prepend,u_txt=<] MIN</li>
+	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[ttwp=S392 S100]</b> MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]SR 120[jl4][ttwp=1001710,o_mode=append,o_txt=+,u_mode=prepend,u_txt=<] MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]ROTH>LOUISE[nl][jl4][ttwp=1083010 1088010 1088210,om=append,ot=+,um=prepend,ut=<] MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]ROTH>LOUISE[nl][jl4][ttwp=1083010 1088010 1088210,om=append,ot=+,um=replace,ut=OVER 65 MPH,unit=']</li>
 </ul>
 <h4>Route Pathfinding</h4>
 <p>

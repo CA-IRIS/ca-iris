@@ -159,6 +159,7 @@ public enum SystemAttrEnum {
 	TESLA_HOST(String.class),
 	TOLL_MIN_PRICE(0.25f, 0f, 100f),
 	TOLL_MAX_PRICE(8f, 1f, 100f),
+	TRAVEL_TIME_UNIT_TEXT(""),
 	TRAVEL_TIME_MAX_MPH(65, 51, 100),
 	TRAVEL_TIME_MIN_MPH(15, 1, 50),
 	UPTIME_LOG_ENABLE(false),

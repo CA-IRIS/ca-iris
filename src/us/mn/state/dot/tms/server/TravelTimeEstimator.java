@@ -197,7 +197,7 @@ public class TravelTimeEstimator {
 			else if (under || all_under)
 				addUnderLimit(tt);
 			else
-				addSpan(String.valueOf(mn));
+				addSpan(String.valueOf(mn) + tt.getUnitText());
 		}
 
 		/** Add over limit travel time */
@@ -206,10 +206,13 @@ public class TravelTimeEstimator {
 			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime(true)));
 			switch (tt.getOverMode()) {
 			case prepend:
-				addSpan(tt.getOverText() + lim);
+				addSpan(tt.getOverText() + lim + tt.getUnitText());
 				break;
 			case append:
-				addSpan(lim + tt.getOverText());
+				addSpan(lim + tt.getOverText() + tt.getUnitText());
+				break;
+			case replace:
+				addSpan(tt.getOverText());
 				break;
 			default:
 				valid = false;
@@ -225,10 +228,13 @@ public class TravelTimeEstimator {
 			String lim = String.valueOf(tt.getFastestTime(true));
 			switch (tt.getUnderMode()) {
 			case prepend:
-				addSpan(tt.getUnderText() + lim);
+				addSpan(tt.getUnderText() + lim + tt.getUnitText());
 				break;
 			case append:
-				addSpan(lim + tt.getUnderText());
+				addSpan(lim + tt.getUnderText() + tt.getUnitText());
+				break;
+			case replace:
+				addSpan(tt.getUnderText());
 				break;
 			default:
 				valid = false;
