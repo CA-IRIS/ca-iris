@@ -129,7 +129,7 @@ public class TravelTimeEstimator {
 					wp2 = i.next();
 					if (wp1 == null || wp2 == null)
 						continue;
-					r = lookupRoute(wp1, wp2);
+					r = lookupRoute(wp2, wp1);
 					testRouteLeg(r, tt);
 					if (!valid)
 						break;
@@ -244,13 +244,13 @@ public class TravelTimeEstimator {
 	}
 
 	/** Lookup a route by station ID */
-	private Route lookupRoute(String sid, String o_sid) {
-		if (!s_routes.containsKey(sid)) {
-			Route r = createRoute(sid, o_sid);
+	private Route lookupRoute(String d_sid, String o_sid) {
+		if (!s_routes.containsKey(d_sid)) {
+			Route r = createRoute(d_sid, o_sid);
 			if (r != null)
-				s_routes.put(sid, r);
+				s_routes.put(d_sid, r);
 		}
-		return s_routes.get(sid);
+		return s_routes.get(d_sid);
 	}
 
 	/** Create one route to a travel time destination */
