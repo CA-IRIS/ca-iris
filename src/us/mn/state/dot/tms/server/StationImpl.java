@@ -258,7 +258,7 @@ public class StationImpl implements Station, VehicleSampler {
 	private void updateAvgSpeed(float s) {
 		System.arraycopy(avg_speed, 0, avg_speed, 1,
 			avg_speed.length - 1);
-		avg_speed[0] = Math.min(s, getSpeedLimit());
+		avg_speed[0] = Math.min(s, getSpeedLimit() + 10);
 	}
 
 	/** Get the average speed smoothed over several samples */
