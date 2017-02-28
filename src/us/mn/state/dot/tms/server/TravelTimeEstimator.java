@@ -144,7 +144,8 @@ public class TravelTimeEstimator {
 					tt.addRoute(r);
 					logTravel("d: " + r.getDistance().asFloat(MILES)
 						+ " tmax: " + maximumTripMinutes(r.getDistance())
-						+ " tmin: " + minimumTripMinutes(r.getDistance()), wp1 + " => " + wp2);
+						+ " tmin: " + minimumTripMinutes(r.getDistance()),
+						"WAY-POINT " + wp1 + " => " + wp2);
 				} while (i.hasNext());
 
 			} else if (tt.isValid()) {
@@ -196,13 +197,13 @@ public class TravelTimeEstimator {
 			else if (under || all_under)
 				addUnderLimit(tt);
 			else
-				addSpan(String.valueOf(tt.getCalculatedTime()));
+				addSpan(String.valueOf(mn));
 		}
 
 		/** Add over limit travel time */
 		private void addOverLimit(TravelTimeTag tt)
 		{
-			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime()));
+			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime(true)));
 			switch (tt.getOverMode()) {
 			case prepend:
 				addSpan(tt.getOverText() + lim);
@@ -221,7 +222,7 @@ public class TravelTimeEstimator {
 			if (!tt.useUnderMode())
 				return;
 
-			String lim = String.valueOf(tt.getFastestTime());
+			String lim = String.valueOf(tt.getFastestTime(true));
 			switch (tt.getUnderMode()) {
 			case prepend:
 				addSpan(tt.getUnderText() + lim);
