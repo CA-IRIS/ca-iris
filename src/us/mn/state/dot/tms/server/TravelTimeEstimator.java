@@ -26,6 +26,7 @@ import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Interval;
 
 import static us.mn.state.dot.tms.SystemAttrEnum.ROUTE_MAX_MILES;
+import static us.mn.state.dot.tms.units.Distance.Units.MILES;
 import static us.mn.state.dot.tms.units.Interval.Units.MINUTES;
 import us.mn.state.dot.tms.units.Speed;
 import static us.mn.state.dot.tms.units.Speed.Units.MPH;
@@ -133,14 +134,17 @@ public class TravelTimeEstimator {
 					testRouteLeg(r, tt);
 					if (!valid)
 						break;
-					float d = tt.getDistance(Distance.Units.MILES)
-						+ r.getDistance().asFloat(Distance.Units.MILES);
+					float d = tt.getDistance(MILES)
+						+ r.getDistance().asFloat(MILES);
 					int m = ROUTE_MAX_MILES.getInt();
 					if (d > m) {
 						valid = false;
 						break;
 					}
 					tt.addRoute(r);
+					logTravel("d: " + r.getDistance().asFloat(MILES)
+						+ " tmax: " + maximumTripMinutes(r.getDistance())
+						+ " tmin: " + minimumTripMinutes(r.getDistance()), wp1 + " => " + wp2);
 				} while (i.hasNext());
 
 			} else if (tt.isValid()) {
@@ -176,8 +180,11 @@ public class TravelTimeEstimator {
 		/** Add a travel time */
 		private void addTravelTimeOverUnder(TravelTimeTag tt)
 		{
-			boolean over = tt.getCalculatedTime(true) > tt.getSlowestTime(true);
-			boolean under = tt.useUnderMode() && tt.getCalculatedTime(true) < tt.getFastestTime(true);
+			int mn = tt.getCalculatedTime(true);
+			int slow = tt.getSlowestTime(true);
+			int fast = tt.getFastestTime(true);
+			boolean over = mn > slow;
+			boolean under = tt.useUnderMode() && mn < fast;
 
 			if (over)
 				any_over = true;
