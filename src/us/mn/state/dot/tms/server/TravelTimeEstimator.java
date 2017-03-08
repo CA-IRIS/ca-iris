@@ -166,6 +166,11 @@ public class TravelTimeEstimator {
 		/** Add a travel time for a route */
 		private void testRouteLeg(Route r, TravelTimeTag tt)
 		{
+			if (null == r) {
+				valid = false;
+				return;
+			}
+
 			boolean final_dest = isFinalDest(r);
 			try {
 				tt.addCalculatedTime(calculateTravelTime(r, final_dest));
