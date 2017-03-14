@@ -1722,7 +1722,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		// NOTE: use schedule for source even for blank messages
 		if (shouldUpdateDeployedScheduledMsg(sm)) {
 			try {
-				logSched("set message to " + sm.getMulti());
+				logSched("set scheduled message to " + sm.getMulti());
 				if (sm.getSource() == tolling.ordinal())
 				    logPriceMessages(EventType.PRICE_DEPLOYED);
 				doSetMessageNext(sm, null);
