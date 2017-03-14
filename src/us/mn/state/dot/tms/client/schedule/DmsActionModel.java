@@ -262,9 +262,11 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 			}
 			public void setValueAt(DmsAction da, Object value) {
 				try {
+					if (value == null || !(value instanceof String))
+						return;
 					String v = value.toString().trim();
 					int i = Integer.parseInt(v);
-					if (i >= 0)
+					if (i >= -1)
 						da.setDurationMinutes(i);
 				}
 				catch (NumberFormatException e) {
@@ -292,6 +294,8 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	/** */
 	private final TypeCache<QuickMessage> quick_messages;
 
+	/** duration */
+	private final int duration;
 
 	/** Sign group type cache */
 	private final TypeCache<SignGroup> sign_groups;
@@ -337,6 +341,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		sign_groups = s.getSonarState().getDmsCache().getSignGroups();
 		sign_groups.addProxyListener(sign_group_listener);
 		quick_messages = s.getSonarState().getDmsCache().getQuickMessages();
+		duration = 0;
 	}
 
 	/** Get the SONAR type name */
@@ -402,6 +407,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 				DMSMessagePriority.SCHEDULED.ordinal());
 			attrs.put("r_priority",
 				DMSMessagePriority.SCHEDULED.ordinal());
+			attrs.put("duration_minutes", 0);
 			cache.createObject(name, attrs);
 		}
 	}
