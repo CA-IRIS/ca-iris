@@ -67,6 +67,11 @@ public class MapSegment implements MapObject {
 	/** Segment object */
 	private final Segment segment;
 
+	/** get the segment object */
+	protected final Segment getSegment() {
+		return segment;
+	}
+
 	/** Get the r_node */
 	public R_Node getR_Node() {
 		return segment.getModel().r_node;
@@ -74,6 +79,11 @@ public class MapSegment implements MapObject {
 
 	/** Lane for segment (null for all lanes) */
 	private final Integer lane;
+
+	/** get the lane for segment */
+	protected final Integer getLane() {
+		return lane;
+	}
 
 	/** Shape to render */
 	private final Shape shape;

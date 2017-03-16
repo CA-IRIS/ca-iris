@@ -45,6 +45,7 @@ public class SegmentLayerState extends ProxyLayerState<R_Node> {
 		addTheme(new SpeedTheme());
 		addTheme(new FlowTheme());
 		addTheme(new FreewayTheme());
+		addTheme(new TravelTimeTheme());
 		manager = m;
 		builder = sb;
 	}
