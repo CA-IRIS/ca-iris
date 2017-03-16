@@ -53,19 +53,21 @@ public class TravelTimeTheme extends SegmentTheme {
 	@Override
 	protected Style getSegmentStyle(MapSegment ms) {
 		Integer cnt = ms.getSpeed(); // FIXME TT route count
+		cnt = (cnt == null) ? 0 : cnt;
 
-			if (cnt == null)
-				return DEFAULT_STYLE;
-			if (cnt < 15)
-				return S_STYLES[0];
-			if (cnt < 25)
-				return S_STYLES[1];
-			if (cnt < 40)
-				return S_STYLES[2];
-			if (cnt < 55)
-				return S_STYLES[3];
-			if (cnt < 80)
-				return S_STYLES[4];
-			return S_STYLES[5];
+		if (cnt == 0)
+			return S_STYLES[0];
+
+		//FIXME TESTING
+		cnt = (int) (cnt * 0.1);
+		if (cnt < 3)
+			return S_STYLES[1];
+		if (cnt < 5)
+			return S_STYLES[2];
+		if (cnt < 7)
+			return S_STYLES[3];
+		if (cnt < 10)
+			return S_STYLES[4];
+		return S_STYLES[5];
 	}
 }
