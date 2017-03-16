@@ -24,15 +24,22 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Jacob Barde
  */
 public class TravelTimeTheme extends SegmentTheme {
-
+	/** colors */
+	static private final Color UNUSED = new Color(0, 0, 0, 0.05f);
+	static private final Color LOW = new Color(2, 0, 185);
+	static private final Color LOWMED = new Color(16, 0, 255);
+	static private final Color MED = new Color(0, 125, 255);
+	static private final Color MEDHIGH = new Color(0, 187, 209);
+	static private final Color HIGH = new Color(0, 255, 243);
 	/** Speed styles */
 	static private final Style[] S_STYLES = new Style[] {
-		new Style(I18N.get("units.travel.unused"), OUTLINE, new Color(0, 0, 0, 0.3f)),
-		new Style(I18N.get("units.speed.low"), OUTLINE, RED),
-		new Style(I18N.get("units.speed.low.med"), OUTLINE, ORANGE),
-		new Style(I18N.get("units.speed.medium"), OUTLINE, YELLOW),
-		new Style(I18N.get("units.speed.med.high"), OUTLINE, GREEN),
-		new Style(I18N.get("units.speed.high"), OUTLINE, VIOLET)
+		// segment not used in Travel-Time
+		new Style(I18N.get("units.travel.unused"), OUTLINE, UNUSED),
+		new Style(I18N.get("units.travel.low"), OUTLINE, LOW),
+		new Style(I18N.get("units.travel.low.med"), OUTLINE, LOWMED),
+		new Style(I18N.get("units.travel.medium"), OUTLINE, MED),
+		new Style(I18N.get("units.travel.med.high"), OUTLINE, MEDHIGH),
+		new Style(I18N.get("units.travel.high"), OUTLINE, HIGH)
 	};
 
 	/** Create a new speed theme */
@@ -45,19 +52,20 @@ public class TravelTimeTheme extends SegmentTheme {
 	/** Get the style to draw a given segment */
 	@Override
 	protected Style getSegmentStyle(MapSegment ms) {
-		Integer spd = ms.getSpeed();
-		boolean segmentInTTRoute = true; //FIXME need to determine this
-		if(spd != null && segmentInTTRoute) {
-			if (spd < 25)
+		Integer cnt = ms.getSpeed(); // FIXME TT route count
+
+			if (cnt == null)
+				return DEFAULT_STYLE;
+			if (cnt < 15)
+				return S_STYLES[0];
+			if (cnt < 25)
 				return S_STYLES[1];
-			if (spd < 40)
+			if (cnt < 40)
 				return S_STYLES[2];
-			if (spd < 55)
+			if (cnt < 55)
 				return S_STYLES[3];
-			if (spd < 90)
+			if (cnt < 80)
 				return S_STYLES[4];
 			return S_STYLES[5];
-		}
-		return S_STYLES[0];
 	}
 }
