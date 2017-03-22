@@ -345,7 +345,7 @@
 
 		<signjar keystore="${sign.store}" storepass="${sign.store.pass}"
 		         alias="${sign.alias}" keypass="${sign.alias.pass}"
-				 tsaurl="${sign.tsaurl)" lazy="true">
+				 tsaurl="${sign.tsaurl}" lazy="true">
 			<fileset dir="${dist.client}/lib">
 				<include name="*.jar"/>
 			</fileset>
