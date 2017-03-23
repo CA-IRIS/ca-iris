@@ -80,6 +80,7 @@ public class FlushXmlJob extends Job {
 		w.write("<!ATTLIST sample flow CDATA 'UNKNOWN'>\n");
 		w.write("<!ATTLIST sample speed CDATA 'UNKNOWN'>\n");
 		w.write("<!ATTLIST sample occ CDATA 'UNKNOWN'>\n");
+		w.write("<!ATTLIST sample tvt CDATA 'UNKNOWN'>\n");
 		w.write("]>\n");
 	}
 

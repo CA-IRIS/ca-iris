@@ -188,7 +188,7 @@ public class SamplerSet implements VehicleSampler {
 	/** Get the current average speed */
 	@Override
 	public int getTravelTimeRoutes() {
-		float t_tvt = 0;
+		int t_tvt = 0;
 		int n_tvt = 0;
 		for (VehicleSampler vs: samplers) {
 			int s = vs.getTravelTimeRoutes();
@@ -197,7 +197,7 @@ public class SamplerSet implements VehicleSampler {
 				n_tvt++;
 			}
 		}
-		return (n_tvt > 0) ? (int)(t_tvt / n_tvt) : MISSING_DATA;
+		return (n_tvt > 0) ? (t_tvt / n_tvt) : MISSING_DATA;
 	}
 
 	/** Get a string representation (for debugging) */
