@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.server;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.units.Distance;
@@ -146,5 +147,9 @@ public class Route implements Comparable<Route> {
 		for (CorridorTrip trip: trips)
 			sb.append(trip.toString());
 		return sb.toString();
+	}
+
+	public List<CorridorTrip> getTrips() {
+		return trips;
 	}
 }

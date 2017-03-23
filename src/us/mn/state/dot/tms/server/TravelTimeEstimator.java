@@ -18,6 +18,8 @@ package us.mn.state.dot.tms.server;
 import java.util.HashMap;
 import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.tms.Detector;
 import us.mn.state.dot.tms.GeoLoc;
 import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.StationHelper;
@@ -160,6 +162,18 @@ public class TravelTimeEstimator {
 				valid = false;
 			} else {
 				addTravelTimeOverUnder(tt);
+				for (Route tr : tt.getRoutes()) {
+					for (CorridorTrip ct : tr.getTrips()) {
+						Iterator<R_NodeImpl> it = ct.corridor.iterator();
+						while (it.hasNext()) {
+							R_NodeImpl rn = it.next();
+							for (DetectorImpl d : rn.getDetectorSet().getAll()) {
+								d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
+							}
+						}
+
+					}
+				}
 			}
 		}
 
