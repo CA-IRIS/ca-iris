@@ -157,6 +157,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache = new PeriodicSampleCache(PeriodicSampleType.VOLUME);
 		scn_cache = new PeriodicSampleCache(PeriodicSampleType.SCAN);
 		spd_cache = new PeriodicSampleCache(PeriodicSampleType.SPEED);
+		tvt_cache = new PeriodicSampleCache(PeriodicSampleType.TVT_TYPE);
 		vol_mc_cache = new PeriodicSampleCache(
 			PeriodicSampleType.MOTORCYCLE);
 		vol_s_cache = new PeriodicSampleCache(
@@ -185,6 +186,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache = new PeriodicSampleCache(PeriodicSampleType.VOLUME);
 		scn_cache = new PeriodicSampleCache(PeriodicSampleType.SCAN);
 		spd_cache = new PeriodicSampleCache(PeriodicSampleType.SPEED);
+		tvt_cache = new PeriodicSampleCache(PeriodicSampleType.TVT_TYPE);
 		vol_mc_cache = new PeriodicSampleCache(
 			PeriodicSampleType.MOTORCYCLE);
 		vol_s_cache = new PeriodicSampleCache(
@@ -952,6 +954,37 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 			w.write(createAttribute("speed", speed));
 		if (occ >= 0)
 			w.write(createAttribute("occ", formatFloat(occ, 2)));
+		int tvt = getTravelTimeRoutes();
+		if (tvt > 0)
+			w.write(createAttribute("tvt", tvt));
 		w.write("/>\n");
 	}
+
+
+	/** Periodic speed sample cache */
+	private transient final PeriodicSampleCache tvt_cache;
+
+	/** last tvt. */
+	private transient int last_tvt = MISSING_DATA;
+
+	/** Timestamp of most recent 30-second sample period speed store. */
+	protected transient long last_tvt_stamp = MISSING_DATA;
+
+	/** get the number of travel time routes on this */
+	@Override
+	public int getTravelTimeRoutes() {
+		return last_tvt;
+	}
+
+	/** Store one route sample for this detector.
+	 * @param tvt PeriodicSample containing route data. */
+	public void storeTravelTimeRoute(PeriodicSample tvt) {
+		tvt_cache.add(tvt);
+		if (tvt.period == SAMPLE_PERIOD_SEC) {
+			last_tvt = tvt.value;
+			last_tvt_stamp = tvt.stamp;
+		}
+	}
+
+
 }

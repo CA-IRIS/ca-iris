@@ -278,6 +278,15 @@ public class StationImpl implements Station, VehicleSampler {
 			return MISSING_DATA;
 	}
 
+	/** Current average station speed */
+	private int tvt = MISSING_DATA;
+
+	/** get the number of travel time routes on this */
+	@Override
+	public int getTravelTimeRoutes() {
+		return tvt;
+	}
+
 	/** Samples used in previous time step */
 	private int rolling_samples = 0;
 
@@ -351,7 +360,14 @@ public class StationImpl implements Station, VehicleSampler {
 		int n_density = 0;
 		float t_speed = 0;
 		int n_speed = 0;
+		int t_tvt = 0;
+		int n_tvt = 0;
 		for(DetectorImpl det: r_node.getDetectors()) {
+			int t = det.getTravelTimeRoutes();
+			if (t != MISSING_DATA) {
+				t_tvt += t;
+				n_tvt++;
+			}
 			if(det.getAbandoned() || !det.isStationOrCD() ||
 			   !det.isSampling())
 				continue;
@@ -390,6 +406,7 @@ public class StationImpl implements Station, VehicleSampler {
 		flow = Math.round(average(t_flow, n_flow));
 		density = average(t_density, n_density);
 		speed = average(t_speed, n_speed);
+		tvt = (n_tvt > 0) ? (int)(t_tvt/n_tvt) : 0;
 		updateRollingSpeed(speed);
 		updateAvgSpeed(speed);
 		updateLowSpeed(low);
@@ -412,6 +429,9 @@ public class StationImpl implements Station, VehicleSampler {
 			w.write(createAttribute("occ",
 				BaseObjectImpl.formatFloat(o, 2)));
 		}
+		int t = getTravelTimeRoutes();
+		if (t > 0)
+			w.write((createAttribute("tvt", t)));
 		w.write("/>\n");
 	}
 
