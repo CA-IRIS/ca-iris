@@ -208,6 +208,28 @@ public class Segment {
 			return null;
 	}
 
+	public Integer getTvt(Integer lane) {
+		int total = 0;
+		int count = 0;
+		for (Map.Entry<String, Integer> ent: lane_sensors.entrySet()) {
+			if (lane == null || lane == ent.getValue()) {
+				String sid = ent.getKey();
+				SensorSample s = samples.getSample(sid);
+				if (s != null) {
+					Integer tvt = s.getTravelTimeRoutes();
+					if (tvt != null) {
+						total += tvt;
+						count++;
+					}
+				}
+			}
+		}
+		if (count > 0)
+			return total / count;
+		else
+			return null;
+	}
+
 	/** Get the minimum left shift */
 	public int getLeftMin() {
 		return Math.min(model.getUpstreamLane(true),

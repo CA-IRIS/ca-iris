@@ -237,4 +237,8 @@ public class MapSegment implements MapObject {
 	public Integer getSpeed() {
 		return segment.getSpeed(lane);
 	}
+
+	public Integer getTvt() {
+		return segment.getTvt(lane);
+	}
 }

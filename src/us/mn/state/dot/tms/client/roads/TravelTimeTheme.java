@@ -52,14 +52,11 @@ public class TravelTimeTheme extends SegmentTheme {
 	/** Get the style to draw a given segment */
 	@Override
 	protected Style getSegmentStyle(MapSegment ms) {
-		Integer cnt = ms.getSpeed(); // FIXME TT route count
-		cnt = (cnt == null) ? 0 : cnt;
+		Integer cnt = ms.getTvt();
 
-		if (cnt == 0)
+		if (cnt == null || cnt == 0)
 			return S_STYLES[0];
 
-		//FIXME TESTING
-		cnt = (int) (cnt * 0.1);
 		if (cnt < 3)
 			return S_STYLES[1];
 		if (cnt < 5)

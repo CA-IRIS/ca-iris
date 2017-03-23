@@ -84,8 +84,6 @@ abstract public class SegmentTheme extends Theme {
 	/** Get the tooltip text for a given segment */
 	@Override
 	public String getTip(MapObject mo) {
-		if (mo instanceof TravelTimeSegment)
-			return ((TravelTimeSegment) mo).getTip();
 		if (mo instanceof MapSegment)
 			return ((MapSegment) mo).getTip();
 		return null;

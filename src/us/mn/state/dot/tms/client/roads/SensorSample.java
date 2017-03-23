@@ -41,10 +41,14 @@ public class SensorSample {
 	}
 
 	/** Create a new sensor sample */
-	public SensorSample(String i, Integer f, Integer s, Integer t) {
+	public SensorSample(String i, Integer f, Integer s) {
 		id = i;
 		flow = f;
 		speed = s;
+	}
+
+	public SensorSample(String i, Integer f, Integer s, Integer t) {
+		this(i,f,s);
 		tvt = t;
 	}
 
@@ -56,10 +60,10 @@ public class SensorSample {
 			return null;
 	}
 
-	private int tvt;
+	private Integer tvt;
 
 	/** get the number of travel time routes on this */
-	public int getTravelTimeRoutes() {
+	public Integer getTravelTimeRoutes() {
 		return tvt;
 	}
 }

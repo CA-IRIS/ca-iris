@@ -75,9 +75,7 @@ public class SegmentLayerState extends ProxyLayerState<R_Node> {
 	private MapObject forEachStation(MapSearcher s) {
 		float scale = getScale();
 		for (Segment seg: builder) {
-			MapSegment ms = (getTheme() instanceof TravelTimeTheme)
-				? new TravelTimeSegment(seg, scale)
-				: new MapSegment(seg, scale);
+			MapSegment ms = new MapSegment(seg, scale);
 			if (s.next(ms))
 				return ms;
 		}
@@ -93,9 +91,7 @@ public class SegmentLayerState extends ProxyLayerState<R_Node> {
 			for (int sh = seg.getLeftMin(); sh < seg.getRightMax();
 			     sh++)
 			{
-				MapSegment ms = (getTheme() instanceof TravelTimeTheme)
-					? new TravelTimeSegment(seg, sh, scale)
-					: new MapSegment(seg, sh, scale);
+				MapSegment ms = new MapSegment(seg, sh, scale);
 				if (s.next(ms))
 					return ms;
 			}

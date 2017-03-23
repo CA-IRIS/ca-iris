@@ -870,6 +870,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		writer.flush(vol_cache, name);
 		writer.flush(scn_cache, name);
 		writer.flush(spd_cache, name);
+		writer.flush(tvt_cache, name);
 		writer.flush(vol_mc_cache, name);
 		writer.flush(vol_s_cache, name);
 		writer.flush(vol_m_cache, name);
@@ -881,6 +882,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache.purge(before);
 		scn_cache.purge(before);
 		spd_cache.purge(before);
+		tvt_cache.purge(before);
 		vol_mc_cache.purge(before);
 		vol_s_cache.purge(before);
 		vol_m_cache.purge(before);
