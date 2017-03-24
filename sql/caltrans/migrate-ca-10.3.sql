@@ -35,6 +35,8 @@ INSERT INTO iris.system_attribute (name, value) VALUES ('system_min_password_len
 
 INSERT INTO iris.system_attribute (name, value) VALUES ('travel_time_max_mph', 65);
 
+INSERT INTO iris.system_attribute (name, value) VALUES ('travel_time_unit_text', '');
+
 -- to accommodate larger tags and their attributes, e.g. tt
 ALTER TABLE iris.quick_message
   ALTER COLUMN multi TYPE VARCHAR(2048);

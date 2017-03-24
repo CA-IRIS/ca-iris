@@ -130,7 +130,7 @@ public class TravelTimeEstimator {
 					wp2 = i.next();
 					if (wp1 == null || wp2 == null)
 						continue;
-					r = lookupRoute(wp2, wp1);
+					r = lookupRoute(wp1, wp2);
 					testRouteLeg(r, tt);
 					if (!valid)
 						break;
@@ -149,7 +149,7 @@ public class TravelTimeEstimator {
 				} while (i.hasNext());
 
 			} else if (tt.isValid()) {
-				r = lookupRoute(tt.getDestinationStation());
+				r = lookupRoute(name, tt.getDestinationStation());
 				testRouteLeg(r, tt);
 				if (valid)
 					tt.addRoute(r);
@@ -166,6 +166,11 @@ public class TravelTimeEstimator {
 		/** Add a travel time for a route */
 		private void testRouteLeg(Route r, TravelTimeTag tt)
 		{
+			if (null == r) {
+				valid = false;
+				return;
+			}
+
 			boolean final_dest = isFinalDest(r);
 			try {
 				tt.addCalculatedTime(calculateTravelTime(r, final_dest));
@@ -197,7 +202,7 @@ public class TravelTimeEstimator {
 			else if (under || all_under)
 				addUnderLimit(tt);
 			else
-				addSpan(String.valueOf(mn));
+				addSpan(String.valueOf(mn) + tt.getUnitText());
 		}
 
 		/** Add over limit travel time */
@@ -206,10 +211,13 @@ public class TravelTimeEstimator {
 			String lim = String.valueOf(roundUp5Min(tt.getSlowestTime(true)));
 			switch (tt.getOverMode()) {
 			case prepend:
-				addSpan(tt.getOverText() + lim);
+				addSpan(tt.getOverText() + lim + tt.getUnitText());
 				break;
 			case append:
-				addSpan(lim + tt.getOverText());
+				addSpan(lim + tt.getOverText() + tt.getUnitText());
+				break;
+			case replace:
+				addSpan(tt.getOverText());
 				break;
 			default:
 				valid = false;
@@ -225,10 +233,13 @@ public class TravelTimeEstimator {
 			String lim = String.valueOf(tt.getFastestTime(true));
 			switch (tt.getUnderMode()) {
 			case prepend:
-				addSpan(tt.getUnderText() + lim);
+				addSpan(tt.getUnderText() + lim + tt.getUnitText());
 				break;
 			case append:
-				addSpan(lim + tt.getUnderText());
+				addSpan(lim + tt.getUnderText() + tt.getUnitText());
+				break;
+			case replace:
+				addSpan(tt.getUnderText());
 				break;
 			default:
 				valid = false;
@@ -255,13 +266,14 @@ public class TravelTimeEstimator {
 	}
 
 	/** Lookup a route by station ID */
-	private Route lookupRoute(String d_sid, String o_sid) {
-		if (!s_routes.containsKey(d_sid)) {
-			Route r = createRoute(d_sid, o_sid);
+	private Route lookupRoute(String o_sid, String d_sid) {
+		String k = new StringBuilder().append(o_sid).append("->").append(d_sid).toString();
+		if (!s_routes.containsKey(k)) {
+			Route r = createRoute(o_sid, d_sid);
 			if (r != null)
-				s_routes.put(d_sid, r);
+				s_routes.put(k, r);
 		}
-		return s_routes.get(d_sid);
+		return s_routes.get(k);
 	}
 
 	/** Create one route to a travel time destination */
@@ -271,11 +283,11 @@ public class TravelTimeEstimator {
 	}
 
 	/** Create one route to a travel time destination from an origin */
-	private Route createRoute(String sid, String o_sid) {
-		Station s = StationHelper.lookup(sid);
+	private Route createRoute(String o_sid, String d_sid) {
 		Station os = StationHelper.lookup(o_sid);
-		if (s != null && os != null)
-			return createRoute(s, os);
+		Station ds = StationHelper.lookup(d_sid);
+		if (ds != null && os != null)
+			return createRoute(os, ds);
 		else
 			return null;
 	}
@@ -287,19 +299,19 @@ public class TravelTimeEstimator {
 	}
 
 	/** Create one route to a travel time destination from an origin */
-	private Route createRoute(Station s, Station os) {
-		GeoLoc dest = s.getR_Node().getGeoLoc();
+	private Route createRoute(Station os, Station ds) {
 		GeoLoc orig = os.getR_Node().getGeoLoc();
-		return createRoute(dest, orig, os.getName());
+		GeoLoc dest = ds.getR_Node().getGeoLoc();
+		return createRoute(orig, dest, os.getName());
 	}
 
 	/** Create one route to a travel time destination */
 	private Route createRoute(GeoLoc dest) {
-		return createRoute(dest, origin, name);
+		return createRoute(origin, dest, name);
 	}
 
 	/** Create one route to a travel time destination from an origin */
-	private Route createRoute(GeoLoc dest, GeoLoc orig, String n) {
+	private Route createRoute(GeoLoc orig, GeoLoc dest, String n) {
 		RouteBuilder builder = new RouteBuilder(TRAVEL_LOG, n,
 			BaseObjectImpl.corridors);
 		return builder.findBestRoute(orig, dest);

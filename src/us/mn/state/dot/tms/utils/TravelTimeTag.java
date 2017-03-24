@@ -20,6 +20,7 @@ import java.util.List;
 import us.mn.state.dot.tms.server.Route;
 import us.mn.state.dot.tms.units.Distance;
 
+import static us.mn.state.dot.tms.SystemAttrEnum.TRAVEL_TIME_UNIT_TEXT;
 import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 import static us.mn.state.dot.tms.utils.SString.isBlank;
 
@@ -66,6 +67,9 @@ public class TravelTimeTag {
 	/** under text key */
 	static public final String UNDER_TEXT = "ut";
 
+	/** unit text key */
+	static public final String UNIT_TEXT = "unit";
+
 	/** way-point station ids.
 	 * last station id is always the destination.
 	 * if 2 or more way points, first is considered origin station */
@@ -82,6 +86,9 @@ public class TravelTimeTag {
 
 	/** under threshold text */
 	private String underText;
+
+	/** unit text */
+	private String unitText;
 
 	/** routes */
 	private List<Route> routes;
@@ -115,6 +122,7 @@ public class TravelTimeTag {
 		slowestTime = 0;
 		fastestTime = 0;
 		calculatedTime = 0;
+		unitText = TRAVEL_TIME_UNIT_TEXT.getString();
 	}
 
 	/** Constructor */
@@ -226,6 +234,16 @@ public class TravelTimeTag {
 	/** has under text */
 	public boolean hasUnderText() {
 		return underText != null;
+	}
+
+	/** Set the unitText field value. */
+	public String getUnitText() {
+		return (unitText != null) ? unitText : "";
+	}
+
+	/** Set the unitText field value. */
+	public void setUnitText(String unit) {
+		unitText = unit;
 	}
 
 	/** get route(s) combined distance */
@@ -383,6 +401,9 @@ public class TravelTimeTag {
 				if (tt.hasUnderText() && !DEF_UNDER_TEXT.equals(tt.getUnderText()))
 					rv.append(ARG_DELIM).append(UNDER_TEXT).append(KV_DELIM).append(tt.getUnderText());
 			}
+			if (!isBlank(emptyBecomesNull(tt.getUnitText()))
+				&& !TRAVEL_TIME_UNIT_TEXT.getString().equals(tt.getUnitText()))
+				rv.append(ARG_DELIM).append(UNIT_TEXT).append(KV_DELIM).append(tt.getUnitText());
 		} else {
 			rv.append(tt.getWayPointStationsStr());
 			if (!DEF_OVER_MODE.equals(tt.getOverMode()))
@@ -421,6 +442,8 @@ public class TravelTimeTag {
 						rv.setUnderMode(parseMode(kv[1].trim(), DEF_UNDER_MODE));
 					else if (UNDER_TEXT.equals(kv[0]))
 						rv.setUnderText(kv[1]);
+					else if (UNIT_TEXT.equals(kv[0]))
+						rv.setUnitText(kv[1]);
 				}
 			}
 		}

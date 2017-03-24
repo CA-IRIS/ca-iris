@@ -144,7 +144,7 @@ public interface Multi {
 
 	/** Modes for travel time over limit handling */
 	enum OverLimitMode {
-		blank, prepend, append
+		blank, prepend, append, replace
 	};
 
 	/** Add a travel time destination.
