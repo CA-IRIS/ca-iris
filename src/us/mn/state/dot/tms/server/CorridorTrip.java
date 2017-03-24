@@ -64,6 +64,19 @@ public class CorridorTrip {
 		return new Distance(d, Distance.Units.MILES);
 	}
 
+	public ArrayList<VehicleSampler> lookupAllSamplers() {
+		final ArrayList<VehicleSampler> samplers = new ArrayList<>();
+		corridor.findStation(new Corridor.StationFinder() {
+			@Override
+			public boolean check(Float m, StationImpl s) {
+				if(isWithinTrip(m))
+					samplers.addAll(lookupSamplers(s).getAll());
+				return false;
+			}
+		});
+		return samplers;
+	}
+
 	/** Lookup samplers on a corridor trip */
 	public ArrayList<VehicleSampler> lookupSamplers(final LaneType lt) {
 		final ArrayList<VehicleSampler> samplers =

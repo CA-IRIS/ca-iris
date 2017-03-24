@@ -128,6 +128,14 @@ public class Route implements Comparable<Route> {
 		return new SamplerSet(vs);
 	}
 
+	/** get all samplers in this troup route */
+	public SamplerSet getSamplerSet() {
+		ArrayList<VehicleSampler> vs = new ArrayList<>();
+		for (CorridorTrip trip : trips)
+			vs.addAll(trip.lookupAllSamplers());
+		return new SamplerSet(vs);
+	}
+
 	/** Compare to another route (for sorting) */
 	@Override
 	public int compareTo(Route o) {

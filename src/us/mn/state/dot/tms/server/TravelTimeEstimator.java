@@ -165,28 +165,11 @@ public class TravelTimeEstimator {
 				long dc = 0L;
 				long rc = 0L;
 				for (Route tr : tt.getRoutes()) {
-					SamplerSet ss = new SamplerSet();
-					ss.addAll(tr.getSamplerSet(LaneType.NONE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.MAINLINE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.AUXILIARY).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.CD_LANE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.REVERSIBLE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.MERGE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.QUEUE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.EXIT).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.BYPASS).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.PASSAGE).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.VELOCITY).getAll());
-//					ss.addAll(tr.getSamplerSet(LaneType.OMNIBUS).getAll());
-//					ss.addAll(tr.getSamplerSet(LaneType.GREEN).getAll());
-//					ss.addAll(tr.getSamplerSet(LaneType.WRONG_WAY).getAll());
-					ss.addAll(tr.getSamplerSet(LaneType.HOV).getAll());
-//					ss.addAll(tr.getSamplerSet(LaneType.HOT).getAll());
+					SamplerSet ss = tr.getSamplerSet();
 					for (VehicleSampler vs : ss.getAll()) {
 						if (vs instanceof DetectorImpl) {
 							DetectorImpl d = (DetectorImpl) vs;
-							int tvt = (d.getTravelTimeRoutes() > 0) ? d.getTravelTimeRoutes() + 1 : 1;
-							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, tvt));
+							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
 							dc++;
 						}
 					}
