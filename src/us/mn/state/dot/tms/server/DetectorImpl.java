@@ -989,6 +989,4 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 			last_tvt_stamp = tvt.stamp;
 		}
 	}
-
-
 }

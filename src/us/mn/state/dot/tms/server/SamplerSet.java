@@ -200,6 +200,11 @@ public class SamplerSet implements VehicleSampler {
 		return (n_tvt > 0) ? (t_tvt / n_tvt) : MISSING_DATA;
 	}
 
+	/** convenience method */
+	public void addAll(Collection<? extends VehicleSampler> dets) {
+		samplers.addAll(dets);
+	}
+
 	/** Get a string representation (for debugging) */
 	@Override
 	public String toString() {
@@ -212,9 +217,5 @@ public class SamplerSet implements VehicleSampler {
 		}
 		sb.append('}');
 		return sb.toString();
-	}
-
-	public void addAll(Collection<? extends VehicleSampler> dets) {
-		samplers.addAll(dets);
 	}
 }

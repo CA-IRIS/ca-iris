@@ -208,6 +208,7 @@ public class Segment {
 			return null;
 	}
 
+	/** get the travel time route usage information for segment */
 	public Integer getTvt(Integer lane) {
 		int total = 0;
 		int count = 0;

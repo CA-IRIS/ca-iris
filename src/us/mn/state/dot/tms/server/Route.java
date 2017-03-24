@@ -128,7 +128,7 @@ public class Route implements Comparable<Route> {
 		return new SamplerSet(vs);
 	}
 
-	/** get all samplers in this troup route */
+	/** get all samplers in this travel route */
 	public SamplerSet getSamplerSet() {
 		ArrayList<VehicleSampler> vs = new ArrayList<>();
 		for (CorridorTrip trip : trips)
@@ -155,9 +155,5 @@ public class Route implements Comparable<Route> {
 		for (CorridorTrip trip: trips)
 			sb.append(trip.toString());
 		return sb.toString();
-	}
-
-	public List<CorridorTrip> getTrips() {
-		return trips;
 	}
 }

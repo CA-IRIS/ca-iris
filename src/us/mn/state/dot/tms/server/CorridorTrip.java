@@ -64,6 +64,7 @@ public class CorridorTrip {
 		return new Distance(d, Distance.Units.MILES);
 	}
 
+	/** get all the samplers within the trip */
 	public ArrayList<VehicleSampler> lookupAllSamplers() {
 		final ArrayList<VehicleSampler> samplers = new ArrayList<>();
 		corridor.findStation(new Corridor.StationFinder() {

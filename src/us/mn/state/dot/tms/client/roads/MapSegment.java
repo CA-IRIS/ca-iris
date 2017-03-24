@@ -238,6 +238,7 @@ public class MapSegment implements MapObject {
 		return segment.getSpeed(lane);
 	}
 
+	/** get travel time route usage information for segment */
 	public Integer getTvt() {
 		return segment.getTvt(lane);
 	}

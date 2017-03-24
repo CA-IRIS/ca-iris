@@ -47,6 +47,7 @@ public class SensorSample {
 		speed = s;
 	}
 
+	/** create a sensor sample with travel time route info */
 	public SensorSample(String i, Integer f, Integer s, Integer t) {
 		this(i,f,s);
 		tvt = t;
@@ -60,6 +61,7 @@ public class SensorSample {
 			return null;
 	}
 
+	/** travel time route usage */
 	private Integer tvt;
 
 	/** get the number of travel time routes on this */

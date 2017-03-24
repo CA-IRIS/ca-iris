@@ -363,8 +363,9 @@ public class StationImpl implements Station, VehicleSampler {
 		int t_tvt = 0;
 		int n_tvt = 0;
 		for(DetectorImpl det: r_node.getDetectors()) {
+			// TTR data collection only cares that detector isn't abandoned
 			int t = det.getTravelTimeRoutes();
-			if (t != MISSING_DATA) {
+			if (t != MISSING_DATA && !det.getAbandoned()) {
 				t_tvt += t;
 				n_tvt++;
 			}
@@ -406,7 +407,7 @@ public class StationImpl implements Station, VehicleSampler {
 		flow = Math.round(average(t_flow, n_flow));
 		density = average(t_density, n_density);
 		speed = average(t_speed, n_speed);
-		tvt = (n_tvt > 0) ? (int)(t_tvt/n_tvt) : 0;
+		tvt = (n_tvt > 0) ? (t_tvt / n_tvt) : 0;
 		updateRollingSpeed(speed);
 		updateAvgSpeed(speed);
 		updateLowSpeed(low);

@@ -31,6 +31,22 @@ class StationManager {
 	/** Location of station sample XML file */
 	static private final String SAMPLE_XML = "stat_sample.xml";
 
+	/** DTD in single location */
+	static protected final String DTD_TRAF_SAMP = new StringBuilder()
+		.append("<!DOCTYPE traffic_sample [\n")
+		.append("<!ELEMENT traffic_sample (sample)*>\n")
+		.append("<!ATTLIST traffic_sample time_stamp CDATA #REQUIRED>\n")
+		.append("<!ATTLIST traffic_sample period CDATA #REQUIRED>\n")
+		.append("<!ELEMENT sample EMPTY>\n")
+		.append("<!ATTLIST sample sensor CDATA #REQUIRED>\n")
+		.append("<!ATTLIST sample flow CDATA 'UNKNOWN'>\n")
+		.append("<!ATTLIST sample speed CDATA 'UNKNOWN'>\n")
+		.append("<!ATTLIST sample occ CDATA 'UNKNOWN'>\n")
+		.append("<!ATTLIST sample tvt CDATA 'UNKNOWN'>\n")
+		.append("]>\n")
+		.toString();
+
+
 	/** Calculate the current data for all stations */
 	public void calculateData() {
 		Iterator<Station> it = StationHelper.iterator();
@@ -67,18 +83,7 @@ class StationManager {
 
 	/** Print the DTD */
 	private void writeDtd(Writer w) throws IOException {
-		w.write("<!DOCTYPE traffic_sample [\n");
-		w.write("<!ELEMENT traffic_sample (sample)*>\n");
-		w.write("<!ATTLIST traffic_sample time_stamp " +
-			"CDATA #REQUIRED>\n");
-		w.write("<!ATTLIST traffic_sample period CDATA #REQUIRED>\n");
-		w.write("<!ELEMENT sample EMPTY>\n");
-		w.write("<!ATTLIST sample sensor CDATA #REQUIRED>\n");
-		w.write("<!ATTLIST sample flow CDATA 'UNKNOWN'>\n");
-		w.write("<!ATTLIST sample speed CDATA 'UNKNOWN'>\n");
-		w.write("<!ATTLIST sample occ CDATA 'UNKNOWN'>\n");
-		w.write("<!ATTLIST sample tvt CDATA 'UNKNOWN'>\n");
-		w.write("]>\n");
+		w.write(DTD_TRAF_SAMP);
 	}
 
 	/** Print the body of the station sample XML file */

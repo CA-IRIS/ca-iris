@@ -24,6 +24,7 @@ import us.mn.state.dot.tms.utils.I18N;
  * @author Jacob Barde
  */
 public class TravelTimeTheme extends SegmentTheme {
+
 	/** colors */
 	static private final Color UNUSED = new Color(0, 0, 0, 0.20f);
 	static private final Color LOW = new Color(2, 0, 185);
@@ -31,6 +32,7 @@ public class TravelTimeTheme extends SegmentTheme {
 	static private final Color MED = new Color(0, 125, 255);
 	static private final Color MEDHIGH = new Color(0, 187, 209);
 	static private final Color HIGH = new Color(0, 255, 243);
+
 	/** Speed styles */
 	static private final Style[] S_STYLES = new Style[] {
 		// segment not used in Travel-Time

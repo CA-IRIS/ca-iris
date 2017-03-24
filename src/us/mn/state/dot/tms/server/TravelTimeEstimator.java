@@ -162,19 +162,14 @@ public class TravelTimeEstimator {
 				valid = false;
 			} else {
 				addTravelTimeOverUnder(tt);
-				long dc = 0L;
-				long rc = 0L;
 				for (Route tr : tt.getRoutes()) {
 					SamplerSet ss = tr.getSamplerSet();
-					for (VehicleSampler vs : ss.getAll()) {
-						if (vs instanceof DetectorImpl) {
-							DetectorImpl d = (DetectorImpl) vs;
-							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
-							dc++;
-						}
-					}
+					for (VehicleSampler vs : ss.getAll())
+						if (vs instanceof DetectorImpl)
+							((DetectorImpl) vs).storeTravelTimeRoute(
+								new PeriodicSample(TimeSteward.currentTimeMillis(),
+									           30, 1));
 				}
-				logTravel(" rnode count=" + rc + ", detector count=" + dc);
 			}
 		}
 
