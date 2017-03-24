@@ -167,11 +167,12 @@ public class SensorReader {
 	}
 
 	/** Notify segment layer of one sensor sample */
-	private void notifySensorSample(String sensor, String f, String s) {
+	private void notifySensorSample(String sensor, String f, String s, String t) {
 		Integer flow = parseInt(f);
 		Integer speed = parseInt(s);
-		if (flow != null || speed != null)
-			builder.update(new SensorSample(sensor, flow, speed));
+		Integer tvt = parseInt(t);
+		if (flow != null || speed != null || tvt != null)
+			builder.update(new SensorSample(sensor, flow, speed, tvt));
 	}
 
 	/** Handle one sensor sample element */
@@ -180,8 +181,9 @@ public class SensorReader {
 			String sensor = attrs.getValue("sensor");
 			String flow = attrs.getValue("flow");
 			String speed = attrs.getValue("speed");
+			String tvt = attrs.getValue("tvt");
 			if (sensor != null)
-				notifySensorSample(sensor, flow, speed);
+				notifySensorSample(sensor, flow, speed, tvt);
 		}
 	}
 }

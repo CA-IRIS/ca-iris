@@ -52,7 +52,10 @@ public enum PeriodicSampleType {
 	PRECIP_RATE("pr", 2, Short.MAX_VALUE, Aggregation.SUM),
 
 	/** Precipitation type (rain, snow, etc.) */
-	PRECIP_TYPE("pt", 1, Byte.MAX_VALUE, Aggregation.NONE);
+	PRECIP_TYPE("pt", 1, Byte.MAX_VALUE, Aggregation.NONE),
+
+	/** TVT type - count of routes */
+	TVT_TYPE("tvt", 1, Byte.MAX_VALUE, Aggregation.NONE);
 
 	/** Maximum bytes to store any sample type */
 	static public final int MAX_BYTES = 2;

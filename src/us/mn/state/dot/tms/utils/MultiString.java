@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.units.Interval;
-import us.mn.state.dot.tms.utils.Multi.OverLimitMode;
 
 /**
  * MULTI String (MarkUp Language for Transportation Information), as specified
@@ -31,6 +31,7 @@ import us.mn.state.dot.tms.utils.Multi.OverLimitMode;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class MultiString {
 
@@ -258,37 +259,21 @@ public class MultiString {
 	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
 	 * @param cb Callback to set travel time. */
 	static private void parseTravelTime(String v, Multi cb) {
-		String[] args = v.split(",", 3);
-		String sid = (args.length > 0) ? args[0] : null;
-		OverLimitMode mode = (args.length > 1)
-		                   ? parseOverMode(args[1])
-		                   : OverLimitMode.prepend;
-		String o_txt = (args.length > 2) ? args[2] : "OVER ";
-		if (sid != null)
-			cb.addTravelTime(sid, mode, o_txt);
+		TravelTimeTag tt = TravelTimeTag.mapTo(v);
+		if (tt.isValid())
+			cb.addTravelTime(tt);
 	}
 
-	/** Parse a over limit mode value */
-	static private OverLimitMode parseOverMode(String mode) {
-		for (OverLimitMode m : OverLimitMode.values()) {
-			if (mode.equals(m.toString()))
-				return m;
-		}
-		return OverLimitMode.prepend;
-	}
-
-	/** Parse slow traffic warning from a [slows,b], [slows,b,u] or
-	 * [slows,b,u,dist] tag.
-	 * @param v Slow traffic tag value (s,b, s,b,u, s,b,u,dist from tag).
+	/** Parse slow traffic warning from a [slows,d] or [slows,d,m] tag.
+	 * @param v Slow traffic tag value (s,d or s,d,m from tag).
 	 * @param cb Callback to set slow warning. */
 	static private void parseSlowWarning(String v, Multi cb) {
-		String[] args = v.split(",", 4);
+		String[] args = v.split(",", 3);
 		Integer spd = parseInt(args, 0);
-		Integer b = parseInt(args, 1);
-		String units = parseSpeedUnits(args, 2);
-		boolean dist = parseDist(args, 3);
-		if (isSpeedValid(spd) && isBackupValid(b))
-			cb.addSlowWarning(spd, b, units, dist);
+		Integer dist = parseInt(args, 1);
+		String mode = parseSlowMode(args, 2);
+		if (isSpeedValid(spd) && isDistValid(dist))
+			cb.addSlowWarning(spd, dist, mode);
 	}
 
 	/** Parse tolling tag [tz{p,o,c},z1,...zn].
@@ -336,38 +321,12 @@ public class MultiString {
 		      : null;
 	}
 
-	/** Test if a parsed backup distance is valid */
-	static private boolean isBackupValid(Integer b) {
-		return b != null && b <= 16 && b >= -16;
-	}
-
-	/** Parse a speed units value */
-	static private String parseSpeedUnits(String[] args, int n) {
+	/** Parse a slow mode value */
+	static private String parseSlowMode(String[] args, int n) {
 		if (n < args.length)
-			return parseSpeedUnits(args[n]);
+			return parseSlowMode(args[n]);
 		else
-			return "mph";
-	}
-
-	/** Parse a speed units value */
-	static private String parseSpeedUnits(String param) {
-		if (param.equals("kph"))
-			return param;
-		else
-			return "mph";
-	}
-
-	/** Parse a "dist" value */
-	static private boolean parseDist(String[] args, int n) {
-		if (n < args.length)
-			return parseDist(args[n]);
-		else
-			return false;
-	}
-
-	/** Parse a "dist" value */
-	static private boolean parseDist(String param) {
-		return param.equals("dist");
+			return null;
 	}
 
 	/** MULTI string buffer */

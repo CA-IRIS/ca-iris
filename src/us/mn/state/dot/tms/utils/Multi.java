@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ package us.mn.state.dot.tms.utils;
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Jacob Barde
  */
 public interface Multi {
 
@@ -142,24 +144,21 @@ public interface Multi {
 
 	/** Modes for travel time over limit handling */
 	enum OverLimitMode {
-		blank, prepend, append
+		blank, prepend, append, replace
 	};
 
 	/** Add a travel time destination.
-	 * @param stat_id Destination station ID.
-	 * @param mode Over limit mode.
-	 * @param o_txt Over limit text. */
-	void addTravelTime(String sid, OverLimitMode mode, String o_txt);
+	 * @param tt Map of travel time arguments. */
+	void addTravelTime(TravelTimeTag tt);
 
 	/** Add a speed advisory */
 	void addSpeedAdvisory();
 
 	/** Add a slow traffic warning.
 	 * @param spd Highest speed to activate warning.
-	 * @param b Distance to end of backup (negative indicates upstream).
-	 * @param units Units for speed (mph or kph).
-	 * @param dist If true, replace tag with distance to slow station. */
-	void addSlowWarning(int spd, int b, String units, boolean dist);
+	 * @param dist Distance to search for slow traffic (1/10 mile).
+	 * @param mode Tag replacement mode (none, dist or speed). */
+	void addSlowWarning(int spd, int dist, String mode);
 
 	/** Add a feed message */
 	void addFeed(String fid);
