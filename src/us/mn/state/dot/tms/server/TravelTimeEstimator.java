@@ -18,7 +18,9 @@ package us.mn.state.dot.tms.server;
 import java.util.HashMap;
 import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.GeoLoc;
+import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.StationHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
@@ -160,6 +162,14 @@ public class TravelTimeEstimator {
 				valid = false;
 			} else {
 				addTravelTimeOverUnder(tt);
+				for (Route tr : tt.getRoutes()) {
+					SamplerSet ss = tr.getSamplerSet();
+					for (VehicleSampler vs : ss.getAll())
+						if (vs instanceof DetectorImpl)
+							((DetectorImpl) vs).storeTravelTimeRoute(
+								new PeriodicSample(TimeSteward.currentTimeMillis(),
+									           30, 1));
+				}
 			}
 		}
 

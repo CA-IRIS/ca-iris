@@ -160,4 +160,10 @@ public class FakeDetector implements VehicleSampler {
 		}
 		return calculateAverage(t_speed, n_speed);
 	}
+
+	/** get the number of travel time routes on this */
+	@Override
+	public int getTravelTimeRoutes() {
+		return MISSING_DATA;
+	}
 }

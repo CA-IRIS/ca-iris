@@ -185,6 +185,26 @@ public class SamplerSet implements VehicleSampler {
 		return occ;
 	}
 
+	/** Get the current average speed */
+	@Override
+	public int getTravelTimeRoutes() {
+		int t_tvt = 0;
+		int n_tvt = 0;
+		for (VehicleSampler vs: samplers) {
+			int s = vs.getTravelTimeRoutes();
+			if (s > 0) {
+				t_tvt += s;
+				n_tvt++;
+			}
+		}
+		return (n_tvt > 0) ? (t_tvt / n_tvt) : MISSING_DATA;
+	}
+
+	/** convenience method */
+	public void addAll(Collection<? extends VehicleSampler> dets) {
+		samplers.addAll(dets);
+	}
+
 	/** Get a string representation (for debugging) */
 	@Override
 	public String toString() {
