@@ -164,18 +164,20 @@ public class TravelTimeEstimator {
 				long dc = 0L;
 				long rc = 0L;
 				for (Route tr : tt.getRoutes()) {
-					for (CorridorTrip ct : tr.getTrips()) {
-						Iterator<R_NodeImpl> it = ct.corridor.iterator();
-						while (it.hasNext()) {
-							R_NodeImpl rn = it.next();
-							rc++;
-							for (DetectorImpl d : rn.getDetectors()) {
-								d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
-								dc++;
-							}
-						}
 
+//					for (CorridorTrip ct : tr.getTrips()) {
+//						Iterator<R_NodeImpl> it = ct.corridor.iterator();
+					Iterator<R_NodeImpl> it = tr.getOnlyCorridor().iterator();
+					while (it.hasNext()) {
+						R_NodeImpl rn = it.next();
+						rc++;
+						for (DetectorImpl d : rn.getDetectors()) {
+							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
+							dc++;
+						}
 					}
+
+//					}
 				}
 				logTravel(" rnode count=" + rc + ", detector count=" + dc);
 			}
