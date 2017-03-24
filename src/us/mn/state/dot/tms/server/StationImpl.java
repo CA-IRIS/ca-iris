@@ -248,7 +248,7 @@ public class StationImpl implements Station, VehicleSampler {
 		System.arraycopy(rlg_speed, 0, rlg_speed, 1,
 			rlg_speed.length - 1);
 		// Clamp the speed to 10 mph above the speed limit
-		rlg_speed[0] = Math.min(s, getSpeedLimit() + 10);
+		rlg_speed[0] = s; //Math.min(s, getSpeedLimit() + 10);
 	}
 
 	/** Average station speed for previous ten samples */
@@ -258,7 +258,7 @@ public class StationImpl implements Station, VehicleSampler {
 	private void updateAvgSpeed(float s) {
 		System.arraycopy(avg_speed, 0, avg_speed, 1,
 			avg_speed.length - 1);
-		avg_speed[0] = Math.min(s, getSpeedLimit());
+		avg_speed[0] = s; //Math.min(s, getSpeedLimit() + 10);
 	}
 
 	/** Get the average speed smoothed over several samples */
@@ -329,7 +329,7 @@ public class StationImpl implements Station, VehicleSampler {
 	private void updateLowSpeed(float s) {
 		System.arraycopy(low_speed, 0, low_speed, 1,
 			low_speed.length - 1);
-		low_speed[0] = Math.min(s, getSpeedLimit());
+		low_speed[0] = s; //Math.min(s, getSpeedLimit());
 	}
 
 	/** Get the low speed smoothed over several samples */

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import us.mn.state.dot.tms.server.Route;
+import us.mn.state.dot.tms.units.Distance;
 
 import static us.mn.state.dot.tms.utils.SString.emptyBecomesNull;
 import static us.mn.state.dot.tms.utils.SString.isBlank;
@@ -104,11 +105,8 @@ public class TravelTimeTag {
 	private List<Integer> accCalc = new ArrayList<>();
 
 	/** Constructor */
-	public TravelTimeTag(String d_sid) {
-		assert d_sid != null;
-		assert !"".equals(d_sid.trim());
+	private TravelTimeTag() {
 		wayPointStations = new ArrayList<>();
-		setWayPointStations(d_sid);
 		overMode = DEF_OVER_MODE;
 		overText = DEF_OVER_TEXT;
 		underMode = null;
@@ -117,6 +115,14 @@ public class TravelTimeTag {
 		slowestTime = 0;
 		fastestTime = 0;
 		calculatedTime = 0;
+	}
+
+	/** Constructor */
+	public TravelTimeTag(String d_sid) {
+		this();
+		assert d_sid != null;
+		assert !"".equals(d_sid.trim());
+		setWayPointStations(d_sid);
 	}
 
 	/** Constructor */
@@ -148,7 +154,7 @@ public class TravelTimeTag {
 	/** set a list of way-point stations from string. */
 	private void setWayPointStations(String wps) throws IllegalArgumentException {
 		if (isBlank(emptyBecomesNull(wps)))
-			throw new IllegalArgumentException("Nulls or empty emptry strings not allowed");
+			throw new IllegalArgumentException("Nulls or empty way-point strings not allowed");
 		String w = wps.trim();
 		wayPointStations = Arrays.asList(w.split(WP_DELIM));
 	}
@@ -185,9 +191,7 @@ public class TravelTimeTag {
 
 	/** do we have an origin sid */
 	public boolean hasOrigin() {
-		if (wayPointStations.size() > 1)
-			return true;
-		return false;
+		return (wayPointStations.size() > 1);
 	}
 
 	/** Set the underMode field value. */
@@ -224,6 +228,14 @@ public class TravelTimeTag {
 		return underText != null;
 	}
 
+	/** get route(s) combined distance */
+	public float getDistance(Distance.Units units) {
+		float rv = 0.0F;
+		for (Route r : routes) {
+			rv += r.getDistance().asFloat(units);
+		}
+		return rv;
+	}
 	/** Set the routes field value. */
 	public List<Route> getRoutes() {
 		return routes;
@@ -386,9 +398,8 @@ public class TravelTimeTag {
 	static public TravelTimeTag mapTo(String v) {
 		String[] args = v.split(ARG_DELIM, 6);
 		TravelTimeTag rv;
-		if (!v.contains("=") && args.length <= 3) {
-			rv = new TravelTimeTag(
-				((args.length > 0) ? args[0] : null));
+		if (!v.contains("=") && args.length > 0 && args.length <= 3) {
+			rv = new TravelTimeTag(args[0]);
 			rv.setOverMode(DEF_OVER_MODE);
 			rv.setOverText(DEF_OVER_TEXT);
 			if (args.length > 1)
@@ -396,7 +407,7 @@ public class TravelTimeTag {
 			if (args.length > 2)
 				rv.setOverText(args[2]);
 		} else {
-			rv = new TravelTimeTag(null);
+			rv = new TravelTimeTag();
 			for (String s : args) {
 				String[] kv = s.split(KV_DELIM,2);
 				if (null != kv[0] && !"".equals(kv[0].trim())) {
