@@ -151,7 +151,7 @@ public class TravelTimeEstimator {
 				} while (i.hasNext());
 
 			} else if (tt.isValid()) {
-				r = lookupRoute(name, tt.getDestinationStation());
+				r = lookupRoute(tt.getDestinationStation());
 				testRouteLeg(r, tt);
 				if (valid)
 					tt.addRoute(r);
