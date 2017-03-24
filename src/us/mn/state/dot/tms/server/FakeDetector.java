@@ -164,6 +164,6 @@ public class FakeDetector implements VehicleSampler {
 	/** get the number of travel time routes on this */
 	@Override
 	public int getTravelTimeRoutes() {
-		return 0;
+		return MISSING_DATA;
 	}
 }

@@ -278,7 +278,7 @@ public class StationImpl implements Station, VehicleSampler {
 			return MISSING_DATA;
 	}
 
-	/** Current average station speed */
+	/** Current number of travel time routes on this */
 	private int tvt = MISSING_DATA;
 
 	/** get the number of travel time routes on this */

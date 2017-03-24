@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.tms.ChangeVetoException;
@@ -975,7 +976,8 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 	/** get the number of travel time routes on this */
 	@Override
 	public int getTravelTimeRoutes() {
-		return last_tvt;
+		return (TimeSteward.currentTimeMillis() - last_tvt_stamp <= 60000)
+			? last_tvt : MISSING_DATA;
 	}
 
 	/** Store one route sample for this detector.
