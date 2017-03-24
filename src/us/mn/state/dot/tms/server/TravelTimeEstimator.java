@@ -20,6 +20,7 @@ import java.util.Iterator;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.tms.GeoLoc;
+import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.Station;
 import us.mn.state.dot.tms.StationHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
@@ -164,20 +165,31 @@ public class TravelTimeEstimator {
 				long dc = 0L;
 				long rc = 0L;
 				for (Route tr : tt.getRoutes()) {
-
-//					for (CorridorTrip ct : tr.getTrips()) {
-//						Iterator<R_NodeImpl> it = ct.corridor.iterator();
-					Iterator<R_NodeImpl> it = tr.getOnlyCorridor().iterator();
-					while (it.hasNext()) {
-						R_NodeImpl rn = it.next();
-						rc++;
-						for (DetectorImpl d : rn.getDetectors()) {
-							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, 1));
+					SamplerSet ss = new SamplerSet();
+					ss.addAll(tr.getSamplerSet(LaneType.NONE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.MAINLINE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.AUXILIARY).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.CD_LANE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.REVERSIBLE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.MERGE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.QUEUE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.EXIT).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.BYPASS).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.PASSAGE).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.VELOCITY).getAll());
+//					ss.addAll(tr.getSamplerSet(LaneType.OMNIBUS).getAll());
+//					ss.addAll(tr.getSamplerSet(LaneType.GREEN).getAll());
+//					ss.addAll(tr.getSamplerSet(LaneType.WRONG_WAY).getAll());
+					ss.addAll(tr.getSamplerSet(LaneType.HOV).getAll());
+//					ss.addAll(tr.getSamplerSet(LaneType.HOT).getAll());
+					for (VehicleSampler vs : ss.getAll()) {
+						if (vs instanceof DetectorImpl) {
+							DetectorImpl d = (DetectorImpl) vs;
+							int tvt = (d.getTravelTimeRoutes() > 0) ? d.getTravelTimeRoutes() + 1 : 1;
+							d.storeTravelTimeRoute(new PeriodicSample(TimeSteward.currentTimeMillis(), 30, tvt));
 							dc++;
 						}
 					}
-
-//					}
 				}
 				logTravel(" rnode count=" + rc + ", detector count=" + dc);
 			}

@@ -213,4 +213,8 @@ public class SamplerSet implements VehicleSampler {
 		sb.append('}');
 		return sb.toString();
 	}
+
+	public void addAll(Collection<? extends VehicleSampler> dets) {
+		samplers.addAll(dets);
+	}
 }
