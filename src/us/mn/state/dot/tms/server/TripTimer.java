@@ -34,13 +34,13 @@ public class TripTimer {
 	static private final float LOW_SPEED_DISTANCE = 1.0f;
 
 	/** Maximum allowed length of a travel time link (miles) */
-	static private final float MAX_LINK_LENGTH = ROUTE_MAX_LINK_MILES.getFloat();
+	private final float MAX_LINK_LENGTH = ROUTE_MAX_LINK_MILES.getFloat();
 
 	/** Check if a segment is too long.
 	 * @param m0 Milepoint at start of segment.
 	 * @param m1 Milepoint at end of segment.
 	 * @return true if segment is too long. */
-	static private boolean isSegmentTooLong(float m0, float m1) {
+	private boolean isSegmentTooLong(float m0, float m1) {
 		return (m1 - m0) > (3 * MAX_LINK_LENGTH);
 	}
 
