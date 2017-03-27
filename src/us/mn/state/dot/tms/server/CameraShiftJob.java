@@ -131,7 +131,19 @@ public class CameraShiftJob extends Job {
 	 * @param offset offset in millis
 	 */
 	public CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset) {
-		this(s, vsc, pan, offset, null);
+		this(s, vsc, pan, offset, null, false);
+	}
+
+	/**
+	 * Create a camera shift job
+	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job.
+	 * @param vsc    the video server coupler, to see if a camera is in-use.
+	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
+	 * @param offset offset in millis
+	 * @param recompute recompute the job
+	 */
+	public CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset, boolean recompute) {
+		this(s, vsc, pan, offset, null, recompute);
 	}
 
 	/**
@@ -143,24 +155,25 @@ public class CameraShiftJob extends Job {
 	 * @param ctm    camera to move - this should only be used internally by this class. Specifically for cameras
 	 *               with shift_schedule's defined.
 	 */
-	private CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset, Camera ctm) {
+	private CameraShiftJob(Scheduler s, VideoServerCoupler vsc, PresetAliasName pan, int offset, Camera ctm,
+		boolean recompute) {
 		super(convertToSubMinuteOffset((offset)));
 
 		scheduler = s;
 		videoServerCoupler = vsc;
-		isIrisServerStart = (pan == null);
+		isIrisServerStart = (pan == null && !recompute);
 		camMoved = new HashMap<>();
 		if (null != ctm) {
 			forceMovement = true;
 			camMoved.put(ctm, false);
 		}
 
-		if (null == pan && !isShiftReinit())
+		if (recompute || (null == pan && !isShiftReinit()))
 			ignoreStartup = true;
 		destPan = (pan != null) ? pan : CameraHelper.calculateLastShift(offset);
 
 		StringBuilder sb = new StringBuilder("Camera shift");
-		if (null == ctm && isIrisServerStart)
+		if (!recompute && null == ctm && isIrisServerStart)
 			sb.append(" re-initialization");
 		sb.append(" job created");
 		if (null != ctm)
@@ -269,7 +282,8 @@ public class CameraShiftJob extends Job {
 				cal.add(Calendar.MINUTE, 1);
 
 			int offsetMillis = (int) (cal.getTimeInMillis() - TimeSteward.currentTimeMillis());
-			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, destPan, offsetMillis, c));
+			scheduler.addJob(
+				new CameraShiftJob(scheduler, videoServerCoupler, destPan, offsetMillis, c, false));
 		}
 
 	}
@@ -320,7 +334,13 @@ public class CameraShiftJob extends Job {
 
 		if (c != null) {
 			offset = (int) (c.getTimeInMillis() - now.getTimeInMillis());
-			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset));
+
+			boolean recomp = false;
+			if (offset > 24 * 3600000) {
+				recomp = true;
+				offset = 3600000;
+			}
+			scheduler.addJob(new CameraShiftJob(scheduler, videoServerCoupler, nsp, offset, recomp));
 			log.log(LOG_SCHEDULED_SHIFT);
 		} else
 			log.log(ERROR_COMPUTE_SHIFT);
