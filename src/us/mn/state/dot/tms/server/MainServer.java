@@ -195,9 +195,7 @@ public class MainServer {
 
 	/** Schedule jobs on TIMER thread */
 	static private void scheduleTimerJobs() {
-		int secs = SystemAttrEnum.LCS_POLL_PERIOD_SECS.getInt();
-		if (secs > 5)
-			TIMER.addJob(new LcsQueryMsgJob(secs));
+		TIMER.addJob(new LcsQueryMsgJob(TIMER));
 		TIMER.addJob(new DmsQueryStatusJob());
 		TIMER.addJob(new DmsQueryDialupJob());
 		TIMER.addJob(new MeteringJob(FLUSH));
