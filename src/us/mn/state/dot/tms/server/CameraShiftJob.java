@@ -1,6 +1,6 @@
 /*
  * IRIS -- Intelligent Roadway Information System
- * Copyright (C) 2016       California Department of Transportation
+ * Copyright (C) 2016-2017  California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,21 +100,18 @@ public class CameraShiftJob extends Job {
 		"ERROR: Unable to compute and schedule next camera-shift job.";
 	static final private String NOTICE_MT_HOUR = "NOTICE: Camera Shift Job is taking more than an hour.";
 	static final private String WARN_CAMERA_IN_USE = "WARNING: Not moving camera, as it is in use: ";
-	static final private String WARN_NO_CAMERAS = new StringBuilder("WARNING: no cameras found with requisite '")
-		.append(HOME.alias).append("' and '").append(NIGHT_SHIFT.alias).append("' presets enabled.").toString();
-	static final private String WARN_TERMINATING = new StringBuilder(
-		"WARNING: Terminating job, as it has taken more than ").append(MAX_RUNTIME).append(" hours.")
-		.toString();
+	static final private String WARN_NO_CAMERAS = "WARNING: no cameras found with requisite '" + HOME.alias
+		+ "' and '" + NIGHT_SHIFT.alias + "' presets enabled.";
+	static final private String WARN_TERMINATING = "WARNING: Terminating job, as it has taken more than "
+		+ MAX_RUNTIME + " hours.";
 
 	/** instance of the scheduler controlling this job */
 	private final Scheduler scheduler;
 
 	/** a map to track what cameras were moved (or attempted to do so) */
 	private final Map<Camera, Boolean> camMoved = new HashMap<>();
-	;
 
-	/**
-	 * used to force movement of camera */
+	/** used to force movement of camera */
 	private final boolean forceMovement;
 
 	/** Preset Alias Name to move cameras to */
@@ -137,24 +134,20 @@ public class CameraShiftJob extends Job {
 
 	/**
 	 * Create a camera shift job.  For MainServer start
-	 * @param s      the scheduler in charge of this job, used to add new
-	 *               CameraShiftJob after completing this job.
-	 * @param vsc    the video server coupler, to see if a camera is in-use.
+	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job
+	 * @param vsc    the video server coupler, to see if a camera is in-use
 	 * @param offset offset in millis
 	 */
-	public CameraShiftJob(Scheduler s, VideoServerCoupler vsc, int offset) {
+	CameraShiftJob(Scheduler s, VideoServerCoupler vsc, int offset) {
 		this(s, vsc, null, null, offset, true, true);
 	}
 
 	/**
 	 * Create a camera shift job. Used solely within this class to create/recreate these jobs
-	 * @param s      the scheduler in charge of this job, used to add new
-	 *               CameraShiftJob after completing this job.
-	 * @param vsc    the video server coupler, to see if a camera is in-use.
-	 * @param pan    preset to move cameras to. if null, will move to the
-	 *               last shift's preset
-	 * @param ctm    camera to move - this should only be used internally by
-	 *               this class. Specifically for cameras with
+	 * @param s      the scheduler in charge of this job, used to add new CameraShiftJob after completing this job
+	 * @param vsc    the video server coupler, to see if a camera is in-use
+	 * @param pan    preset to move cameras to. if null, will move to the last shift's preset
+	 * @param ctm    camera to move - this should only be used internally by this class
 	 * @param offset offset in millis
 	 * @param start  used for iris server start
 	 * @param clear  used for clearing any job of this type
@@ -213,8 +206,8 @@ public class CameraShiftJob extends Job {
 		sb.append(" job created");
 		if (null != ctm)
 			sb.append(" for camera ").append(ctm.getName());
-		sb.append(", will execute in about ").append((offset / MINUTE)).append(" minutes for the ").append(
-			destPan.name()).append(" preset.");
+		sb.append(", will execute in about ").append((offset / MINUTE))
+			.append(" minutes for the ").append(destPan.name()).append(" preset.");
 		log.log(sb.toString());
 
 		logServerStartup();
@@ -306,6 +299,7 @@ public class CameraShiftJob extends Job {
 				iuLastUpdate = TimeSteward.currentTimeMillis();
 			}
 
+			assert inuse != null;
 			for (Camera c : camSortedList) {
 				if (!forceMovement) {
 					if (camMoved.get(c))
@@ -356,11 +350,10 @@ public class CameraShiftJob extends Job {
 				log.log("Completed scheduled camera shift job for " + c.getName() + " at " + c
 					.getShiftSchedule() + " past the hour.");
 			return; // jobs with forced movement at specific times do not reschedule
-		} else
-			log.log(LOG_COMPLETED_SHIFT);
+		}
 
+		log.log(LOG_COMPLETED_SHIFT);
 		scheduleNextJob();
-
 		log.log(LOG_JOB_COMPLETED);
 	}
 
@@ -383,9 +376,9 @@ public class CameraShiftJob extends Job {
 				logJob(j, "Added");
 				log.log(LOG_SCHEDULED_SHIFT);
 				return;
-			} else
-				log.log("ERROR: offset is more than " + too_long
-					+ " hours in the future. Please check settings.");
+			}
+			log.log("ERROR: offset is more than " + too_long
+				+ " hours in the future. Please check settings.");
 		}
 		log.log(ERROR_COMPUTE_SHIFT);
 	}
@@ -429,26 +422,33 @@ public class CameraShiftJob extends Job {
 		if (forceMovement)
 			return;
 
+		StringBuilder sb;
+		String pad = "    ";
 		log.log(LOG_CAMERA_SETTINGS);
-		StringBuilder sb = new StringBuilder().append("    ").append(
-			CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase()).append(": .. ").append(getConcurrentMovements());
+
+		sb = new StringBuilder(pad).append(CAMERA_SHIFT_CONCUR_MOVE.name().toLowerCase())
+			.append(": .. ").append(getConcurrentMovements());
 		if (getConcurrentMovements() < 1)
 			sb.append("   <=== value DISABLES camera-shift job");
 		log.log(sb.toString());
-		sb = new StringBuilder().append("    ").append(CAMERA_SHIFT_REINIT.name().toLowerCase()).append(
-			": ....... ").append(isShiftReinit());
+
+		sb = new StringBuilder(pad).append(CAMERA_SHIFT_REINIT.name().toLowerCase())
+			.append(": ....... ").append(isShiftReinit());
 		log.log(sb.toString());
-		sb = new StringBuilder().append("    ").append(CAMERA_SHIFT_MOVE_PAUSE.name().toLowerCase()).append(
-			": ... ").append(getShiftPause());
+
+		sb = new StringBuilder(pad).append(CAMERA_SHIFT_MOVE_PAUSE.name().toLowerCase())
+			.append(": ... ").append(getShiftPause());
 		if (getShiftPause() > 180)
 			sb.append("   <=== LARGE values, particularly when combined with a large number of cameras, ")
 				.append("may cause time-related issues with camera-shift jobs.");
 		log.log(sb.toString());
-		sb = new StringBuilder().append("    ").append(CAMERA_SHIFT_SUNRISE_OFFSET.name().toLowerCase()).append(
-			": ").append(getSunriseOffset());
+
+		sb = new StringBuilder(pad).append(CAMERA_SHIFT_SUNRISE_OFFSET.name().toLowerCase())
+			.append(": ").append(getSunriseOffset());
 		log.log(sb.toString());
-		sb = new StringBuilder().append("    ").append(CAMERA_SHIFT_SUNSET_OFFSET.name().toLowerCase()).append(
-			":  ").append(getSunsetOffset());
+
+		sb = new StringBuilder(pad).append(CAMERA_SHIFT_SUNSET_OFFSET.name().toLowerCase())
+			.append(":  ").append(getSunsetOffset());
 		log.log(sb.toString());
 	}
 
@@ -464,14 +464,15 @@ public class CameraShiftJob extends Job {
 		if (shiftCams.isEmpty()) {
 			log.log(WARN_NO_CAMERAS);
 			return;
-		} else
-			log.log("Cameras found eligible for shift: " + shiftCams.size());
+		}
 
+		log.log("Cameras found eligible for shift: " + shiftCams.size());
 		log.log(LOG_CAMERAS_FOUND_START);
 		Collections.sort(shiftCams, comp);
 		StringBuilder sb;
+		String pad = "    ";
 		for (Camera c : shiftCams) {
-			sb = new StringBuilder("    ").append(c.getName());
+			sb = new StringBuilder(pad).append(c.getName());
 			if (null != c.getShiftSchedule())
 				sb.append(" *");
 			log.log(sb.toString());
@@ -485,22 +486,35 @@ public class CameraShiftJob extends Job {
 
 		Position pos = getGeographicCenter();
 		log.log(LOG_COMPUTED_INFO);
-		log.log("    Geographical center: " + pos.toString());
+		String pad = "    ";
+
+		StringBuilder sb = new StringBuilder(pad);
+		sb.append("Geographical center: ").append(pos);
+		log.log(sb.toString());
+
 		Calendar c = getShiftTime(HOME, 0);
 		Calendar s = (Calendar) c.clone();
 		s.add(Calendar.MINUTE, -(getSunriseOffset()));
-		log.log("    Today's sunrise: ... " + time_format.format(s.getTime()) + "  (shift @ " + time_format
-			.format(c.getTime()) + ")");
+		sb = new StringBuilder(pad);
+		sb.append("Today's sunrise: ... ").append(time_format.format(s.getTime()))
+			.append("  (shift @ ").append(time_format.format(c.getTime())).append(")");
+		log.log(sb.toString());
+
 		c = getShiftTime(NIGHT_SHIFT, 0);
 		s = (Calendar) c.clone();
 		s.add(Calendar.MINUTE, -(getSunsetOffset()));
-		log.log("    Today's sunset: .... " + time_format.format(s.getTime()) + "  (shift @ " + time_format
-			.format(c.getTime()) + ")");
+		sb = new StringBuilder(pad);
+		sb.append("Today's sunset: .... ").append(time_format.format(s.getTime()))
+			.append("  (shift @ ").append(time_format.format(c.getTime())).append(")");
+		log.log(sb.toString());
+
 		c = getShiftTime(HOME, 1);
 		s = (Calendar) c.clone();
 		s.add(Calendar.MINUTE, -(getSunriseOffset()));
-		log.log("    Tomorrow's sunrise:  " + time_format.format(s.getTime()) + "  (shift @ " + time_format
-			.format(c.getTime()) + ")");
+		sb = new StringBuilder(pad);
+		sb.append("Tomorrow's sunrise:  ").append(time_format.format(s.getTime()))
+			.append("  (shift @ ").append(time_format.format(c.getTime())).append(")");
+		log.log(sb.toString());
 	}
 
 	/**
@@ -516,10 +530,9 @@ public class CameraShiftJob extends Job {
 		return (int) (future.getTimeInMillis() - TimeSteward.currentTimeMillis());
 	}
 
-	/** create new job for next shift */
+	/** create new job to only schedule next shift */
 	private void createNewJob() {
-		int off = 1 * MINUTE;
-		CameraShiftJob j = new CameraShiftJob(scheduler, videoServerCoupler, null, null, off, false, true) {
+		CameraShiftJob j = new CameraShiftJob(scheduler, videoServerCoupler, null, null, MINUTE, false, true) {
 			public void perform() {}
 			public void complete() {
 				scheduleNextJob();
@@ -558,7 +571,7 @@ public class CameraShiftJob extends Job {
 	}
 
 	/** create a string containing the settings at this instant */
-	private final String createSettingsString() {
+	private String createSettingsString() {
 		StringBuilder s = new StringBuilder();
 		s.append(CAMERA_SHIFT_CONCUR_MOVE.getInt());
 		s.append("|");
@@ -571,7 +584,7 @@ public class CameraShiftJob extends Job {
 		return s.toString().trim();
 	}
 
-	/** log job info */
+	/** log job debugging info */
 	private void logJob(Job j, String action) {
 		//log.log(action + " job '" + j.getName() + "' hash=" + j.hashCode() + ", to scheduler.");
 	}
