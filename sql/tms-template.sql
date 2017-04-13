@@ -2473,7 +2473,7 @@ camera_ptz_panel_enable	false
 camera_ptz_return_home	false
 camera_shift_concur_move	0
 camera_shift_move_pause	5
-camera_shift_reinit false
+camera_shift_reinit	false
 camera_shift_sunrise_offset	-30
 camera_shift_sunset_offset	-30
 camera_sort	0
@@ -2556,7 +2556,7 @@ msg_feed_verify	true
 operation_retry_threshold	3
 rtms_read_margin_sec	5
 route_max_legs	8
-route_max_link_miles  0.6
+route_max_link_miles	0.6
 route_max_miles	16
 rwis_color_high	FF0000
 rwis_color_low	00FFFF
