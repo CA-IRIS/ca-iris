@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Interval;
 
 import static us.mn.state.dot.tms.SystemAttrEnum.ROUTE_MAX_LINK_MILES;
@@ -37,6 +36,8 @@ public class TripTimer {
 	private final float MAX_LINK_LENGTH = ROUTE_MAX_LINK_MILES.getFloat();
 
 	/** Check if a segment is too long.
+	 * Purposefully non-static so that if ROUTE_MAX_LINK_MILES changes, it
+	 * it is accounted for in next instance of TripTimer.
 	 * @param m0 Milepoint at start of segment.
 	 * @param m1 Milepoint at end of segment.
 	 * @return true if segment is too long. */
@@ -102,6 +103,11 @@ public class TripTimer {
 		low_mile = (fd)
 		          ? trip.destination - LOW_SPEED_DISTANCE
 		          : trip.destination;
+		if (dlog != null && dlog.isOpen()) {
+			dlog.log(this.getClass().getSimpleName()
+				+ " instance with ROUTE_MAX_LINK_MILES set at "
+				+ MAX_LINK_LENGTH);
+		}
 	}
 
 	/** Calculate the current trip time.
