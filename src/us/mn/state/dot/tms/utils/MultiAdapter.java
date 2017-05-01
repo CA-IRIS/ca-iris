@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2009-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +15,13 @@
  */
 package us.mn.state.dot.tms.utils;
 
+
 /**
  * MULTI string state adapter.
  *
  * @author Douglas Lau
  * @author Michael Darter
+ * @author Jacob Barde
  */
 public class MultiAdapter implements Multi {
 
@@ -130,9 +133,10 @@ public class MultiAdapter implements Multi {
 	@Override
 	public void addGraphic(int g_num, Integer x, Integer y, String g_id) { }
 
-	/** Add a travel time destination */
+	/** Add a travel time destination.
+	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(String sid) { }
+	public void addTravelTime(TravelTimeTag tt) { }
 
 	/** Add a speed advisory */
 	@Override
@@ -140,11 +144,10 @@ public class MultiAdapter implements Multi {
 
 	/** Add a slow traffic warning.
 	 * @param spd Highest speed to activate warning.
-	 * @param b Distance to end of backup (negative indicates upstream).
-	 * @param units Units for speed (mph or kph).
-	 * @param dist If true, replace tag with distance to slow station. */
+	 * @param dist Distance to search for slow traffic (1/10 mile).
+	 * @param mode Tag replacement mode (none, dist or speed). */
 	@Override
-	public void addSlowWarning(int spd, int b, String units, boolean dist){}
+	public void addSlowWarning(int spd, int dist, String mode) { }
 
 	/** Add a feed message */
 	@Override

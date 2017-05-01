@@ -86,7 +86,6 @@ abstract public class SegmentTheme extends Theme {
 	public String getTip(MapObject mo) {
 		if (mo instanceof MapSegment)
 			return ((MapSegment) mo).getTip();
-		else
-			return null;
+		return null;
 	}
 }

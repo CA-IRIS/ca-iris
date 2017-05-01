@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.sonar.SonarException;
 import us.mn.state.dot.tms.ChangeVetoException;
@@ -157,6 +158,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache = new PeriodicSampleCache(PeriodicSampleType.VOLUME);
 		scn_cache = new PeriodicSampleCache(PeriodicSampleType.SCAN);
 		spd_cache = new PeriodicSampleCache(PeriodicSampleType.SPEED);
+		tvt_cache = new PeriodicSampleCache(PeriodicSampleType.TVT_TYPE);
 		vol_mc_cache = new PeriodicSampleCache(
 			PeriodicSampleType.MOTORCYCLE);
 		vol_s_cache = new PeriodicSampleCache(
@@ -185,6 +187,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache = new PeriodicSampleCache(PeriodicSampleType.VOLUME);
 		scn_cache = new PeriodicSampleCache(PeriodicSampleType.SCAN);
 		spd_cache = new PeriodicSampleCache(PeriodicSampleType.SPEED);
+		tvt_cache = new PeriodicSampleCache(PeriodicSampleType.TVT_TYPE);
 		vol_mc_cache = new PeriodicSampleCache(
 			PeriodicSampleType.MOTORCYCLE);
 		vol_s_cache = new PeriodicSampleCache(
@@ -868,6 +871,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		writer.flush(vol_cache, name);
 		writer.flush(scn_cache, name);
 		writer.flush(spd_cache, name);
+		writer.flush(tvt_cache, name);
 		writer.flush(vol_mc_cache, name);
 		writer.flush(vol_s_cache, name);
 		writer.flush(vol_m_cache, name);
@@ -879,6 +883,7 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 		vol_cache.purge(before);
 		scn_cache.purge(before);
 		spd_cache.purge(before);
+		tvt_cache.purge(before);
 		vol_mc_cache.purge(before);
 		vol_s_cache.purge(before);
 		vol_m_cache.purge(before);
@@ -952,6 +957,36 @@ public class DetectorImpl extends DeviceImpl implements Detector,VehicleSampler{
 			w.write(createAttribute("speed", speed));
 		if (occ >= 0)
 			w.write(createAttribute("occ", formatFloat(occ, 2)));
+		int tvt = getTravelTimeRoutes();
+		if (tvt > 0)
+			w.write(createAttribute("tvt", tvt));
 		w.write("/>\n");
+	}
+
+
+	/** Periodic speed sample cache */
+	private transient final PeriodicSampleCache tvt_cache;
+
+	/** last tvt. */
+	private transient int last_tvt = MISSING_DATA;
+
+	/** Timestamp of most recent 30-second sample period speed store. */
+	protected transient long last_tvt_stamp = MISSING_DATA;
+
+	/** get the number of travel time routes on this */
+	@Override
+	public int getTravelTimeRoutes() {
+		return (TimeSteward.currentTimeMillis() - last_tvt_stamp <= 60000)
+			? last_tvt : MISSING_DATA;
+	}
+
+	/** Store one route sample for this detector.
+	 * @param tvt PeriodicSample containing route data. */
+	public void storeTravelTimeRoute(PeriodicSample tvt) {
+		tvt_cache.add(tvt);
+		if (tvt.period == SAMPLE_PERIOD_SEC) {
+			last_tvt = tvt.value;
+			last_tvt_stamp = tvt.stamp;
+		}
 	}
 }

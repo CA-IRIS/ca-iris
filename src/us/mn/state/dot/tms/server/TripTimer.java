@@ -21,6 +21,8 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.units.Distance;
 import us.mn.state.dot.tms.units.Interval;
 
+import static us.mn.state.dot.tms.SystemAttrEnum.ROUTE_MAX_LINK_MILES;
+
 /**
  * A trip timer calculates travel times for a corridor trip.
  *
@@ -32,7 +34,7 @@ public class TripTimer {
 	static private final float LOW_SPEED_DISTANCE = 1.0f;
 
 	/** Maximum allowed length of a travel time link (miles) */
-	static private final float MAX_LINK_LENGTH = 0.6f;
+	static private final float MAX_LINK_LENGTH = ROUTE_MAX_LINK_MILES.getFloat();
 
 	/** Check if a segment is too long.
 	 * @param m0 Milepoint at start of segment.

@@ -2,6 +2,7 @@
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
  * Copyright (C) 2014-2015  AHMCT, University of California
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +31,7 @@ import us.mn.state.dot.tms.units.Interval;
  * @author Douglas Lau
  * @author Michael Darter
  * @author Travis Swanston
+ * @author Jacob Barde
  */
 public class MultiString {
 
@@ -101,7 +103,7 @@ public class MultiString {
 		else if (ltag.startsWith("tr"))
 			parseTextRectangle(tag.substring(2), cb);
 		else if (ltag.startsWith("tt"))
-			cb.addTravelTime(tag.substring(2));
+			parseTravelTime(tag.substring(2), cb);
 		else if (ltag.startsWith("vsa"))
 			cb.addSpeedAdvisory();
 		else if (ltag.startsWith("slow"))
@@ -183,9 +185,7 @@ public class MultiString {
 	static private void parseFont(String f, Multi cb) {
 		String[] args = f.split(",", 2);
 		Integer f_num = parseInt(args, 0);
-		String f_id = null;
-		if (args.length > 1)
-			f_id = args[1];
+		String f_id = (args.length > 1) ? args[1] : null;
 		if (f_num != null)
 			cb.setFont(f_num, f_id);
 	}
@@ -198,9 +198,7 @@ public class MultiString {
 		Integer g_num = parseInt(args, 0);
 		Integer x = parseInt(args, 1);
 		Integer y = parseInt(args, 2);
-		String g_id = null;
-		if (args.length > 3)
-			g_id = args[3];
+		String g_id = (args.length > 3) ? args[3] : null;
 		if (g_num != null)
 			cb.addGraphic(g_num, x, y, g_id);
 	}
@@ -257,18 +255,25 @@ public class MultiString {
 			cb.setTextRectangle(x, y, w, h);
 	}
 
-	/** Parse slow traffic warning from a [slows,b], [slows,b,u] or
-	 * [slows,b,u,dist] tag.
-	 * @param v Slow traffic tag value (s,b, s,b,u, s,b,u,dist from tag).
+	/** Parse travel time from a [tts], [tts,m] or [tts,m,t] tag.
+	 * @param v Travel time tag value (s or s,m or s,m,t from tag).
+	 * @param cb Callback to set travel time. */
+	static private void parseTravelTime(String v, Multi cb) {
+		TravelTimeTag tt = TravelTimeTag.mapTo(v);
+		if (tt.isValid())
+			cb.addTravelTime(tt);
+	}
+
+	/** Parse slow traffic warning from a [slows,d] or [slows,d,m] tag.
+	 * @param v Slow traffic tag value (s,d or s,d,m from tag).
 	 * @param cb Callback to set slow warning. */
 	static private void parseSlowWarning(String v, Multi cb) {
-		String[] args = v.split(",", 4);
+		String[] args = v.split(",", 3);
 		Integer spd = parseInt(args, 0);
-		Integer b = parseInt(args, 1);
-		String units = parseSpeedUnits(args, 2);
-		boolean dist = parseDist(args, 3);
-		if (isSpeedValid(spd) && isBackupValid(b))
-			cb.addSlowWarning(spd, b, units, dist);
+		Integer dist = parseInt(args, 1);
+		String mode = parseSlowMode(args, 2);
+		if (isSpeedValid(spd) && isDistValid(dist))
+			cb.addSlowWarning(spd, dist, mode);
 	}
 
 	/** Parse tolling tag [tz{p,o,c},z1,...zn].
@@ -304,38 +309,24 @@ public class MultiString {
 		return spd != null && spd > 0 && spd < 100;
 	}
 
-	/** Test if a parsed backup distance is valid */
-	static private boolean isBackupValid(Integer b) {
-		return b != null && b <= 16 && b >= -16;
+	/** Test if a parsed distance is valid (1/10 mile units) */
+	static private boolean isDistValid(Integer d) {
+		return d != null && d > 0 && d <= 160;
 	}
 
-	/** Parse a speed units value */
-	static private String parseSpeedUnits(String[] args, int n) {
+	/** Parse a slow mode value */
+	static private String parseSlowMode(String param) {
+		return ("dist".equals(param) || "speed".equals(param))
+		      ? param
+		      : null;
+	}
+
+	/** Parse a slow mode value */
+	static private String parseSlowMode(String[] args, int n) {
 		if (n < args.length)
-			return parseSpeedUnits(args[n]);
+			return parseSlowMode(args[n]);
 		else
-			return "mph";
-	}
-
-	/** Parse a speed units value */
-	static private String parseSpeedUnits(String param) {
-		if (param.equals("kph"))
-			return param;
-		else
-			return "mph";
-	}
-
-	/** Parse a "dist" value */
-	static private boolean parseDist(String[] args, int n) {
-		if (n < args.length)
-			return parseDist(args[n]);
-		else
-			return false;
-	}
-
-	/** Parse a "dist" value */
-	static private boolean parseDist(String param) {
-		return param.equals("dist");
+			return null;
 	}
 
 	/** MULTI string buffer */

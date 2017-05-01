@@ -16,6 +16,7 @@ package us.mn.state.dot.tms.server;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.LaneType;
 import us.mn.state.dot.tms.units.Distance;
@@ -124,6 +125,14 @@ public class Route implements Comparable<Route> {
 		ArrayList<VehicleSampler> vs = new ArrayList<VehicleSampler>();
 		for (CorridorTrip trip: trips)
 			vs.addAll(trip.lookupSamplers(lt));
+		return new SamplerSet(vs);
+	}
+
+	/** get all samplers in this travel route */
+	public SamplerSet getSamplerSet() {
+		ArrayList<VehicleSampler> vs = new ArrayList<>();
+		for (CorridorTrip trip : trips)
+			vs.addAll(trip.lookupAllSamplers());
 		return new SamplerSet(vs);
 	}
 

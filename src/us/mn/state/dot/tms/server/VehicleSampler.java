@@ -33,4 +33,7 @@ public interface VehicleSampler {
 
 	/** Get the current speed (miles per hour) */
 	float getSpeed();
+
+	/** get the number of travel time routes on this */
+	int getTravelTimeRoutes();
 }

@@ -58,12 +58,12 @@
   <div id="features_div">
     <h3><a href="#traffic_layer">Traffic Map Layer</a></h3>
     <h3><a href="#incident_management">Incident Management</a></h3>
-    <h3><a href="#action_plans">Action Plans</a></h3>
-    <h3><a href="#schedules">Date/Time Schedules</a></h3>
-    <h3><a href="#metering_strategies">Ramp Metering Strategies</a></h3>
+    <h3><a href="#plan_schedule">Plans and Schedules</a></h3>
     <h3><a href="#travel_time">Travel Time Estimation</a></h3>
     <h3><a href="#vsa">Variable Speed Advisory</a></h3>
+    <h3><a href="#slow">Slow Traffic Warning</a></h3>
     <h3><a href="#tolling">Tolling</a></h3>
+    <h3><a href="#metering_strategies">Ramp Metering Strategies</a></h3>
     <h3><a href="#spellchecker">Spell Checker</a></h3>
   </div>
   <h2><a id="troubleshooting_link" href="#troubleshooting">Troubleshooting</a></h2>
@@ -97,7 +97,7 @@
 
 <main class="mainbar">
 <header>
-<div id="stamp">12 Apr 2016</div>
+<div id="stamp">9 December 2016</div>
 </header>
 <h1 id="admin_guide"><span class="left"><img src="iris_icon.svg"/></span>
 	IRIS Administrator Guide</h1>
@@ -453,11 +453,20 @@
 <p>
 	Finally, the IRIS server can now be started with the following command:
 </p>
-<pre class="code">systemctl start iris.service</pre>
+<pre class="code">systemctl start iris</pre>
 <p>
 	Check that everything started OK:
 </p>
-<pre class="code">tail -f -n 40 /var/log/iris/iris.stderr</pre>
+<pre class="code">tail /var/log/iris/iris.stderr
+systemctl status iris</pre>
+<p>
+	This should indicate that IRIS is active and running.
+	If the process is inactive (dead) with an exit status of 127, there
+	may be a packaging problem with OpenJDK (seen on Fedora 24).
+	The following command (followed by restarting IRIS) may work around this
+	problem:
+</p>
+<pre class="code">ln -s /usr/lib/jvm/java-1.8.0/lib/amd64/jli/libjli.so /usr/lib64/</pre>
 
 <h3 id="initial_login">Initial Login</h3>
 <p>
@@ -507,18 +516,16 @@
 		Useful in cases where multiple IRIS servers exist within the
 		same organization.
 	</dd>
-	<dt>proxy.host</dt>
+	<dt>http.proxy</dt>
 	<dd>
-		If a proxy is to be used, its hostname can be specified here.
+		List of HTTP proxy settings (used for downloading map tiles,
+		XML files, etc.)
 	</dd>
-	<dt>proxy.port</dt>
+	<dt>http.proxy.whitelist</dt>
 	<dd>
-		If a proxy is to be used, its port number can be specified here.
-	</dd>
-	<dt>no.proxy.hosts</dt>
-	<dd>
-		A comma-separated list of host IPs/subnets to exclude from proxy
-		use.
+		A list of addresses to bypass using proxy server.
+		Addresses are in CIDR notation (exact IP, or ranges specified
+		such as 192.168.1.0/24).
 	</dd>
 	<dt>keystore.file</dt>
 	<dd>
@@ -609,11 +616,13 @@
 </p>
 
 <h3 id="system_attributes">System Attributes</h3>
+<aside>
+	Select <span class="menu">View ➔ System ➔ System Attributes</span> menu
+	item
+</aside>
 <p>
 	A <b>system attribute</b> is a configurable value which can be used to
 	customize an IRIS system.
-	Select the <span class="menu">View ➔ System ➔ System Attributes</span>
-	menu item to display the System Attributes form.
 	Each system attribute has a corresponding type: string, boolean,
 	integer or floating point number.
 	String values are limited to 64 characters or less.
@@ -638,6 +647,10 @@
 </p>
 
 <h3 id="users_and_roles">Users and Roles</h3>
+<aside>
+	Select <span class="menu">View ➔ System ➔ Users and Roles</span>
+	menu item
+</aside>
 <p>
 	When a user logs into the IRIS system, the user is checked for validity.
 	The user account must be enabled, and be assigned to an enabled
@@ -646,8 +659,6 @@
 	performed using <a href="#sonar_config">LDAP</a>.
 	Otherwise, IRIS checks the password against the stored password hash
 	for that user account.
-	Select the <span class="menu">View ➔ System ➔ Users and Roles</span>
-	menu item to display the <b>Users and Roles</b> form.
 </p>
 <p>
 	The template SQL database contains one administrator role, called
@@ -873,9 +884,10 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </pre>
 
 <h4>Create Map Extents in IRIS database</h4>
+<aside>
+	Select <span class="menu">View ➔ System ➔ Map Extents</span> menu item
+</aside>
 <p>
-	In the IRIS client, select the <span class="menu">View ➔ System ➔
-	Map Extents</span> menu item to bring up the Map Extents form.
 	This form enables the creation of map extents, which are buttons
 	allowing quick selection of a map location and zoom level.
 	Each map extent will be displayed as a button on the upper right area
@@ -939,10 +951,11 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	Northbound road A.
 </p>
 <h4>Road Setup</h4>
+<aside>
+	Select <span class="menu">View ➔ System ➔ Roads</span> menu item
+</aside>
 <p>
 	Before creating r_nodes, some roads must be created.
-	Select the <span class="menu">View ➔ System ➔ Roads</span> menu item to
-	bring up the Roads form.
 	With <a href="#edit_mode">edit mode</a> <b>ON</b>, enter the road name
 	into the text box at the bottom of the form and press the <b>Create</b>
 	button.
@@ -1104,13 +1117,13 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
       Each corridor has a reference lane, which corresponds to the leftmost
       lane along the entire corridor.
   </dd>
-  <dt>station_id</dt>
+  <dt id='station_id'>station_id</dt>
   <dd>The station_id is a unique identifier for the detectors associated with
       the r_node.
       It is displayed on the <a href="#traffic_layer">traffic layer</a>, and is
       also used for identifying travel time destinations.
   </dd>
-  <dt>speed_limit</dt>
+  <dt id='speed_limit'>speed_limit</dt>
   <dd>This is the posted speed limit at the r_node.
       The units are miles per hour, but should in future be dependent on locale
       (KPH).
@@ -1148,12 +1161,14 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </p>
 
 <h3 id="comm_links">Comm Links</h3>
+<aside>
+	Select <span class="menu">View ➔ Maintenance ➔ Comm Links</span> menu
+	item
+</aside>
 <p>
 	A <b>comm link</b> is a network connection to an external device or
 	system.
 	IRIS is capable of supporting hundreds of simultaneous comm links.
-	The comm link interface is found on the <span class="menu">View ➔
-	Maintenance ➔ Comm Links</span> menu item.
 	Each comm link has a number of attributes, including URI and protocol.
 </p>
 <p>
@@ -1177,40 +1192,47 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	    <th>Protocol</th>
 	    <th>Description</th>
 	    <th>Default Scheme</th>
+	    <th>Multidrop</th>
 	</tr>
 	<tr>
-	    <td>NTCIP Class A</td>
+	    <td>NTCIP A</td>
 	    <td><a href="#dms">DMS</a> control,
 	        <a href="#ilcs">ILCS</a> (no HDLC)
 	    </td>
 	    <td>UDP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
-	    <td>NTCIP Class B</td>
+	    <td>NTCIP B</td>
 	    <td><a href="#dms">DMS</a> control,
 	        <a href="#ilcs">ILCS</a> over serial (HDLC)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
-	    <td>NTCIP Class C</td>
+	    <td>NTCIP C</td>
 	    <td><a href="#dms">DMS</a> control,
 	        <a href="#ilcs">ILCS</a> (no HDLC)</td>
 	    <td>TCP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>DMS XML</td>
 	    <td><a href="#dms">DMS</a> control to external system</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
-	    <td>Addco NodeComm</td>
-	    <td><a href="#dms">DMS</a> control</td>
+	    <td>Addco</td>
+	    <td><a href="#dms">DMS</a> control (NodeComm)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Msg feed</td>
 	    <td><a href="#msg_feed">DMS messages</a> from external system</td>
-	    <td>TCP / HTTP</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>MnDOT 170 4</td>
@@ -1221,6 +1243,7 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 		<a href="#alarms">alarms</a>
 	    </td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>MnDOT 170 5</td>
@@ -1231,51 +1254,95 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 		<a href="#alarms">alarms</a>
 	    </td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Canoga</td>
 	    <td><a href="#vds">VDS</a> (GTT Canoga Traffic Sensing System)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>SS105</td>
 	    <td><a href="#vds">VDS</a> (original Wavetronix SmartSensor)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>SS125</td>
 	    <td><a href="#vds">VDS</a> (Wavetronix SmartSensor HD)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>RTMS G4</td>
 	    <td><a href="#vds">VDS</a> (RTMS G4 sensor)</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
+	</tr>
+	<tr>
+	    <td>DR-500</td>
+	    <td><a href="#vds">VDS</a> (Houston Radar DR-500 doppler)</td>
+	    <td>TCP</td>
+	    <td>No</td>
+	</tr>
+	<tr>
+	    <td>Axis PTZ</td>
+	    <td><a href="#ptz">PTZ</a> for Axis cameras</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>Pelco D</td>
 	    <td><a href="#ptz">PTZ</a> for Pelco cameras</td>
 	    <td>UDP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Manchester</td>
 	    <td><a href="#ptz">PTZ</a> for AD cameras</td>
 	    <td>UDP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Vicon</td>
 	    <td><a href="#ptz">PTZ</a> for Vicon cameras</td>
 	    <td>UDP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Infinova</td>
 	    <td><a href="#ptz">PTZ</a> for Infinova cameras</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>Cohu</td>
 	    <td><a href="#ptz">PTZ</a> for Cohu cameras</td>
 	    <td>TCP</td>
+	    <td>Yes</td>
+	</tr>
+	<tr>
+	    <td>Pelco P KBD</td>
+	    <td><a href="#video">Video switching</a> and <a href="#ptz">PTZ</a>
+	        input
+	    </td>
+	    <td>TCP</td>
+	    <td>No</td>
+	</tr>
+	<tr>
+	    <td>Pelco Switcher</td>
+	    <td><a href="#video">Video switching</a> for Pelco</td>
+	    <td>TCP</td>
+	    <td>No</td>
+	</tr>
+	<tr>
+	    <td>MonStream</td>
+	    <td><a href="#video">Video switching</a> for simple streaming
+	        decoders
+	    </td>
+	    <td>UDP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>STC</td>
@@ -1283,41 +1350,43 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	        SmartTouch Controllers
 	    </td>
 	    <td>TCP</td>
+	    <td>Yes</td>
 	</tr>
 	<tr>
 	    <td>E6</td>
 	    <td><a href="#tag_readers">Tag Reader</a> (Transcore E6)</td>
 	    <td>UDP</td>
-	</tr>
-	<tr>
-	    <td>Pelco Switcher</td>
-	    <td><a href="#video">Video switching</a> for Pelco</td>
-	    <td>TCP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>Org 815</td>
 	    <td><a href="#rwis">RWIS</a> (ORG 815 sensor)</td>
 	    <td>TCP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>SSI</td>
 	    <td><a href="#rwis">RWIS</a> (SSI RWIS sensor)</td>
-	    <td>TCP / HTTP</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td><a href="#din_relay">DLI DIN Relay</a></td>
 	    <td><a href="#dlcs">DLCS</a>, <a href="#beacons">beacons</a></td>
-	    <td>TCP / HTTP</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
-	    <td><a href="#cbw">Control By Web</a></td>
-	    <td><a href="#beacons">beacons</a></td>
-	    <td>TCP / HTTP</td>
+	    <td><a href="#cbw">CBW</a></td>
+	    <td><a href="#beacons">beacons</a> (Control by Web)</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 	<tr>
 	    <td>Incident feed</td>
 	    <td><a href="#inc_feed">Incidents</a> from external system</td>
-	    <td>TCP / HTTP</td>
+	    <td>HTTP</td>
+	    <td>No</td>
 	</tr>
 </table>
 <p/>
@@ -1350,13 +1419,14 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 <p>
 	There are a couple of other required steps to enable a message feed
 	to operate.
-	First, an action plan must be created which associates a DMS action
-	with the message feed.
+	First, an <a href="#action_plan">action plan</a> must be created which
+	associates a <a href="#dms_action">DMS action</a> with the message
+	feed.
 	The DMS action must be associated with a <a href="#quick_msg">quick
-	message</a> that references the message feed, using a special MULTI tag.
+	message</a> that references the message feed, using a <b>feed</b>
+	<a href="#action_tag">action tag</a>.
 	So, if the message feed is on a Comm Link called "LFEED", then the
-	<a href="#quick_msg">quick message</a> MULTI string must be
-	"[feedLFEED]".
+	quick message MULTI string must be "[feedLFEED]".
 	Also, the action plan must be active and deployed.
 	This requirement allows only administrator-approved DMS to be controlled
 	by the message feed.
@@ -1369,8 +1439,9 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	In some circumstances, it may be appropriate to disable this checking.
 	For example, if the message feed host is fully trusted and there is no
 	possibility of man-in-the-middle attacks between IRIS and the feed host.
-	In this case the "msg_feed_verify" <a href="#system_attributes">system
-	attribute</a> can be set to "false" to disable this check.
+	In this case the <code>msg_feed_verify</code>
+	<a href="#system_attributes">system attribute</a> can be set to
+	<code>false</code> to disable this check.
 </p>
 
 <h4 id="din_relay">DIN Relay</h4>
@@ -1387,10 +1458,12 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	It can be used to control <a href="#beacons">beacon</a> devices.
 </p>
 <p>
-	HTTP Basic Authentication can be used to connect with the controller
-	if enabled on the setup page of the device (setup.html).
-	To allow IRIS to authenticate, the password field of the controller
-	in IRIS must have <i>none:</i> prepended to the actual password.
+	HTTP Basic Authentication can be used to connect with the
+	<a href="#controllers">controller</a> if enabled on the setup page of the
+	device (setup.html).
+	To allow IRIS to authenticate, the <a href="#ctrl_pwd">password</a>
+	field must have <i>none:</i> prepended to the actual password (user name
+	"none").
 </p>
 
 <h4 id="inc_feed">Incident Feed Protocol</h4>
@@ -1413,11 +1486,13 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </p>
 
 <h3 id="controllers">Controllers</h3>
+<aside>
+	Select <span class="menu">View ➔ Maintenance ➔ Comm Links</span> menu
+	item
+</aside>
 <p>
 	A <b>controller</b> is an end-point for a <a href="#comm_links">comm
 	link</a>.
-	They are managed with the comm link interface (found at
-	<span class="menu">View ➔ Maintenance ➔ Comm Links</span> in the menu).
 	Each controller can have one or more associated <a href="#devices">
 	devices</a>, depending on the protocol.
 	Sometimes a controller represents a separate physical "box", which is
@@ -1439,6 +1514,19 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 	Each controller is assigned a unique (to the comm link) drop address,
 	which is used to route all messages sent to the controller.
 	For single-drop protocols, the drop address is ignored.
+</p>
+
+<h4 id="ctrl_pwd">Controller Password</h4>
+<p>
+	Some protocols allow or require authentication.
+	The controller <b>Password</b> field is used to enter this
+	authentication data.
+	For example, NTCIP requires the use of an SNMP "community" name.
+	If no controller password is selected, IRIS will use "Public" for the
+	community name.
+	Web-based devices may require HTTP Basic Authentication.
+	For these types of devices, the password field should contain both the
+	user name and password, separated by a colon (<i>user:password</i>).
 </p>
 
 <h4 id="io_pins">I/O Pins</h4>
@@ -1532,6 +1620,10 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 <br/>
 
 <h3 id="fonts">Fonts</h3>
+<aside>
+	Select <span class="menu">View ➔ Message Signs ➔ DMS Fonts</span> menu
+	item
+</aside>
 <p>
 	A font is a set of bitmapped glyphs for displaying text on a dynamic
 	message sign (DMS).
@@ -1710,8 +1802,6 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 <p>
 	The IRIS client also contains a font editor which can be used to design
 	new DMS fonts.
-	The font interface is found on the <span class="menu">View ➔
-	Message Signs ➔ DMS Fonts</span> menu item.
 </p>
 
 <h2 id="devices">Devices</h2>
@@ -1740,6 +1830,9 @@ scp -rp ~/osm/tiles/* root@tilehost:/var/www/html/
 </p>
 
 <h3 id="dms">Dynamic Message Signs (DMS)</h3>
+<aside>
+	Select <span class="menu">View ➔ Message Signs ➔ DMS</span> menu item
+</aside>
 <p>
 	A dynamic message sign (DMS) is a sign which is capable of changing the
 	message displayed to motorists.
@@ -1903,43 +1996,15 @@ FIXME
 	with a sign group.
 	When a DMS is selected, a drop-down list is populated with quick
 	messages from sign groups of which that DMS is a member.
+	Quick messages are also be used for <a href="#dms_action">DMS
+	actions</a> as part of an <a href="#action_plan">action plan</a>.
+	For these messages, it is best to leave the sign group blank.
 </p>
-<p>
-	Quick messages can also be used for DMS actions as part of an
-	<a href="#action_plans">action plan</a>.
-	Some additional "MULTI-like" tags are supported in quick messages used
-	in action plans.
-	These tags are replaced by IRIS before sending the message to the DMS.
-</p>
-<table>
-	<tr>
-	    <th>Tag</th>
-	    <th>Description</th>
-	</tr>
-	<tr>
-	    <td>[tt<i>n</i>]</td>
-	    <td><a href="#travel_time">Travel time</a></td>
-	</tr>
-	<tr>
-	    <td>[vsa]</td>
-	    <td><a href="#vsa">Speed advisory</a></td>
-	</tr>
-	<tr>
-	    <td>[slow<i>s</i>,<i>b</i>,<i>u</i>,<i>dist</i>]</td>
-	    <td>Slow traffic warning</td>
-	</tr>
-	<tr>
-	    <td>[feed<i>n</i>]</td>
-	    <td><a href="#msg_feed">Message feed</a></td>
-	</tr>
-	<tr>
-	    <td>[tz<i>{p,o,c}</i>,<i>{tz0},</i>…<i>{tzn}</i>]</td>
-	    <td><a href="#tolling">Toll Zone</a></td>
-	</tr>
-</table>
-<br/>
 
 <h3 id="cameras">Cameras</h3>
+<aside>
+	Select <span class="menu">View ➔ Video ➔ Cameras</span> menu item
+</aside>
 <p>
 	Closed-circuit television cameras are commonly used to monitor traffic
 	conditions.
@@ -1953,6 +2018,30 @@ FIXME
 <p>
 	To display camera video in IRIS, it must be digitally encoded.
 </p>
+<h4 id="camera_setup">Camera Setup</h4>
+<p>
+	The camera <b>Setup</b> tab contains attributes to configure the
+	encoded stream.
+</p>
+<dl>
+    <dt>encoder_type</dt>
+    <dd>The type of encoder for the video stream: GENERIC, AXIS or INFINOVA</dd>
+    <dt>encoder</dt>
+    <dd>The encoder stream URI.
+        Usually, only the host name (or ip address) is needed here.
+        For GENERIC encoder types, the path is also required.
+        The default URI scheme is determined by the stream type, but can be
+        overridden here (for example "mms://" or "axrtsp://").
+    </dd>
+    <dt>enc_mcast</dt>
+    <dd>Multicast stream URI.</dd>
+    <dt>encoder_channel</dt>
+    <dd>For encoders with more than 1 channel.</dd>
+    <dt>stream_type</dt>
+    <dd>The video stream type: UNKNOWN, MJPEG, MPEG4, H264, H265</dd>
+    <dt>publish</dt>
+    <dd>Flag to allow stream to be published.</dd>
+</dl>
 <h4 id="ptz">Pan / Tilt / Zoom</h4>
 <p>
 	Some cameras have a built-in pan/tilt/zoom (PTZ) functionality.
@@ -1960,10 +2049,18 @@ FIXME
 </p>
 <ul>
 	<li>Panning / tilting the camera</li>
-	<li>Zooming in or out</li>
 	<li>Recall preset positions</li>
 	<li>Store preset positions</li>
+	<li>Zooming in or out</li>
+	<li>Manual focus: near / far</li>
+	<li>Manual iris: open / close</li>
+	<li>Wiper control</li>
 </ul>
+<p>
+	For PTZ control to function, the camera must be associated with a
+	<a href="#controllers">controller</a> on a PTZ protocol
+	<a href="#comm_links">comm link</a>.
+</p>
 <h4 id="video">Video Switching</h4>
 <p>
 	IRIS can also be configured to send commands to a video switcher
@@ -1976,6 +2073,24 @@ FIXME
 	their camera selection on the user interface.
 	This way, every time the user selects a camera, it's video is
 	immediately displayed on the associated monitor.
+</p>
+<h5 id="cam_tool">Camera Selector Tool</h5>
+<p>
+	There is a simple camera selector tool on the toolbar just below the
+	map.
+	It has a text entry field with an icon and label.
+	This tool allows quick switching of the selected camera.
+</p>
+<h5 id="numpad">Numpad Hotkeys</h5>
+<p>
+	The keyboard "numpad" can be used from anywhere within IRIS to control
+	the camera selector tool.
+	When the <b>Num Lock</b> key is off, all numpad keystrokes are directed
+	to the tool.
+	Pressing the <code>*</code> key (on the numpad) changes to video monitor
+	selection &mdash; the icon will change to indicate this change.
+	The <code>+</code> and <code>-</code> keys can select the next and
+	previous cameras, respectively.
 </p>
 
 <h3 id="vds">Vehicle Detection Systems</h3>
@@ -2088,6 +2203,9 @@ FIXME
 </p>
 
 <h3 id="lcs">Lane-use Control Signs (LCS)</h3>
+<aside>
+	Select <span class="menu">View ➔ Lane Use ➔ LCS</span> menu item
+</aside>
 <p>
 	A lane-use control sign (LCS) is a sign which is mounted over a single
 	lane of traffic (typically one for each lane).
@@ -2118,6 +2236,9 @@ FIXME
 </p>
 
 <h3 id="ramp_meters">Ramp Meters</h3>
+<aside>
+	Select <span class="menu">View ➔ Ramp Meters</span> menu item
+</aside>
 <p>
 	A ramp meter is a traffic signal at an on-ramp which controls the rate
 	of vehicles entering a freeway.
@@ -2137,12 +2258,75 @@ FIXME
 </ul>
 
 <h3 id="gate_arms">Gate Arms</h3>
+<aside>
+	Select <span class="menu">View ➔ Gate Arm Arrays</span> menu item
+</aside>
 <p>
-	Gate Arms are traffic control devices which restrict access to a
+	Gate arms are traffic control devices which restrict access to a
 	section of roadway.
 	They can be used, for example, for reversible lanes which can be changed
 	by time of day.
 </p>
+<p>
+	Gate arms are controlled as arrays of 1-8 gate arms.
+	Opening or closing an array will control all gate arms in the array.
+</p>
+<p>
+	Up to two <a href="#cameras">cameras</a> can be associated with a gate
+	arm array.
+	This allows operators to verify the status and check traffic conditions
+	before opening or closing a gate arm array.
+</p>
+<p>
+	A <a href="#dms">DMS</a> can be associated with a gate arm array, to
+	inform motirists.
+	Two <a href="#quick_msg">quick messages</a>, for <em>open</em> and
+	<em>closed</em> will be automatically sent to the DMS.
+</p>
+<h4 id="interlocks">Interlocks</h4>
+<p>
+	Great care must be taken to prevent traffic conflicts when using gate
+	arms.
+	Two types of <em>interlock</em> are available for this purpose.
+	An <em>open interlock</em> is a constraint which prevents the gate arm
+	from being opened within IRIS.
+	Similarly, a <em>close interlock</em> prevents the gate arm from being
+	closed.
+</p>
+<p>
+	When a gate arm is open, all other gate arms on the same roadway, but in
+	any other direction will have an <em>open interlock</em>.
+</p>
+</p>
+	Each gate arm can be assigned a <em>prerequisite</em> gate arm (on the
+	same roadway and direction).
+	This configuration prevents the gate arm from opening until the
+	prerequisite has been opened, using an <em>open interlock</em>.
+	Once a gate arm and its prerequisite are both open, the prerequisite
+	gate arm will have a <em>close interlock</em> until the other gate arm
+	is closed.
+</p>
+<p>
+	If communication is lost to a gate arm, the state will be unknown by
+	IRIS.
+	After 90 seconds, it will be treated as <em>possibly open</em>, causing
+	interlocks to be checked.
+	Also, an email will be sent to the address in the
+	<code>email_recipient_gate_arm</code>
+	<a href="#system_attributes">system attribute</a>.
+</p>
+<h4 id="gate_conflict">Conflicts</h4>
+<p>
+	If a <em>conflict</em> is detected, an <em>alert</em> email will be sent
+	to the address in the <code>email_recipient_gate_arm</code>
+	<a href="#system_attributes">system attribute</a>.
+	An <em>open conflict</em> exists when an <em>open interlock</em>
+	constraint is broken.
+	Similarly, a <em>close conflict</em> exists for <em>close interlock</em>
+	constraints.
+	IRIS will not automatically try to resolve conflicts.
+</p>
+<h4 id="gate_security">Gate Arm Security</h4>
 <p>
 	There are a couple of extra security features to restrict access to
 	gate arm control.
@@ -2157,8 +2341,8 @@ FIXME
 <p>
 	Another gate arm security feature causes the entire "gate arm system"
 	to be disabled whenever any configuration change is made to a gate arm.
-	This includes changes to a gate arm array, controller or associated
-	comm link.
+	This includes any changes to a gate arm array, <a href="#controllers">
+	controller</a> or associated <a href="#comm_links">comm link</a>.
 	IRIS will not send any command to open or close any gate arm in this
 	state.
 	The only way to re-enable gate arm control is to create a file at
@@ -2166,10 +2350,11 @@ FIXME
 </p>
 
 <h3 id="tag_readers">Tag Readers</h3>
+<aside>
+	Select <span class="menu">View ➔ Lane Use ➔ Tag Readers</span> menu item
+</aside>
 <p>
 	A tag reader is a sensor for in-vehicle transponders (tags).
-	Select the <span class="menu">View ➔ Lane Use ➔ Tag Readers</span>
-	menu item to display the Tag Reader form.
 	When a tag is read, an event is logged in the database.
 	The event includes the date and time, tag ID, toll zone and tollway.
 	This information can be used for <a href="#tolling">tolling</a>
@@ -2177,20 +2362,28 @@ FIXME
 </p>
 
 <h3 id="beacons">Beacons</h3>
+<aside>
+	Select <span class="menu">View ➔ Message Signs ➔ Beacons</span> menu
+	item
+</aside>
 <p>
 	A beacon is a light or set of lights that flashes toward oncoming
 	traffic.
 	Its purpose is to draw attention to a <a href="#dms">DMS</a> or static
 	sign.
 	Sometimes, they are called <b>flashers</b> or <b>wig-wags</b>.
-	Internal and external beacons are supported. Internal beacons are
-	controlled through the DMS controller, are activated through the
-	NTCIP DMS protocol and are considered part of the DMS. External
-	beacons use dedicated controllers and protocols (e.g. MNDOT 170 4,
-	MNDOT 170 5).
+	Internal and external beacons are supported.
+	Internal beacons are controlled through the DMS controller, are
+	activated through the NTCIP DMS protocol and are considered part of the
+	DMS.
+	External beacons use dedicated controllers and protocols (e.g. MnDOT
+	170 4, MnDOT 170 5).
 </p>
 
 <h3 id="alarms">Alarms</h3>
+<aside>
+	Select <span class="menu">View ➔ Maintenance ➔ Alarms</span> menu item
+</aside>
 <p>
 	An alarm is a simple device triggered by an event.
 	The event might be an equipment failure, high temperature, or low
@@ -2203,16 +2396,23 @@ FIXME
 	Triggered.
 	Alarms are created using the Alarm Form and can only be created for
 	controllers using a protocol driver that generate alarms.
-	For example, the Mn/DOT ramp meter drivers.
+	For example, the MnDOT ramp meter drivers.
 </p>
 
 <h3 id="rwis">Road Weather Information Systems</h3>
+<aside>
+	Select <span class="menu">View ➔ Weather Sensors</span> menu item
+</aside>
 <p>
 	Road Weather Information Systems (RWIS) can sense data such as
 	precipitation rate, road surface temperature, wind speed, etc.
 </p>
 
 <h3 id="lane_marking">Lane Marking</h3>
+<aside>
+	Select <span class="menu">View ➔ Lane Use ➔ Lane Markings</span> menu
+	item
+</aside>
 <p>
 	A lane marking device is also called <b>in-road lighting</b>.  It allows
 	the lane striping to be changed dynamically, by turning on and off
@@ -2309,12 +2509,14 @@ FIXME
 	</a> and <a href="#inc_advice">advice</a> are found.
 </p>
 <h5 id="inc_descriptor">Incident Descriptor</h5>
+<aside>
+	Select <span class="menu">View ➔ Incident ➔ Incident Descriptor</span>
+	menu item
+</aside>
 <p>
 	An incident matches a descriptor only if all the attributes match.
 	Each matching descriptor will be checked to see if the
 	<a href="#multi">MULTI</a> string can be rendered on the DMS.
-	Select the <span class="menu">View ➔ Incident ➔ Incident
-	Descriptor</span> menu item to display the Incident Descriptor form.
 </p>
 <dl>
 	<dt>Sign group<dt>
@@ -2329,6 +2531,10 @@ FIXME
 	<dd>yes / no</dd>
 </dl>
 <h5 id="inc_locator">Incident Locator</h5>
+<aside>
+	Select <span class="menu">View ➔ Incident ➔ Incident Locator</span> menu
+	item
+</aside>
 <p>
 	The incident is associated with the nearest <em>pickable</em>
 	<a href="#r_node">r_node</a>.
@@ -2336,8 +2542,6 @@ FIXME
 	<em>locator</em>.
 	If not, the nearest <em>non-pickable</em> r_node is found.
 	It can be used if distance is less than 1 mile.
-	Select the <span class="menu">View ➔ Incident ➔ Incident
-	Locator</span> menu item to display the Incident Locator form.
 </p>
 <p>
 	An incident matches a locator only if all the attributes match.
@@ -2355,7 +2559,8 @@ FIXME
 	<dd>no / yes</dd>
 </dl>
 <p>
-	One MULTI-like tag is defined for incident locators.
+	One "<a href="#multi">MULTI</a>-like" tag is defined for incident
+	locators.
 </p>
 <table>
 	<tr>
@@ -2394,10 +2599,12 @@ FIXME
 	For the `[locxa]` tag, all matching prefixes and suffixes are stripped.
 </p>
 <h5 id="inc_advice">Incident Advice</h5>
+<aside>
+	Select <span class="menu">View ➔ Incident ➔ Incident Advice</span> menu
+	item
+</aside>
 <p>
 	An incident matches an advice record only if all attributes match.
-	Select the <span class="menu">View ➔ Incident ➔ Incident
-	Advice</span> menu item to display the Incident Advice form.
 </p>
 <dl>
 	<dt>Sign group<dt>
@@ -2446,20 +2653,295 @@ FIXME
 	</tr>
 </table>
 <br/>
-<h3 id="action_plans">Action Plans</h3>
-FIXME
 
-<h3 id="schedules">Date/Time Schedules</h3>
-FIXME
-
-<h3 id="metering_strategies">Ramp Metering Strategies</h3>
-FIXME
+<h3 id="plan_schedule">Plans and Schedules</h3>
+<aside>
+	Select <span class="menu">View ➔ Plans and Schedules</span> menu item
+</aside>
+<h4 id="action_plan">Action Plans</h4>
+<p>
+	Action plans provide a way to coördinate multiple related actions
+	at the same time.
+	Each action plan has a <a href="#plan_phase">phase</a>, which can be
+	changed at any time.
+	Each phase can be associated with any number of <a href="#dms_action">
+	DMS</a>, <a href="#beacon_action">beacon</a> or <a href="#meter_action">
+	ramp meter</a> actions.
+	More advanced plans can have many phases, each with separate actions.
+	If the <b>Sync Actions</b> box is checked, the phase can only be changed
+	if all associated devices are online.
+	If the <b>Sticky</b> box is checked, messages sent with DMS actions will
+	be configured to persist even if communication or power is lost.
+</p>
+<h4 id="day_plan">Day Plans</h4>
+<p>
+	A day plan is a set of days which can be used for scheduling.
+	All days which are not assigned holidays are included in a day plan.
+	Holidays are specified by <b>Month</b>, <b>Day</b>, <b>Week</b> and
+	<b>Weekday</b>.
+	Any day which matches <b>all</b> specified fields will be a holiday.
+	<b>Shift</b> is only required for days like Black Friday (Fourth
+	Thursday of November <b>+1</b>).
+</p>
+<h4 id="plan_phase">Plan Phases</h4>
+<p>
+	The basic phases of an action plan are <b>deployed</b> and
+	<b>undeployed</b>.
+	Additional phases can be added on the <b>Plan Phases</b> tab.
+	Each phase must have a unique name.
+	A transient phase can automatically advance to the <b>Next Phase</b>
+	after a specified <b>Hold Time</b>.
+	Currently, this must be a multiple of 30 seconds.
+</p>
+<h4 id="schedule">Schedules</h4>
+<p>
+	An action plan schedule can automatically change the phase at specified
+	dates and times.
+	These events can be scheduled using either a <a href="#day_plan">day
+	plan</a> or a specific date (but not both).
+	A time of day must also be specified (HH:MM in 24-hour format).
+	Whenever the scheduled time occurs, the action plan will be changed to
+	the specified phase.
+</p>
+<h4 id="dms_action">DMS Actions</h4>
+<p>
+	<a href="#dms">DMS</a> actions have an associated sign group to
+	determine which signs are affected by the action.
+	The action happens when the action plan phase matches the <b>phase</b>
+	of the DMS action.
+	The <a href="#quick_msg">quick message</a> indicates which message is
+	activated by the plan.
+	<b>Activation</b> and <b>run-time priorities</b> determine which of
+	multiple actions will take precedence.
+</p>
+<p>
+	<b>PREFIX_PAGE</b> is a special activation priority which can be used
+	to combine a scheduled message with an operator message.
+	When a DMS action is active with PREFIX_PAGE priority, any user message
+	sent will be modified by inserting the scheduled message on each page
+	of the operator message.
+	Care must be taken to ensure the combined message can be displayed on
+	the sign.
+	This feature could be used, for example, to put a graphic logo on all
+	messages displayed on a sign.
+</p>
+<h4 id="action_tag">DMS Action Tags</h4>
+<p>
+	Some "<a href="#multi">MULTI</a>-like" tags are supported in
+	<a href="#quick_msg">quick messages</a> used by DMS actions.
+	These tags are interpreted by IRIS before sending the message to the
+	DMS.
+</p>
+<table>
+	<tr>
+	    <th>Tag</th>
+	    <th>Description</th>
+	</tr>
+	<tr>
+	    <td>[feed<i>n</i>]</td>
+	    <td><a href="#msg_feed">Message feed</a></td>
+	</tr>
+	<tr>
+	    <td>[tt<i>s</i>,<i>m</i>,<i>t</i>]</td>
+	    <td><a href="#travel_time">Travel time</a></td>
+	</tr>
+	<tr>
+	    <td>[vsa]</td>
+	    <td><a href="#vsa">Speed advisory</a></td>
+	</tr>
+	<tr>
+	    <td>[slow<i>s</i>,<i>b</i>,<i>u</i>,<i>dist</i>]</td>
+	    <td><a href="#slow">Slow traffic warning</a></td>
+	</tr>
+	<tr>
+	    <td>[tz<i>{p,o,c}</i>,<i>{tz0},</i>…<i>{tzn}</i>]</td>
+	    <td><a href="#tolling">Toll Zone</a></td>
+	</tr>
+</table>
+<br/>
+<h4 id="beacon_action">Beacon Actions</h4>
+<p>
+	A <a href="#beacons">beacon</a> action can cause a beacon to be deployed
+	when the action plan is set to the specified <b>phase</b>.
+	When the plan is set to any other phase, the beacon will shut off.
+</p>
+<h4 id="meter_action">Meter Actions</h4>
+<p>
+	A <a href="#ramp_meters">meter</a> action can cause a ramp meter to
+	begin metering at the specified <b>phase</b>.
+	When the plan is set to any other phase, the meter will shut off.
+</p>
 
 <h3 id="travel_time">Travel Time Estimation</h3>
-FIXME
+<p>
+	The current <b>travel time</b> from a <a href="#dms">DMS</a> (or origin
+	station) to a downstream station can be estimated and displayed on the sign.
+	A new estimate is made every 30 seconds, based on speed data from
+	<a href="#vds">vehicle detection systems</a>.
+</p>
+<p>
+	A <b>tt</b> <a href="#action_tag">action tag</a> can be used to specify
+	a travel time within a <a href="#quick_msg">quick message</a>.
+	When the message is deployed, the tag will be replaced by the estimated
+	travel time, in minutes.
+	The tag has three parameters, separated by commas.
+</p>
+<ol>
+	<li>Destination <a href="#station_id">station ID</a></li>
+	<li><a href="#travel_time_limit">Over limit</a> mode (<b>prepend</b> if
+	    omitted)
+	    <ul>
+	        <li><b>blank</b>: do not display travel time when over limit</li>
+	        <li><b>prepend</b>: prepend over limit text before travel
+	            time</li>
+	        <li><b>append</b>: append over limit text after travel time</li>
+			<li><b>replace</b>: use only text in over limit text. No numerical computations or other arguments will appear.</li>
+	    </ul>
+	</li>
+	<li>Over limit text ("OVER " if omitted) &mdash; used for slow traffic.</li>
+</ol>
+	<strong>If using the following additional arguments, you must use key=value pairs (see examples).</strong>
+<ol start="4">
+	<li>Under limit mode (see <a href="#travel_time_limit">Over limit</a>)</li>
+	<li>Under limit text &mdash; used for fast traffic. Must be specified, but may be blank.</li>
+	<li>Unit text &mdash; defaults to an empty string or what is specified in TRAVEL_TIME_UNIT_TEXT system attribute.</li>
+</ol>
+<aside>
+	NOTE: multiple destinations can be included on the same message by
+	specifying multiple <b>[tt…]</b> tags.<br/>
+	Over-limit modes and text take precedence over under-limit modes/ text …that's just how it's done.<br/>
+	Also multiple way-points can be specified to tailor the travel time route for construction detours, etc. by inserting
+	multiple stations in the way-point list. The first is always considered the origin, the last is always considered the destination.<br/>
+</aside>
+<p>
+	Examples:
+</p>
+<ul>
+	<li>FREEWAY TIME TO[nl][jl2]I-94[jl4]<b>[ttS100,prepend,OVER ]</b> MIN</li>
+	<li>TIME TO[nl][jl2]I-35W[jl4]<b>[ttS200,append,+]</b> MIN</li>
+	<li>DOWNTN[nl]<b>[ttS300,blank]</b> MIN</li>
+	<li>FREEWAY TIME[nl][jl2]I-5 TO SR99[nl][jl4]<b>[ttwp=S392 S100]</b> MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]SR 120[jl4][ttwp=1001710,o_mode=append,o_txt=+,u_mode=prepend,u_txt=<] MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]ROTH>LOUISE[nl][jl4][ttwp=1083010 1088010 1088210,om=append,ot=+,um=prepend,ut=<] MIN</li>
+	<li>[pt0o][jl2]TRAVEL TIME[nl][jl2]ROTH>LOUISE[nl][jl4][ttwp=1083010 1088010 1088210,om=append,ot=+,um=replace,ut=OVER 65 MPH,unit=']</li>
+</ul>
+<aside>
+	Travel time routes that are currently active (via
+	<a href="#plan_schedule">Plans and Scheduling</a>) may be viewed by
+	selecting Travel Time Routes from the map legend drop-down.
+</aside>
+<h4>Route Pathfinding</h4>
+<p>
+	This feature requires that the <a href="#road_topology">road topology
+	</a> is configured for the entire route.
+	Using this topology, the shortest route is found from the DMS to the
+	destination station.
+	A route consists of one or more <b>corridor trips</b>.
+	Each corridor trip has an <b>origin</b> and a <b>destination</b>, which
+	are r_nodes associated with a single freeway corridor.
+	For the first corridor trip, the origin is the DMS location.
+	A route can only branch if an r_node with <b>exit</b>
+	<a href="#r_node_type">node type</a> is matched with an <b>entrance</b>
+	r_node.
+	In order to match, the <b>roadway / direction</b> for the exit r_node
+	must equal the <b>cross street / direction</b> for the entrance, and
+	vice versa.
+</p>
+<p>
+	Two <a href="#system_attributes">system attributes</a> control route
+	pathfinding:
+</p>
+<dl>
+	<dt>route_max_legs</dt>
+	<dd>Maximum number of corridors to branch</dd>
+	<dt>route_max_miles</dt>
+	<dd>Maximum total route distance</dd>
+</dl>
+
+<h4>Speed Smoothing</h4>
+<p>
+	To deal with sampling problems at low speeds, a <b>smoothing</b>
+	procedure is used.
+	For each station, <b>running average</b> and <b>running minimum</b>
+	speeds are calculated from all valid detectors in the station.
+	If a speed higher than the <a href="#speed_limit">speed limit</a> is
+	recorded, the speed limit is used instead.
+	The sample interval used increases as the speed becomes lower:
+</p>
+<ul>
+    <li>Normally 2 minutes</li>
+    <li>Extend to 3 minutes if &lt; 25 mph</li>
+    <li>Extend to 4 minutes if &lt; 20 mph</li>
+    <li>Extend to 5 minutes if &lt; 15 mph</li>
+</ul>
+
+<h4>Route Travel Time</h4>
+<p>
+	The distance between each consecutive valid station is divided into 3
+	<b>links</b> of equal length.
+	If any link is longer than 0.6 miles, a travel time estimate would not
+	be reliable, so the process is aborted.
+	The links which are adjacent to a station are assigned speed from that
+	station.
+	"Middle" links are assigned an average of the immediate upstream and
+	downstream station speeds.
+	Normally, the running average speed is used.
+	If the link is less than 1 mile from the corridor destination, the
+	running minimum is used instead.
+	Travel time for each link is estimated by dividing its length by the
+	assigned speed.
+	If the route branches, each branch adds a 1 minute <b>turning delay</b>.
+</p>
+
+<h4 id="travel_time_limit">Travel Time Limit</h4>
+<p>
+	To prevent unreasonable messages from being displayed due to data
+	errors, a limit is calculated.
+	The total route length is divided by the
+	<code>travel_time_min_mph</code> <a href="#system_attributes">system
+	attribute</a> (default 15).
+	The result, rounded up the to next 5 minutes, is the <b>travel time
+	limit</b>.
+</p>
+<p>
+	If the calculated travel time is over the travel time limit, the
+	message will be <b>over limit</b>.
+	If the over limit mode is <b>blank</b>, no message will be shown.
+	Otherwise, the tag will be replaced with the travel time limit, with
+	the over limit text either prepended or appended.
+</p>
 
 <h3 id="vsa">Variable Speed Advisory</h3>
 FIXME
+
+<h3 id="slow">Slow Traffic Warning</h3>
+<p>
+	A <b>slow</b> <a href="#action_tag">action tag</a> allows warnings to be
+	displayed on DMS when traffic is slow.
+	The tag has three parameters, separated by commas.
+</p>
+<ol>
+	<li>Highest speed to activate the warning, in mph.</li>
+	<li>Distance (tenths of mile) to search for slow traffic, relative to
+	    the DMS location.</li>
+	<li>Tag replacement mode (<b>none</b> if omitted)
+	    <ul>
+	        <li><b>none</b>: a blank string</li>
+	        <li><b>dist</b>: distance rounded to nearest mile</li>
+	        <li><b>speed</b>: speed rounded to nearest 5 mph</li>
+	    </ul>
+	</li>
+</ol>
+<dl>
+	<dt>[slow35, 10]SLOW[nl]TRAFFIC[nl]AHEAD</dt>
+	<dd>Displays if traffic slower than 35 mph within 1 mile</dd>
+	<dt>SLOW TRAFFIC[nl][slow40,60,dist] MILES[nl]USE CAUTION</dt>
+	<dd>Displays if traffic slower than 40 mph within 6 miles</dd>
+	<dt>[slow45,5,speed] MPH[nl]1/2 MILE[nl]AHEAD</dt>
+	<dd>Displays if traffic slower than 45 mph within 0.5 miles</dd>
+</dl>
+<p>
+</p>
 
 <h3 id="tolling">Tolling</h3>
 <p>
@@ -2471,10 +2953,11 @@ FIXME
 	be provided by an external system.
 </p>
 <h4>Toll Zones</h4>
+<aside>
+	Select <span class="menu">View ➔ Lane Use ➔ Toll Zones</span> menu item
+</aside>
 <p>
 	A toll zone is a segment of roadway between two stations.
-	Select the <span class="menu">View ➔ Lane Use ➔ Toll Zones</span>
-	menu item to display the Toll Zone form.
 	All HOT lane detectors between the starting station and ending station
 	can be used to calculate the toll.
 	Every 3 minutes, tolls are calculated using data from the most recent 6
@@ -2489,8 +2972,8 @@ FIXME
 <h4>Pricing on DMS</h4>
 <p>
 	A DMS can display pricing information for toll zones.
-	This is accomplished using an IRIS-specific <a href="#multi">MULTI</a>
-	tag.
+	This is accomplished using a <b>tz</b> <a href="#action_tag">action
+	tag</a>.
 	The tag has two or more parameters, separated by commas.
 	The first parameter is the tolling mode, and must be "<i>p</i>",
 	"<i>o</i>" or "<i>c</i>".
@@ -2501,17 +2984,18 @@ FIXME
 	provided after the first.
 </p>
 <p>
-	If the tolling mode is <i>priced</i>, the MULTI tag will be replaced
-	with the calculated price, for example "2.75".
+	If the tolling mode is <i>priced</i>, the tag will be replaced with the
+	calculated price, for example "2.75".
 	It will be the sum of prices for all specified toll zones.
 	Two <a href="#system_attributes">system attributes</a>,
-	toll_min_price and toll_max_price, limit the calculated price.
+	<code>toll_min_price</code> and <code>toll_max_price</code>, limit the
+	calculated price.
 </p>
 <p>
-	For <i>open</i> and <i>closed</i> modes, the MULTI tag will be replaced
-	with an empty string.
+	For <i>open</i> and <i>closed</i> modes, the tag will be replaced with
+	an empty string.
 	If required, a message such as "OPEN" or "CLOSED" may be appended after
-	the MULTI tag.
+	the tag.
 </p>
 <p>
 	Price events are logged when a message is sent to a DMS, and again when
@@ -2519,7 +3003,7 @@ FIXME
 	The price event includes the date and time, toll zone, tolling mode
 	(<i>priced</i>, <i>open</i>, <i>closed</i>), price, sent / verified
 	status and next downstream tag reader.
-	The logged toll zone is the last zone specified in the MULTI tag.
+	The logged toll zone is the last zone specified in the tag.
 	In <i>priced</i> mode, the displayed price is logged.
 	For <i>open</i> or <i>closed</i>, a price of 0 is logged.
 </p>
@@ -2532,6 +3016,9 @@ FIXME
 	to build a list of trips for each tag ID.
 	This information can be used to bill customers.
 </p>
+<h3 id="metering_strategies">Ramp Metering Strategies</h3>
+FIXME
+
 <h3 id="spellchecker">Spell Checker</h3>
 <p>
 	The system attributes <i>dict_allowed_scheme</i> and
@@ -2619,6 +3106,10 @@ FIXME
 	<tr>
 	    <th>Filename</th>
 	    <th>Description</th>
+	</tr>
+	<tr>
+	    <td>{comm-link-name}.log</td>
+	    <td>Comm link log</td>
 	</tr>
 	<tr>
 	    <td>addco</td>
@@ -2726,7 +3217,7 @@ FIXME
 	</tr>
 	<tr>
 	    <td>slow</td>
-	    <td>DMS slow warning system log</td>
+	    <td>DMS <a href="#slow">slow warning</a> system log</td>
 	</tr>
 	<tr>
 	    <td>snmp</td>
@@ -2761,20 +3252,12 @@ FIXME
 	    <td>System attribute change log</td>
 	</tr>
 	<tr>
-	    <td>szm</td>
-	    <td>Stratified zone metering log</td>
-	</tr>
-	<tr>
 	    <td>toll</td>
 	    <td>Tolling info log</td>
 	</tr>
 	<tr>
 	    <td>travel</td>
 	    <td>Travel time info log</td>
-	</tr>
-	<tr>
-	    <td>viconptz</td>
-	    <td>Vicon PTZ protocol</td>
 	</tr>
 	<tr>
 	    <td>vsa</td>
@@ -2827,7 +3310,7 @@ zcat tms-20120523.sql.gz | pgsql tms</pre>
 </p>
 <pre class="code">dnf update iris-<i>{major}</i>.<i>{minor}</i>.<i>{micro}</i>-<i>{build}</i>.noarch.rpm
 iris_ctl update
-systemctl restart iris.service</pre>
+systemctl restart iris</pre>
 <p>
 	An unstable upgrade is when either the major or minor IRIS version
 	numbers change.
@@ -2841,7 +3324,7 @@ systemctl restart iris.service</pre>
 <pre class="code">dnf update iris-<i>{major}</i>.<i>{minor}</i>.<i>{micro}</i>-<i>{build}</i>.noarch.rpm
 psql tms -f /var/lib/iris/sql/migrate-<i>{major}</i>.<i>{minor}</i>.sql
 iris_ctl update
-systemctl restart iris.service</pre>
+systemctl restart iris</pre>
 <p>
 	Note: when skipping one or more minor versions in an upgrade, <b>all</b>
 	migrate scripts must be run.
@@ -3096,7 +3579,7 @@ FIXME
 	<li>Click on the Action Plan just created (e.g. slick_roads)</li>
 	<li>Click the DMS Actions tab</li>
 	<li>In the edit field on the bottom of the form, type the name of an
-	    existing sign or sign group</li>
+	    existing sign group</li>
 	<li>Press the Create button</li>
 	<li>The new DMS Action should appear in the table</li>
 	<li>Click on the "Quick Message" column in the DMS Action just created

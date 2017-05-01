@@ -1,6 +1,7 @@
 /*
  * IRIS -- Intelligent Roadway Information System
  * Copyright (C) 2006-2016  Minnesota Department of Transportation
+ * Copyright (C) 2017       California Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@ package us.mn.state.dot.tms.utils;
  * specified in NTCIP 1203.
  *
  * @author Douglas Lau
+ * @author Jacob Barde
  */
 public class MultiBuilder implements Multi {
 
@@ -187,9 +189,9 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Set the page background color for color24bit color scheme.
-	 * @param r Red component (0-255).
-	 * @param g Green component (0-255).
-	 * @param b Blue component (0-255). */
+	 * @param red Red component (0-255).
+	 * @param green Green component (0-255).
+	 * @param blue Blue component (0-255). */
 	@Override
 	public void setPageBackground(int red, int green, int blue) {
 		multi.append("[pb");
@@ -214,9 +216,9 @@ public class MultiBuilder implements Multi {
 	}
 
 	/** Set the foreground color for color24bit color scheme.
-	 * @param r Red component (0-255).
-	 * @param g Green component (0-255).
-	 * @param b Blue component (0-255). */
+	 * @param red Red component (0-255).
+	 * @param green Green component (0-255).
+	 * @param blue Blue component (0-255). */
 	@Override
 	public void setColorForeground(int red, int green, int blue) {
 		multi.append("[cf");
@@ -297,11 +299,12 @@ public class MultiBuilder implements Multi {
 		multi.append("]");
 	}
 
-	/** Add a travel time destination */
+	/** Add a travel time destination.
+	 * @param tt Travel Time arguments map object. */
 	@Override
-	public void addTravelTime(String sid) {
+	public void addTravelTime(TravelTimeTag tt) {
 		multi.append("[tt");
-		multi.append(sid);
+		multi.append(TravelTimeTag.mapToArgs(tt));
 		multi.append("]");
 	}
 
@@ -313,20 +316,17 @@ public class MultiBuilder implements Multi {
 
 	/** Add a slow traffic warning.
 	 * @param spd Highest speed to activate warning.
-	 * @param b Distance to end of backup (negative indicates upstream).
-	 * @param units Units for speed (mph or kph).
-	 * @param dist If true, replace tag with distance to slow station. */
+	 * @param dist Distance to search for slow traffic (1/10 mile).
+	 * @param mode Tag replacement mode (none, dist or speed). */
 	@Override
-	public void addSlowWarning(int spd, int b, String units, boolean dist) {
+	public void addSlowWarning(int spd, int dist, String mode) {
 		multi.append("[slow");
 		multi.append(spd);
 		multi.append(',');
-		multi.append(b);
-		if (dist || !units.equals("mph")) {
+		multi.append(dist);
+		if ("dist".equals(mode) || "speed".equals(mode)) {
 			multi.append(',');
-			multi.append(units);
-			if (dist)
-				multi.append(",dist");
+			multi.append(mode);
 		}
 		multi.append("]");
 	}

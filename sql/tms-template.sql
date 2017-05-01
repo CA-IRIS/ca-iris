@@ -366,7 +366,7 @@ CREATE TABLE iris.sign_group (
 CREATE TABLE iris.quick_message (
 	name VARCHAR(20) PRIMARY KEY,
 	sign_group VARCHAR(16) REFERENCES iris.sign_group,
-	multi VARCHAR(256) NOT NULL
+	multi VARCHAR(2048) NOT NULL
 );
 
 CREATE TABLE iris.comm_protocol (
@@ -1482,7 +1482,8 @@ CREATE TABLE iris.dms_action (
 	quick_message VARCHAR(20) REFERENCES iris.quick_message,
 	beacon_enabled BOOLEAN NOT NULL,
 	a_priority INTEGER NOT NULL,
-	r_priority INTEGER NOT NULL
+	r_priority INTEGER NOT NULL,
+	duration_minutes INTEGER NOT NULL DEFAULT -1
 );
 
 CREATE TABLE iris.beacon_action (
@@ -2472,7 +2473,7 @@ camera_ptz_panel_enable	false
 camera_ptz_return_home	false
 camera_shift_concur_move	0
 camera_shift_move_pause	5
-camera_shift_reinit false
+camera_shift_reinit	false
 camera_shift_sunrise_offset	-30
 camera_shift_sunset_offset	-30
 camera_sort	0
@@ -2500,6 +2501,7 @@ dms_composer_uppercase	false
 dms_default_justification_line	3
 dms_default_justification_page	2
 dms_duration_enable	true
+dms_action_duration_minutes	0
 dms_font_selection_enable	false
 dms_form	1
 dms_high_temp_cutoff	60
@@ -2554,6 +2556,7 @@ msg_feed_verify	true
 operation_retry_threshold	3
 rtms_read_margin_sec	5
 route_max_legs	8
+route_max_link_miles	0.6
 route_max_miles	16
 rwis_color_high	FF0000
 rwis_color_low	00FFFF
@@ -2580,6 +2583,7 @@ toll_min_price	0.25
 toll_max_price	8
 travel_time_max_legs	8
 travel_time_max_miles	16
+travel_time_max_mph	65
 travel_time_min_mph	15
 uptime_log_enable	false
 urms_read_margin_sec	5

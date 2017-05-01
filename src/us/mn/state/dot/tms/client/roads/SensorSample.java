@@ -47,11 +47,25 @@ public class SensorSample {
 		speed = s;
 	}
 
+	/** create a sensor sample with travel time route info */
+	public SensorSample(String i, Integer f, Integer s, Integer t) {
+		this(i,f,s);
+		tvt = t;
+	}
+
 	/** Get the density (vehicles per mile per lane) */
 	public Integer getDensity() {
 		if(flow != null && speed != null && speed > 0)
 			return Math.round((float)flow / (float)speed);
 		else
 			return null;
+	}
+
+	/** travel time route usage */
+	private Integer tvt;
+
+	/** get the number of travel time routes on this */
+	public Integer getTravelTimeRoutes() {
+		return tvt;
 	}
 }

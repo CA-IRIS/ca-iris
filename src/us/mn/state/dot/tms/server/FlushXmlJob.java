@@ -70,17 +70,7 @@ public class FlushXmlJob extends Job {
 
 	/** Write the DTD */
 	private void writeDtd(Writer w) throws IOException {
-		w.write("<!DOCTYPE traffic_sample [\n");
-		w.write("<!ELEMENT traffic_sample (sample)*>\n");
-		w.write("<!ATTLIST traffic_sample time_stamp " +
-			"CDATA #REQUIRED>\n");
-		w.write("<!ATTLIST traffic_sample period CDATA #REQUIRED>\n");
-		w.write("<!ELEMENT sample EMPTY>\n");
-		w.write("<!ATTLIST sample sensor CDATA #REQUIRED>\n");
-		w.write("<!ATTLIST sample flow CDATA 'UNKNOWN'>\n");
-		w.write("<!ATTLIST sample speed CDATA 'UNKNOWN'>\n");
-		w.write("<!ATTLIST sample occ CDATA 'UNKNOWN'>\n");
-		w.write("]>\n");
+		w.write(StationManager.DTD_TRAF_SAMP);
 	}
 
 	/** Write the body of the detector sample XML file */

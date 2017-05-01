@@ -18,6 +18,8 @@ package us.mn.state.dot.tms;
 import java.io.IOException;
 import java.util.Iterator;
 import static us.mn.state.dot.tms.SignMsgSource.*;
+
+import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.utils.Base64;
 import us.mn.state.dot.tms.utils.MultiString;
 
@@ -119,6 +121,44 @@ public class SignMessageHelper extends BaseHelper {
 			return bm1.equals(bm2);
 	}
 
+
+	/** compare two sign messages, more completely */
+	static public boolean isEquivalentMore(SignMessage sm1, SignMessage sm2) {
+		boolean rv = isEquivalent(sm1, sm2);
+		rv = rv && integerEquals(sm1.getDuration(), sm2.getDuration());
+		rv = rv && sm1.getSource() == sm2.getSource();
+		rv = rv && sm1.getBeaconEnabled() == sm2.getBeaconEnabled();
+		return rv;
+	}
+
+	public boolean equals2(Object o1, Object o2) {
+		if (o1 == o2)
+			return true;
+		if (!(o2 instanceof SignMessageImpl))
+			return false;
+		if (!o1.equals(o2))
+			return false;
+
+		SignMessageImpl sm1 = (SignMessageImpl) o1;
+		SignMessageImpl sm2 = (SignMessageImpl) o2;
+
+		if (sm1.getBeaconEnabled() != sm2.getBeaconEnabled())
+			return false;
+		if (sm1.getActivationPriority() != sm2.getActivationPriority())
+			return false;
+		if (sm1.getRunTimePriority() != sm2.getRunTimePriority())
+			return false;
+		if (sm1.getSource() != sm2.getSource())
+			return false;
+		if (sm1.getIncident() != null ? !sm1.getIncident().equals(sm2.getIncident()) : sm2.getIncident() != null)
+			return false;
+		if (sm1.getMulti() != null ? !sm1.getMulti().equals(sm2.getMulti()) : sm2.getMulti() != null)
+			return false;
+		if (sm1.getBitmaps() != null ? !sm1.getBitmaps().equals(sm2.getBitmaps()) : sm2.getBitmaps() != null)
+			return false;
+		return sm1.getDuration() != null ? sm1.getDuration().equals(sm2.getDuration()) : sm2.getDuration() == null;
+	}
+
 	/** Return an array of font names in a message.
 	 * @param f_num Default font number, one based.
 	 * @return A string array with length equal to the number 
@@ -176,7 +216,7 @@ public class SignMessageHelper extends BaseHelper {
 
 	/** Get the bitmap graphic for all pages of the specified DMS.
 	 * @param sm SignMessage in question.
-	 * @param DMS with the graphic.
+	 * @param dms DMS with the graphic.
 	 * @return Array of bitmaps, one for each page, or null on error. */
 	static public BitmapGraphic[] getBitmaps(SignMessage sm, DMS dms) {
 		if (sm == null || dms == null)

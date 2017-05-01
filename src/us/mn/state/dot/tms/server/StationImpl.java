@@ -248,7 +248,7 @@ public class StationImpl implements Station, VehicleSampler {
 		System.arraycopy(rlg_speed, 0, rlg_speed, 1,
 			rlg_speed.length - 1);
 		// Clamp the speed to 10 mph above the speed limit
-		rlg_speed[0] = Math.min(s, getSpeedLimit() + 10);
+		rlg_speed[0] = s; //Math.min(s, getSpeedLimit() + 10);
 	}
 
 	/** Average station speed for previous ten samples */
@@ -258,7 +258,7 @@ public class StationImpl implements Station, VehicleSampler {
 	private void updateAvgSpeed(float s) {
 		System.arraycopy(avg_speed, 0, avg_speed, 1,
 			avg_speed.length - 1);
-		avg_speed[0] = Math.min(s, getSpeedLimit());
+		avg_speed[0] = s; //Math.min(s, getSpeedLimit() + 10);
 	}
 
 	/** Get the average speed smoothed over several samples */
@@ -276,6 +276,15 @@ public class StationImpl implements Station, VehicleSampler {
 				return getSpeedLimit();
 		} else
 			return MISSING_DATA;
+	}
+
+	/** Current number of travel time routes on this */
+	private int tvt = MISSING_DATA;
+
+	/** get the number of travel time routes on this */
+	@Override
+	public int getTravelTimeRoutes() {
+		return tvt;
 	}
 
 	/** Samples used in previous time step */
@@ -329,7 +338,7 @@ public class StationImpl implements Station, VehicleSampler {
 	private void updateLowSpeed(float s) {
 		System.arraycopy(low_speed, 0, low_speed, 1,
 			low_speed.length - 1);
-		low_speed[0] = Math.min(s, getSpeedLimit());
+		low_speed[0] = s; //Math.min(s, getSpeedLimit());
 	}
 
 	/** Get the low speed smoothed over several samples */
@@ -351,7 +360,15 @@ public class StationImpl implements Station, VehicleSampler {
 		int n_density = 0;
 		float t_speed = 0;
 		int n_speed = 0;
+		int t_tvt = 0;
+		int n_tvt = 0;
 		for(DetectorImpl det: r_node.getDetectors()) {
+			// TTR data collection only cares that detector isn't abandoned
+			int t = det.getTravelTimeRoutes();
+			if (t != MISSING_DATA && !det.getAbandoned()) {
+				t_tvt += t;
+				n_tvt++;
+			}
 			if(det.getAbandoned() || !det.isStationOrCD() ||
 			   !det.isSampling())
 				continue;
@@ -390,6 +407,7 @@ public class StationImpl implements Station, VehicleSampler {
 		flow = Math.round(average(t_flow, n_flow));
 		density = average(t_density, n_density);
 		speed = average(t_speed, n_speed);
+		tvt = (n_tvt > 0) ? (t_tvt / n_tvt) : 0;
 		updateRollingSpeed(speed);
 		updateAvgSpeed(speed);
 		updateLowSpeed(low);
@@ -412,6 +430,9 @@ public class StationImpl implements Station, VehicleSampler {
 			w.write(createAttribute("occ",
 				BaseObjectImpl.formatFloat(o, 2)));
 		}
+		int t = getTravelTimeRoutes();
+		if (t > 0)
+			w.write((createAttribute("tvt", t)));
 		w.write("/>\n");
 	}
 

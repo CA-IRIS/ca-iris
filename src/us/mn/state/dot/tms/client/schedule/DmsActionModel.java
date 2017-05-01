@@ -85,7 +85,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	@Override
 	protected ArrayList<ProxyColumn<DmsAction>> createColumns() {
 		ArrayList<ProxyColumn<DmsAction>> cols =
-			new ArrayList<ProxyColumn<DmsAction>>(6);
+			new ArrayList<ProxyColumn<DmsAction>>(7);
 		cols.add(new ProxyColumn<DmsAction>("action.plan.dms.group",
 			120)
 		{
@@ -252,6 +252,27 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 				return new DefaultCellEditor(cbx);
 			}
 		});
+		cols.add(new ProxyColumn<DmsAction>("dms.action.duration", 100) {
+			@Override
+			public Object getValueAt(DmsAction da) {
+				return da.getDurationMinutes();
+			}
+			public boolean isEditable(DmsAction da) {
+				return canUpdate(da);
+			}
+			public void setValueAt(DmsAction da, Object value) {
+				try {
+					if (value == null || !(value instanceof String))
+						return;
+					String v = value.toString().trim();
+					int i = Integer.parseInt(v);
+					if (i >= -1)
+						da.setDurationMinutes(i);
+				}
+				catch (NumberFormatException e) {
+				}
+			}
+		});
 		return cols;
 	}
 
@@ -273,6 +294,8 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 	/** */
 	private final TypeCache<QuickMessage> quick_messages;
 
+	/** duration */
+	private final int duration;
 
 	/** Sign group type cache */
 	private final TypeCache<SignGroup> sign_groups;
@@ -318,6 +341,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 		sign_groups = s.getSonarState().getDmsCache().getSignGroups();
 		sign_groups.addProxyListener(sign_group_listener);
 		quick_messages = s.getSonarState().getDmsCache().getQuickMessages();
+		duration = 0;
 	}
 
 	/** Get the SONAR type name */
@@ -383,6 +407,7 @@ public class DmsActionModel extends ProxyTableModel<DmsAction> {
 				DMSMessagePriority.SCHEDULED.ordinal());
 			attrs.put("r_priority",
 				DMSMessagePriority.SCHEDULED.ordinal());
+			attrs.put("duration_minutes", 0);
 			cache.createObject(name, attrs);
 		}
 	}
