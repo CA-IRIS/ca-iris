@@ -116,7 +116,9 @@ public class MainServer {
 			scheduleFlushJobs();
 			aws_scheduler.addJob(new AwsJob());
 			shift_scheduler.addJob(
-				new CameraShiftJob(shift_scheduler, new VideoServerCoupler(props), null, 600000));
+				new CameraShiftJob(shift_scheduler,
+					new VideoServerCoupler(props),
+					600000));
 			server = new Server(ns, props, new AccessLogger(FLUSH));
 			auth_provider = new IrisProvider();
 			server.addProvider(auth_provider);
@@ -195,9 +197,7 @@ public class MainServer {
 
 	/** Schedule jobs on TIMER thread */
 	static private void scheduleTimerJobs() {
-		int secs = SystemAttrEnum.LCS_POLL_PERIOD_SECS.getInt();
-		if (secs > 5)
-			TIMER.addJob(new LcsQueryMsgJob(secs));
+		TIMER.addJob(new LcsQueryMsgJob(TIMER));
 		TIMER.addJob(new DmsQueryStatusJob());
 		TIMER.addJob(new DmsQueryDialupJob());
 		TIMER.addJob(new MeteringJob(FLUSH));

@@ -171,41 +171,26 @@ public class CameraHelper extends BaseHelper {
 
 	/** get the shift reinit system attribute */
 	static public boolean isShiftReinit() {
-		boolean rv = false;
-		if (null != CAMERA_SHIFT_REINIT)
-			rv = CAMERA_SHIFT_REINIT.getBoolean();
-		return rv;
+		return CAMERA_SHIFT_REINIT.getBoolean();
 	}
 	/** get the shift pause system attribute */
 	static public int getShiftPause() {
-		int delay = 0;
-		if (null != CAMERA_SHIFT_MOVE_PAUSE)
-			delay = CAMERA_SHIFT_MOVE_PAUSE.getInt();
-		return delay;
+		return CAMERA_SHIFT_MOVE_PAUSE.getInt();
 	}
 
 	/** get the shift concurrent movements system attribute */
 	static public int getConcurrentMovements() {
-		int concurrent = 1;
-		if (null != CAMERA_SHIFT_CONCUR_MOVE)
-			concurrent = CAMERA_SHIFT_CONCUR_MOVE.getInt();
-		return concurrent;
+		return CAMERA_SHIFT_CONCUR_MOVE.getInt();
 	}
 
 	/** get sunrise offset system attribute */
 	static public int getSunriseOffset() {
-		int offset = 0;
-		if (null != CAMERA_SHIFT_SUNRISE_OFFSET)
-			offset = CAMERA_SHIFT_SUNRISE_OFFSET.getInt();
-		return offset;
+		return CAMERA_SHIFT_SUNRISE_OFFSET.getInt();
 	}
 
 	/** get sunset offset system attribute */
 	static public int getSunsetOffset() {
-		int offset = 0;
-		if (null != CAMERA_SHIFT_SUNSET_OFFSET)
-			offset = CAMERA_SHIFT_SUNSET_OFFSET.getInt();
-		return offset;
+		return CAMERA_SHIFT_SUNSET_OFFSET.getInt();
 	}
 
 	/**
@@ -227,6 +212,54 @@ public class CameraHelper extends BaseHelper {
 			rv = NIGHT_SHIFT;
 
 		return rv;
+	}
+
+	/**
+	 * calculate what the next shift is.
+	 * @param offset offset in millis from now to calculate this for.
+	 *               should always be 0. only server start-up should use any
+	 *               other value.
+	 */
+	static public PresetAliasName calculateNextShift(int offset) {
+		GregorianCalendar now = (GregorianCalendar) TimeSteward.getCalendarInstance();
+		now.setTimeInMillis((now.getTimeInMillis() + offset));
+
+		GregorianCalendar dayshift = (GregorianCalendar) getShiftTime(HOME, 0);
+		GregorianCalendar nightshift = (GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
+
+		if (dayshift == null || nightshift == null)
+			return HOME;
+
+		if (now.getTimeInMillis() < dayshift.getTimeInMillis())
+			return HOME;
+		if (now.getTimeInMillis() < nightshift.getTimeInMillis())
+			return NIGHT_SHIFT;
+
+		return HOME;
+	}
+
+	/** calculate the time of the next shift
+	 * @param offset offset in millis from now to calculate from.
+	 *               if current time is a shift time, an offset of 1 or more minutes would be advisable.
+	 */
+	static public Calendar calculateNextShiftTime(int offset) {
+		GregorianCalendar now = (GregorianCalendar) TimeSteward.getCalendarInstance();
+		now.setTimeInMillis((now.getTimeInMillis() + offset));
+		GregorianCalendar todayshift = (GregorianCalendar) getShiftTime(HOME, 0);
+		GregorianCalendar tonightshift = (GregorianCalendar) getShiftTime(NIGHT_SHIFT, 0);
+		GregorianCalendar tomorrowdawn = (GregorianCalendar) getShiftTime(HOME, 1);
+
+		if (todayshift == null || tonightshift == null || tomorrowdawn == null)
+			return null;
+
+		if (now.getTimeInMillis() < todayshift.getTimeInMillis())
+			return todayshift;
+		if (now.getTimeInMillis() < tonightshift.getTimeInMillis())
+			return tonightshift;
+		if (now.getTimeInMillis() < tomorrowdawn.getTimeInMillis())
+			return tomorrowdawn;
+
+		return null;
 	}
 
 	/**

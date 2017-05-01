@@ -45,7 +45,6 @@ import us.mn.state.dot.tms.Camera;
 import us.mn.state.dot.tms.CameraHelper;
 import us.mn.state.dot.tms.EncoderType;
 import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.PresetAlias;
 import us.mn.state.dot.tms.PresetAliasHelper;
 import us.mn.state.dot.tms.PresetAliasName;
 import us.mn.state.dot.tms.SystemAttrEnum;
