@@ -32,6 +32,7 @@ import us.mn.state.dot.tms.BitmapGraphic;
 import us.mn.state.dot.tms.Beacon;
 import us.mn.state.dot.tms.CameraPreset;
 import us.mn.state.dot.tms.ChangeVetoException;
+import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.DmsAction;
@@ -1612,17 +1613,27 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		return isMsgExpiring(getMessageCurrent());
 	}
 
-	/** test if a message would be expired or will within a minute
-	 * based on the DMS deploy time */
+	/** test if a message is expired, or is about to expire prior to next
+	 * poll period (with a latency factor built in). */
 	private boolean isMsgExpiring(SignMessage sm) {
 		if (SignMessageHelper.isBlank(sm))
 			return false;
 		if (sm.getDuration() == null)
 			return false;
 		long now = TimeSteward.currentTimeMillis();
-		long next_poll = now + 60000; //this.getPollPeriod() * 1000;
 		long expired_time = getDeployTime() + sm.getDuration() * 60000;
-		if (now > expired_time || next_poll > expired_time)
+		if (now >= expired_time)
+			return true;
+		long pp = this.getPollPeriod() * 1000;
+		long npoll = (now - (now % pp)) + pp;
+		if (npoll >= expired_time)
+			return true;
+		CommLink cl = ((ControllerImpl)this.controller).getCommLink();
+		long min_delay = 3000;
+		if (isActiveDialup())
+			min_delay = isConnected() ? 60000 : 120000;
+		long latency_factor = Math.max(min_delay, cl.getTimeout()) * 4;
+		if ((npoll + latency_factor) >= expired_time)
 			return true;
 		return false;
 	}
@@ -1681,9 +1692,9 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		Integer rv = da.getDurationMinutes();
 		if (rv == null || rv < 0)
 			return null;
-		if (rv < 1)
+		if (rv < 1) // use sys setting if dmsaction duration is zero
 			rv = SystemAttrEnum.DMS_ACTION_DURATION_MINUTES.getInt();
-		if (rv < 1)
+		if (rv < 1) // use default if sys setting isn't valid
 			rv = getUnstickyDuration();
 		return rv;
 	}
