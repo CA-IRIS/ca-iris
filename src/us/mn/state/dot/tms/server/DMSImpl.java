@@ -1628,7 +1628,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		long npoll = (now - (now % pp)) + pp;
 		if (npoll >= expired_time)
 			return true;
-		CommLink cl = ((ControllerImpl)this.controller).getCommLink();
+		CommLink cl = this.controller.getCommLink();
 		long min_delay = 3000;
 		if (isActiveDialup())
 			min_delay = isConnected() ? 60000 : 120000;
