@@ -353,6 +353,7 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 	protected int idle_secs = Integer.MAX_VALUE;
 
 	/** Set the max allowable idle time in seconds */
+	@Override
 	public void setIdleSecs(int is) {
 		testGateArmDisable(name, "idle_secs");
 		idle_secs = is;
@@ -368,9 +369,13 @@ public class CommLinkImpl extends BaseObjectImpl implements CommLink {
 		if (dp != null)
 			dp.setIdleSecs(is);
 		store.update(this, "idle_secs", is);
+		setIdleSecs(is);
+		closePoller();
+		setStatusNotify(Constants.UNKNOWN);
 	}
 
 	/** Get the max allowable idle time in seconds */
+	@Override
 	public int getIdleSecs() {
 		return idle_secs;
 	}

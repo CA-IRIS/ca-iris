@@ -146,6 +146,29 @@ public class CommLinkModel extends ProxyTableModel<CommLink> {
 				return new TimeoutCellEditor(MAX_TIMEOUT_MS);
 			}
 		});
+		cols.add(new ProxyColumn<CommLink>("comm.link.idle", 100) {
+			@Override
+			public Object getValueAt(CommLink cl) {
+				return cl.getIdleSecs();
+			}
+			public boolean isEditable(CommLink cl) { return canUpdate(cl, "idle_secs"); }
+			public void setValueAt(CommLink cl, Object value) {
+				String v = value.toString().toLowerCase().trim();
+				try {
+					Integer i = Integer.parseInt(v);
+					if (i != null && i >= 0)
+						cl.setIdleSecs(i);
+					else
+						cl.setIdleSecs(Integer.MAX_VALUE);
+				}
+				catch (NumberFormatException e) {
+					if ("perop".equals(v))
+						cl.setIdleSecs(0);
+					else
+						cl.setIdleSecs(Integer.MAX_VALUE);
+				}
+			}
+		});
 		return cols;
 	}
 

@@ -94,6 +94,12 @@ public interface CommLink extends SonarObject {
 	/** Get the polling timeout (milliseconds) */
 	int getTimeout();
 
+	/** get idle seconds */
+	int getIdleSecs();
+
+	/** set idle seconds */
+	void setIdleSecs(int is);
+
 	/** Get the communication port status */
 	String getStatus();
 }
