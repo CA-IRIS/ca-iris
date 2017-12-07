@@ -42,7 +42,7 @@ public class GPSutil {
 		double lat;
 		double lon;
 
-		if (!pl.isEmpty()) {
+		if (pl == null || !pl.isEmpty()) {
 			for (Position p : pl) {
 				lat = p.getLatitude();
 				lon = p.getLongitude();

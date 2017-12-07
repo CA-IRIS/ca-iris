@@ -153,6 +153,7 @@ public class CameraHelper extends BaseHelper {
 		List<Position> pl = new ArrayList<>();
 		double lat = 0.0;
 		double lon = 0.0;
+		Position rv;
 
 		Iterator<Camera> it = iterator();
 		while (it.hasNext()) {
@@ -166,7 +167,17 @@ public class CameraHelper extends BaseHelper {
 			}
 		}
 
-		return GPSutil.getGeographicCenter(pl);
+		rv = GPSutil.getGeographicCenter(pl);
+
+		// if a center wasn't found, use the "Home" map extent as center
+		if (rv == null) {
+			MapExtent me = MapExtentHelper.lookup(
+				SystemAttrEnum.MAP_EXTENT_NAME_INITIAL.getString());
+
+			rv = new Position(me.getLat(), me.getLon());
+		}
+
+		return rv;
 	}
 
 	/** get the shift reinit system attribute */
