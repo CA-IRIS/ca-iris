@@ -30,10 +30,10 @@ public class CommMessageImpl<T extends ControllerProperty>
 	implements CommMessage<T>
 {
 	/** Messenger object */
-	private final Messenger messenger;
+	protected final Messenger messenger;
 
 	/** Controller operation */
-	private final OpController<T> op;
+	protected final OpController<T> op;
 
 	/** Protocol debug log */
 	private final DebugLog p_log;

@@ -1,2 +1,0 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://docs.oasis-open.org/wsrf/bf-2", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package us.mn.state.dot.tms.server.comm.onvif.generated.oasis_open.docs.wsrf.bf_2;

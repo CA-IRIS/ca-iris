@@ -43,6 +43,8 @@ import us.mn.state.dot.tms.server.comm.mndot.MndotPoller;
 import us.mn.state.dot.tms.server.comm.msgfeed.MsgFeedPoller;
 import us.mn.state.dot.tms.server.comm.ntcip.HDLCMessenger;
 import us.mn.state.dot.tms.server.comm.ntcip.NtcipPoller;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.HttpMessenger;
 import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
 import us.mn.state.dot.tms.server.comm.pelcod.PelcoDPoller;
@@ -169,6 +171,8 @@ public class DevicePollerFactory {
 			return createCaRwisPoller();
 		case TTIP_DMS:
 			return createTtipDmsPoller();
+		case ONVIF_PTZ:
+			return createOnvifPtz();
 		default:
 			throw new ProtocolException("INVALID PROTOCOL");
 		}
@@ -292,6 +296,10 @@ public class DevicePollerFactory {
 	/** Create an http file messenger */
 	private HttpFileMessenger createHttpFileMessenger() throws IOException {
 		return new HttpFileMessenger(new URL(uri));
+	}
+
+	private HttpMessenger createHttpMessenger() {
+		return new HttpMessenger(uri);
 	}
 
 	/** Create an NTCIP Class A poller */
@@ -470,5 +478,10 @@ public class DevicePollerFactory {
 	/** Create a TTIP DMS poller */
 	private DevicePoller createTtipDmsPoller() throws IOException {
 		return new TtipDmsPoller(name);
+	}
+
+	/** Create an Onvfi PTZ poller */
+	private DevicePoller createOnvifPtz() {
+		return new OnvifPoller(name, createHttpMessenger());
 	}
 }

@@ -89,6 +89,9 @@ public class ControllerForm extends SonarObjectForm<Controller> {
 	/** Controller notes text */
 	private final JTextArea notes_txt = new JTextArea(3, 24);
 
+	/** Access username */
+	private final JTextField username = new JTextField(16);
+
 	/** Access password */
 	private final JPasswordField password = new JPasswordField(16);
 
@@ -259,6 +262,8 @@ public class ControllerForm extends SonarObjectForm<Controller> {
 		p.add(comm_link_cbx, Stretch.LAST);
 		p.add("controller.drop");
 		p.add(drop_spn, Stretch.LAST);
+		p.add("controller.username");
+		p.add(username, Stretch.LAST);
 		p.add("controller.password");
 		p.add(password);
 		p.add(new JButton(clear_pwd), Stretch.RIGHT);
@@ -286,6 +291,12 @@ public class ControllerForm extends SonarObjectForm<Controller> {
 			public void stateChanged(ChangeEvent e) {
 				Number n = (Number)drop_spn.getValue();
 				proxy.setDrop(n.shortValue());
+			}
+		});
+		username.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				proxy.setUsername(username.getText().trim());
 			}
 		});
 		password.addFocusListener(new FocusAdapter() {
@@ -375,6 +386,7 @@ public class ControllerForm extends SonarObjectForm<Controller> {
 	@Override
 	protected void updateEditMode() {
 		loc_pnl.updateEditMode();
+		username.setEnabled(canUpdate("username"));
 		password.setEnabled(canUpdate("password"));
 		clear_pwd.setEnabled(canUpdate("password"));
 		comm_link_act.setEnabled(canUpdate("commLink"));
@@ -396,6 +408,8 @@ public class ControllerForm extends SonarObjectForm<Controller> {
 		}
 		if (a == null || a.equals("drop"))
 			drop_spn.setValue(proxy.getDrop());
+		if (a == null || a.equals("username"))
+			username.setText(proxy.getUsername());
 		if (a == null || a.equals("notes"))
 			notes_txt.setText(proxy.getNotes());
 		if (a == null || a.equals("condition"))

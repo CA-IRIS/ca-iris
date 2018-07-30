@@ -83,7 +83,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	static protected void loadAll() throws TMSException {
 		namespace.registerType(SONAR_TYPE, ControllerImpl.class);
 		store.query("SELECT name, cabinet, comm_link, drop_id, " +
-			"condition, password, notes, fail_time FROM iris." +
+			"condition, password, notes, fail_time, username FROM iris." +
 			SONAR_TYPE  +";", new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
@@ -93,6 +93,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 					row.getString(3),	// comm_link
 					row.getShort(4),	// drop_id
 					row.getInt(5),		// condition
+					row.getString(9), // username is last col
 					row.getString(6),	// password
 					row.getString(7),	// notes
 					row.getTimestamp(8)	// failTime
@@ -110,6 +111,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 		map.put("comm_link", comm_link);
 		map.put("drop_id", drop_id);
 		map.put("condition", condition.ordinal());
+		map.put("username", username);
 		map.put("password", password);
 		map.put("notes", notes);
 		map.put("fail_time", asTimestamp(failTime));
@@ -137,13 +139,14 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 
 	/** Create a new controller */
 	protected ControllerImpl(String n, CabinetImpl c, CommLink cl, short d,
-		int cnd, String p, String nt, Date ft) throws TMSException
+		int cnd, String u, String p, String nt, Date ft) throws TMSException
 	{
 		super(n);
 		cabinet = c;
 		comm_link = commLinkImpl(cl);
 		drop_id = d;
 		condition = CtrlCondition.fromOrdinal(cnd);
+		username = u;
 		password = p;
 		notes = nt;
 		failTime = stampMillis(ft);
@@ -152,9 +155,9 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 
 	/** Create a new controller */
 	protected ControllerImpl(String n, String c, String cl, short d,
-		int cnd, String p, String nt, Date ft) throws TMSException
+		int cnd, String u, String p, String nt, Date ft) throws TMSException
 	{
-		this(n, lookupCabinet(c), lookupCommLink(cl), d, cnd, p, nt,ft);
+		this(n, lookupCabinet(c), lookupCommLink(cl), d, cnd, u, p, nt,ft);
 	}
 
 	/** Initialize the transient fields */
@@ -314,6 +317,29 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	/** Check if condition is active */
 	public boolean isActive() {
 		return condition == CtrlCondition.ACTIVE;
+	}
+
+	/** device username for this controller */
+	private String username = "";
+
+	/** Set the device username */
+	@Override
+	public void setUsername(String n) {
+		username = n;
+	}
+
+	/** Set the device username */
+	public void doSetUsername(String n) throws TMSException {
+		if (n.equals(username))
+			return;
+		store.update(this, "username", n);
+		setUsername(n);
+	}
+
+	/** Get the device username */
+	@Override
+	public String getUsername() {
+		return username;
 	}
 
 	/** Access password */
@@ -1029,6 +1055,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 		Cabinet cab = getCabinet();
 		if (cab != null && cab.toString().length() > 0)
 			w.write(createAttribute("cabinet", getCabinet()));
+		// todo username fields??
 		if (getNotes().length() > 0)
 			w.write(createAttribute("notes", getNotes()));
 		w.write("/>\n");

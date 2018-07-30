@@ -54,6 +54,12 @@ public interface Controller extends SonarObject {
 	/** Get the condition */
 	int getCondition();
 
+	/** Set the access username */
+	void setUsername(String uname);
+
+	/** Get the username */
+	String getUsername();
+
 	/** Set the access password */
 	void setPassword(String pwd);
 

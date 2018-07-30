@@ -70,6 +70,7 @@
 	<path id="classpath">
 		<fileset dir="${lib.dir}">
 			<include name="mail.jar"/>
+			<include name="onvif.jar"/>
 			<include name="${scheduler.jar}"/>
 			<include name="${sonar.server.jar}"/>
 			<include name="${sonar.client.jar}"/>
@@ -139,6 +140,9 @@
 		</antcall>
 		<antcall target="check-dep">
 			<param name="file.dep" value="mail.jar"/>
+		</antcall>
+		<antcall target="check-dep">
+			<param name="file.dep" value="onvif.jar"/>
 		</antcall>
 		<antcall target="check-subproject">
 			<param name="file.dep" value="${scheduler.jar}"/>
@@ -223,7 +227,7 @@
 	        description="Compile all of the source files">
 		<javac srcdir="${build.src}"
 		       destdir="${build.classes}"
-		       debug="${debug}"
+		       debug="true"
 		       deprecation="on"
 		       includeantruntime="false"
 		       source="1.7"
@@ -259,6 +263,7 @@
 		<copy todir="${dist.server}">
 			<fileset dir="${lib.dir}">
 				<include name="mail.jar"/>
+				<include name="onvif.jar"/>
 				<include name="${scheduler.jar}"/>
 				<include name="${sonar.server.jar}"/>
 			</fileset>

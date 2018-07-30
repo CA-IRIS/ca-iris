@@ -134,7 +134,10 @@ public enum CommProtocol {
 	CA_RWIS("CA RWIS"),
 
 	/** TTIP DMS (36) */
-	TTIP_DMS("TTIP DMS");
+	TTIP_DMS("TTIP DMS"),
+
+	/** ONVIF PTZ (37) */
+	ONVIF_PTZ("ONVIF PTZ");
 
 	/** Create a new comm protocol value */
 	CommProtocol(String d) {
