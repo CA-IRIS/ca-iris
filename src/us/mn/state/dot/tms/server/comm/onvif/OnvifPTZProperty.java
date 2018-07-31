@@ -9,11 +9,10 @@ import org.onvif.ver20.ptz.wsdl.RelativeMove;
 import org.onvif.ver20.ptz.wsdl.RelativeMoveResponse;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.CameraImpl;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSession;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.messenger.SoapWrapper;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 
 class OnvifPTZProperty extends OnvifProperty {
@@ -24,10 +23,9 @@ class OnvifPTZProperty extends OnvifProperty {
     private PTZVector translation = new PTZVector();
     private RelativeMove relativeMove = new RelativeMove();
     private RelativeMoveResponse relativeMoveResponse = new RelativeMoveResponse();
-    ;
 
     public OnvifPTZProperty(CameraImpl c, float p, float t, float z, DebugLog d,
-                            OnvifSession session)
+                            OnvifSessionMessenger session)
     {
         super(d, session);
         // todo validate inputs
@@ -52,20 +50,19 @@ class OnvifPTZProperty extends OnvifProperty {
         translation.setZoom(vector1DStop);
     }
 
-    private void relativeMove(OutputStream os) throws Exception {
+    private void relativeMove() throws Exception {
         relativeMove.setProfileToken(session.getDefaultProfileTok());
         relativeMove.setTranslation(translation);
-        SoapWrapper soapWrapper = new SoapWrapper(
-                relativeMove, relativeMoveResponse, session.getAuth());
+        SoapWrapper soapWrapper = new SoapWrapper(relativeMove, session.getAuth());
         String mediaUri = session.getCapabilities().getMedia().getXAddr();
-        soapWrapper.callSoapWebServiceAsync(os);
+        response = soapWrapper.callSoapWebService(mediaUri);
     }
 
     @Override
-    protected void encodeStore(OutputStream os) throws IOException {
+    protected void encodeStore() throws IOException {
         try {
             initPTZVector();
-            relativeMove(os);
+            relativeMove();
         } catch (Exception e) {
             throw new IOException("cannot send ptz request to device: "
                     +  e.getMessage());

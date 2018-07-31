@@ -17,42 +17,28 @@ import java.security.NoSuchAlgorithmException;
 public class SoapWrapper {
 
     private Object requestObject;
-    private Object responseObject;
     private SOAPMessage soapRequest;
 
-    public SoapWrapper(Object requestObject, Object responseObject)
+    public SoapWrapper(Object requestObject)
             throws SOAPException, JAXBException, ParserConfigurationException
     {
         this.requestObject = requestObject;
-        this.responseObject = responseObject;
         soapRequest = createSoapRequest();
     }
 
     /**
      * use this constructor if you want an auth header
      */
-    public SoapWrapper(Object requestObject, Object responseObject,
-                       WSUsernameToken auth) throws SOAPException,
-            JAXBException, ParserConfigurationException, NoSuchAlgorithmException
+    public SoapWrapper(Object requestObject, WSUsernameToken auth)
+            throws SOAPException, JAXBException, ParserConfigurationException,
+            NoSuchAlgorithmException
     {
-        this(requestObject, responseObject);
+        this(requestObject);
         addAuthHeader(auth);
     }
 
-    public void callSoapWebServiceAsync(OutputStream os)
-            throws IOException, SOAPException
-    {
-        soapRequest.writeTo(os);
-    }
-
-    /**
-     * Used for getting a response from a messenger web service using this
-     * request and response objects for debugging purposes.
-     * Blocks until response!
-     */
-    public Object callSoapWebService(String uri) throws IOException,
-            SOAPException, JAXBException
-    {
+    public SOAPMessage callSoapWebService(String uri) throws IOException,
+            SOAPException, JAXBException {
         // create connection
         SOAPConnectionFactory soapConnectionFactory =
                 SOAPConnectionFactory.newInstance();
@@ -74,7 +60,17 @@ public class SoapWrapper {
         soapResponse.writeTo(System.out);
         System.out.println();
 
-        return convertToObject(soapResponse, responseObject);
+        return soapResponse;
+    }
+
+    /**
+     * Used for getting a response from a messenger web service using this
+     * request and response objects for debugging purposes.
+     * Blocks until response!
+     */
+    public Object callSoapWebService(String uri, Object responseObject)
+            throws IOException, SOAPException, JAXBException {
+        return convertToObject(callSoapWebService(uri), responseObject);
     }
 
     private SOAPMessage createSoapRequest() throws SOAPException,

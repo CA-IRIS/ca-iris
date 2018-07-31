@@ -7,8 +7,7 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.HttpMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSession;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -17,11 +16,11 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 {
     static private final DebugLog ONVIF_LOG = new DebugLog("onvif");
 
-    private OnvifSession session = null;
+    private OnvifSessionMessenger session = null;
 
-    public OnvifPoller(String name, HttpMessenger m) {
+    public OnvifPoller(String name, OnvifSessionMessenger m) {
         super(name, m);
-        session = new OnvifSession(m.getUri(), m);
+        session = m;
         ONVIF_LOG.log("ONVIF device instantiated: " + name);
         CommLink commLink = CommLinkHelper.lookup(name);
 

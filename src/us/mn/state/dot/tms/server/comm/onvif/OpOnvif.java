@@ -5,16 +5,16 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSession;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
 
 abstract public class OpOnvif extends OpDevice<OnvifProperty> {
 
     static protected DebugLog ONVIF_LOG;
 
-    protected OnvifSession session;
+    protected OnvifSessionMessenger session;
 
     protected OpOnvif(PriorityLevel p, DeviceImpl d, DebugLog debugLog,
-                      OnvifSession session)
+                      OnvifSessionMessenger session)
     {
         super(p, d);
         ONVIF_LOG = debugLog;
