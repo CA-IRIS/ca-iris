@@ -16,8 +16,7 @@ abstract public class OpOnvif extends OpDevice<OnvifProperty> {
     protected OpOnvif(PriorityLevel p, DeviceImpl d, DebugLog debugLog,
                       OnvifSession session)
     {
-        // so far all implemented onvif operations are exclusive
-        super(p, d, true);
+        super(p, d);
         ONVIF_LOG = debugLog;
         this.session = session;
         device.setOpStatus("sending cmd");

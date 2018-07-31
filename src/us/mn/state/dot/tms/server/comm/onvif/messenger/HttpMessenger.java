@@ -24,8 +24,10 @@ public class HttpMessenger extends Messenger {
     }
 
     public void setUri(String uri) {
-        this.uri = uri;
-        uriChanged = true;
+        if (!this.uri.matches(uri)) {
+            this.uri = uri;
+            uriChanged = true;
+        }
     }
 
     @Override
@@ -39,7 +41,6 @@ public class HttpMessenger extends Messenger {
         output = httpURLConnection.getOutputStream();
     }
 
-    /** this method is essentially unused (only closed if idle for int max) */
     @Override
     public void close() {
         if (input != null) {
