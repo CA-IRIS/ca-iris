@@ -76,7 +76,8 @@ public class OnvifSession {
      */
     public Capabilities getCapabilities() {
         if (capabilities == null) {
-            String uri = "http://" + ip + "/onvif/device_service";
+            // todo assuming that "http://" is already part of uri, but need to verify this
+            String uri = ip + "/onvif/device_service";
             GetCapabilities getCapabilities = new GetCapabilities();
             GetCapabilitiesResponse getCapabilitiesResponse =
                     new GetCapabilitiesResponse();

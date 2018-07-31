@@ -20,6 +20,7 @@ abstract public class OpOnvif extends OpDevice<OnvifProperty> {
         super(p, d, true);
         ONVIF_LOG = debugLog;
         this.session = session;
+        device.setOpStatus("sending cmd");
     }
 
     protected OpOnvif(PriorityLevel p, CameraImpl d) {

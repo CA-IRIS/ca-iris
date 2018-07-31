@@ -1,7 +1,10 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
 
-import org.onvif.ver10.schema.*;
+import org.onvif.ver10.schema.PTZSpaces;
+import org.onvif.ver10.schema.PTZVector;
+import org.onvif.ver10.schema.Vector1D;
+import org.onvif.ver10.schema.Vector2D;
 import org.onvif.ver20.ptz.wsdl.RelativeMove;
 import org.onvif.ver20.ptz.wsdl.RelativeMoveResponse;
 import us.mn.state.dot.sched.DebugLog;
