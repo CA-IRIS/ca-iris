@@ -1,13 +1,13 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.CommLink;
-import us.mn.state.dot.tms.CommLinkHelper;
-import us.mn.state.dot.tms.DeviceRequest;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.WSUsernameToken;
 
 import java.io.IOException;
 
@@ -16,26 +16,29 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 {
     static private final DebugLog ONVIF_LOG = new DebugLog("onvif");
 
-    private OnvifSessionMessenger session = null;
+    /** this is just a more specific to our messenger for convenienve */
+    private OnvifSessionMessenger session;
 
     public OnvifPoller(String name, OnvifSessionMessenger m) {
         super(name, m);
         session = m;
-        ONVIF_LOG.log("ONVIF device instantiated: " + name);
-        CommLink commLink = CommLinkHelper.lookup(name);
+        CommLink cl = CommLinkHelper.lookup(name);
+        ControllerImpl c = null;
 
-        if (commLink == null) {
-            ONVIF_LOG.log("Failed to find CommLink.");
-            return;
+        if (cl == null)
+            ONVIF_LOG.log("failed to find CommLink.");
+        else
+            c = (ControllerImpl) ControllerHelper.lookup(cl.getName());
+        if (c == null)
+            ONVIF_LOG.log("could not find controller for: " + name);
+        else {
+            try {
+                session.initialize(c.getUsername(), c.getPassword());
+            } catch (Exception e) {
+                ONVIF_LOG.log("failed to start onvif session");
+            }
         }
-
-        int to = commLink.getTimeout();
-        try {
-            m.setTimeout(to);
-            ONVIF_LOG.log("Set Messenger timeout to " + to + ".");
-        } catch (IOException e) {
-            ONVIF_LOG.log("Failed to set Messenger timeout.");
-        }
+        ONVIF_LOG.log("onvif device instantiated: " + name);
     }
 
     @Override

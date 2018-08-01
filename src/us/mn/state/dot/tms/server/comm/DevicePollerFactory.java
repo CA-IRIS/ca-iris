@@ -44,6 +44,7 @@ import us.mn.state.dot.tms.server.comm.msgfeed.MsgFeedPoller;
 import us.mn.state.dot.tms.server.comm.ntcip.HDLCMessenger;
 import us.mn.state.dot.tms.server.comm.ntcip.NtcipPoller;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
+import us.mn.state.dot.tms.server.comm.onvif.messenger.HttpMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.org815.Org815Poller;
 import us.mn.state.dot.tms.server.comm.pelco.PelcoPoller;
@@ -477,7 +478,7 @@ public class DevicePollerFactory {
 	}
 
 	/** Create an Onvfi PTZ poller */
-	private DevicePoller createOnvifPtz() {
+	private DevicePoller createOnvifPtz() throws IOException {
 		return new OnvifPoller(name, new OnvifSessionMessenger(uri));
 	}
 }

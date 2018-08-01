@@ -26,6 +26,9 @@ public class WSUsernameToken {
     private String date;
 
     public WSUsernameToken(String username, String password) {
+        if (username == null || username.isEmpty()
+            || password == null || password.isEmpty())
+            throw new IllegalArgumentException("username and password may not be null");
         this.username = username;
         this.password = password;
     }

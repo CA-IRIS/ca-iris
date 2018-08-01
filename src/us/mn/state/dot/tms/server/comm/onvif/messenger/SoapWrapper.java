@@ -99,7 +99,7 @@ public class SoapWrapper {
     /**
      * A WSUsername specific implementation of an authentication header
      */
-    private void addAuthHeader(WSUsernameToken WSUsernameToken) throws
+    private void addAuthHeader(WSUsernameToken tok) throws
             SOAPException, NoSuchAlgorithmException
     {
         SOAPPart soapPart = soapRequest.getSOAPPart();
@@ -112,14 +112,14 @@ public class SoapWrapper {
 
         SOAPElement usernameTokenElement = securityElement.addChildElement("UsernameToken", "wsse");
         SOAPElement usernameElement = usernameTokenElement.addChildElement("Username", "wsse");
-        usernameElement.setTextContent(WSUsernameToken.getUsername());
+        usernameElement.setTextContent(tok.getUsername());
         SOAPElement passwordElement = usernameTokenElement.addChildElement("Password", "wsse");
         passwordElement.setAttribute("Type", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest");
-        passwordElement.setTextContent(WSUsernameToken.getPasswordDigest());
+        passwordElement.setTextContent(tok.getPasswordDigest());
         SOAPElement nonceElement = usernameTokenElement.addChildElement("Nonce", "wsse");
-        nonceElement.setTextContent(WSUsernameToken.getEncodedNonce());
+        nonceElement.setTextContent(tok.getEncodedNonce());
         SOAPElement createdElement = usernameTokenElement.addChildElement("Created", "wsu");
-        createdElement.setTextContent(WSUsernameToken.getUTCTime());
+        createdElement.setTextContent(tok.getUTCTime());
     }
 
     private static Document convertToXml(Object xmlObject) throws JAXBException,

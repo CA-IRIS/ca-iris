@@ -4,7 +4,6 @@ import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
 import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.WSUsernameToken;
 
 import javax.xml.soap.SOAPMessage;
 import java.io.IOException;
@@ -45,15 +44,11 @@ abstract class OnvifProperty extends ControllerProperty {
      * must be called by subclasses before attempting to use the auth credentials
      * @return true if the session was freshly initialized
      */
-    private void sessionInit(ControllerImpl c) throws IOException {
+    private void initSession(ControllerImpl c) throws IOException {
         // this should be a one time session setup per device per client
         if (!session.isInitialized()) {
-            String u = c.getUsername();
-            String p = c.getPassword();
-            if (u == null || u.isEmpty() || p == null || p.isEmpty())
-                throw new IOException("ONVIF authentication credentials not set");
             try {
-                session.initialize(new WSUsernameToken(u, p));
+                session.initialize(c.getUsername(), c.getPassword());
             } catch (Exception e) {
                 throw new IOException(e.getMessage());
             }
@@ -64,7 +59,7 @@ abstract class OnvifProperty extends ControllerProperty {
     @Override
     public void encodeStore(ControllerImpl c, OutputStream os)
             throws IOException {
-        sessionInit(c);
+        initSession(c);
         encodeStore();
     }
 

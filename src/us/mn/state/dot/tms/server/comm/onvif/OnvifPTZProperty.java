@@ -28,7 +28,7 @@ class OnvifPTZProperty extends OnvifProperty {
                             OnvifSessionMessenger session)
     {
         super(d, session);
-        // todo validate inputs
+        // todo validate inputs (e.g. null checks)
         pan = p;
         tilt = t;
         zoom = z;
@@ -40,12 +40,10 @@ class OnvifPTZProperty extends OnvifProperty {
         Vector2D vector2DStop = new Vector2D();
         vector2DStop.setX(pan);
         vector2DStop.setY(tilt);
-        vector2DStop.setSpace(
-                spaces.getRelativePanTiltTranslationSpace().get(0).getURI());
+        vector2DStop.setSpace(spaces.getRelativePanTiltTranslationSpace().get(0).getURI());
         translation.setPanTilt(vector2DStop);
         Vector1D vector1DStop = new Vector1D();
-        vector1DStop.setSpace(
-                spaces.getRelativeZoomTranslationSpace().get(0).getURI());
+        vector1DStop.setSpace(spaces.getRelativeZoomTranslationSpace().get(0).getURI());
         vector1DStop.setX(zoom);
         translation.setZoom(vector1DStop);
     }
@@ -55,7 +53,7 @@ class OnvifPTZProperty extends OnvifProperty {
         relativeMove.setTranslation(translation);
         SoapWrapper soapWrapper = new SoapWrapper(relativeMove, session.getAuth());
         String mediaUri = session.getCapabilities().getMedia().getXAddr();
-        response = soapWrapper.callSoapWebService(mediaUri);
+        relativeMoveResponse = (RelativeMoveResponse) soapWrapper.callSoapWebService(mediaUri, relativeMoveResponse);
     }
 
     @Override
