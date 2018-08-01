@@ -3,6 +3,7 @@ package us.mn.state.dot.tms.server.comm.onvif;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
@@ -10,6 +11,9 @@ import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.messenger.WSUsernameToken;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class OnvifPoller extends TransientPoller<OnvifProperty>
         implements CameraPoller
@@ -28,7 +32,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
         if (cl == null)
             ONVIF_LOG.log("failed to find CommLink.");
         else
-            c = (ControllerImpl) ControllerHelper.lookup(cl.getName());
+            c = (ControllerImpl) getControllerImpl((CommLinkImpl) cl);
         if (c == null)
             ONVIF_LOG.log("could not find controller for: " + name);
         else {
@@ -39,6 +43,16 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
             }
         }
         ONVIF_LOG.log("onvif device instantiated: " + name);
+    }
+
+    private ControllerImpl getControllerImpl(CommLinkImpl cl) {
+        ControllerImpl found = null;
+        LinkedList<Controller> controllers = cl.getActiveControllers();
+        for (Controller c : controllers)
+            if (c.getCommLink().getName().equals(cl.getName()))
+                found = (ControllerImpl) c;
+            return found;
+
     }
 
     @Override

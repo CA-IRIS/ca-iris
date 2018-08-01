@@ -49,7 +49,7 @@ public class OnvifSessionMessenger extends HttpMessenger {
     }
 
     public OnvifSessionMessenger(String uri) throws IOException {
-        super(uri);
+        super(uri + "/onvif/device_service");
         checkUri(uri);
     }
 
@@ -62,7 +62,7 @@ public class OnvifSessionMessenger extends HttpMessenger {
         // all devices are guaranteed to have at least one profile
         defaultProfileTok = mediaProfiles.get(0).getToken();
         initPtzSpaces();
-        this.setUri(getCapabilities().getPTZ().getXAddr());
+        this.setUri(capabilities.getPTZ().getXAddr());
         initialized = true;
     }
 
@@ -106,7 +106,7 @@ public class OnvifSessionMessenger extends HttpMessenger {
      * individual commands.
      */
     private void initCapabilities() throws Exception {
-        String uri = this.getUri() + "/onvif/device_service";
+        String uri = this.getUri();
         GetCapabilities getCapabilities = new GetCapabilities();
         GetCapabilitiesResponse getCapabilitiesResponse = new GetCapabilitiesResponse();
         SoapWrapper soapWrapper = new SoapWrapper(getCapabilities, auth);
