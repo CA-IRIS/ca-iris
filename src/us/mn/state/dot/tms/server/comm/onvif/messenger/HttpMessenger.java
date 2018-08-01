@@ -1,8 +1,10 @@
 package us.mn.state.dot.tms.server.comm.onvif.messenger;
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.Messenger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -41,8 +43,8 @@ public class HttpMessenger extends Messenger {
         httpURLConnection.setRequestMethod("POST");
         httpURLConnection.setRequestProperty("SOAPAction", uri);
         try {
-            input = httpURLConnection.getInputStream();
             output = httpURLConnection.getOutputStream();
+//            input = httpURLConnection.getInputStream();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,8 +85,13 @@ public class HttpMessenger extends Messenger {
             open();
             uriChanged = false;
         }
-        // we call super to make use of the os null check on output stream
-        return output = super.getOutputStream(null);
+        return output;
+    }
+
+    @Override
+    public InputStream getInputStream(String path, ControllerImpl c)
+            throws IOException {
+        return input; // we won't be needing any response
     }
 
     @Override

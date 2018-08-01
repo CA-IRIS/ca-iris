@@ -55,40 +55,63 @@ public class OnvifSessionMessenger extends HttpMessenger {
 
     public void initialize(String username, String password) throws Exception {
         this.auth = new WSUsernameToken(username, password);
-        initCapabilities();
+        capabilities = initCapabilities(this.getUri());
         if (!hasPTZCapability() || !hasMediaCapability())
             throw new IOException("onvif device does not have required functionality");
-        initMediaProfiles();
+        this.setUri(getCapabilities().getMedia().getXAddr());
+        mediaProfiles = initMediaProfiles(this.getUri());
         // all devices are guaranteed to have at least one profile
         defaultProfileTok = mediaProfiles.get(0).getToken();
-        initPtzSpaces();
         this.setUri(capabilities.getPTZ().getXAddr());
+        ptzSpaces = initPtzSpaces(this.getUri());
         initialized = true;
+    }
+
+    /**
+     * @return capabilities which include the specific service addresses for
+     * individual commands.
+     */
+    private Capabilities initCapabilities(String deviceUri) throws Exception {
+        GetCapabilities getCapabilities = new GetCapabilities();
+        GetCapabilitiesResponse getCapabilitiesResponse = new GetCapabilitiesResponse();
+        SoapWrapper soapWrapper = new SoapWrapper(getCapabilities, auth);
+        getCapabilitiesResponse = (GetCapabilitiesResponse) soapWrapper.callSoapWebService(deviceUri, getCapabilitiesResponse);
+        return getCapabilitiesResponse.getCapabilities();
+    }
+
+    /**
+     * a profile is required to make ptzService requests
+     * @return all media profiles for the device
+     */
+    private List<Profile> initMediaProfiles(String mediaUri) throws Exception {
+        GetProfiles getProfiles = new GetProfiles();
+        GetProfilesResponse getProfilesResponse = new GetProfilesResponse();
+        SoapWrapper soapWrapper = new SoapWrapper(getProfiles, auth);
+        getProfilesResponse = (GetProfilesResponse) soapWrapper.callSoapWebService(mediaUri, getProfilesResponse);
+        return getProfilesResponse.getProfiles();
     }
 
     /**
      * @return the ptzService ptzSpaces are the different devices actions
      */
-    private void initPtzSpaces() throws Exception {
-        String ptzUri = getCapabilities().getPTZ().getXAddr();
-
+    private PTZSpaces initPtzSpaces(String ptzUri) throws Exception {
         GetConfigurations getConfigurations = new GetConfigurations();
         GetConfigurationsResponse getConfigurationsResponse = new GetConfigurationsResponse();
         GetConfigurationOptions getConfigurationOptions = new GetConfigurationOptions();
         GetConfigurationOptionsResponse getConfigurationOptionsResponse = new GetConfigurationOptionsResponse();
 
-        SoapWrapper soapWrapper1 = new SoapWrapper(getConfigurations);
+        SoapWrapper soapWrapper1 = new SoapWrapper(getConfigurations, auth);
         getConfigurationsResponse = (GetConfigurationsResponse) soapWrapper1.callSoapWebService(ptzUri, getConfigurationsResponse);
 
         String token = getConfigurationsResponse.getPTZConfiguration().get(0).getToken();
 
         getConfigurationOptions.setConfigurationToken(token);
-        SoapWrapper soapWrapper2 = new SoapWrapper(getConfigurationOptions);
+        SoapWrapper soapWrapper2 = new SoapWrapper(getConfigurationOptions, auth);
 
         // the getConfigurationOptionsResponse has info about the Spaces of
         // movement and their range limits
         getConfigurationOptionsResponse = (GetConfigurationOptionsResponse) soapWrapper2.callSoapWebService(ptzUri, getConfigurationOptionsResponse);
-        ptzSpaces = getConfigurationOptionsResponse.getPTZConfigurationOptions().getSpaces();
+        return getConfigurationOptionsResponse.getPTZConfigurationOptions().getSpaces();
     }
 
     private boolean hasPTZCapability() {
@@ -99,34 +122,6 @@ public class OnvifSessionMessenger extends HttpMessenger {
     private boolean hasMediaCapability() {
         return getCapabilities().getMedia() != null
                 && getCapabilities().getMedia().getXAddr() != null;
-    }
-
-    /**
-     * capabilities which include the specific service addresses for
-     * individual commands.
-     */
-    private void initCapabilities() throws Exception {
-        String uri = this.getUri();
-        GetCapabilities getCapabilities = new GetCapabilities();
-        GetCapabilitiesResponse getCapabilitiesResponse = new GetCapabilitiesResponse();
-        SoapWrapper soapWrapper = new SoapWrapper(getCapabilities, auth);
-        getCapabilitiesResponse = (GetCapabilitiesResponse) soapWrapper.callSoapWebService(uri, getCapabilitiesResponse);
-        capabilities = getCapabilitiesResponse.getCapabilities();
-    }
-
-    /**
-     * a profile is required to make ptzService requests
-     * @return all media profiles for the device
-     */
-    private void initMediaProfiles() throws Exception {
-        GetProfiles getProfiles = new GetProfiles();
-        GetProfilesResponse getProfilesResponse = new GetProfilesResponse();
-        String mediaUri = getCapabilities().getMedia().getXAddr();
-        SoapWrapper soapWrapper =
-                new SoapWrapper(getProfiles, auth);
-        getProfilesResponse =
-                (GetProfilesResponse) soapWrapper.callSoapWebService(mediaUri, getProfilesResponse);
-        mediaProfiles = getProfilesResponse.getProfiles();
     }
 
     /** user input self defense */

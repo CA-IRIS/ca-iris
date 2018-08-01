@@ -53,9 +53,10 @@ public class SoapWrapper {
         soapRequest.writeTo(System.out);
         System.out.println();
 
+        System.out.println("To uri: " + uri);
+
         SOAPMessage soapResponse = soapConnection.call(soapRequest, uri);
 
-        // todo remove debug
         System.out.println("Response SOAP message: ");
         soapResponse.writeTo(System.out);
         System.out.println();
