@@ -1,41 +1,34 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
-import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
-import us.mn.state.dot.tms.server.comm.onvif.messenger.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
-abstract public class OpOnvif extends OpDevice<OnvifProperty> {
+public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 
-    static protected DebugLog ONVIF_LOG;
+	protected OnvifSessionMessenger session;
 
-    protected OnvifSessionMessenger session;
+	protected OpOnvif(
+		PriorityLevel p, DeviceImpl d, OnvifSessionMessenger session)
+	{
+		super(p, d);
+		this.session = session;
+		updateOpStatus("Preparing to send operation");
+		OnvifPoller.log("Preparing to send operation");
+	}
 
-    protected OpOnvif(PriorityLevel p, DeviceImpl d, DebugLog debugLog,
-                      OnvifSessionMessenger session)
-    {
-        super(p, d);
-        ONVIF_LOG = debugLog;
-        this.session = session;
-        device.setOpStatus("sending cmd");
-    }
-
-    protected OpOnvif(PriorityLevel p, CameraImpl d) {
-        super(p, d);
-    }
-
-    /**
-     * Update device op status.
-     * We bundle the operation description into the status because camera
-     * ops are generally so short that, as far as I can tell, by the time
-     * the client gets the SONAR "operation" notification and requests the
-     * op's description via SONAR, the device has already been released,
-     * and thus Device.getOperation() returns "None".
-     */
-    protected void updateOpStatus(String stat) {
-        String s = getOperationDescription() + ": " + stat;
-        device.setOpStatus(s);
-    }
+	/**
+	 * Update device op status. We bundle the operation description into
+	 * the
+	 * status because camera ops are generally so short that, as far as I
+	 * can tell, by the time the client gets the SONAR "operation"
+	 * notification and requests the op's description via SONAR, the device
+	 * has already been released, and thus Device.getOperation() returns
+	 * "None".
+	 */
+	protected void updateOpStatus(String stat) {
+		String s = getOperationDescription() + ": " + stat;
+		device.setOpStatus(s);
+	}
 }
