@@ -13,18 +13,32 @@ import org.onvif.ver20.ptz.wsdl.GetConfigurations;
 import org.onvif.ver20.ptz.wsdl.GetConfigurationsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.soap.SOAPException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+/**
+ * keeps track of device authentication session, verifies capabilities, and
+ * interface to some web service logic
+ *
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class OnvifSessionMessenger extends HttpMessenger {
 
+	/** true iff the device is ready for commands */
 	private boolean initialized = false;
 	private WSUsernameToken auth;
+	/** correspond to media stream types */
 	private List<Profile> mediaProfiles;
 	private Capabilities capabilities;
+	/** the first media profile token (all devices required to have at least one */
 	private String defaultProfileTok;
+	/** different types of ptz commands */
 	private PTZSpaces ptzSpaces;
 
 	public Capabilities getCapabilities() {
@@ -56,80 +70,92 @@ public class OnvifSessionMessenger extends HttpMessenger {
 		checkUri(uri);
 	}
 
+	/**
+	 * establish a session with the device and determine the device's capabilities
+	 * @param username may not be null
+	 * @param password may not be null
+	 * @throws ParserConfigurationException soap error
+	 * @throws NoSuchAlgorithmException cannot create required password digest
+	 * @throws SOAPException soap formatting error
+	 * @throws IOException soap transmission error
+	 * @throws JAXBException soap formatting error
+	 */
 	public void initialize(String username, String password)
-		throws Exception
+		throws IOException, ParserConfigurationException,
+		NoSuchAlgorithmException, SOAPException, JAXBException
 	{
-		this.auth = new WSUsernameToken(username, password);
-		capabilities = initCapabilities(this.getUri());
-		if (!hasPTZCapability() || !hasMediaCapability())
+		OnvifPoller.log("Attempting to start session. ");
+		try {
+			auth = new WSUsernameToken(username, password);
+			capabilities = initCapabilities(this.getUri());
+		} catch (IOException e) {
+			OnvifPoller.log("Check username, password, and uri");
+		}
+		if (!hasPTZCapability())
 			throw new IOException(
-				"onvif device does not have required " +
+				"Onvif device does not have required " +
 					"functionality");
-		this.setUri(getCapabilities().getMedia().getXAddr());
+		setUri(capabilities.getMedia().getXAddr());
 		mediaProfiles = initMediaProfiles(this.getUri());
 		// all devices are guaranteed to have at least one profile
 		defaultProfileTok = mediaProfiles.get(0).getToken();
-		this.setUri(capabilities.getPTZ().getXAddr());
+		setUri(capabilities.getPTZ().getXAddr());
 		ptzSpaces = initPtzSpaces(this.getUri());
 		initialized = true;
-		OnvifPoller.log("Session started");
+		OnvifPoller.log("Session started. ");
 	}
 
 	/**
 	 * @return capabilities which include the specific service addresses
-	 * for
-	 * individual commands.
+	 * for individual commands.
 	 */
 	private Capabilities initCapabilities(String deviceUri)
-		throws Exception
+		throws ParserConfigurationException, NoSuchAlgorithmException,
+		SOAPException, JAXBException, IOException
 	{
 		GetCapabilities getCapabilities = new GetCapabilities();
-		GetCapabilitiesResponse getCapabilitiesResponse =
-			new GetCapabilitiesResponse();
 		SoapWrapper soapWrapper =
-			new SoapWrapper(getCapabilities, auth);
-		getCapabilitiesResponse = (GetCapabilitiesResponse) soapWrapper
+			new SoapWrapper(getCapabilities);
+		GetCapabilitiesResponse getCapabilitiesResponse = (GetCapabilitiesResponse) soapWrapper
 			.callSoapWebService(deviceUri,
-				getCapabilitiesResponse);
+				GetCapabilitiesResponse.class, auth);
 		return getCapabilitiesResponse.getCapabilities();
 	}
 
 	/**
 	 * a profile is required to make ptzService requests
+	 * each profile corresponds to a media stream type
 	 *
 	 * @return all media profiles for the device
 	 */
 	private List<Profile> initMediaProfiles(String mediaUri)
-		throws Exception
+		throws SOAPException, JAXBException, IOException,
+		ParserConfigurationException, NoSuchAlgorithmException
 	{
 		GetProfiles getProfiles = new GetProfiles();
-		GetProfilesResponse getProfilesResponse =
-			new GetProfilesResponse();
-		SoapWrapper soapWrapper = new SoapWrapper(getProfiles, auth);
-		getProfilesResponse = (GetProfilesResponse) soapWrapper
-			.callSoapWebService(mediaUri, getProfilesResponse);
+		SoapWrapper soapWrapper = new SoapWrapper(getProfiles);
+		GetProfilesResponse getProfilesResponse = (GetProfilesResponse) soapWrapper
+			.callSoapWebService(mediaUri, GetProfilesResponse.class,
+				auth);
 		return getProfilesResponse.getProfiles();
 	}
 
 	/**
-	 * @return the ptzService ptzSpaces are the different devices actions
+	 * @return the ptzSpaces are akin to different devices actions
 	 */
-	private PTZSpaces initPtzSpaces(String ptzUri) throws Exception {
+	private PTZSpaces initPtzSpaces(String ptzUri)
+		throws SOAPException, JAXBException, IOException,
+		ParserConfigurationException, NoSuchAlgorithmException
+	{
 		GetConfigurations getConfigurations = new GetConfigurations();
-		GetConfigurationsResponse getConfigurationsResponse =
-			new GetConfigurationsResponse();
 		GetConfigurationOptions getConfigurationOptions =
 			new GetConfigurationOptions();
-		GetConfigurationOptionsResponse
-			getConfigurationOptionsResponse =
-			new GetConfigurationOptionsResponse();
-
 		SoapWrapper soapWrapper1 =
-			new SoapWrapper(getConfigurations, auth);
-		getConfigurationsResponse =
+			new SoapWrapper(getConfigurations);
+		GetConfigurationsResponse getConfigurationsResponse =
 			(GetConfigurationsResponse) soapWrapper1
 				.callSoapWebService(ptzUri,
-					getConfigurationsResponse);
+					GetConfigurationsResponse.class, auth);
 
 		String token =
 			getConfigurationsResponse.getPTZConfiguration().get(0)
@@ -137,31 +163,44 @@ public class OnvifSessionMessenger extends HttpMessenger {
 
 		getConfigurationOptions.setConfigurationToken(token);
 		SoapWrapper soapWrapper2 =
-			new SoapWrapper(getConfigurationOptions, auth);
+			new SoapWrapper(getConfigurationOptions);
 
 		// the getConfigurationOptionsResponse has info about the
 		// Spaces of
 		// movement and their range limits
-		getConfigurationOptionsResponse =
+		GetConfigurationOptionsResponse getConfigurationOptionsResponse =
 			(GetConfigurationOptionsResponse) soapWrapper2
 				.callSoapWebService(ptzUri,
-					getConfigurationOptionsResponse);
+					GetConfigurationOptionsResponse.class, auth);
 		return getConfigurationOptionsResponse
 			.getPTZConfigurationOptions().getSpaces();
 	}
 
+	/**
+	 * @return true if the device has ptz capabilities (also checks for
+	 * 	media capabilities)
+	 */
 	private boolean hasPTZCapability() {
-		return getCapabilities().getPTZ() != null
-			&& getCapabilities().getPTZ().getXAddr() != null;
+		return hasMediaCapability()
+			&& capabilities != null
+			&& capabilities.getPTZ() != null
+			&& capabilities.getPTZ().getXAddr() != null;
 	}
 
+	/**
+	 * @return true if the device has media capabilities (required for ptz)
+	 */
 	private boolean hasMediaCapability() {
-		return getCapabilities().getMedia() != null
-			&& getCapabilities().getMedia().getXAddr() != null;
+		return capabilities != null
+			&& capabilities.getMedia() != null
+			&& capabilities.getMedia().getXAddr() != null;
 	}
 
 	/**
 	 * user input self defense
+	 *
+	 * @param uri gets checked
+	 * @throws IOException if the uri is malformed
 	 */
 	private void checkUri(String uri) throws IOException {
 		try {

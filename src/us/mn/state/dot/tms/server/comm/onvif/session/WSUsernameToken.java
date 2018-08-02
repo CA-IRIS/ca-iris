@@ -1,32 +1,38 @@
 package us.mn.state.dot.tms.server.comm.onvif.session;
 
+import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Random;
 
+/**
+ * the logic for WSUsernameToken session authentication
+ * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+ * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+ *
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class WSUsernameToken {
 
 	private String username;
-	private String nonce;
 	private String password;
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
+	/** the session token (static for all sequential session transactions) */
+	private String nonce;
+	/** the date for the last call to passwordDigest() */
 	private String date;
 
-	public WSUsernameToken(String username, String password) {
+	String getUsername() {
+		return username;
+	}
+
+	/**
+	 * @param username may not be null
+	 * @param password may not be null
+	 */
+	WSUsernameToken(String username, String password) {
 		if (username == null || username.isEmpty()
 			|| password == null || password.isEmpty())
 			throw new IllegalArgumentException(
@@ -47,11 +53,9 @@ public class WSUsernameToken {
 		try {
 			messageDigest = MessageDigest.getInstance("SHA-1");
 		} catch (NoSuchAlgorithmException e) {
-			System.err.println(
+			OnvifPoller.log(
 				"ONVIF-required SHA-1 digest algorithm is " +
-					"not" +
-					" " +
-					"implemented");
+					"not implemented");
 			throw e;
 		}
 		messageDigest.update((getNonce() + getUTCTime() + password)
@@ -61,6 +65,9 @@ public class WSUsernameToken {
 			.encodeToString(messageDigest.digest());
 	}
 
+	/**
+	 * @return the base 64 encoded nonce
+	 */
 	String getEncodedNonce() {
 		if (nonce == null) {
 			nonce = createNonce();
@@ -68,7 +75,12 @@ public class WSUsernameToken {
 		return Base64.getEncoder().encodeToString(nonce.getBytes());
 	}
 
-	protected String getUTCTime() {
+	/**
+	 * Note: Should be called after getPasswordDigest()
+	 *
+	 * @return the UTC date for the most recent call to getPasswordDigest()
+	 */
+	String getUTCTime() {
 		if (date == null) {
 			date = Instant.now().toString();
 		}
@@ -79,15 +91,17 @@ public class WSUsernameToken {
 		date = null;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
+	/**
+	 * @return a new random int
+	 */
 	private String createNonce() {
 		Random generator = new Random();
 		return "" + generator.nextInt();
 	}
 
+	/**
+	 * @return returns the current nonce else new nonce
+	 */
 	private String getNonce() {
 		if (nonce == null) {
 			nonce = createNonce();

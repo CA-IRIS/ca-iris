@@ -2,34 +2,23 @@ package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.server.comm.ProtocolException;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
-import javax.xml.soap.SOAPMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public abstract class OnvifProperty extends ControllerProperty {
 	protected OnvifSessionMessenger session;
-	protected SOAPMessage response;
+	public Object response;
 
 	protected OnvifProperty(OnvifSessionMessenger session) {
 		this.session = session;
-		OnvifPoller.log("Preparing operation properties.");
-	}
-
-	/**
-	 * Read from is and decode a STORE response
-	 */
-	@Override
-	public void decodeStore(ControllerImpl c, InputStream is)
-		throws IOException
-	{
-		// todo handle error responses
-		if (response != null)
-			OnvifPoller
-				.log("Unexpected ONVIF device response " +
-					"received");
+		OnvifPoller.log("Preparing operation properties");
 	}
 
 	private String readStream(InputStream is) {
@@ -42,8 +31,6 @@ public abstract class OnvifProperty extends ControllerProperty {
 	/**
 	 * must be called by subclasses before attempting to use the auth
 	 * credentials
-	 *
-	 * @return true if the session was freshly initialized
 	 */
 	private void initSession(ControllerImpl c) throws IOException {
 		// this should be a one time session setup per device per
@@ -59,7 +46,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	/**
-	 * Encode a store request and write it to the output stream
+	 * Encode a store request and send it to the device
 	 */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
@@ -69,5 +56,20 @@ public abstract class OnvifProperty extends ControllerProperty {
 		encodeStore();
 	}
 
+	@Override
+	public void decodeStore(ControllerImpl c, InputStream is)
+		throws IOException
+	{
+		if (response == null)
+			throw new IOException("No response received from device");
+		decodeStore();
+	}
+
+	/**
+	 * A way of requiring concrete implementations of this class to check
+	 * that the session is initialized before sending a request
+	 * @throws IOException the session could not be initialized
+	 */
 	protected abstract void encodeStore() throws IOException;
+	protected abstract void decodeStore() throws IOException;
 }

@@ -10,6 +10,9 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
 
+/**
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class OpOnvifPTZ extends OpOnvif {
 
 	private OnvifPTZProperty onvifPTZProperty;

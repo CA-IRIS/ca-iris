@@ -13,8 +13,13 @@ import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZ;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 
+/**
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class OnvifPoller extends TransientPoller<OnvifProperty>
 	implements CameraPoller
 {
@@ -26,7 +31,9 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	private OnvifSessionMessenger session;
 
-	public OnvifPoller(String name, OnvifSessionMessenger m) {
+	public OnvifPoller(String name, OnvifSessionMessenger m) throws
+		IOException
+	{
 		super(name, m);
 		session = m;
 		CommLink cl = CommLinkHelper.lookup(name);
@@ -43,7 +50,9 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 				session.initialize(c.getUsername(),
 					c.getPassword());
 			} catch (Exception e) {
-				log("failed to start onvif session");
+				log(e);
+				throw new IOException(
+					"Failed to start onvif session");
 			}
 		}
 		log("onvif device instantiated: " + name);
@@ -185,5 +194,10 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	public static void log(String message) {
 		ONVIF_LOG.log("ONVIF: " + message);
+	}
+
+	public static void log(Exception e) {
+		ONVIF_LOG.log("ONVIF: " + e.getMessage() + "\n"
+			+ Arrays.toString(e.getStackTrace()));
 	}
 }

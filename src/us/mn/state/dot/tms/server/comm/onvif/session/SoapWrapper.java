@@ -12,32 +12,44 @@ import javax.xml.soap.*;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * an encapsulation of the soap formatting and transmission logic for soap
+ * requests
+ *
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class SoapWrapper {
 
-	private Object requestObject;
 	private SOAPMessage soapRequest;
 
+	/**
+	 * Create a soap request
+	 *
+	 * @param requestObject must be initialized with fields populated
+	 * @throws SOAPException
+	 * @throws JAXBException
+	 * @throws ParserConfigurationException
+	 */
 	public SoapWrapper(Object requestObject)
 		throws SOAPException, JAXBException,
 		ParserConfigurationException
 	{
-		this.requestObject = requestObject;
-		soapRequest = createSoapRequest();
+		soapRequest = createSoapRequest(requestObject);
 	}
 
 	/**
-	 * use this constructor if you want an auth header
+	 * Used for getting a response from a session web service using this
+	 * request and a response object. Blocks until response! Does not
+	 * format
+	 * response.
+	 *
+	 * @param uri this soap message will be sent to the uri
+	 * @return the response initialized object
+	 * @throws IOException error during soap transmission
+	 * @throws SOAPException error during response formatting
 	 */
-	public SoapWrapper(Object requestObject, WSUsernameToken auth)
-		throws SOAPException, JAXBException,
-		ParserConfigurationException, NoSuchAlgorithmException
-	{
-		this(requestObject);
-		addAuthHeader(auth);
-	}
-
 	public SOAPMessage callSoapWebService(String uri)
-		throws IOException, SOAPException, JAXBException
+		throws IOException, SOAPException
 	{
 		// create connection
 		SOAPConnectionFactory soapConnectionFactory =
@@ -67,17 +79,36 @@ public class SoapWrapper {
 
 	/**
 	 * Used for getting a response from a session web service using this
-	 * request and response objects for debugging purposes. Blocks until
-	 * response!
+	 * request and a response object. Blocks until response!
+	 *
+	 * @param uri this soap message will be sent to the uri
+	 * @param targetClass for formatting purposes
+	 * @return the response initialized object
+	 * @throws IOException error during soap transmission
+	 * @throws SOAPException error during response formatting
+	 * @throws JAXBException error during response formatting
+	 * @throws NoSuchAlgorithmException trouble adding auth header
 	 */
-	public Object callSoapWebService(String uri, Object responseObject)
-		throws IOException, SOAPException, JAXBException
+	public Object callSoapWebService(
+		String uri, Class<?> targetClass,
+		WSUsernameToken auth)
+		throws IOException, SOAPException, JAXBException,
+		NoSuchAlgorithmException
 	{
+		addAuthHeader(auth);
 		return convertToObject(callSoapWebService(uri),
-			responseObject);
+			targetClass);
 	}
 
-	private SOAPMessage createSoapRequest()
+	/**
+	 * @param requestObject
+	 * @return a new instance of a soap request
+	 * @throws SOAPException malformed soap
+	 * @throws JAXBException cannot make document
+	 * @throws ParserConfigurationException cannot convert soapMessage into
+	 * 	document
+	 */
+	private SOAPMessage createSoapRequest(Object requestObject)
 		throws SOAPException, JAXBException,
 		ParserConfigurationException
 	{
@@ -94,6 +125,11 @@ public class SoapWrapper {
 		return soapMessage;
 	}
 
+	/**
+	 * @param soapMessage the soap object to which the body will be added
+	 * @param document the body content to add
+	 * @throws SOAPException malformed soap
+	 */
 	private void createSoapBody(SOAPMessage soapMessage, Document document)
 		throws SOAPException
 	{
@@ -106,9 +142,13 @@ public class SoapWrapper {
 
 	/**
 	 * A WSUsername specific implementation of an authentication header
+	 *
+	 * @param tok the token for the session
+	 * @throws SOAPException malformed soap
+	 * @throws NoSuchAlgorithmException cannot generate password digest
 	 */
 	private void addAuthHeader(WSUsernameToken tok)
-		throws SOAPException, NoSuchAlgorithmException
+		throws NoSuchAlgorithmException, SOAPException
 	{
 		SOAPPart soapPart = soapRequest.getSOAPPart();
 		SOAPEnvelope soapEnvelope = soapPart.getEnvelope();
@@ -147,6 +187,14 @@ public class SoapWrapper {
 		createdElement.setTextContent(tok.getUTCTime());
 	}
 
+	/**
+	 * @param xmlObject the object to convert to xml
+	 * @return an xml representation of the instance of Object
+	 * @throws JAXBException a marshaller could not be created for the
+	 * 	object
+	 * @throws ParserConfigurationException an xml document could not be
+	 * 	created for the object
+	 */
 	private static Document convertToXml(Object xmlObject)
 		throws JAXBException, ParserConfigurationException
 	{
@@ -161,18 +209,20 @@ public class SoapWrapper {
 
 	/**
 	 * @param soapMessage the message to convert
-	 * @param xmlObject the returned object type to which the soapMessage
-	 * will be converted
+	 * @param targetClass the returned object type to which the soapMessage
+	 * 	will be converted
 	 * @return
-	 * @throws JAXBException
-	 * @throws SOAPException
+	 * @throws JAXBException an unmarshaller instance could not be created
+	 * 	for the obect
+	 * @throws SOAPException if the SOAP Body does not exist or cannot be
+	 * 	retrieved
 	 */
 	private static Object convertToObject(
-		SOAPMessage soapMessage, Object xmlObject)
+		SOAPMessage soapMessage, Class<?> targetClass)
 		throws JAXBException, SOAPException
 	{
 		Unmarshaller unmarshaller =
-			JAXBContext.newInstance(xmlObject.getClass())
+			JAXBContext.newInstance(targetClass)
 				.createUnmarshaller();
 		return unmarshaller.unmarshal(
 			soapMessage.getSOAPBody().extractContentAsDocument());

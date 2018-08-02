@@ -8,37 +8,47 @@ import org.onvif.ver10.schema.Vector2D;
 import org.onvif.ver20.ptz.wsdl.ContinuousMove;
 import org.onvif.ver20.ptz.wsdl.ContinuousMoveResponse;
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 
 import java.io.IOException;
 
-
+/**
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public class OnvifPTZProperty extends OnvifProperty {
 
 	private Float pan;
 	private Float tilt;
 	private Float zoom;
-	private PTZSpeed speed = new PTZSpeed();
-	private ContinuousMove continuousMove = new ContinuousMove();
-	private ContinuousMoveResponse continuousMoveResponse =
-		new ContinuousMoveResponse();
 
 	public OnvifPTZProperty(
 		CameraImpl c, float p, float t, float z,
 		OnvifSessionMessenger session)
 	{
 		super(session);
-		// todo validate inputs (e.g. null checks)
 		pan = p;
 		tilt = t;
 		zoom = z;
 	}
 
-	private void initPTZSpeed() {
+	private void checkInputs(Float pan, Float tilt, Float zoom)
+		throws IOException
+	{
+		if (pan == null || tilt == null || zoom == null) {
+			OnvifPoller
+				.log(this.getClass() + " recevied null input");
+			throw new IOException(
+				"cannot perform ptz move request");
+		}
+
+	}
+
+	private PTZSpeed initPTZSpeed() {
+		PTZSpeed speed = new PTZSpeed();
 		PTZSpaces spaces = session.getPtzSpaces();
-		// todo map map values to onvif range (ie. min and max)
 		Vector2D vector2D = new Vector2D();
 		vector2D.setX(pan);
 		vector2D.setY(tilt);
@@ -51,27 +61,43 @@ public class OnvifPTZProperty extends OnvifProperty {
 			.getURI());
 		vector1D.setX(zoom);
 		speed.setZoom(vector1D);
+		return speed;
 	}
 
-	private void continuousMove() throws Exception {
+	private void continuousMove(PTZSpeed speed) throws IOException {
+		ContinuousMove continuousMove = new ContinuousMove();
 		continuousMove.setProfileToken(session.getDefaultProfileTok());
 		continuousMove.setVelocity(speed);
-		SoapWrapper soapWrapper =
-			new SoapWrapper(continuousMove, session.getAuth());
-		String ptzUri = session.getCapabilities().getPTZ().getXAddr();
-		continuousMoveResponse = (ContinuousMoveResponse) soapWrapper
-			.callSoapWebService(ptzUri, continuousMoveResponse);
+		try {
+			SoapWrapper soapRequest =
+				new SoapWrapper(continuousMove);
+			String ptzUri =
+				session.getCapabilities().getPTZ().getXAddr();
+			response = soapRequest
+				.callSoapWebService(ptzUri,
+					ContinuousMoveResponse.class,
+					session.getAuth());
+		} catch (Exception e) {
+			OnvifPoller.log(e);
+			throw new IOException(
+				"Unable to send continous PTZ move request. ");
+		}
 	}
 
 	@Override
 	protected void encodeStore() throws IOException {
+		checkInputs(pan, tilt, zoom);
+		continuousMove(initPTZSpeed());
+	}
+
+	@Override
+	protected void decodeStore() throws IOException {
 		try {
-			initPTZSpeed();
-			continuousMove();
+			ContinuousMoveResponse continuousMoveResponse =
+				(ContinuousMoveResponse) response;
 		} catch (Exception e) {
-			throw new IOException(
-				"Cannot send ptz request to device: "
-					+ e.getMessage());
+			OnvifPoller.log(e.getClass().toString());
+			// todo parse errors
 		}
 	}
 }

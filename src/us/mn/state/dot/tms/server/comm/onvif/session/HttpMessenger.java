@@ -9,8 +9,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+
 /**
- * This Messenger implementation is responsible for http connection operations
+ * todo for now this is a dummy class (later we will make use of the output stream)
+ * @author Wesley Skillern (Southwest Research Institue)
  */
 public class HttpMessenger extends Messenger {
 	private String uri;

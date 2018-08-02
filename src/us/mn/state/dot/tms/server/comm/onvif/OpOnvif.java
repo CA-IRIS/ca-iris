@@ -5,6 +5,9 @@ import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
+/**
+ * @author Wesley Skillern (Southwest Research Institue)
+ */
 public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 
 	protected OnvifSessionMessenger session;
