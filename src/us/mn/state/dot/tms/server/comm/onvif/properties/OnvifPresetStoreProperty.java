@@ -80,9 +80,18 @@ public class OnvifPresetStoreProperty extends OnvifProperty {
 		SetPresetResponse setPresetResponse = (SetPresetResponse) soap
 			.callSoapWebService(session.getUri(),
 				SetPresetResponse.class, session.getAuth());
-		if (!setPresetResponse.getPresetToken().equals(presetToken)) {
+		// null check then:
+		// if we are overwriting, we should get back the same token
+		// if we are creating, we should get any token back
+		if (setPresetResponse.getPresetToken() == null
+			|| (presetToken != null
+			&& !setPresetResponse.getPresetToken()
+			.equals(presetToken))
+			|| setPresetResponse.getPresetToken().isEmpty())
+		{
 			OnvifPoller
-				.log("Tried to set overwrite existing preset," +
+				.log("Tried to set overwrite existing " +
+					"preset," +
 					" " +
 					"but response preset token did not " +
 					"match found preset token");

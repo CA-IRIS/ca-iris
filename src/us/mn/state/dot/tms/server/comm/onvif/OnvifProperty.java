@@ -85,16 +85,19 @@ public abstract class OnvifProperty extends ControllerProperty {
 
 	}
 
+	/**
+	 *
+	 * @param preset the IRIS present number to find
+	 * @param presets the presets to look in
+	 * @return null if not found else contains the presetToken
+	 */
 	protected String findPresetToken(
 		Integer preset, List<PTZPreset> presets)
 	{
-		String token = null;
 		for (PTZPreset p : presets) {
 			if (p.getName().equals("IRIS" + preset))
-				// warning duplicate names would return last
-				// occurrence
-				token = p.getToken();
+				return p.getToken();
 		}
-		return token;
+		return null;
 	}
 }
