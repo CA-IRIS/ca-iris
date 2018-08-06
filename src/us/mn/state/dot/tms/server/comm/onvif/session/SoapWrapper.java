@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.session;
 
 import org.w3c.dom.Document;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -96,8 +97,15 @@ public class SoapWrapper {
 		NoSuchAlgorithmException
 	{
 		addAuthHeader(auth);
-		return convertToObject(callSoapWebService(uri),
-			targetClass);
+		SOAPMessage m = callSoapWebService(uri);
+
+		if (m.getSOAPBody().hasFault()) {
+			OnvifPoller.log(m.toString());
+			// todo remove debug
+			System.out.println(m.toString());
+			throw new IOException(m.getSOAPBody().getFault().getFaultString());
+		}
+		return convertToObject(m, targetClass);
 	}
 
 	/**

@@ -4,13 +4,9 @@ import org.onvif.ver10.device.wsdl.GetCapabilities;
 import org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
 import org.onvif.ver10.media.wsdl.GetProfiles;
 import org.onvif.ver10.media.wsdl.GetProfilesResponse;
+import org.onvif.ver10.schema.*;
 import org.onvif.ver10.schema.Capabilities;
-import org.onvif.ver10.schema.PTZSpaces;
-import org.onvif.ver10.schema.Profile;
-import org.onvif.ver20.ptz.wsdl.GetConfigurationOptions;
-import org.onvif.ver20.ptz.wsdl.GetConfigurationOptionsResponse;
-import org.onvif.ver20.ptz.wsdl.GetConfigurations;
-import org.onvif.ver20.ptz.wsdl.GetConfigurationsResponse;
+import org.onvif.ver20.ptz.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
 import javax.xml.bind.JAXBException;
@@ -40,6 +36,12 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	private String defaultProfileTok;
 	/** different types of ptz commands */
 	private PTZSpaces ptzSpaces;
+
+	public List<PTZNode> getNodes() {
+		return nodes;
+	}
+
+	private List<PTZNode> nodes;
 
 	public Capabilities getCapabilities() {
 		return capabilities;
@@ -93,16 +95,46 @@ public class OnvifSessionMessenger extends HttpMessenger {
 		}
 		if (!hasPTZCapability())
 			throw new IOException(
-				"Onvif device does not have required " +
-					"functionality");
+				"Onvif device does not support ptz");
 		setUri(capabilities.getMedia().getXAddr());
+
 		mediaProfiles = initMediaProfiles(this.getUri());
 		// all devices are guaranteed to have at least one profile
 		defaultProfileTok = mediaProfiles.get(0).getToken();
+
 		setUri(capabilities.getPTZ().getXAddr());
 		ptzSpaces = initPtzSpaces(this.getUri());
+		if (ptzSpaces.getContinuousPanTiltVelocitySpace() == null ||
+			ptzSpaces.getContinuousZoomVelocitySpace() == null)
+			throw new IOException("Device does not support continuous move");
+
+		// not sure if we need to get nodes...
+		nodes = initNodes();
+
 		initialized = true;
 		OnvifPoller.log("Session started. ");
+	}
+
+	public List<PTZPreset> getPresets() throws SOAPException, JAXBException,
+		ParserConfigurationException, IOException,
+		NoSuchAlgorithmException
+	{
+		GetPresets getPresets = new GetPresets();
+		getPresets.setProfileToken(defaultProfileTok);
+		SoapWrapper soap = new SoapWrapper(getPresets);
+		GetPresetsResponse response = (GetPresetsResponse) soap.callSoapWebService(getUri(), GetPresetsResponse.class, auth);
+		return response.getPreset();
+	}
+
+	private List<PTZNode> initNodes()
+		throws JAXBException, NoSuchAlgorithmException, SOAPException,
+		IOException, ParserConfigurationException
+	{
+		GetNodes getNodes = new GetNodes();
+		GetNodesResponse getNodesResponse = new GetNodesResponse();
+		SoapWrapper soapWrapper = new SoapWrapper(getNodes);
+		getNodesResponse = (GetNodesResponse) soapWrapper.callSoapWebService(getUri(), GetNodesResponse.class, auth);
+		return getNodesResponse.getPTZNode();
 	}
 
 	/**

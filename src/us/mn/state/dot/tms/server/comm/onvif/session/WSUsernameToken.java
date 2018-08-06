@@ -32,7 +32,7 @@ public class WSUsernameToken {
 	 * @param username may not be null
 	 * @param password may not be null
 	 */
-	WSUsernameToken(String username, String password) {
+	public WSUsernameToken(String username, String password) {
 		if (username == null || username.isEmpty()
 			|| password == null || password.isEmpty())
 			throw new IllegalArgumentException(

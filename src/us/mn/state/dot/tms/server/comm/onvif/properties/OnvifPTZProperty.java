@@ -24,8 +24,7 @@ public class OnvifPTZProperty extends OnvifProperty {
 	private Float tilt;
 	private Float zoom;
 
-	public OnvifPTZProperty(
-		CameraImpl c, float p, float t, float z,
+	public OnvifPTZProperty(float p, float t, float z,
 		OnvifSessionMessenger session)
 	{
 		super(session);
@@ -33,18 +32,30 @@ public class OnvifPTZProperty extends OnvifProperty {
 		tilt = t;
 		zoom = z;
 	}
-
-	private void checkInputs(Float pan, Float tilt, Float zoom)
-		throws IOException
-	{
-		if (pan == null || tilt == null || zoom == null) {
-			OnvifPoller
-				.log(this.getClass() + " recevied null input");
-			throw new IOException(
-				"cannot perform ptz move request");
-		}
-
-	}
+//
+//	/**
+//	 * we expect pan, tilt, and zoom, to be in the range of -1 to 1
+//	 * (hence our input range is 2)
+//	 * @throws IOException
+//	 */
+//	private void resizeInputs() throws IOException
+//	{
+//		if (pan == null || tilt == null || zoom == null) {
+//			OnvifPoller
+//				.log(this.getClass() + " recevied null input");
+//			throw new IOException(
+//				"cannot perform ptz move request");
+//		}
+//		float inputRange = 2, inputMin = -1;
+//		if (pan != 0) {
+//			float targetMin = session.getPtzSpaces().getContinuousPanTiltVelocitySpace().get(0).getXRange().getMin();
+//			float targetMax = session.getPtzSpaces().getContinuousPanTiltVelocitySpace().get(0).getXRange().getMax();
+//			float targetRange = targetMax - targetMin;
+//			float temp = pan + 1;
+//			temp = temp / inputRange;
+//
+//		}
+//	}
 
 	private PTZSpeed initPTZSpeed() {
 		PTZSpeed speed = new PTZSpeed();
@@ -86,18 +97,8 @@ public class OnvifPTZProperty extends OnvifProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		checkInputs(pan, tilt, zoom);
+//		resizeInputs();
+		// todo validate inputs
 		continuousMove(initPTZSpeed());
-	}
-
-	@Override
-	protected void decodeStore() throws IOException {
-		try {
-			ContinuousMoveResponse continuousMoveResponse =
-				(ContinuousMoveResponse) response;
-		} catch (Exception e) {
-			OnvifPoller.log(e.getClass().toString());
-			// todo parse errors
-		}
 	}
 }

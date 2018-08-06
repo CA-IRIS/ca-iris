@@ -22,15 +22,15 @@ public class OpOnvifPTZ extends OpOnvif {
 		OnvifSessionMessenger session)
 	{
 		super(PriorityLevel.COMMAND, c, session);
-		onvifPTZProperty = new OnvifPTZProperty(c, p, t, z, session);
+		onvifPTZProperty = new OnvifPTZProperty(p, t, z, session);
 	}
 
 	@Override
 	protected Phase<OnvifProperty> phaseTwo() {
-		return new PhaseTwo();
+		return new PTZ();
 	}
 
-	protected class PhaseTwo extends Phase<OnvifProperty> {
+	protected class PTZ extends Phase<OnvifProperty> {
 		protected Phase<OnvifProperty> poll(
 			CommMessage<OnvifProperty> mess) throws IOException
 		{

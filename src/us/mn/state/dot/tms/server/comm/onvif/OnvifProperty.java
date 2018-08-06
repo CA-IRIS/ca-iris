@@ -1,13 +1,14 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
+import org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
-import us.mn.state.dot.tms.server.comm.ProtocolException;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -61,15 +62,39 @@ public abstract class OnvifProperty extends ControllerProperty {
 		throws IOException
 	{
 		if (response == null)
-			throw new IOException("No response received from device");
+			throw new IOException(
+				"No response received from device");
 		decodeStore();
 	}
 
 	/**
 	 * A way of requiring concrete implementations of this class to check
 	 * that the session is initialized before sending a request
+	 *
 	 * @throws IOException the session could not be initialized
 	 */
 	protected abstract void encodeStore() throws IOException;
-	protected abstract void decodeStore() throws IOException;
+
+	/**
+	 * may be overridden by concrete implementations if errors may be
+	 * produced by encodeStore()
+	 *
+	 * @throws IOException
+	 */
+	protected void decodeStore() throws IOException {
+
+	}
+
+	protected String findPresetToken(
+		Integer preset, List<PTZPreset> presets)
+	{
+		String token = null;
+		for (PTZPreset p : presets) {
+			if (p.getName().equals("IRIS" + preset))
+				// warning duplicate names would return last
+				// occurrence
+				token = p.getToken();
+		}
+		return token;
+	}
 }
