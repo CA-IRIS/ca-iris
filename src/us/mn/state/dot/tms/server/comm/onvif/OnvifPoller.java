@@ -10,9 +10,7 @@ import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
-import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifAux;
-import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZ;
-import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPreset;
+import us.mn.state.dot.tms.server.comm.onvif.operations.*;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -95,54 +93,18 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_WIPER_ONESHOT:
 			addOperation(new OpOnvifAux(c, session));
 		case CAMERA_FOCUS_NEAR:
-			// todo implement (imaging: continuous focus)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_FOCUS_FAR:
-			// todo implement (imaging: continuous focus)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_FOCUS_STOP:
-			// todo implement (imaging: continuous focus)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_FOCUS_MANUAL:
-			// todo implement (imaging: focus modes)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_FOCUS_AUTO:
-			// todo implement (imaging: focus modes)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_IRIS_CLOSE:
-			// todo implement (imaging: set imaging
-			// settings)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_IRIS_OPEN:
-			// todo implement (imaging: set imaging
-			// settings)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_IRIS_STOP:
-			// todo implement (imaging: set imaging
-			// settings)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_IRIS_MANUAL:
-			// todo implement (imaging: set imaging
-			// settings)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
 		case CAMERA_IRIS_AUTO:
-			// todo implement (imaging: set imaging
-			// settings)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
+			addOperation(new OpOnvifImaging(c, session, r));
 		case RESET_DEVICE:
-			// todo implement (device: reboot)
-			log("ONVIF DeviceRequest not yet implemented: " + r);
-			break;
+			addOperation(new OpOnvifDevice(c, session));
 		case QUERY_CONFIGURATION:
 		case QUERY_MESSAGE:
 		case QUERY_STATUS:

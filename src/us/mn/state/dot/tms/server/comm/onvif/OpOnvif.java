@@ -23,8 +23,7 @@ public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 
 	/**
 	 * Update device op status. We bundle the operation description into
-	 * the
-	 * status because camera ops are generally so short that, as far as I
+	 * the status because camera ops are generally so short that, as far as I
 	 * can tell, by the time the client gets the SONAR "operation"
 	 * notification and requests the op's description via SONAR, the device
 	 * has already been released, and thus Device.getOperation() returns

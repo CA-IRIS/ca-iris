@@ -28,12 +28,7 @@ public class OpOnvifPreset extends OpOnvif {
 
 	@Override
 	protected Phase<OnvifProperty> phaseTwo() {
-		if (store) {
-			return new StoreStop();
-		}
-		else {
-			return new Recall();
-		}
+		return store ? new StoreStop() : new Recall();
 	}
 
 	/**
@@ -45,7 +40,7 @@ public class OpOnvifPreset extends OpOnvif {
 		{
 			mess.add(new OnvifStopProperty(session));
 			mess.storeProps();
-			updateOpStatus("Store command sent");
+			updateOpStatus("Stop command sent before preset store");
 			return new StoreMove();
 		}
 	}
@@ -56,7 +51,7 @@ public class OpOnvifPreset extends OpOnvif {
 		{
 			mess.add(new OnvifPresetStoreProperty(session, preset));
 			mess.storeProps();
-			updateOpStatus("Store command sent");
+			updateOpStatus("Store preset command sent");
 			return null;
 		}
 	}

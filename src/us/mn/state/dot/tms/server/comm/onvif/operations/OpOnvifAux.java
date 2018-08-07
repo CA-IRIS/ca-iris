@@ -21,11 +21,21 @@ public class OpOnvifAux extends OpOnvif {
 		super(PriorityLevel.COMMAND, d, session);
 	}
 
+	/**
+	 * More Auxiliary commands may be supported in the future, but wiper is
+	 * all that the UI supports for now.
+	 *
+	 * @return
+	 */
 	@Override
 	protected Phase<OnvifProperty> phaseTwo() {
 		return new WiperOn();
 	}
 
+	/**
+	 * Onvif does not have the idea of a wiper one shot; in fact, it barely
+	 * has a wiper command at all. This the best attempt at a one shot
+	 */
 	protected class WiperOn extends Phase<OnvifProperty> {
 		protected Phase<OnvifProperty> poll(
 			CommMessage<OnvifProperty> mess) throws IOException

@@ -32,20 +32,36 @@ public class OnvifWiperProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		SendAuxiliaryCommand cmd;
-		if (switchOn) {
-			cmd = initCmd(matchAny(
+
+		cmd = switchOn ?
+			initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
 					.getAuxiliaryCommands().toArray(),
-				WIPER_ON));
-		} else {
-			cmd = initCmd(matchAny(
+				WIPER_ON))
+			: initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
 					.getAuxiliaryCommands().toArray(),
 				WIPER_OFF));
-		}
-		if (cmd != null)
+		if (cmd != null) {
+			// Onvif does not have the idea of a wiper one shot;
+			// in fact, it barely has a wiper command at all.
+			// This one second delay is the best attempt at a one
+			// shot.
+			if (!switchOn) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					OnvifPoller
+						.log("Pause between wiper on " +
+							"and wiper off was " +
+							"interrupted. Wiper " +
+							"operation may not " +
+							"have completed. ");
+				}
+			}
 			response = session.call(OnvifService.PTZ, cmd,
 				SendAuxiliaryCommandResponse.class);
+		}
 		else
 			OnvifPoller.log("Wiper command not supported.");
 	}

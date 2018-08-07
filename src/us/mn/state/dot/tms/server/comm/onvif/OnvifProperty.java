@@ -45,6 +45,20 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	/**
+	 * @return a float remapped to a new range
+	 * @throws AssertionError if oldMin == oldMax
+	 */
+	protected float resize(
+		float val, float oldMin, float oldMax, float newMin,
+		float newMax) throws AssertionError
+	{
+		assert oldMin != oldMax; // avoid division by zero
+		float oldRange = oldMax - oldMin;
+		float newRange = newMax - newMin;
+		return (val - oldMin) / oldRange * newRange + newMin;
+	}
+
+	/**
 	 * Encode a store request and send it to the device
 	 */
 	@Override

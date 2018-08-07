@@ -74,20 +74,6 @@ public class OnvifMoveProperty extends OnvifProperty {
 			targetMax);
 	}
 
-	/**
-	 * @return a float remapped to a new range
-	 * @throws AssertionError if oldMin == oldMax
-	 */
-	private float resize(
-		float val, float oldMin, float oldMax, float newMin,
-		float newMax) throws AssertionError
-	{
-		assert oldMin != oldMax; // avoid division by zero
-		float oldRange = oldMax - oldMin;
-		float newRange = newMax - newMin;
-		return (val - oldMin) / oldRange * newRange + newMin;
-	}
-
 	private PTZSpeed initPTZSpeed() {
 		PTZSpeed speed = new PTZSpeed();
 		PTZSpaces spaces = session.getPtzSpaces();
