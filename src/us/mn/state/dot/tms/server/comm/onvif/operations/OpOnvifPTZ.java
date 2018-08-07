@@ -5,8 +5,8 @@ import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifMoveProperty;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifStopProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -24,9 +24,9 @@ public class OpOnvifPTZ extends OpOnvif {
 	{
 		super(PriorityLevel.COMMAND, c, session);
 		if (p == 0 && t == 0 && z == 0)
-			property = new OnvifStopProperty(session);
+			property = new OnvifPTZStopProperty(session);
 		else
-			property = new OnvifMoveProperty(p, t, z, session);
+			property = new OnvifPTZMoveProperty(p, t, z, session);
 	}
 
 	@Override

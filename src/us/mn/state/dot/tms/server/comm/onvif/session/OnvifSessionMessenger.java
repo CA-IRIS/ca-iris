@@ -9,6 +9,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsd
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfilesResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Capabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
 
 import java.io.IOException;
@@ -45,6 +46,10 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	private PTZSpaces ptzSpaces;
 
 	private List<PTZNode> nodes;
+	/** supported imaging options including iris operations and ranges */
+	private ImagingSettings20 imagingOptions;
+	/** supported focus move operations and ranges */
+	private MoveOptions20 imagingMoveOptions;
 
 	public List<Profile> getMediaProfiles() {
 		return mediaProfiles;
@@ -71,6 +76,14 @@ public class OnvifSessionMessenger extends HttpMessenger {
 		checkUri(uri);
 	}
 
+	public ImagingSettings20 getImagingOptions() {
+		return imagingOptions;
+	}
+
+	public MoveOptions20 getImagingMoveOptions() {
+		return imagingMoveOptions;
+	}
+
 	/**
 	 * establish a session with the device and determine the device's
 	 * capabilities
@@ -81,42 +94,46 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	public void initialize(String username, String password)
 		throws IOException
 	{
+		// general device setup
 		OnvifPoller.log("Attempting to start session. ");
 		try {
 			auth = new WSUsernameToken(username, password);
 			setAuthClockOffset();
 
 		} catch (IOException e) {
-			OnvifPoller.log("Check username, password, and uri");
-			throw e;
+			throw new IOException(
+				"Failed to retrieve device date and time. " +
+					"Check username, password, and uri",
+				e);
 		}
-		GetCapabilities getCapabilities =
-			new GetCapabilities();
-		capabilities = ((GetCapabilitiesResponse)
-			call(getCapabilities,
-				GetCapabilitiesResponse.class))
+		GetCapabilities getCapabilities = new GetCapabilities();
+		capabilities = ((GetCapabilitiesResponse) call(getCapabilities,
+			GetCapabilitiesResponse.class))
 			.getCapabilities();
-		if (!hasPTZCapability())
-			throw new IOException(
-				"Onvif device does not support ptz");
-
-		GetProfiles getProfiles = new GetProfiles();
-		mediaProfiles = ((GetProfilesResponse) (call(
-			OnvifService.MEDIA, getProfiles,
-			GetProfilesResponse.class))).getProfiles();
-		// all devices are guaranteed to have at least one profile
-		defaultProfileTok = mediaProfiles.get(0).getToken();
-
-		ptzSpaces = initPtzSpaces();
-		if (ptzSpaces.getContinuousPanTiltVelocitySpace() == null ||
-			ptzSpaces.getContinuousZoomVelocitySpace() == null)
-			throw new IOException(
-				"Device does not support continuous move");
-
-		GetNodes getNodes = new GetNodes();
-		nodes = ((GetNodesResponse) call(OnvifService.PTZ,
-			getNodes, GetNodesResponse.class)).getPTZNode();
-
+		if (supportsMediaService()) {
+			GetProfiles getProfiles = new GetProfiles();
+			mediaProfiles = ((GetProfilesResponse) (call(
+				OnvifService.MEDIA, getProfiles,
+				GetProfilesResponse.class))).getProfiles();
+			defaultProfileTok = mediaProfiles.get(0).getToken();
+		}
+		if (supportsPTZService()) {
+			ptzSpaces = initPtzSpaces();
+			GetNodes getNodes = new GetNodes();
+			nodes = ((GetNodesResponse) call(OnvifService.PTZ,
+				getNodes, GetNodesResponse.class)).getPTZNode();
+		}
+		if (supportsImagingService()) {
+			GetOptions getOptions = new GetOptions();
+			imagingOptions = ((GetImagingSettingsResponse) call(
+				OnvifService.IMAGING, getOptions,
+				GetOptionsResponse.class)).getImagingSettings();
+			GetMoveOptions getMoveOptions = new GetMoveOptions();
+			getMoveOptions.setVideoSourceToken(defaultProfileTok);
+			imagingMoveOptions = ((GetMoveOptionsResponse) call(
+				OnvifService.IMAGING, getMoveOptions,
+				GetMoveOptionsResponse.class)).getMoveOptions();
+		}
 		initialized = true;
 		OnvifPoller.log("Session started. ");
 	}
@@ -182,17 +199,36 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	{
 		switch (s) {
 		case DEVICE:
+			if (capabilities == null)
+				throw new IOException(
+					"Device is not initialized properly");
 			setUri(capabilities.getDevice().getXAddr());
 			break;
 		case MEDIA:
+			if (!supportsMediaService())
+				throw new IOException(
+					"Device does not support the Media " +
+						"Service requests");
 			setUri(capabilities.getMedia().getXAddr());
 			break;
 		case PTZ:
+			if (!supportsPTZService())
+				throw new IOException(
+					"Device does not support the PTZ " +
+						"Service requests");
 			setUri(capabilities.getPTZ().getXAddr());
 			break;
 		case IMAGING:
+			if (!supportsImagingService())
+				throw new IOException(
+					"Device does not support the Imaging" +
+						" Service requests");
 			setUri(capabilities.getImaging().getXAddr());
 			break;
+		default:
+			throw new IOException(
+				"Attempt to call uncegnized Service"
+			);
 		}
 		return call(request, responseClass);
 	}
@@ -230,19 +266,34 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	 * @return true if the device has ptz capabilities (also checks for
 	 * 	media capabilities)
 	 */
-	private boolean hasPTZCapability() {
-		return hasMediaCapability()
-			&& capabilities != null
-			&& capabilities.getPTZ() != null
+	private boolean supportsImagingService() throws IOException {
+		if (capabilities == null)
+			throw new IOException("Device is not properly " +
+				"initialized.");
+		return capabilities.getImaging() != null
+			&& capabilities.getImaging().getXAddr() != null;
+	}
+
+	/**
+	 * @return true if the device has ptz capabilities (also checks for
+	 * 	media capabilities)
+	 */
+	private boolean supportsPTZService() throws IOException {
+		if (capabilities == null)
+			throw new IOException("Device is not properly " +
+				"initialized.");
+		return capabilities.getPTZ() != null
 			&& capabilities.getPTZ().getXAddr() != null;
 	}
 
 	/**
 	 * @return true if the device has media capabilities (required for ptz)
 	 */
-	private boolean hasMediaCapability() {
-		return capabilities != null
-			&& capabilities.getMedia() != null
+	private boolean supportsMediaService() throws IOException {
+		if (capabilities == null)
+			throw new IOException("Device is not properly " +
+				"initialized.");
+		return capabilities.getMedia() != null
 			&& capabilities.getMedia().getXAddr() != null;
 	}
 

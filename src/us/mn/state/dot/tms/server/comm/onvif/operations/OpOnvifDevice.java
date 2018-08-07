@@ -5,7 +5,7 @@ import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifRebootProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceRebootProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class OpOnvifDevice extends OpOnvif {
 		protected Phase<OnvifProperty> poll(
 			CommMessage<OnvifProperty> mess) throws IOException
 		{
-			mess.add(new OnvifRebootProperty(session));
+			mess.add(new OnvifDeviceRebootProperty(session));
 			mess.storeProps();
 			updateOpStatus("Onvif device reboot command sent");
 			return null;
