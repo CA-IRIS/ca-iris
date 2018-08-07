@@ -4,14 +4,16 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
+import java.time.*;
 import java.util.Base64;
 import java.util.Random;
 
 /**
  * the logic for WSUsernameToken session authentication
- * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
- * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+ * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext
+ * -1.0.xsd
+ * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility
+ * -1.0.xsd
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
@@ -19,10 +21,13 @@ public class WSUsernameToken {
 
 	private String username;
 	private String password;
-	/** the session token (static for all sequential session transactions) */
+	/** the session token (static for all sequential session
+	 * transactions) */
 	private String nonce;
 	/** the date for the last call to passwordDigest() */
 	private String date;
+	/** positive value means device is ahead by clockOffset milliseconds */
+	private long clockOffset = 0;
 
 	String getUsername() {
 		return username;
@@ -32,13 +37,19 @@ public class WSUsernameToken {
 	 * @param username may not be null
 	 * @param password may not be null
 	 */
-	public WSUsernameToken(String username, String password) {
+	public WSUsernameToken(
+		String username, String password)
+	{
 		if (username == null || username.isEmpty()
 			|| password == null || password.isEmpty())
 			throw new IllegalArgumentException(
 				"username and password may not be null");
 		this.username = username;
 		this.password = password;
+	}
+
+	public void setClockOffset(ZonedDateTime ourTime, ZonedDateTime deviceTime) {
+		clockOffset = Duration.between(ourTime, deviceTime).toMillis();
 	}
 
 	/**
@@ -49,7 +60,7 @@ public class WSUsernameToken {
 	 */
 	String getPasswordDigest() throws NoSuchAlgorithmException {
 		resetTime();
-		MessageDigest messageDigest = null;
+		MessageDigest messageDigest;
 		try {
 			messageDigest = MessageDigest.getInstance("SHA-1");
 		} catch (NoSuchAlgorithmException e) {
@@ -82,7 +93,8 @@ public class WSUsernameToken {
 	 */
 	String getUTCTime() {
 		if (date == null) {
-			date = Instant.now().toString();
+			date =
+				Instant.now().plusMillis(clockOffset).toString();
 		}
 		return date;
 	}

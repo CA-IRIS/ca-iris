@@ -105,6 +105,7 @@ public class SoapWrapper {
 			System.out.println(m.toString());
 			throw new IOException(m.getSOAPBody().getFault().getFaultString());
 		}
+		// todo verify returned nonce
 		return convertToObject(m, targetClass);
 	}
 

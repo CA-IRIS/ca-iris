@@ -1,21 +1,21 @@
 package us.mn.state.dot.tms.server.comm.onvif.session;
 
-import org.onvif.ver10.device.wsdl.GetCapabilities;
-import org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
-import org.onvif.ver10.media.wsdl.GetProfiles;
-import org.onvif.ver10.media.wsdl.GetProfilesResponse;
-import org.onvif.ver10.schema.*;
-import org.onvif.ver10.schema.Capabilities;
-import org.onvif.ver20.ptz.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilities;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTime;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTimeResponse;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfiles;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfilesResponse;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Capabilities;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.soap.SOAPException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -29,34 +29,33 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	/** true iff the device is ready for commands */
 	private boolean initialized = false;
 	private WSUsernameToken auth;
-	/** correspond to media stream types */
+
+	/**
+	 * correspond to media stream types a profile is required to make
+	 * ptzService requests each profile corresponds to a media stream type
+	 */
 	private List<Profile> mediaProfiles;
 	private Capabilities capabilities;
-	/** the first media profile token (all devices required to have at least one */
+	/**
+	 * the first media profile token (all devices required to have at least
+	 * one
+	 */
 	private String defaultProfileTok;
 	/** different types of ptz commands */
 	private PTZSpaces ptzSpaces;
+
+	private List<PTZNode> nodes;
+
+	public List<Profile> getMediaProfiles() {
+		return mediaProfiles;
+	}
 
 	public List<PTZNode> getNodes() {
 		return nodes;
 	}
 
-	private List<PTZNode> nodes;
-
-	public Capabilities getCapabilities() {
-		return capabilities;
-	}
-
 	public String getDefaultProfileTok() {
 		return defaultProfileTok;
-	}
-
-	public WSUsernameToken getAuth() {
-		return auth;
-	}
-
-	public List<Profile> getMediaProfiles() {
-		return mediaProfiles;
 	}
 
 	public PTZSpaces getPtzSpaces() {
@@ -73,137 +72,156 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	}
 
 	/**
-	 * establish a session with the device and determine the device's capabilities
+	 * establish a session with the device and determine the device's
+	 * capabilities
+	 *
 	 * @param username may not be null
 	 * @param password may not be null
-	 * @throws ParserConfigurationException soap error
-	 * @throws NoSuchAlgorithmException cannot create required password digest
-	 * @throws SOAPException soap formatting error
-	 * @throws IOException soap transmission error
-	 * @throws JAXBException soap formatting error
 	 */
 	public void initialize(String username, String password)
-		throws IOException, ParserConfigurationException,
-		NoSuchAlgorithmException, SOAPException, JAXBException
+		throws IOException
 	{
 		OnvifPoller.log("Attempting to start session. ");
 		try {
 			auth = new WSUsernameToken(username, password);
-			capabilities = initCapabilities(this.getUri());
+			setAuthClockOffset();
+
 		} catch (IOException e) {
 			OnvifPoller.log("Check username, password, and uri");
+			throw e;
 		}
+		GetCapabilities getCapabilities =
+			new GetCapabilities();
+		capabilities = ((GetCapabilitiesResponse)
+			call(getCapabilities,
+				GetCapabilitiesResponse.class))
+			.getCapabilities();
 		if (!hasPTZCapability())
 			throw new IOException(
 				"Onvif device does not support ptz");
-		setUri(capabilities.getMedia().getXAddr());
 
-		mediaProfiles = initMediaProfiles(this.getUri());
+		GetProfiles getProfiles = new GetProfiles();
+		mediaProfiles = ((GetProfilesResponse) (call(
+			OnvifService.MEDIA, getProfiles,
+			GetProfilesResponse.class))).getProfiles();
 		// all devices are guaranteed to have at least one profile
 		defaultProfileTok = mediaProfiles.get(0).getToken();
 
-		setUri(capabilities.getPTZ().getXAddr());
-		ptzSpaces = initPtzSpaces(this.getUri());
+		ptzSpaces = initPtzSpaces();
 		if (ptzSpaces.getContinuousPanTiltVelocitySpace() == null ||
 			ptzSpaces.getContinuousZoomVelocitySpace() == null)
-			throw new IOException("Device does not support continuous move");
+			throw new IOException(
+				"Device does not support continuous move");
 
-		// not sure if we need to get nodes...
-		nodes = initNodes();
+		GetNodes getNodes = new GetNodes();
+		nodes = ((GetNodesResponse) call(OnvifService.PTZ,
+			getNodes, GetNodesResponse.class)).getPTZNode();
 
 		initialized = true;
 		OnvifPoller.log("Session started. ");
 	}
 
-	public List<PTZPreset> getPresets() throws SOAPException, JAXBException,
-		ParserConfigurationException, IOException,
-		NoSuchAlgorithmException
-	{
-		GetPresets getPresets = new GetPresets();
-		getPresets.setProfileToken(defaultProfileTok);
-		SoapWrapper soap = new SoapWrapper(getPresets);
-		GetPresetsResponse response = (GetPresetsResponse) soap.callSoapWebService(getUri(), GetPresetsResponse.class, auth);
-		return response.getPreset();
+	private void setAuthClockOffset() throws IOException {
+		GetSystemDateAndTime getSystemDateAndTime =
+			new GetSystemDateAndTime();
+		SystemDateTime response;
+		// add one second for travel delay as the ONVIF programmer
+		// guide does
+		ZonedDateTime ourDateTime =
+			ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(1);
+		try {
+			response = ((GetSystemDateAndTimeResponse) call(
+				getSystemDateAndTime,
+				GetSystemDateAndTimeResponse.class))
+				.getSystemDateAndTime();
+		} catch (IOException e) {
+			throw new IOException(
+				"Could not get device time; check device uri",
+				e);
+		}
+		DateTime deviceDT = response.getUTCDateTime();
+		ZoneOffset zoneID = ZoneOffset.UTC;
+		// we will may only get one of the time formats (UTC only
+		// required by ONVIF 2.0), so local time is a backup
+		if (deviceDT == null) {
+			deviceDT = response.getLocalDateTime();
+			zoneID = ZoneOffset.of(response.getTimeZone().getTZ());
+		}
+		ZonedDateTime deviceDateTime = ZonedDateTime.of(
+			deviceDT.getDate().getYear(),
+			deviceDT.getDate().getMonth(),
+			deviceDT.getDate().getDay(),
+			deviceDT.getTime().getHour(),
+			deviceDT.getTime().getMinute(),
+			deviceDT.getTime().getSecond(),
+			0,
+			zoneID);
+		auth.setClockOffset(ourDateTime, deviceDateTime);
 	}
 
-	private List<PTZNode> initNodes()
-		throws JAXBException, NoSuchAlgorithmException, SOAPException,
-		IOException, ParserConfigurationException
+	private Object call(Object request, Class<?> responseClass)
+		throws IOException
 	{
-		GetNodes getNodes = new GetNodes();
-		GetNodesResponse getNodesResponse = new GetNodesResponse();
-		SoapWrapper soapWrapper = new SoapWrapper(getNodes);
-		getNodesResponse = (GetNodesResponse) soapWrapper.callSoapWebService(getUri(), GetNodesResponse.class, auth);
-		return getNodesResponse.getPTZNode();
+		try {
+			SoapWrapper soap = new SoapWrapper(request);
+			return soap.callSoapWebService(getUri(),
+				responseClass, auth);
+		} catch (Exception e) {
+			throw new IOException("Could not make Onvif request",
+				e);
+		}
 	}
 
 	/**
-	 * @return capabilities which include the specific service addresses
-	 * for individual commands.
+	 * Adds authentication and calls the specified service with the request
+	 * object
 	 */
-	private Capabilities initCapabilities(String deviceUri)
-		throws ParserConfigurationException, NoSuchAlgorithmException,
-		SOAPException, JAXBException, IOException
+	public Object call(
+		OnvifService s, Object request, Class<?> responseClass)
+		throws IOException
 	{
-		GetCapabilities getCapabilities = new GetCapabilities();
-		SoapWrapper soapWrapper =
-			new SoapWrapper(getCapabilities);
-		GetCapabilitiesResponse getCapabilitiesResponse = (GetCapabilitiesResponse) soapWrapper
-			.callSoapWebService(deviceUri,
-				GetCapabilitiesResponse.class, auth);
-		return getCapabilitiesResponse.getCapabilities();
-	}
-
-	/**
-	 * a profile is required to make ptzService requests
-	 * each profile corresponds to a media stream type
-	 *
-	 * @return all media profiles for the device
-	 */
-	private List<Profile> initMediaProfiles(String mediaUri)
-		throws SOAPException, JAXBException, IOException,
-		ParserConfigurationException, NoSuchAlgorithmException
-	{
-		GetProfiles getProfiles = new GetProfiles();
-		SoapWrapper soapWrapper = new SoapWrapper(getProfiles);
-		GetProfilesResponse getProfilesResponse = (GetProfilesResponse) soapWrapper
-			.callSoapWebService(mediaUri, GetProfilesResponse.class,
-				auth);
-		return getProfilesResponse.getProfiles();
+		switch (s) {
+		case DEVICE:
+			setUri(capabilities.getDevice().getXAddr());
+			break;
+		case MEDIA:
+			setUri(capabilities.getMedia().getXAddr());
+			break;
+		case PTZ:
+			setUri(capabilities.getPTZ().getXAddr());
+			break;
+		case IMAGING:
+			setUri(capabilities.getImaging().getXAddr());
+			break;
+		}
+		return call(request, responseClass);
 	}
 
 	/**
 	 * @return the ptzSpaces are akin to different devices actions
 	 */
-	private PTZSpaces initPtzSpaces(String ptzUri)
-		throws SOAPException, JAXBException, IOException,
-		ParserConfigurationException, NoSuchAlgorithmException
-	{
+	private PTZSpaces initPtzSpaces() throws IOException {
 		GetConfigurations getConfigurations = new GetConfigurations();
 		GetConfigurationOptions getConfigurationOptions =
 			new GetConfigurationOptions();
-		SoapWrapper soapWrapper1 =
-			new SoapWrapper(getConfigurations);
 		GetConfigurationsResponse getConfigurationsResponse =
-			(GetConfigurationsResponse) soapWrapper1
-				.callSoapWebService(ptzUri,
-					GetConfigurationsResponse.class, auth);
+			(GetConfigurationsResponse) call(
+				OnvifService.PTZ, getConfigurations,
+				GetConfigurationsResponse.class);
 
 		String token =
 			getConfigurationsResponse.getPTZConfiguration().get(0)
 				.getToken();
 
 		getConfigurationOptions.setConfigurationToken(token);
-		SoapWrapper soapWrapper2 =
-			new SoapWrapper(getConfigurationOptions);
 
 		// the getConfigurationOptionsResponse has info about the
-		// Spaces of
-		// movement and their range limits
-		GetConfigurationOptionsResponse getConfigurationOptionsResponse =
-			(GetConfigurationOptionsResponse) soapWrapper2
-				.callSoapWebService(ptzUri,
-					GetConfigurationOptionsResponse.class, auth);
+		// Spaces of movement and their range limits
+		GetConfigurationOptionsResponse
+			getConfigurationOptionsResponse =
+			(GetConfigurationOptionsResponse) call(
+				OnvifService.PTZ, getConfigurationOptions,
+				GetConfigurationOptionsResponse.class);
 		return getConfigurationOptionsResponse
 			.getPTZConfigurationOptions().getSpaces();
 	}
@@ -237,7 +255,7 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	private void checkUri(String uri) throws IOException {
 		try {
 			// basic null, protocol, and form check
-			URL url = new URL(uri);
+			new URL(uri);
 		} catch (MalformedURLException e) {
 			throw new IOException(e.getMessage());
 		}

@@ -1,12 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
-import org.onvif.ver10.schema.PTZPreset;
-import org.onvif.ver20.ptz.wsdl.SetPreset;
-import org.onvif.ver20.ptz.wsdl.SetPresetResponse;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
+import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,8 +20,9 @@ import java.util.List;
  *
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifPresetStoreProperty extends OnvifProperty {
+public class OnvifPresetStoreProperty extends OnvifPresetProperty {
 	private Integer preset;
+	private String presetToken;
 
 	public OnvifPresetStoreProperty(
 		OnvifSessionMessenger session, int num)
@@ -35,13 +35,13 @@ public class OnvifPresetStoreProperty extends OnvifProperty {
 	protected void encodeStore() throws IOException {
 		List<PTZPreset> presets;
 		try {
-			presets = session.getPresets();
+			presets = getPresets();
 		} catch (Exception e) {
 			OnvifPoller.log(e.getMessage());
 			throw new IOException(
 				"Could not retrieve current presets");
 		}
-		String presetToken = findPresetToken(preset, presets);
+		presetToken = findPresetToken(preset, presets);
 		try {
 			if (presetToken != null)
 				setPreset(preset, presetToken);
@@ -59,7 +59,7 @@ public class OnvifPresetStoreProperty extends OnvifProperty {
 		throws NoSuchAlgorithmException, ParserConfigurationException,
 		IOException, SOAPException, JAXBException
 	{
-		return session.getPresets().size()
+		return getPresets().size()
 			< session.getNodes().get(0).getMaximumNumberOfPresets();
 	}
 
@@ -68,21 +68,24 @@ public class OnvifPresetStoreProperty extends OnvifProperty {
 	 * @param presetToken if null, then a new preset will be created
 	 */
 	private void setPreset(Integer preset, String presetToken)
-		throws JAXBException, NoSuchAlgorithmException, SOAPException,
-		IOException, ParserConfigurationException
+		throws IOException
 	{
 		SetPreset setPreset = new SetPreset();
 		setPreset.setProfileToken(session.getDefaultProfileTok());
 		setPreset.setPresetName("IRIS" + preset);
 		if (presetToken != null)
 			setPreset.setPresetToken(presetToken);
-		SoapWrapper soap = new SoapWrapper(setPreset);
-		SetPresetResponse setPresetResponse = (SetPresetResponse) soap
-			.callSoapWebService(session.getUri(),
-				SetPresetResponse.class, session.getAuth());
+		response = session.call(OnvifService.PTZ, setPreset,
+			SetPresetResponse.class);
+	}
+
+	@Override
+	public void decodeStore() throws IOException {
 		// null check then:
 		// if we are overwriting, we should get back the same token
 		// if we are creating, we should get any token back
+		SetPresetResponse setPresetResponse =
+			(SetPresetResponse) response;
 		if (setPresetResponse.getPresetToken() == null
 			|| (presetToken != null
 			&& !setPresetResponse.getPresetToken()
@@ -100,5 +103,6 @@ public class OnvifPresetStoreProperty extends OnvifProperty {
 		}
 		OnvifPoller
 			.log("Preset overwritten: " + preset + ", token: " + presetToken);
+
 	}
 }

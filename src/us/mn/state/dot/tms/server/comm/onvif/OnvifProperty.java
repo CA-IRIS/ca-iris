@@ -1,6 +1,5 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
-import org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
@@ -8,7 +7,6 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -83,21 +81,5 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 */
 	protected void decodeStore() throws IOException {
 
-	}
-
-	/**
-	 *
-	 * @param preset the IRIS present number to find
-	 * @param presets the presets to look in
-	 * @return null if not found else contains the presetToken
-	 */
-	protected String findPresetToken(
-		Integer preset, List<PTZPreset> presets)
-	{
-		for (PTZPreset p : presets) {
-			if (p.getName().equals("IRIS" + preset))
-				return p.getToken();
-		}
-		return null;
 	}
 }

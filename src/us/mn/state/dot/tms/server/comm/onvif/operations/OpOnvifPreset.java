@@ -5,9 +5,9 @@ import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPresetRecallProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPresetStoreProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -37,20 +37,20 @@ public class OpOnvifPreset extends OpOnvif {
 	}
 
 	/**
-	 * Onvif devices must be in a stopped state inorder to save position
+	 * Onvif devices must be in a stopped state in order to save position
 	 */
 	protected class StoreStop extends Phase<OnvifProperty> {
 		protected Phase<OnvifProperty> poll(
 			CommMessage<OnvifProperty> mess) throws IOException
 		{
-			mess.add(new OnvifPTZProperty(0, 0, 0, session));
+			mess.add(new OnvifStopProperty(session));
 			mess.storeProps();
 			updateOpStatus("Store command sent");
-			return new StoreSave();
+			return new StoreMove();
 		}
 	}
 
-	protected class StoreSave extends Phase<OnvifProperty> {
+	protected class StoreMove extends Phase<OnvifProperty> {
 		protected Phase<OnvifProperty> poll(
 			CommMessage<OnvifProperty> mess) throws IOException
 		{
