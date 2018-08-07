@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import org.w3._2004._08.xop.include.Include;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2004._08.xop.include.Include;
 
 
 /**

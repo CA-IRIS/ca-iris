@@ -14,12 +14,12 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.util.LinkedList;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.ControllerImpl;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.LinkedList;
 
 /**
  * Comm message implementation.
@@ -30,10 +30,10 @@ public class CommMessageImpl<T extends ControllerProperty>
 	implements CommMessage<T>
 {
 	/** Messenger object */
-	protected final Messenger messenger;
+	private final Messenger messenger;
 
 	/** Controller operation */
-	protected final OpController<T> op;
+	private final OpController<T> op;
 
 	/** Protocol debug log */
 	private final DebugLog p_log;

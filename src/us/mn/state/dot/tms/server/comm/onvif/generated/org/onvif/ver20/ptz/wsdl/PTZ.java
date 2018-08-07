@@ -16,7 +16,7 @@ import javax.xml.ws.ResponseWrapper;
  *
  */
 @WebService(targetNamespace = "http://www.onvif.org/ver20/ptz/wsdl", name = "PTZ")
-@XmlSeeAlso({ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.bf_2.ObjectFactory.class, org.w3._2004._08.xop.include.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsn.b_2.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsn.t_1.ObjectFactory.class, org.w3._2003._05.soap_envelope.ObjectFactory.class, org.w3._2005._05.xmlmime.ObjectFactory.class})
+@XmlSeeAlso({ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.bf_2.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2004._08.xop.include.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsn.b_2.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsn.t_1.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2003._05.soap_envelope.ObjectFactory.class, us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2005._05.xmlmime.ObjectFactory.class})
 @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2018-08-07T08:49:35.034-05:00", comments = "Apache CXF 3.2.5")
 public interface PTZ {
 

@@ -1,17 +1,14 @@
 
 package us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema;
 
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2003._05.soap_envelope.Envelope;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2003._05.soap_envelope.Fault;
+
+import javax.annotation.Generated;
+import javax.xml.bind.annotation.*;
+import javax.xml.namespace.QName;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Generated;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAnyAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.namespace.QName;
-import org.w3._2003._05.soap_envelope.Envelope;
-import org.w3._2003._05.soap_envelope.Fault;
 
 
 /**
