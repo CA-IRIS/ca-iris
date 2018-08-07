@@ -31,32 +31,62 @@ public class OnvifMoveProperty extends OnvifProperty {
 		tilt = t;
 		zoom = z;
 	}
-//
-//	/**
-//	 * we expect pan, tilt, and zoom, to be in the range of -1 to 1
-//	 * (hence our input range is 2)
-//	 * @throws IOException
-//	 */
-//	private void resizeInputs() throws IOException
-//	{
-//		if (pan == null || tilt == null || zoom == null) {
-//			OnvifPoller
-//				.log(this.getClass() + " recevied null input");
-//			throw new IOException(
-//				"cannot perform ptz move request");
-//		}
-//		float inputRange = 2, inputMin = -1;
-//		if (pan != 0) {
-//			float targetMin = session.getPtzSpaces()
-// .getContinuousPanTiltVelocitySpace().get(0).getXRange().getMin();
-//			float targetMax = session.getPtzSpaces()
-// .getContinuousPanTiltVelocitySpace().get(0).getXRange().getMax();
-//			float targetRange = targetMax - targetMin;
-//			float temp = pan + 1;
-//			temp = temp / inputRange;
-//
-//		}
-//	}
+
+	@Override
+	protected void encodeStore() throws IOException {
+		resizeInputs();
+		continuousMove(initPTZSpeed());
+	}
+
+	/**
+	 * we expect pan, tilt, and zoom, to be in the range of -1 to 1 from
+	 * the
+	 * iris client, but we cannot say for certain the range for our device
+	 * (though 100% of the devices we have seen so far map from -1 to 1
+	 * also), so this is just for safety
+	 */
+	private void resizeInputs() throws IOException
+	{
+		float sourceMin = -1;
+		float sourceMax = 1;
+		float targetMin = session.getPtzSpaces()
+			.getContinuousPanTiltVelocitySpace().get(0).getXRange()
+			.getMin();
+		float targetMax = session.getPtzSpaces()
+			.getContinuousPanTiltVelocitySpace().get(0).getXRange()
+			.getMax();
+		pan = resize(pan, sourceMin, sourceMax, targetMin, targetMax);
+		targetMin = session.getPtzSpaces()
+			.getContinuousPanTiltVelocitySpace().get(0).getYRange()
+			.getMin();
+		targetMax = session.getPtzSpaces()
+			.getContinuousPanTiltVelocitySpace().get(0).getYRange()
+			.getMax();
+		tilt = resize(tilt, sourceMin, sourceMax, targetMin,
+			targetMax);
+		targetMin =
+			session.getPtzSpaces().getContinuousZoomVelocitySpace()
+				.get(0).getXRange().getMin();
+		targetMax =
+			session.getPtzSpaces().getContinuousZoomVelocitySpace()
+				.get(0).getXRange().getMax();
+		zoom = resize(zoom, sourceMin, sourceMax, targetMin,
+			targetMax);
+	}
+
+	/**
+	 * @return a float remapped to a new range
+	 * @throws AssertionError if oldMin == oldMax
+	 */
+	private float resize(
+		float val, float oldMin, float oldMax, float newMin,
+		float newMax) throws AssertionError
+	{
+		assert oldMin != oldMax; // avoid division by zero
+		float oldRange = oldMax - oldMin;
+		float newRange = newMax - newMin;
+		return (val - oldMin) / oldRange * newRange + newMin;
+	}
 
 	private PTZSpeed initPTZSpeed() {
 		PTZSpeed speed = new PTZSpeed();
@@ -83,12 +113,5 @@ public class OnvifMoveProperty extends OnvifProperty {
 		response = session.call(OnvifService.PTZ,
 			continuousMove,
 			ContinuousMoveResponse.class);
-	}
-
-	@Override
-	protected void encodeStore() throws IOException {
-//		resizeInputs();
-		// todo validate inputs
-		continuousMove(initPTZSpeed());
 	}
 }

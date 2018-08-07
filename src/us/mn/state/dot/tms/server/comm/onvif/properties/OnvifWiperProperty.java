@@ -31,13 +31,13 @@ public class OnvifWiperProperty extends OnvifProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		SendAuxiliaryCommand cmd = null;
-		if (switchOn)
+		SendAuxiliaryCommand cmd;
+		if (switchOn) {
 			cmd = initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
 					.getAuxiliaryCommands().toArray(),
 				WIPER_ON));
-		else {
+		} else {
 			cmd = initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
 					.getAuxiliaryCommands().toArray(),

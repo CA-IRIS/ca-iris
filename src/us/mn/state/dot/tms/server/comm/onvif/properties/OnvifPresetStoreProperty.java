@@ -7,11 +7,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.soap.SOAPException;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 /**
@@ -55,10 +51,7 @@ public class OnvifPresetStoreProperty extends OnvifPresetProperty {
 		}
 	}
 
-	private boolean hasRoomForAnotherPreset()
-		throws NoSuchAlgorithmException, ParserConfigurationException,
-		IOException, SOAPException, JAXBException
-	{
+	private boolean hasRoomForAnotherPreset() throws IOException {
 		return getPresets().size()
 			< session.getNodes().get(0).getMaximumNumberOfPresets();
 	}
