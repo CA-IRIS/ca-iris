@@ -1,5 +1,6 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -9,7 +10,6 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public abstract class OpOnvif extends OpDevice<OnvifProperty> {
-
 	protected OnvifSessionMessenger session;
 
 	protected OpOnvif(
@@ -17,8 +17,21 @@ public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 	{
 		super(p, d);
 		this.session = session;
-		updateOpStatus("Preparing to send operation");
-		OnvifPoller.log("Preparing to send operation");
+		checkSessionCredentials();
+		log("Preparing an operation");
+	}
+
+	private void checkSessionCredentials() {
+		if (!session.isInitialized()) {
+			ControllerImpl c = getController();
+			if (c == null)
+				log("Failed to find Controller");
+			else if (c.getUsername() == null || c.getPassword() == null
+				|| c.getUsername().isEmpty() || c.getPassword().isEmpty())
+				log("Controller username or password not set: " + c.getName());
+			else
+				session.setAuth(c.getUsername(), c.getPassword());
+		}
 	}
 
 	/**
@@ -32,5 +45,11 @@ public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 	protected void updateOpStatus(String stat) {
 		String s = getOperationDescription() + ": " + stat;
 		device.setOpStatus(s);
+	}
+
+	protected void log(String msg) {
+		String m = device.getName() + ": " + getOpName() + ": " + msg;
+		updateOpStatus(m);
+		OnvifPoller.log(m);
 	}
 }

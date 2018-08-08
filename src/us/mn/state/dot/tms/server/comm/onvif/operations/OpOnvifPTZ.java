@@ -7,6 +7,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
+import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -27,6 +28,11 @@ public class OpOnvifPTZ extends OpOnvif {
 			property = new OnvifPTZStopProperty(session);
 		else
 			property = new OnvifPTZMoveProperty(p, t, z, session);
+		try {
+			session.selectService(OnvifService.PTZ);
+		} catch (IOException e) {
+			log(e.getMessage());
+		}
 	}
 
 	@Override
@@ -40,7 +46,7 @@ public class OpOnvifPTZ extends OpOnvif {
 		{
 			mess.add(property);
 			mess.storeProps();
-			updateOpStatus("PTZ command sent");
+			log("PTZ command sent");
 			return null;
 		}
 	}

@@ -13,11 +13,11 @@ import java.io.OutputStream;
  */
 public abstract class OnvifProperty extends ControllerProperty {
 	protected OnvifSessionMessenger session;
-	public Object response;
+	protected Object response;
 
 	protected OnvifProperty(OnvifSessionMessenger session) {
 		this.session = session;
-		OnvifPoller.log("Preparing operation properties");
+		log("Preparing operation properties");
 	}
 
 	private String readStream(InputStream is) {
@@ -36,8 +36,9 @@ public abstract class OnvifProperty extends ControllerProperty {
 		// client
 		if (!session.isInitialized()) {
 			try {
-				session.initialize(c.getUsername(),
+				session.setAuth(c.getUsername(),
 					c.getPassword());
+				session.open();
 			} catch (Exception e) {
 				throw new IOException(e.getMessage());
 			}
@@ -65,6 +66,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
+		log("Sending operation properties");
 		initSession(c);
 		encodeStore();
 	}
@@ -73,6 +75,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 	public void decodeStore(ControllerImpl c, InputStream is)
 		throws IOException
 	{
+		log("Reading operation response properties");
 		if (response == null)
 			throw new IOException(
 				"No response received from device");
@@ -94,6 +97,16 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 * @throws IOException
 	 */
 	protected void decodeStore() throws IOException {
+		log("Device responded: " + response.toString());
+	}
 
+	protected void log(String msg) {
+		OnvifPoller.log("Property: " + msg);
+	}
+
+	protected void logFailure (String msg) throws IOException {
+		String m = this.getClass().getSimpleName() + ": " + msg;
+		log(m);
+		throw new IOException(m);
 	}
 }

@@ -16,13 +16,13 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institue)
  */
-public class OnvifMoveProperty extends OnvifProperty {
+public class OnvifPTZMoveProperty extends OnvifProperty {
 
 	private Float pan;
 	private Float tilt;
 	private Float zoom;
 
-	public OnvifMoveProperty(
+	public OnvifPTZMoveProperty(
 		float p, float t, float z,
 		OnvifSessionMessenger session)
 	{
@@ -34,8 +34,17 @@ public class OnvifMoveProperty extends OnvifProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		resizeInputs();
-		continuousMove(initPTZSpeed());
+		if (!supportsContinuousPTZMove())
+			logFailure("ContinuousPTZMove not supported");
+		else {
+			resizeInputs();
+			continuousMove(initPTZSpeed());
+		}
+	}
+
+	private boolean supportsContinuousPTZMove() throws IOException {
+		return session.getPtzSpaces().getContinuousPanTiltVelocitySpace() != null
+			&& session.getPtzSpaces().getAbsolutePanTiltPositionSpace() != null;
 	}
 
 	/**
@@ -74,7 +83,7 @@ public class OnvifMoveProperty extends OnvifProperty {
 			targetMax);
 	}
 
-	private PTZSpeed initPTZSpeed() {
+	private PTZSpeed initPTZSpeed() throws IOException {
 		PTZSpeed speed = new PTZSpeed();
 		PTZSpaces spaces = session.getPtzSpaces();
 		Vector2D vector2D = new Vector2D();

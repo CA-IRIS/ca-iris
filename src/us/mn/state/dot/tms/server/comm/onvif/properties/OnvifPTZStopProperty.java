@@ -11,14 +11,17 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifStopProperty extends OnvifProperty {
+public class OnvifPTZStopProperty extends OnvifProperty {
 
-	public OnvifStopProperty(OnvifSessionMessenger session) {
+	public OnvifPTZStopProperty(OnvifSessionMessenger session) {
 		super(session);
 	}
 
 	@Override
 	protected void encodeStore() throws IOException {
+		// all onvif ptz devices must implement stop
+		// there, if we support the ptz service,
+		// we can assume the feature will be present
 		Stop stop = new Stop();
 		stop.setProfileToken(session.getDefaultProfileTok());
 		response = session.call(OnvifService.PTZ, stop, StopResponse.class);

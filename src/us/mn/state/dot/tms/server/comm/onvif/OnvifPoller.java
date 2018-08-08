@@ -1,21 +1,12 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.CommLink;
-import us.mn.state.dot.tms.CommLinkHelper;
-import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.CameraImpl;
-import us.mn.state.dot.tms.server.CommLinkImpl;
-import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.server.comm.onvif.operations.*;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -24,6 +15,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	implements CameraPoller
 {
 	private static final DebugLog ONVIF_LOG = new DebugLog("onvif");
+	private String name;
 
 	/**
 	 * this is just a more specific reference to our session for
@@ -31,41 +23,11 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	private OnvifSessionMessenger session;
 
-	public OnvifPoller(String name, OnvifSessionMessenger m) throws
-		IOException
-	{
+	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
+		this.name = name;
 		session = m;
-		CommLink cl = CommLinkHelper.lookup(name);
-		ControllerImpl c = null;
-
-		if (cl == null)
-			log("failed to find CommLink.");
-		else
-			c = getControllerImpl((CommLinkImpl) cl);
-		if (c == null)
-			log("could not find controller for: " + name);
-		else {
-			try {
-				session.initialize(c.getUsername(),
-					c.getPassword());
-			} catch (Exception e) {
-				log(e);
-				throw new IOException(
-					"Failed to start onvif session");
-			}
-		}
-		log("onvif device instantiated: " + name);
-	}
-
-	private ControllerImpl getControllerImpl(CommLinkImpl cl) {
-		ControllerImpl found = null;
-		LinkedList<Controller> controllers = cl.getActiveControllers();
-		for (Controller c : controllers)
-			if (c.getCommLink().getName().equals(cl.getName()))
-				found = (ControllerImpl) c;
-		return found;
-
+		log("Onvif device instantiated: " + name);
 	}
 
 	@Override
@@ -75,12 +37,12 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
-		addOperation(new OpOnvifPreset(c, preset, true, session));
+		addOperation(new OpOnvifPTZPreset(c, preset, true, session));
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
-		addOperation(new OpOnvifPreset(c, preset, false, session));
+		addOperation(new OpOnvifPTZPreset(c, preset, false, session));
 	}
 
 	@Override
@@ -91,7 +53,8 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 				new OpOnvifPTZ(c, 0, 0, 0, session));
 			break;
 		case CAMERA_WIPER_ONESHOT:
-			addOperation(new OpOnvifAux(c, session));
+			addOperation(new OpOnvifPTZAux(c, session));
+			break;
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
 		case CAMERA_FOCUS_STOP:
@@ -100,11 +63,13 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
 		case CAMERA_IRIS_STOP:
-		case CAMERA_IRIS_MANUAL:
-		case CAMERA_IRIS_AUTO:
 			addOperation(new OpOnvifImaging(c, session, r));
+			break;
 		case RESET_DEVICE:
 			addOperation(new OpOnvifDevice(c, session));
+			break;
+		case CAMERA_IRIS_MANUAL:
+		case CAMERA_IRIS_AUTO:
 		case QUERY_CONFIGURATION:
 		case QUERY_MESSAGE:
 		case QUERY_STATUS:
@@ -120,13 +85,13 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case SEND_LEDSTAR_SETTINGS:
 		case QUERY_LEDSTAR_SETTINGS:
 		case DISABLE_SYSTEM:
-			log("DeviceRequest not supported: " + r);
+			log("Device request not supported: " + r);
 			break;
 		case NO_REQUEST:
-			log("received: " + r);
+			log("Received: " + r);
 			break;
 		default:
-			log("received: " + r);
+			log("Unrecognized device request: " + r);
 			break;
 		}
 	}
@@ -142,10 +107,5 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	public static void log(String message) {
 		ONVIF_LOG.log("ONVIF: " + message);
-	}
-
-	public static void log(Exception e) {
-		ONVIF_LOG.log("ONVIF: " + e.getMessage() + "\n"
-			+ Arrays.toString(e.getStackTrace()));
 	}
 }

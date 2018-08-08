@@ -4,11 +4,13 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifFocusProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingProperty;
+import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
@@ -26,25 +28,42 @@ public class OpOnvifImaging extends OpOnvif {
 	{
 		super(PriorityLevel.COMMAND, d, session);
 		property = selectProperty(r);
+		try {
+			session.selectService(OnvifService.IMAGING);
+		} catch (IOException e) {
+			log(e.getMessage());
+		}
 	}
 
 	private OnvifImagingProperty selectProperty(DeviceRequest r) {
-		OnvifFocusProperty out = null;
+		OnvifImagingProperty out = null;
 		switch (r) {
 		case CAMERA_FOCUS_NEAR:
+			out = new OnvifImagingFocusMoveProperty(session, 0.2f, true);
+			break;
 		case CAMERA_FOCUS_FAR:
+			out = new OnvifImagingFocusMoveProperty(session, 0.2f, false);
+			break;
 		case CAMERA_FOCUS_STOP:
+			out = new OnvifImagingFocusMoveProperty(session, 0f, true);
+			break;
 		case CAMERA_FOCUS_MANUAL:
+			out = new OnvifImagingFocusAutoProperty(session, false);
+			break;
 		case CAMERA_FOCUS_AUTO:
+			out = new OnvifImagingFocusAutoProperty(session, true);
+			break;
 		case CAMERA_IRIS_CLOSE:
+			out = new OnvifImagingIrisProperty(session, 10f, false);
+			break;
 		case CAMERA_IRIS_OPEN:
+			out = new OnvifImagingIrisProperty(session, 10f, true);
+			break;
 		case CAMERA_IRIS_STOP:
-		case CAMERA_IRIS_MANUAL:
-		case CAMERA_IRIS_AUTO:
-			out = new OnvifFocusProperty(session);
+			out = new OnvifImagingIrisProperty(session, 0f, false);
 			break;
 		default:
-			OnvifPoller.log("OpOnvifImaging does not recognize request: " + r);
+			log("Imaging Service request not recognized: " + r);
 		}
 		return out;
 	}
@@ -64,7 +83,7 @@ public class OpOnvifImaging extends OpOnvif {
 		{
 			mess.add(property);
 			mess.storeProps();
-			updateOpStatus("Onvif device reboot command sent");
+			log("Onvif device reboot command sent");
 			return null;
 		}
 	}

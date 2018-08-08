@@ -1,6 +1,5 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommand;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommandResponse;
@@ -12,7 +11,7 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifWiperProperty extends OnvifProperty {
+public class OnvifPTZWiperProperty extends OnvifProperty {
 	/** true if we should swith the wiper on, else false */
 	private boolean switchOn;
 	/**
@@ -22,7 +21,7 @@ public class OnvifWiperProperty extends OnvifProperty {
 	private static String WIPER_OFF[] = {"tt:Wiper|Off", "wiperon"};
 	private static String WIPER_ON[] = {"tt:Wiper|On", "wiperoff"};
 
-	public OnvifWiperProperty(
+	public OnvifPTZWiperProperty(
 		OnvifSessionMessenger session, boolean switchOn)
 	{
 		super(session);
@@ -31,45 +30,52 @@ public class OnvifWiperProperty extends OnvifProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		SendAuxiliaryCommand cmd;
+		// ensure that the device supports wiper auxiliary command
+		SendAuxiliaryCommand supportedCmd = findSupportedCmd();
+		if (supportedCmd == null)
+			logFailure("Wiper command not supported for " + session
+				.getUri());
+		else
+			doWiper(supportedCmd);
+	}
 
-		cmd = switchOn ?
+	private void doWiper(SendAuxiliaryCommand cmd) throws IOException {
+		// Onvif does not have the idea of a wiper one shot;
+		// in fact, it barely has a wiper command at all.
+		// This one second delay is the best attempt at a one
+		// shot.
+		if (!switchOn) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				log("Pause between wiper on " +
+					"and wiper off was " +
+					"interrupted. Wiper " +
+					"operation may not " +
+					"have completed. ");
+			}
+		}
+		response = session.call(OnvifService.PTZ, cmd,
+			SendAuxiliaryCommandResponse.class);
+	}
+
+	private SendAuxiliaryCommand findSupportedCmd() throws IOException {
+		return switchOn ?
 			initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
 					.getAuxiliaryCommands().toArray(),
 				WIPER_ON))
 			: initCmd(matchAny(
-				(String[]) session.getNodes().get(0)
-					.getAuxiliaryCommands().toArray(),
-				WIPER_OFF));
-		if (cmd != null) {
-			// Onvif does not have the idea of a wiper one shot;
-			// in fact, it barely has a wiper command at all.
-			// This one second delay is the best attempt at a one
-			// shot.
-			if (!switchOn) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					OnvifPoller
-						.log("Pause between wiper on " +
-							"and wiper off was " +
-							"interrupted. Wiper " +
-							"operation may not " +
-							"have completed. ");
-				}
-			}
-			response = session.call(OnvifService.PTZ, cmd,
-				SendAuxiliaryCommandResponse.class);
-		}
-		else
-			OnvifPoller.log("Wiper command not supported.");
+			(String[]) session.getNodes().get(0)
+				.getAuxiliaryCommands().toArray(),
+			WIPER_OFF));
 	}
+
 
 	/**
 	 * @return a initialized AuxiliaryCommand if the param is not null
 	 */
-	private SendAuxiliaryCommand initCmd(String param) {
+	private SendAuxiliaryCommand initCmd(String param) throws IOException {
 		SendAuxiliaryCommand cmd = null;
 		if (param != null) {
 			cmd = new SendAuxiliaryCommand();

@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public abstract class OnvifPresetProperty extends OnvifProperty {
-	protected OnvifPresetProperty(
+public abstract class OnvifPTZPresetProperty extends OnvifProperty {
+	OnvifPTZPresetProperty(
 		OnvifSessionMessenger session)
 	{
 		super(session);
@@ -25,7 +25,7 @@ public abstract class OnvifPresetProperty extends OnvifProperty {
 	 * @param presets the presets to look in
 	 * @return null if not found else contains the presetToken
 	 */
-	protected String findPresetToken(
+	String findPresetToken(
 		Integer preset, List<PTZPreset> presets)
 	{
 		for (PTZPreset p : presets) {
@@ -41,5 +41,13 @@ public abstract class OnvifPresetProperty extends OnvifProperty {
 		return ((GetPresetsResponse) session
 			.call(OnvifService.PTZ, getPresets, GetPresetsResponse.class))
 			.getPreset();
+	}
+
+	/**
+	 *
+	 * @return any device that has at least 1 preset must support the preset commands
+	 */
+	boolean supportsPresets() throws IOException {
+		return session.getNodes().get(0).getMaximumNumberOfPresets() > 0;
 	}
 }

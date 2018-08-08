@@ -1,6 +1,5 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.SystemReboot;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.SystemRebootResponse;
@@ -12,8 +11,8 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifRebootProperty extends OnvifProperty {
-	public OnvifRebootProperty(
+public class OnvifDeviceRebootProperty extends OnvifProperty {
+	public OnvifDeviceRebootProperty(
 		OnvifSessionMessenger session)
 	{
 		super(session);
@@ -27,7 +26,7 @@ public class OnvifRebootProperty extends OnvifProperty {
 
 	protected void decodeStore() throws IOException {
 		SystemRebootResponse status = (SystemRebootResponse) response;
-		OnvifPoller.log("Onvif device preparing to reboot: "
+		logFailure("Onvif device responded to reboot request: "
 			+ status.getMessage());
 	}
 }

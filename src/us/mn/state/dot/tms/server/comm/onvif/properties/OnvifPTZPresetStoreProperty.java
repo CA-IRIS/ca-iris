@@ -1,6 +1,5 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
@@ -16,11 +15,11 @@ import java.util.List;
  *
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifPresetStoreProperty extends OnvifPresetProperty {
+public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	private Integer preset;
 	private String presetToken;
 
-	public OnvifPresetStoreProperty(
+	public OnvifPTZPresetStoreProperty(
 		OnvifSessionMessenger session, int num)
 	{
 		super(session);
@@ -29,25 +28,27 @@ public class OnvifPresetStoreProperty extends OnvifPresetProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		List<PTZPreset> presets;
-		try {
-			presets = getPresets();
-		} catch (Exception e) {
-			OnvifPoller.log(e.getMessage());
-			throw new IOException(
-				"Could not retrieve current presets");
-		}
-		presetToken = findPresetToken(preset, presets);
-		try {
-			if (presetToken != null)
-				setPreset(preset, presetToken);
-			else if (hasRoomForAnotherPreset())
-				setPreset(preset, null);
-			else throw new IOException(
-					"Device does not have room for more " +
-						"presets");
-		} catch (Exception e) {
-			throw new IOException(e.getMessage());
+		if (!supportsPresets())
+			logFailure("Presets not supported");
+		else {
+			List<PTZPreset> presets = null;
+			try {
+				presets = getPresets();
+			} catch (Exception e) {
+				logFailure("Could not retrieve current presets");
+			}
+			presetToken = findPresetToken(preset, presets);
+			try {
+				if (presetToken != null)
+					setPreset(preset, presetToken);
+				else if (hasRoomForAnotherPreset())
+					setPreset(preset, null);
+				else throw new IOException(
+						"Device does not have room for" +
+							" more presets");
+			} catch (Exception e) {
+				throw new IOException(e.getMessage());
+			}
 		}
 	}
 
@@ -85,8 +86,7 @@ public class OnvifPresetStoreProperty extends OnvifPresetProperty {
 			.equals(presetToken))
 			|| setPresetResponse.getPresetToken().isEmpty())
 		{
-			OnvifPoller
-				.log("Tried to set overwrite existing " +
+			log("Tried to set overwrite existing " +
 					"preset," +
 					" " +
 					"but response preset token did not " +
@@ -94,8 +94,7 @@ public class OnvifPresetStoreProperty extends OnvifPresetProperty {
 			throw new IOException(
 				"Unexpected response to store preset request");
 		}
-		OnvifPoller
-			.log("Preset overwritten: " + preset + ", token: " + presetToken);
+		log("Preset overwritten: " + preset + ", token: " + presetToken);
 
 	}
 }
