@@ -11,14 +11,13 @@ import java.net.URL;
 
 
 /**
- * todo for now this is a dummy class (later we will make use of the output stream)
+ * todo for now this is a dummy class (later we may make use of the output stream)
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class HttpMessenger extends Messenger {
 	private String uri;
 	private HttpURLConnection httpURLConnection = null;
 	private int timeout = 5000;
-	private boolean uriChanged = true;
 
 	public HttpMessenger(String uri) {
 		input = null;
@@ -27,9 +26,9 @@ public class HttpMessenger extends Messenger {
 	}
 
 	public void setUri(String uri) {
-		if (!this.uri.matches(uri)) {
+		if (!this.uri.equals(uri)) {
 			this.uri = uri;
-			uriChanged = true;
+			close();
 		}
 	}
 
@@ -81,11 +80,8 @@ public class HttpMessenger extends Messenger {
 	 */
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		if (uriChanged) {
-			close();
+		if (output == null)
 			open();
-			uriChanged = false;
-		}
 		return output;
 	}
 

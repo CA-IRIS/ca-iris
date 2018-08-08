@@ -1,7 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.session;
 
 import org.w3c.dom.Document;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
+import us.mn.state.dot.sched.DebugLog;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -10,7 +10,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.*;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 
 /**
@@ -22,14 +24,15 @@ import java.security.NoSuchAlgorithmException;
 public class SoapWrapper {
 
 	private SOAPMessage soapRequest;
+	private static final DebugLog SOAP_LOG = new DebugLog("soap");
 
 	/**
 	 * Create a soap request
 	 *
 	 * @param requestObject must be initialized with fields populated
-	 * @throws SOAPException
-	 * @throws JAXBException
-	 * @throws ParserConfigurationException
+	 * @throws SOAPException on soap creation error
+	 * @throws JAXBException on soap creation error
+	 * @throws ParserConfigurationException on soap creation error
 	 */
 	public SoapWrapper(Object requestObject)
 		throws SOAPException, JAXBException,
@@ -61,19 +64,13 @@ public class SoapWrapper {
 
 		soapRequest.saveChanges();
 
-		// todo remove debug
-		System.out.println("Request SOAP message: ");
-		soapRequest.writeTo(System.out);
-		System.out.println();
 
-		System.out.println("To uri: " + uri);
+		log("Request SOAP message to " + uri, soapRequest);
 
 		SOAPMessage soapResponse =
 			soapConnection.call(soapRequest, uri);
 
-		System.out.println("Response SOAP message: ");
-		soapResponse.writeTo(System.out);
-		System.out.println();
+		log("Response SOAP message from " + uri, soapResponse);
 
 		return soapResponse;
 	}
@@ -100,17 +97,35 @@ public class SoapWrapper {
 		SOAPMessage m = callSoapWebService(uri);
 
 		if (m.getSOAPBody().hasFault()) {
-			OnvifPoller.log(m.toString());
-			// todo remove debug
-			System.out.println(m.toString());
-			throw new IOException(m.getSOAPBody().getFault().getFaultString());
+
+			log("SOAP Fault", m);
+			throw new IOException(
+				m.getSOAPBody().getFault().getFaultString());
 		}
-		// todo verify returned nonce
 		return convertToObject(m, targetClass);
 	}
 
 	/**
-	 * @param requestObject
+	 * Call soap web service but does not wait for a response.
+	 * @param uri
+	 * @param auth
+	 * @param os
+	 * @throws IOException
+	 * @throws SOAPException
+	 * @throws JAXBException
+	 * @throws NoSuchAlgorithmException
+	 */
+	public void callSoapWebService(
+		String uri, WSUsernameToken auth, OutputStream os)
+		throws IOException, SOAPException, NoSuchAlgorithmException
+	{
+		addAuthHeader(auth);
+		soapRequest.writeTo(os);
+	}
+
+	/**
+	 * @param requestObject the object from which the message format will
+	 * 	be derived
 	 * @return a new instance of a soap request
 	 * @throws SOAPException malformed soap
 	 * @throws JAXBException cannot make document
@@ -220,7 +235,7 @@ public class SoapWrapper {
 	 * @param soapMessage the message to convert
 	 * @param targetClass the returned object type to which the soapMessage
 	 * 	will be converted
-	 * @return
+	 * @return the object form of soapMessage
 	 * @throws JAXBException an unmarshaller instance could not be created
 	 * 	for the obect
 	 * @throws SOAPException if the SOAP Body does not exist or cannot be
@@ -235,5 +250,20 @@ public class SoapWrapper {
 				.createUnmarshaller();
 		return unmarshaller.unmarshal(
 			soapMessage.getSOAPBody().extractContentAsDocument());
+	}
+
+	/**
+	 * formats context information and msg and writes to soap log file
+	 */
+	private static void log(String context, SOAPMessage msg) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			msg.writeTo(out);
+		} catch (Exception e) {
+			SOAP_LOG.log(
+				"Could not convert SOAP message to string for "
+					+ context + "\n" + e);
+		}
+		SOAP_LOG.log(new String(out.toByteArray()));
 	}
 }

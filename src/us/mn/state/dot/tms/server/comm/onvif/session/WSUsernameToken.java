@@ -64,9 +64,9 @@ public class WSUsernameToken {
 		try {
 			messageDigest = MessageDigest.getInstance("SHA-1");
 		} catch (NoSuchAlgorithmException e) {
-			OnvifPoller.log(
+			log(
 				"ONVIF-required SHA-1 digest algorithm is " +
-					"not implemented");
+					"not implemented or not detected");
 			throw e;
 		}
 		messageDigest.update((getNonce() + getUTCTime() + password)
@@ -119,5 +119,9 @@ public class WSUsernameToken {
 			nonce = createNonce();
 		}
 		return nonce;
+	}
+
+	private static void log(String msg) {
+		OnvifPoller.log(msg);
 	}
 }
