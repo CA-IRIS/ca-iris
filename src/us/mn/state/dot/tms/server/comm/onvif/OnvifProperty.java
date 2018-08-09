@@ -2,7 +2,9 @@ package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
+import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,10 +15,16 @@ import java.io.OutputStream;
  */
 public abstract class OnvifProperty extends ControllerProperty {
 	protected OnvifSessionMessenger session;
+	private OnvifService service;
+
+	/** any response to the call to the Service */
 	protected Object response;
 
-	protected OnvifProperty(OnvifSessionMessenger session) {
+	protected OnvifProperty(
+		OnvifSessionMessenger session, OnvifService service)
+	{
 		this.session = session;
+		this.service = service;
 		log("Preparing operation properties");
 	}
 
@@ -28,24 +36,6 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	/**
-	 * must be called by subclasses before attempting to use the auth
-	 * credentials
-	 */
-	private void initSession(ControllerImpl c) throws IOException {
-		// this should be a one time session setup per device per
-		// client
-		if (!session.isInitialized()) {
-			try {
-				session.setAuth(c.getUsername(),
-					c.getPassword());
-				session.open();
-			} catch (Exception e) {
-				throw new IOException(e.getMessage());
-			}
-		}
-	}
-
-	/**
 	 * @return a float remapped to a new range
 	 * @throws AssertionError if oldMin == oldMax
 	 */
@@ -54,6 +44,8 @@ public abstract class OnvifProperty extends ControllerProperty {
 		float newMax) throws AssertionError
 	{
 		assert oldMin != oldMax; // avoid division by zero
+		assert val < oldMax && val > oldMin; // check inputs
+		assert newMax > newMin;
 		float oldRange = oldMax - oldMin;
 		float newRange = newMax - newMin;
 		return (val - oldMin) / oldRange * newRange + newMin;
@@ -67,19 +59,21 @@ public abstract class OnvifProperty extends ControllerProperty {
 		throws IOException
 	{
 		log("Sending operation properties");
-		initSession(c);
-		encodeStore();
+		try {
+			encodeStore();
+		} catch (ServiceNotSupportedException e) {
+			logFailure(e.getMessage());
+		}
 	}
 
 	@Override
 	public void decodeStore(ControllerImpl c, InputStream is)
 		throws IOException
 	{
-		log("Reading operation response properties");
 		if (response == null)
-			throw new IOException(
-				"No response received from device");
-		decodeStore();
+			log("No response received from device");
+		else
+			decodeStore();
 	}
 
 	/**
@@ -88,7 +82,8 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 *
 	 * @throws IOException the session could not be initialized
 	 */
-	protected abstract void encodeStore() throws IOException;
+	protected abstract void encodeStore()
+		throws IOException, ServiceNotSupportedException;
 
 	/**
 	 * may be overridden by concrete implementations if errors may be
@@ -97,14 +92,14 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 * @throws IOException
 	 */
 	protected void decodeStore() throws IOException {
-		log("Device responded: " + response.toString());
+		log(response.getClass().getSimpleName());
 	}
 
 	protected void log(String msg) {
-		OnvifPoller.log("Property: " + msg);
+		OnvifPoller.log(this.getClass().getSimpleName() + ": " + msg);
 	}
 
-	protected void logFailure (String msg) throws IOException {
+	protected void logFailure(String msg) throws IOException {
 		String m = this.getClass().getSimpleName() + ": " + msg;
 		log(m);
 		throw new IOException(m);

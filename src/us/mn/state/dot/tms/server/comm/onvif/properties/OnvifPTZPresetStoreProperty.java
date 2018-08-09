@@ -3,8 +3,8 @@ package us.mn.state.dot.tms.server.comm.onvif.properties;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,7 +27,9 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	}
 
 	@Override
-	protected void encodeStore() throws IOException {
+	protected void encodeStore()
+		throws IOException, ServiceNotSupportedException
+	{
 		if (!supportsPresets())
 			logFailure("Presets not supported");
 		else {
@@ -52,27 +54,6 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 		}
 	}
 
-	private boolean hasRoomForAnotherPreset() throws IOException {
-		return getPresets().size()
-			< session.getNodes().get(0).getMaximumNumberOfPresets();
-	}
-
-	/**
-	 * @param preset the preset number
-	 * @param presetToken if null, then a new preset will be created
-	 */
-	private void setPreset(Integer preset, String presetToken)
-		throws IOException
-	{
-		SetPreset setPreset = new SetPreset();
-		setPreset.setProfileToken(session.getDefaultProfileTok());
-		setPreset.setPresetName("IRIS" + preset);
-		if (presetToken != null)
-			setPreset.setPresetToken(presetToken);
-		response = session.call(OnvifService.PTZ, setPreset,
-			SetPresetResponse.class);
-	}
-
 	@Override
 	public void decodeStore() throws IOException {
 		// null check then:
@@ -87,14 +68,37 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 			|| setPresetResponse.getPresetToken().isEmpty())
 		{
 			log("Tried to set overwrite existing " +
-					"preset," +
-					" " +
-					"but response preset token did not " +
-					"match found preset token");
+				"preset," +
+				" " +
+				"but response preset token did not " +
+				"match found preset token");
 			throw new IOException(
 				"Unexpected response to store preset request");
 		}
 		log("Preset overwritten: " + preset + ", token: " + presetToken);
 
+	}
+
+	private boolean hasRoomForAnotherPreset()
+		throws IOException, ServiceNotSupportedException
+	{
+		return getPresets().size()
+			< session.getNodes().get(0).getMaximumNumberOfPresets();
+	}
+
+	/**
+	 * @param preset the preset number
+	 * @param presetToken if null, then a new preset will be created
+	 */
+	private void setPreset(Integer preset, String presetToken)
+		throws IOException, ServiceNotSupportedException
+	{
+		SetPreset setPreset = new SetPreset();
+		setPreset.setProfileToken(session.getMediaProfileTok());
+		setPreset.setPresetName("IRIS" + preset);
+		if (presetToken != null)
+			setPreset.setPresetToken(presetToken);
+		response = session.makeRequest(setPreset,
+			SetPresetResponse.class);
 	}
 }

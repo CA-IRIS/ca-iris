@@ -14,17 +14,12 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OpOnvifPTZAux extends OpOnvif {
+public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	public OpOnvifPTZAux(
 		DeviceImpl d,
 		OnvifSessionMessenger session)
 	{
 		super(PriorityLevel.COMMAND, d, session);
-		try {
-			session.selectService(OnvifService.PTZ);
-		} catch (IOException e) {
-			log(e.getMessage());
-		}
 	}
 
 	/**
@@ -34,7 +29,7 @@ public class OpOnvifPTZAux extends OpOnvif {
 	 * @return
 	 */
 	@Override
-	protected Phase<OnvifProperty> phaseTwo() {
+	protected OnvifPhase phaseTwo() {
 		return new WiperOn();
 	}
 
@@ -42,23 +37,23 @@ public class OpOnvifPTZAux extends OpOnvif {
 	 * Onvif does not have the idea of a wiper one shot; in fact, it barely
 	 * has a wiper command at all. This the best attempt at a one shot
 	 */
-	protected class WiperOn extends Phase<OnvifProperty> {
-		protected Phase<OnvifProperty> poll(
-			CommMessage<OnvifProperty> mess) throws IOException
+	protected class WiperOn extends OnvifPhase {
+		protected OnvifPhase poll2(
+			CommMessage<OnvifProperty> p) throws IOException
 		{
-			mess.add(new OnvifPTZWiperProperty(session, true));
-			mess.storeProps();
+			p.add(new OnvifPTZWiperProperty(session, true));
+			p.storeProps();
 			log("Wiper on command sent");
 			return new WiperOff();
 		}
 	}
 
-	protected class WiperOff extends Phase<OnvifProperty> {
-		protected Phase<OnvifProperty> poll(
-			CommMessage<OnvifProperty> mess) throws IOException
+	protected class WiperOff extends OnvifPhase {
+		protected OnvifPhase poll2(
+			CommMessage<OnvifProperty> p) throws IOException
 		{
-			mess.add(new OnvifPTZWiperProperty(session, false));
-			mess.storeProps();
+			p.add(new OnvifPTZWiperProperty(session, false));
+			p.storeProps();
 			log("Wiper off command sent");
 			return null;
 		}

@@ -15,19 +15,16 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	implements CameraPoller
 {
 	private static final DebugLog ONVIF_LOG = new DebugLog("onvif");
-	private String name;
-
 	/**
-	 * this is just a more specific reference to our session for
-	 * convenience
+	 * this is just a more specific reference to our messenger (which
+	 * happens to be a session) for convenience
 	 */
 	private OnvifSessionMessenger session;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
-		this.name = name;
 		session = m;
-		log("Onvif device instantiated: " + name);
+		log("Onvif device created: " + name);
 	}
 
 	@Override
@@ -63,13 +60,13 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
 		case CAMERA_IRIS_STOP:
+		case CAMERA_IRIS_MANUAL:
+		case CAMERA_IRIS_AUTO:
 			addOperation(new OpOnvifImaging(c, session, r));
 			break;
 		case RESET_DEVICE:
 			addOperation(new OpOnvifDevice(c, session));
 			break;
-		case CAMERA_IRIS_MANUAL:
-		case CAMERA_IRIS_AUTO:
 		case QUERY_CONFIGURATION:
 		case QUERY_MESSAGE:
 		case QUERY_STATUS:
@@ -101,7 +98,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		log("Drop addresses not supported");
+		log("Drop addresses not valid for Onvif devices");
 		return true;
 	}
 

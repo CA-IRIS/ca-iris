@@ -8,8 +8,6 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisProperty;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
@@ -18,8 +16,9 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OpOnvifImaging extends OpOnvif {
-	private OnvifImagingProperty property;
+public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
+
+	private final DeviceRequest request;
 
 	public OpOnvifImaging(
 		DeviceImpl d,
@@ -27,25 +26,36 @@ public class OpOnvifImaging extends OpOnvif {
 		DeviceRequest r)
 	{
 		super(PriorityLevel.COMMAND, d, session);
-		property = selectProperty(r);
-		try {
-			session.selectService(OnvifService.IMAGING);
-		} catch (IOException e) {
-			log(e.getMessage());
+		request = r;
+	}
+
+	@Override
+	protected OnvifPhase phaseTwo() {
+		return new Adjust();
+	}
+
+	protected class Adjust extends OnvifPhase {
+		protected OnvifPhase poll2(
+			CommMessage<OnvifProperty> p) throws IOException
+		{
+			p.add(selectProperty(request));
+			p.storeProps();
+			log("Onvif device reboot command sent");
+			return null;
 		}
 	}
 
-	private OnvifImagingProperty selectProperty(DeviceRequest r) {
-		OnvifImagingProperty out = null;
+	private OnvifProperty selectProperty(DeviceRequest r) {
+		OnvifProperty out = null;
 		switch (r) {
 		case CAMERA_FOCUS_NEAR:
-			out = new OnvifImagingFocusMoveProperty(session, 0.2f, true);
+			out = new OnvifImagingFocusMoveProperty(session, -0.2f);
 			break;
 		case CAMERA_FOCUS_FAR:
-			out = new OnvifImagingFocusMoveProperty(session, 0.2f, false);
+			out = new OnvifImagingFocusMoveProperty(session, 0.2f);
 			break;
 		case CAMERA_FOCUS_STOP:
-			out = new OnvifImagingFocusMoveProperty(session, 0f, true);
+			out = new OnvifImagingFocusMoveProperty(session, 0f);
 			break;
 		case CAMERA_FOCUS_MANUAL:
 			out = new OnvifImagingFocusAutoProperty(session, false);
@@ -54,37 +64,17 @@ public class OpOnvifImaging extends OpOnvif {
 			out = new OnvifImagingFocusAutoProperty(session, true);
 			break;
 		case CAMERA_IRIS_CLOSE:
-			out = new OnvifImagingIrisProperty(session, 10f, false);
-			break;
 		case CAMERA_IRIS_OPEN:
-			out = new OnvifImagingIrisProperty(session, 10f, true);
-			break;
 		case CAMERA_IRIS_STOP:
-			out = new OnvifImagingIrisProperty(session, 0f, false);
+		case CAMERA_IRIS_MANUAL:
+		case CAMERA_IRIS_AUTO:
+			log("Onvif iris commands not implemented. Onvif only " +
+				"supports absolute iris adjustments, but Iris " +
+				"only supports continuous iris adjustments. ");
 			break;
 		default:
 			log("Imaging Service request not recognized: " + r);
 		}
 		return out;
-	}
-
-	/**
-	 * More Device commands may be supported in the future, but Reboot is
-	 * all the UI supports for now.
-	 */
-	@Override
-	protected Phase<OnvifProperty> phaseTwo() {
-		return new Adjust();
-	}
-
-	protected class Adjust extends Phase<OnvifProperty> {
-		protected Phase<OnvifProperty> poll(
-			CommMessage<OnvifProperty> mess) throws IOException
-		{
-			mess.add(property);
-			mess.storeProps();
-			log("Onvif device reboot command sent");
-			return null;
-		}
 	}
 }

@@ -14,17 +14,12 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OpOnvifDevice extends OpOnvif {
+public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 	public OpOnvifDevice(
 		DeviceImpl d,
 		OnvifSessionMessenger session)
 	{
 		super(PriorityLevel.URGENT, d, session);
-		try {
-			session.selectService(OnvifService.DEVICE);
-		} catch (IOException e) {
-			log(e.getMessage());
-		}
 	}
 
 	/**
@@ -32,16 +27,16 @@ public class OpOnvifDevice extends OpOnvif {
 	 * all the UI supports for now.
 	 */
 	@Override
-	protected Phase<OnvifProperty> phaseTwo() {
+	protected OnvifPhase phaseTwo() {
 		return new Reboot();
 	}
 
-	protected class Reboot extends Phase<OnvifProperty> {
-		protected Phase<OnvifProperty> poll(
-			CommMessage<OnvifProperty> mess) throws IOException
-		{
-			mess.add(new OnvifDeviceRebootProperty(session));
-			mess.storeProps();
+	protected class Reboot extends OnvifPhase {
+		@Override
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> p)
+			throws IOException {
+			p.add(new OnvifDeviceRebootProperty(session));
+			p.storeProps();
 			log("Onvif device reboot command sent");
 			return null;
 		}

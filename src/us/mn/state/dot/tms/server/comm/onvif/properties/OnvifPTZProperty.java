@@ -7,8 +7,8 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public abstract class OnvifImagingProperty extends OnvifProperty {
-	protected OnvifImagingProperty(OnvifSessionMessenger session) {
-		super(session, OnvifService.IMAGING);
+public abstract class OnvifPTZProperty extends OnvifProperty {
+	protected OnvifPTZProperty(OnvifSessionMessenger session) {
+		super(session, OnvifService.PTZ);
 	}
 }

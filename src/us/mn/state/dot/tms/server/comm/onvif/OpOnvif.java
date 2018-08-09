@@ -2,14 +2,17 @@ package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
+import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
+import java.io.IOException;
+
 /**
  * @author Wesley Skillern (Southwest Research Institue)
  */
-public abstract class OpOnvif extends OpDevice<OnvifProperty> {
+public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 	protected OnvifSessionMessenger session;
 
 	protected OpOnvif(
@@ -17,21 +20,22 @@ public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 	{
 		super(p, d);
 		this.session = session;
-		checkSessionCredentials();
-		log("Preparing an operation");
+		if (!session.isInitialized())
+			applySessionCredentials();
+		log("Preparing operation");
 	}
 
-	private void checkSessionCredentials() {
-		if (!session.isInitialized()) {
-			ControllerImpl c = getController();
-			if (c == null)
-				log("Failed to find Controller");
-			else if (c.getUsername() == null || c.getPassword() == null
-				|| c.getUsername().isEmpty() || c.getPassword().isEmpty())
-				log("Controller username or password not set: " + c.getName());
-			else
-				session.setAuth(c.getUsername(), c.getPassword());
-		}
+	private void applySessionCredentials() {
+		ControllerImpl c = getController();
+		if (c == null)
+			log("Failed to find Controller");
+		else if (c.getUsername() == null || c.getPassword() == null
+			|| c.getUsername().isEmpty() || c.getPassword()
+			.isEmpty())
+			log("Controller username or password not set: " +
+				c.getName());
+		else
+			session.setAuth(c.getUsername(), c.getPassword());
 	}
 
 	/**
@@ -47,9 +51,32 @@ public abstract class OpOnvif extends OpDevice<OnvifProperty> {
 		device.setOpStatus(s);
 	}
 
+	@Override
+	protected abstract OnvifPhase phaseTwo();
+
+	protected abstract class OnvifPhase extends Phase<T>
+	{
+		protected abstract OnvifPhase poll2(CommMessage<T> p)
+			throws IOException;
+
+		/**
+		 * Forces some error handling for Onvif devices
+		 * @throws IOException if the property failed
+		 */
+		protected OnvifPhase poll(CommMessage<T> mess) throws IOException
+		{
+			try {
+				return poll2(mess);
+			} catch (IOException e) {
+				log(e.getMessage());
+				setFailed();
+				throw e;
+			}
+		}
+	}
+
 	protected void log(String msg) {
-		String m = device.getName() + ": " + getOpName() + ": " + msg;
-		updateOpStatus(m);
-		OnvifPoller.log(m);
+		updateOpStatus(msg);
+		OnvifPoller.log(getOpName() + ": " + msg);
 	}
 }

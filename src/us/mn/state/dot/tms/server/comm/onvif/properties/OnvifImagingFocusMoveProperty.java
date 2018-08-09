@@ -4,8 +4,8 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Co
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.FocusMove;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.Move;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.MoveResponse;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
 
@@ -14,43 +14,53 @@ import java.io.IOException;
  */
 public class OnvifImagingFocusMoveProperty extends OnvifImagingProperty {
 	private float speed;
-	private static float NEAR_MIN = -1;
-	private static float FAR_MAX = 1;
+	private static final float NEAR_MIN = -1;
+	private static final float FAR_MAX = 1;
 
-
+	/**
+	 * @param speed negative value focuses near and positive value focuses
+	 * 	far
+	 */
 	public OnvifImagingFocusMoveProperty(
-		OnvifSessionMessenger session,
-		float speed,
-		boolean near)
+		OnvifSessionMessenger session, float speed)
 	{
 		super(session);
-		this.speed = speed * (near ? NEAR_MIN : FAR_MAX);
+		this.speed = speed;
 	}
 
 	@Override
-	protected void encodeStore() throws IOException {
+	protected void encodeStore()
+		throws IOException, ServiceNotSupportedException
+	{
 		if (!supportsFocusMove())
 			logFailure("Device does not support Focus Move");
-		float newMin = session.getImagingMoveOptions().getContinuous().getSpeed().getMin();
-		float newMax = session.getImagingMoveOptions().getContinuous().getSpeed().getMin();
-		speed = resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax);
-		continuousFocus();
+		float newMin = session.getImagingMoveOptions().getContinuous()
+			.getSpeed().getMin();
+		float newMax = session.getImagingMoveOptions().getContinuous()
+			.getSpeed().getMax();
+		continuousFocus(
+			resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax));
 	}
 
-	private boolean supportsFocusMove() throws IOException {
+	private boolean supportsFocusMove()
+		throws IOException, ServiceNotSupportedException
+	{
 		return session.getImagingMoveOptions().getContinuous() != null
-			&& session.getImagingMoveOptions().getContinuous().getSpeed() != null;
+			&& session.getImagingMoveOptions().getContinuous()
+			.getSpeed() != null;
 	}
 
-	private void continuousFocus() throws IOException {
+	private void continuousFocus(float speed)
+		throws IOException, ServiceNotSupportedException
+	{
 		Move request = new Move();
-		request.setVideoSourceToken(session.getDefaultProfileTok());
-		FocusMove focusMove = new FocusMove();
+		request.setVideoSourceToken(session.getMediaProfileTok());
 		ContinuousFocus val = new ContinuousFocus();
+		FocusMove focusMove = new FocusMove();
 		val.setSpeed(speed);
 		focusMove.setContinuous(val);
 		request.setFocus(focusMove);
-		response = session.call(OnvifService.IMAGING, request,
+		response = session.makeRequest(request,
 			MoveResponse.class);
 	}
 }
