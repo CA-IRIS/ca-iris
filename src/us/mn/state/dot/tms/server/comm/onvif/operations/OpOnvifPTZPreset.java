@@ -9,7 +9,7 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetRecallProp
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetStoreProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -20,10 +20,11 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 	private boolean store;
 	private int preset;
 
-	public OpOnvifPTZPreset(CameraImpl c, int preset, boolean store,
-				OnvifSessionMessenger session)
+	public OpOnvifPTZPreset(
+		CameraImpl c, int preset, boolean store,
+		OnvifSessionMessenger session)
 	{
-		super(PriorityLevel.COMMAND, c, session);
+		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ);
 		this.preset = preset;
 		this.store = store;
 	}
@@ -37,33 +38,42 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 	 * Onvif devices must be in a stopped state in order to save position
 	 */
 	protected class StoreStop extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(new OnvifPTZStopProperty(session));
-			p.storeProps();
-			log("Stop command sent before preset store");
+			OnvifPTZStopProperty p =
+				new OnvifPTZStopProperty(session);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return new StoreMove();
 		}
 	}
 
 	protected class StoreMove extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(new OnvifPTZPresetStoreProperty(session, preset));
-			p.storeProps();
-			log("Store preset command sent");
+			OnvifPTZPresetStoreProperty p =
+				new OnvifPTZPresetStoreProperty(session,
+					preset);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
 		}
 	}
 
 	protected class Recall extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(new OnvifPTZPresetRecallProperty(session, preset));
-			p.storeProps();
+			OnvifPTZPresetRecallProperty p =
+				new OnvifPTZPresetRecallProperty(session,
+					preset);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
 		}
 	}

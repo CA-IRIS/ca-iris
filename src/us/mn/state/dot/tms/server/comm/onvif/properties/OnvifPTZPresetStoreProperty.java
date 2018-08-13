@@ -3,10 +3,11 @@ package us.mn.state.dot.tms.server.comm.onvif.properties;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -27,30 +28,29 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	}
 
 	@Override
-	protected void encodeStore()
+	protected void encodeStore(OutputStream os)
 		throws IOException, ServiceNotSupportedException
 	{
 		if (!supportsPresets())
-			logFailure("Presets not supported");
+			logFailure("Presets not supported. ");
 		else {
 			List<PTZPreset> presets = null;
-			try {
-				presets = getPresets();
-			} catch (Exception e) {
-				logFailure("Could not retrieve current presets");
-			}
+			presets = getPresets();
 			presetToken = findPresetToken(preset, presets);
-			try {
-				if (presetToken != null)
-					setPreset(preset, presetToken);
-				else if (hasRoomForAnotherPreset())
-					setPreset(preset, null);
-				else throw new IOException(
-						"Device does not have room for" +
-							" more presets");
-			} catch (Exception e) {
-				throw new IOException(e.getMessage());
-			}
+			if (presetToken != null)
+				setPreset(preset, presetToken);
+			else if (hasRoomForAnotherPreset())
+				setPreset(preset, null);
+			else throw new IOException(
+					"Device does not have room " +
+						"for" +
+						" more presets. Try " +
+						"using the device's " +
+						"web app (if " +
+						"available) to delete " +
+						"non-IRIS presets, or " +
+						"overwrite a lower " +
+						"numbered preset. ");
 		}
 	}
 
@@ -68,14 +68,13 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 			|| setPresetResponse.getPresetToken().isEmpty())
 		{
 			log("Tried to set overwrite existing " +
-				"preset," +
-				" " +
-				"but response preset token did not " +
-				"match found preset token");
+				"preset, but response preset token did not " +
+				"match found preset token. ");
 			throw new IOException(
-				"Unexpected response to store preset request");
+				"Unexpected response to store preset request." +
+					" ");
 		}
-		log("Preset overwritten: " + preset + ", token: " + presetToken);
+		log("Preset overwritten for number: " + preset);
 
 	}
 

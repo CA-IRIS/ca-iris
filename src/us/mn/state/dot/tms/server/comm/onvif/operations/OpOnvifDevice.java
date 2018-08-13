@@ -1,5 +1,6 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
+import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -7,7 +8,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceRebootProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -15,11 +16,15 @@ import java.io.IOException;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
+	private DeviceRequest r;
+
 	public OpOnvifDevice(
 		DeviceImpl d,
-		OnvifSessionMessenger session)
+		OnvifSessionMessenger session,
+		DeviceRequest r)
 	{
-		super(PriorityLevel.URGENT, d, session);
+		super(PriorityLevel.URGENT, d, session, OnvifService.DEVICE);
+		this.r = r;
 	}
 
 	/**
@@ -33,12 +38,23 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 
 	protected class Reboot extends OnvifPhase {
 		@Override
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> p)
-			throws IOException {
-			p.add(new OnvifDeviceRebootProperty(session));
-			p.storeProps();
-			log("Onvif device reboot command sent");
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
+		{
+			OnvifProperty p = selectProperty(r);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
+		}
+	}
+
+	private OnvifProperty selectProperty(DeviceRequest r) throws IOException {
+		switch (r) {
+		case RESET_DEVICE:
+			return new OnvifDeviceRebootProperty(session);
+		default:
+			throw new IOException("Unsupported: " + r);
 		}
 	}
 }

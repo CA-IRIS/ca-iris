@@ -7,7 +7,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZWiperProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -19,14 +19,13 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 		DeviceImpl d,
 		OnvifSessionMessenger session)
 	{
-		super(PriorityLevel.COMMAND, d, session);
+		super(PriorityLevel.COMMAND, d, session, OnvifService.PTZ);
 	}
 
 	/**
 	 * More Auxiliary commands may be supported in the future, but wiper is
 	 * all that the UI supports for now.
 	 *
-	 * @return
 	 */
 	@Override
 	protected OnvifPhase phaseTwo() {
@@ -38,23 +37,27 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 * has a wiper command at all. This the best attempt at a one shot
 	 */
 	protected class WiperOn extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(new OnvifPTZWiperProperty(session, true));
-			p.storeProps();
-			log("Wiper on command sent");
+			OnvifPTZWiperProperty p =
+				new OnvifPTZWiperProperty(session, true);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return new WiperOff();
 		}
 	}
 
 	protected class WiperOff extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(new OnvifPTZWiperProperty(session, false));
-			p.storeProps();
-			log("Wiper off command sent");
+			OnvifPTZWiperProperty p =
+				new OnvifPTZWiperProperty(session, false);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
 		}
 	}

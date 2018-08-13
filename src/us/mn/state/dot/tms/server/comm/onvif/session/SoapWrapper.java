@@ -2,6 +2,7 @@ package us.mn.state.dot.tms.server.comm.onvif.session;
 
 import org.w3c.dom.Document;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapWrapperException;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -12,33 +13,57 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * an encapsulation of the soap formatting and transmission logic for soap
+ * A static encapsulation of the soap formatting and transmission logic for soap
  * requests
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class SoapWrapper {
 
-	private SOAPMessage soapRequest;
 	private static final DebugLog SOAP_LOG = new DebugLog("soap");
 
 	/**
-	 * Create a soap request
+	 * Used for getting a response from a session web service using this
+	 * request and a response object. Blocks until response!
 	 *
-	 * @param requestObject must be initialized with fields populated
-	 * @throws SOAPException on soap creation error
-	 * @throws JAXBException on soap creation error
-	 * @throws ParserConfigurationException on soap creation error
+	 * @param uri this soap message will be sent to the uri
+	 * @param targetClass for formatting purposes
+	 * @return the response initialized object
+	 * @throws IOException error during soap transmission
 	 */
-	public SoapWrapper(Object requestObject)
-		throws SOAPException, JAXBException,
-		ParserConfigurationException
+	public static Object callWebService(
+		Object requestObject, String uri, Class<?> targetClass,
+		WSUsernameToken auth) throws SoapWrapperException
 	{
-		soapRequest = createSoapRequest(requestObject);
+		try {
+			SOAPMessage request =
+				createSoapRequest(requestObject);
+			addAuthHeader(request, auth);
+			SOAPMessage m = callWebService(request, uri);
+
+			if (m.getSOAPBody().hasFault()) {
+
+				log("SOAP Fault", m);
+				throw new IOException(
+					m.getSOAPBody().getFault()
+						.getFaultString());
+			}
+			return convertToObject(m, targetClass);
+		} catch (NoSuchAlgorithmException
+			| JAXBException
+			| ParserConfigurationException
+			| IOException e) {
+			throw new SoapWrapperException(e);
+		} catch (SOAPException e) {
+			SoapWrapperException wrapped =
+				new SoapWrapperException(e);
+			int httpStatus = parseHttpErrStatus(e);
+			wrapped.setHttpErr(httpStatus);
+			throw wrapped;
+		}
 	}
 
 	/**
@@ -49,11 +74,12 @@ public class SoapWrapper {
 	 *
 	 * @param uri this soap message will be sent to the uri
 	 * @return the response initialized object
-	 * @throws IOException error during soap transmission
-	 * @throws SOAPException error during response formatting
+	 * @throws SOAPException soap error (possibly client request problem)
 	 */
-	public SOAPMessage callSoapWebService(String uri)
-		throws IOException, SOAPException
+	private static SOAPMessage callWebService(
+		SOAPMessage request,
+		String uri)
+		throws SOAPException
 	{
 		// create connection
 		SOAPConnectionFactory soapConnectionFactory =
@@ -62,13 +88,12 @@ public class SoapWrapper {
 			soapConnectionFactory.createConnection();
 		// send session msg
 
-		soapRequest.saveChanges();
+		request.saveChanges();
 
-
-		log("Request SOAP message to " + uri, soapRequest);
+		log("Request SOAP message to " + uri, request);
 
 		SOAPMessage soapResponse =
-			soapConnection.call(soapRequest, uri);
+			soapConnection.call(request, uri);
 
 		log("Response SOAP message from " + uri, soapResponse);
 
@@ -76,63 +101,11 @@ public class SoapWrapper {
 	}
 
 	/**
-	 * Used for getting a response from a session web service using this
-	 * request and a response object. Blocks until response!
-	 *
-	 * @param uri this soap message will be sent to the uri
-	 * @param targetClass for formatting purposes
-	 * @return the response initialized object
-	 * @throws IOException error during soap transmission
-	 * @throws SOAPException error during response formatting
-	 * @throws JAXBException error during response formatting
-	 * @throws NoSuchAlgorithmException trouble adding auth header
-	 */
-	public Object callSoapWebService(
-		String uri, Class<?> targetClass,
-		WSUsernameToken auth)
-		throws IOException, SOAPException, JAXBException,
-		NoSuchAlgorithmException
-	{
-		addAuthHeader(auth);
-		SOAPMessage m = callSoapWebService(uri);
-
-		if (m.getSOAPBody().hasFault()) {
-
-			log("SOAP Fault", m);
-			throw new IOException(
-				m.getSOAPBody().getFault().getFaultString());
-		}
-		return convertToObject(m, targetClass);
-	}
-
-	/**
-	 * Call soap web service but does not wait for a response.
-	 * @param uri
-	 * @param auth
-	 * @param os
-	 * @throws IOException
-	 * @throws SOAPException
-	 * @throws JAXBException
-	 * @throws NoSuchAlgorithmException
-	 */
-	public void callSoapWebService(
-		String uri, WSUsernameToken auth, OutputStream os)
-		throws IOException, SOAPException, NoSuchAlgorithmException
-	{
-		addAuthHeader(auth);
-		soapRequest.writeTo(os);
-	}
-
-	/**
 	 * @param requestObject the object from which the message format will
 	 * 	be derived
-	 * @return a new instance of a soap request
-	 * @throws SOAPException malformed soap
-	 * @throws JAXBException cannot make document
-	 * @throws ParserConfigurationException cannot convert soapMessage into
-	 * 	document
+	 * @return a new instance of a soap request document
 	 */
-	private SOAPMessage createSoapRequest(Object requestObject)
+	private static SOAPMessage createSoapRequest(Object requestObject)
 		throws SOAPException, JAXBException,
 		ParserConfigurationException
 	{
@@ -154,14 +127,15 @@ public class SoapWrapper {
 	 * @param document the body content to add
 	 * @throws SOAPException malformed soap
 	 */
-	private void createSoapBody(SOAPMessage soapMessage, Document document)
+	private static void createSoapBody(
+		SOAPMessage soapMessage,
+		Document document)
 		throws SOAPException
 	{
 		SOAPPart soapPart = soapMessage.getSOAPPart();
 		SOAPEnvelope envelope = soapPart.getEnvelope();
 		SOAPBody soapBody = envelope.getBody();
 		soapBody.addDocument(document);
-
 	}
 
 	/**
@@ -171,12 +145,14 @@ public class SoapWrapper {
 	 * @throws SOAPException malformed soap
 	 * @throws NoSuchAlgorithmException cannot generate password digest
 	 */
-	private void addAuthHeader(WSUsernameToken tok)
+	private static void addAuthHeader(
+		SOAPMessage request,
+		WSUsernameToken tok)
 		throws NoSuchAlgorithmException, SOAPException
 	{
-		SOAPPart soapPart = soapRequest.getSOAPPart();
+		SOAPPart soapPart = request.getSOAPPart();
 		SOAPEnvelope soapEnvelope = soapPart.getEnvelope();
-		SOAPHeader soapHeader = soapRequest.getSOAPHeader();
+		SOAPHeader soapHeader = request.getSOAPHeader();
 		soapEnvelope.addNamespaceDeclaration("wsse",
 			"http://docs.oasis-open" +
 				".org/wss/2004/01/oasis-200401-wss" +
@@ -252,8 +228,33 @@ public class SoapWrapper {
 			soapMessage.getSOAPBody().extractContentAsDocument());
 	}
 
+
+	private static int parseHttpErrStatus(SOAPException e)
+		throws SoapWrapperException
+	{
+		if (e.getCause() == null
+			|| e.getCause().getMessage() == null)
+			throw new SoapWrapperException(e);
+		String msg = e.getCause().getMessage();
+		String strB4Stats = "Bad response: (";
+		if (!msg.contains(strB4Stats))
+			throw new SoapWrapperException(e);
+		int startI = msg.indexOf(strB4Stats);
+		if (msg.length() < strB4Stats.length() + 3)
+			throw new SoapWrapperException(e);
+		String statusStr = msg.substring(startI + strB4Stats.length(),
+			startI + strB4Stats.length() + 3);
+		int status;
+		try {
+			status = Integer.parseInt(statusStr);
+		} catch (NumberFormatException e1) {
+			throw new SoapWrapperException(e);
+		}
+		return status;
+	}
+
 	/**
-	 * formats context information and msg and writes to soap log file
+	 * Formats context information and msg and writes to soap log file.
 	 */
 	private static void log(String context, SOAPMessage msg) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

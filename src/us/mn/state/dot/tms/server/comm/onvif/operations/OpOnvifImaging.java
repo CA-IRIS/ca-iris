@@ -5,11 +5,11 @@ import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -25,7 +25,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		OnvifSessionMessenger session,
 		DeviceRequest r)
 	{
-		super(PriorityLevel.COMMAND, d, session);
+		super(PriorityLevel.COMMAND, d, session, OnvifService.IMAGING);
 		request = r;
 	}
 
@@ -35,21 +35,25 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	}
 
 	protected class Adjust extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			p.add(selectProperty(request));
-			p.storeProps();
-			log("Onvif device reboot command sent");
+			OnvifProperty p = selectProperty(request);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
 		}
 	}
 
-	private OnvifProperty selectProperty(DeviceRequest r) {
-		OnvifProperty out = null;
+	private OnvifProperty selectProperty(DeviceRequest r)
+		throws IOException
+	{
+		OnvifProperty out;
 		switch (r) {
 		case CAMERA_FOCUS_NEAR:
-			out = new OnvifImagingFocusMoveProperty(session, -0.2f);
+			out = new OnvifImagingFocusMoveProperty(session,
+				-0.2f);
 			break;
 		case CAMERA_FOCUS_FAR:
 			out = new OnvifImagingFocusMoveProperty(session, 0.2f);
@@ -58,7 +62,8 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			out = new OnvifImagingFocusMoveProperty(session, 0f);
 			break;
 		case CAMERA_FOCUS_MANUAL:
-			out = new OnvifImagingFocusAutoProperty(session, false);
+			out = new OnvifImagingFocusAutoProperty(session,
+				false);
 			break;
 		case CAMERA_FOCUS_AUTO:
 			out = new OnvifImagingFocusAutoProperty(session, true);
@@ -71,9 +76,8 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			log("Onvif iris commands not implemented. Onvif only " +
 				"supports absolute iris adjustments, but Iris " +
 				"only supports continuous iris adjustments. ");
-			break;
 		default:
-			log("Imaging Service request not recognized: " + r);
+			throw new IOException("Unsupported: " + r);
 		}
 		return out;
 	}

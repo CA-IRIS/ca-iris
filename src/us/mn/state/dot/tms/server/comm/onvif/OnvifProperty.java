@@ -2,8 +2,6 @@ package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
@@ -11,21 +9,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
+ * A OnvifPoperty knows how to get information required for an OpOnvif and how
+ * to send the specific OpOnvif. Usually a ControllerProperty is the encoded
+ * message.
+ *
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public abstract class OnvifProperty extends ControllerProperty {
 	protected OnvifSessionMessenger session;
-	private OnvifService service;
 
 	/** any response to the call to the Service */
 	protected Object response;
 
 	protected OnvifProperty(
-		OnvifSessionMessenger session, OnvifService service)
+		OnvifSessionMessenger session)
 	{
 		this.session = session;
-		this.service = service;
-		log("Preparing operation properties");
+		log("Preparing operation properties. ");
 	}
 
 	private String readStream(InputStream is) {
@@ -58,9 +58,9 @@ public abstract class OnvifProperty extends ControllerProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		log("Sending operation properties");
+		log("Sending operation properties. ");
 		try {
-			encodeStore();
+			encodeStore(os);
 		} catch (ServiceNotSupportedException e) {
 			logFailure(e.getMessage());
 		}
@@ -71,7 +71,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 		throws IOException
 	{
 		if (response == null)
-			log("No response received from device");
+			log("No response received from device. ");
 		else
 			decodeStore();
 	}
@@ -79,17 +79,13 @@ public abstract class OnvifProperty extends ControllerProperty {
 	/**
 	 * A way of requiring concrete implementations of this class to check
 	 * that the session is initialized before sending a request
-	 *
-	 * @throws IOException the session could not be initialized
 	 */
-	protected abstract void encodeStore()
-		throws IOException, ServiceNotSupportedException;
+	protected abstract void encodeStore(OutputStream os)
+		throws IOException;
 
 	/**
 	 * may be overridden by concrete implementations if errors may be
 	 * produced by encodeStore()
-	 *
-	 * @throws IOException
 	 */
 	protected void decodeStore() throws IOException {
 		log(response.getClass().getSimpleName());
@@ -101,7 +97,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 
 	protected void logFailure(String msg) throws IOException {
 		String m = this.getClass().getSimpleName() + ": " + msg;
-		log(m);
+		OnvifPoller.log(m);
 		throw new IOException(m);
 	}
 }

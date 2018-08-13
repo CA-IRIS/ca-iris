@@ -1,9 +1,10 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
+import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresets;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresetsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.util.List;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public abstract class OnvifPTZPresetProperty extends OnvifPTZProperty {
+public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	public OnvifPTZPresetProperty(OnvifSessionMessenger session) {
 		super(session);
 	}
@@ -38,12 +39,13 @@ public abstract class OnvifPTZPresetProperty extends OnvifPTZProperty {
 		GetPresets getPresets = new GetPresets();
 		getPresets.setProfileToken(session.getMediaProfileTok());
 		return ((GetPresetsResponse) session.makeRequest(getPresets,
-				GetPresetsResponse.class)).getPreset();
+			GetPresetsResponse.class)).getPreset();
 	}
 
 	/**
 	 * @return any device that has at least 1 preset must support the
-	 * preset commands
+	 * preset
+	 * 	commands
 	 */
 	boolean supportsPresets()
 		throws IOException, ServiceNotSupportedException

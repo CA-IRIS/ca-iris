@@ -4,15 +4,17 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Random;
 
 /**
- * the logic for WSUsernameToken session authentication
+ * The logic for WSUsernameToken session authentication
  * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext
- * -1.0.xsd
- * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility
+ * -1.0.xsd http://docs.oasis-open
+ * .org/wss/2004/01/oasis-200401-wss-wssecurity-utility
  * -1.0.xsd
  *
  * @author Wesley Skillern (Southwest Research Institue)
@@ -21,8 +23,9 @@ public class WSUsernameToken {
 
 	private String username;
 	private String password;
-	/** the session token (static for all sequential session
-	 * transactions) */
+	/**
+	 * the session token (static for all sequential session transactions)
+	 */
 	private String nonce;
 	/** the date for the last call to passwordDigest() */
 	private String date;
@@ -43,12 +46,14 @@ public class WSUsernameToken {
 		if (username == null || username.isEmpty()
 			|| password == null || password.isEmpty())
 			throw new IllegalArgumentException(
-				"username and password may not be null");
+				"Username and password may not be null. ");
 		this.username = username;
 		this.password = password;
 	}
 
-	public void setClockOffset(ZonedDateTime ourTime, ZonedDateTime deviceTime) {
+	public void setClockOffset(
+		ZonedDateTime ourTime, ZonedDateTime deviceTime)
+	{
 		clockOffset = Duration.between(ourTime, deviceTime).toMillis();
 	}
 
@@ -66,7 +71,7 @@ public class WSUsernameToken {
 		} catch (NoSuchAlgorithmException e) {
 			log(
 				"ONVIF-required SHA-1 digest algorithm is " +
-					"not implemented or not detected");
+					"not implemented or not detected. ");
 			throw e;
 		}
 		messageDigest.update((getNonce() + getUTCTime() + password)
@@ -94,7 +99,8 @@ public class WSUsernameToken {
 	String getUTCTime() {
 		if (date == null) {
 			date =
-				Instant.now().plusMillis(clockOffset).toString();
+				Instant.now().plusMillis(clockOffset)
+					.toString();
 		}
 		return date;
 	}

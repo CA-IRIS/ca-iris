@@ -6,9 +6,11 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.server.comm.onvif.operations.*;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
 
 /**
+ * An OnvifPoller represents a single Onvif device. It dispatches OpOnvifs in
+ * response to client UI requests.
+ *
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class OnvifPoller extends TransientPoller<OnvifProperty>
@@ -16,14 +18,14 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 {
 	private static final DebugLog ONVIF_LOG = new DebugLog("onvif");
 	/**
-	 * this is just a more specific reference to our messenger (which
+	 * This is just a more specific reference to our messenger (which
 	 * happens to be a session) for convenience
 	 */
-	private OnvifSessionMessenger session;
+	private OnvifSessionMessenger session
+		= (OnvifSessionMessenger) messenger;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
-		session = m;
 		log("Onvif device created: " + name);
 	}
 
@@ -62,11 +64,12 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_STOP:
 		case CAMERA_IRIS_MANUAL:
 		case CAMERA_IRIS_AUTO:
+		case BRIGHTNESS_GOOD:
+		case BRIGHTNESS_TOO_DIM:
+		case BRIGHTNESS_TOO_BRIGHT:
 			addOperation(new OpOnvifImaging(c, session, r));
 			break;
 		case RESET_DEVICE:
-			addOperation(new OpOnvifDevice(c, session));
-			break;
 		case QUERY_CONFIGURATION:
 		case QUERY_MESSAGE:
 		case QUERY_STATUS:
@@ -74,27 +77,19 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case TEST_PIXELS:
 		case TEST_FANS:
 		case TEST_LAMPS:
-		case BRIGHTNESS_GOOD:
-		case BRIGHTNESS_TOO_DIM:
-		case BRIGHTNESS_TOO_BRIGHT:
 		case RESET_MODEM:
 		case SEND_SETTINGS:
 		case SEND_LEDSTAR_SETTINGS:
 		case QUERY_LEDSTAR_SETTINGS:
 		case DISABLE_SYSTEM:
-			log("Device request not supported: " + r);
-			break;
 		case NO_REQUEST:
-			log("Received: " + r);
-			break;
-		default:
-			log("Unrecognized device request: " + r);
+			addOperation(new OpOnvifDevice(c, session, r));
 			break;
 		}
 	}
 
 	/**
-	 * onvif devices don't use drops
+	 * Onvif devices don't use drops.
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
@@ -103,6 +98,6 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	}
 
 	public static void log(String message) {
-		ONVIF_LOG.log("ONVIF: " + message);
+		ONVIF_LOG.log(": " + message);
 	}
 }

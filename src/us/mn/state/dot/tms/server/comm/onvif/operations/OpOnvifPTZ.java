@@ -8,7 +8,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
 
@@ -25,7 +25,7 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 		CameraImpl c, float p, float t, float z,
 		OnvifSessionMessenger session)
 	{
-		super(PriorityLevel.COMMAND, c, session);
+		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ);
 		pan = p;
 		tilt = t;
 		zoom = z;
@@ -37,15 +37,18 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 	}
 
 	protected class PTZ extends OnvifPhase {
-		protected OnvifPhase poll2(
-			CommMessage<OnvifProperty> p) throws IOException
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
+			throws IOException
 		{
-			OnvifProperty property = (pan == 0 && tilt == 0 && zoom == 0) ?
-				 new OnvifPTZStopProperty(session)
-				 : new OnvifPTZMoveProperty(pan, tilt, zoom, session);
-			p.add(property);
-			p.storeProps();
-			log("PTZ operation done. ");
+			OnvifProperty p =
+				(pan == 0 && tilt == 0 && zoom == 0) ?
+					new OnvifPTZStopProperty(session)
+					: new OnvifPTZMoveProperty(pan, tilt,
+					zoom,
+					session);
+			cm.add(p);
+			cm.storeProps();
+			logSent(p);
 			return null;
 		}
 	}

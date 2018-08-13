@@ -1,24 +1,26 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
+import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommand;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommandResponse;
-import us.mn.state.dot.tms.server.comm.onvif.session.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifPTZWiperProperty extends OnvifPTZProperty {
+public class OnvifPTZWiperProperty extends OnvifProperty {
 	/** true if we should swith the wiper on, else false */
 	private boolean switchOn;
 	/**
 	 * based on the onvif spec, these are the only foreseeable free form
 	 * versions of these auxiliary commands
 	 */
-	private static String WIPER_OFF [] = {"tt:Wiper|Off", "wiperon"};
-	private static String WIPER_ON [] = {"tt:Wiper|On", "wiperoff"};
+	private static String WIPER_OFF[] = {"tt:Wiper|Off", "wiperon"};
+	private static String WIPER_ON[] = {"tt:Wiper|On", "wiperoff"};
 
 	public OnvifPTZWiperProperty(
 		OnvifSessionMessenger session, boolean switchOn)
@@ -28,14 +30,13 @@ public class OnvifPTZWiperProperty extends OnvifPTZProperty {
 	}
 
 	@Override
-	protected void encodeStore()
+	protected void encodeStore(OutputStream os)
 		throws IOException, ServiceNotSupportedException
 	{
 		// ensure that the device supports wiper auxiliary command
 		SendAuxiliaryCommand supportedCmd = findSupportedCmd();
 		if (supportedCmd == null)
-			logFailure("Wiper command not supported for " + session
-				.getUri());
+			logFailure("Wiper command not supported. ");
 		else
 			doWiper(supportedCmd);
 	}
@@ -53,10 +54,11 @@ public class OnvifPTZWiperProperty extends OnvifPTZProperty {
 					"and wiper off was " +
 					"interrupted. Wiper " +
 					"operation may not " +
-					"have completed. ");
+					"have completed correctly. ");
 			}
 		}
-		response = session.makeRequest(cmd, SendAuxiliaryCommandResponse.class);
+		response = session.makeRequest(cmd,
+			SendAuxiliaryCommandResponse.class);
 	}
 
 	private SendAuxiliaryCommand findSupportedCmd()

@@ -2,6 +2,7 @@ package us.mn.state.dot.tms.server.comm.onvif.session;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.Messenger;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,19 +12,15 @@ import java.net.URL;
 
 
 /**
- * todo for now this is a dummy class (later we may make use of the output stream)
+ * This is a dummy class (later we may make use of the output stream). Currently
+ * the if output is null, then the property is ignored!
+ *
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class HttpMessenger extends Messenger {
 	private String uri;
 	private HttpURLConnection httpURLConnection = null;
 	private int timeout = 5000;
-
-	public HttpMessenger(String uri) {
-		input = null;
-		output = null;
-		this.uri = uri;
-	}
 
 	public void setUri(String uri) {
 		if (!this.uri.equals(uri)) {
@@ -47,7 +44,7 @@ public class HttpMessenger extends Messenger {
 			output = httpURLConnection.getOutputStream();
 //            input = httpURLConnection.getInputStream();
 		} catch (Exception e) {
-			e.printStackTrace();
+			OnvifPoller.log(e.getMessage());
 		}
 	}
 
@@ -57,14 +54,14 @@ public class HttpMessenger extends Messenger {
 			try {
 				input.close();
 			} catch (IOException e) {
-				// Ignore
+				System.err.println(e.getMessage());
 			}
 		}
 		if (output != null) {
 			try {
 				output.close();
 			} catch (IOException e) {
-				// Ignore
+				System.err.println(e.getMessage());
 			}
 		}
 		input = null;
