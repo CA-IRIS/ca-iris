@@ -9,9 +9,9 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for Vector complex type.
+ * <prop>Java class for Vector complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="Vector"&gt;

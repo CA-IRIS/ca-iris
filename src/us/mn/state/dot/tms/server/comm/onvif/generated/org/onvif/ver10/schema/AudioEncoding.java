@@ -8,10 +8,10 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for AudioEncoding.
+ * <prop>Java class for AudioEncoding.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p>
+ * <prop>The following schema fragment specifies the expected content contained within this class.
+ * <prop>
  * <pre>
  * &lt;simpleType name="AudioEncoding"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;

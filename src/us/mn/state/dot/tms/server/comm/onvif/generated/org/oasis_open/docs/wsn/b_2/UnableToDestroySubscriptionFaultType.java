@@ -9,9 +9,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.
 
 
 /**
- * <p>Java class for UnableToDestroySubscriptionFaultType complex type.
+ * <prop>Java class for UnableToDestroySubscriptionFaultType complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="UnableToDestroySubscriptionFaultType"&gt;

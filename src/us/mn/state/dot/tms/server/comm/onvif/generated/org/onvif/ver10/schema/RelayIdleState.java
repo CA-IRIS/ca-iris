@@ -8,15 +8,15 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for RelayIdleState.
+ * <prop>Java class for RelayIdleState.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p>
+ * <prop>The following schema fragment specifies the expected content contained within this class.
+ * <prop>
  * <pre>
  * &lt;simpleType name="RelayIdleState"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
  *     &lt;enumeration value="closed"/&gt;
- *     &lt;enumeration value="open"/&gt;
+ *     &lt;enumeration value="openConn"/&gt;
  *   &lt;/restriction&gt;
  * &lt;/simpleType&gt;
  * </pre>

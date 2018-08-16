@@ -17,7 +17,6 @@ import java.io.IOException;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
-
 	private final DeviceRequest request;
 
 	public OpOnvifImaging(
@@ -38,10 +37,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifProperty p = selectProperty(request);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = selectProperty(request);
 			return null;
 		}
 	}

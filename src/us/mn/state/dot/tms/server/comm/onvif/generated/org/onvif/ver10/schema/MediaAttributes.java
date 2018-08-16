@@ -21,9 +21,9 @@ import org.w3c.dom.Element;
 /**
  * A set of media attributes valid for a recording at a point in time or for a time interval.
  * 
- * <p>Java class for MediaAttributes complex type.
+ * <prop>Java class for MediaAttributes complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="MediaAttributes"&gt;
@@ -105,20 +105,20 @@ public class MediaAttributes {
     /**
      * Gets the value of the trackAttributes property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the trackAttributes property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getTrackAttributes().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link TrackAttributes }
      * 
@@ -187,20 +187,20 @@ public class MediaAttributes {
     /**
      * Gets the value of the any property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the any property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getAny().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Object }
      * {@link Element }
@@ -218,7 +218,7 @@ public class MediaAttributes {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

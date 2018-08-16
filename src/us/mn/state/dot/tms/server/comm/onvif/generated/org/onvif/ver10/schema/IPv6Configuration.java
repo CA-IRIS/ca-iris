@@ -16,9 +16,9 @@ import javax.xml.namespace.QName;
 
 
 /**
- * <p>Java class for IPv6Configuration complex type.
+ * <prop>Java class for IPv6Configuration complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="IPv6Configuration"&gt;
@@ -135,20 +135,20 @@ public class IPv6Configuration {
     /**
      * Gets the value of the manual property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the manual property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getManual().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PrefixedIPv6Address }
      * 
@@ -165,20 +165,20 @@ public class IPv6Configuration {
     /**
      * Gets the value of the linkLocal property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the linkLocal property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getLinkLocal().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PrefixedIPv6Address }
      * 
@@ -195,20 +195,20 @@ public class IPv6Configuration {
     /**
      * Gets the value of the fromDHCP property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the fromDHCP property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getFromDHCP().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PrefixedIPv6Address }
      * 
@@ -225,20 +225,20 @@ public class IPv6Configuration {
     /**
      * Gets the value of the fromRA property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the fromRA property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getFromRA().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PrefixedIPv6Address }
      * 
@@ -281,7 +281,7 @@ public class IPv6Configuration {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

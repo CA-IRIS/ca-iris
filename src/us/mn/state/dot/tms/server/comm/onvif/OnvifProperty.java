@@ -16,39 +16,13 @@ import java.io.OutputStream;
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public abstract class OnvifProperty extends ControllerProperty {
-	protected OnvifSessionMessenger session;
+	protected final OnvifSessionMessenger session;
 
 	/** any response to the call to the Service */
 	protected Object response;
 
-	protected OnvifProperty(
-		OnvifSessionMessenger session)
-	{
+	protected OnvifProperty(OnvifSessionMessenger session) {
 		this.session = session;
-		log("Preparing operation properties. ");
-	}
-
-	private String readStream(InputStream is) {
-		// todo determine correct delimiter
-		java.util.Scanner s = new java.util.Scanner(
-			is, "UTF-8").useDelimiter("\\A");
-		return s.hasNext() ? s.next() : "";
-	}
-
-	/**
-	 * @return a float remapped to a new range
-	 * @throws AssertionError if oldMin == oldMax
-	 */
-	protected float resize(
-		float val, float oldMin, float oldMax, float newMin,
-		float newMax) throws AssertionError
-	{
-		assert oldMin != oldMax; // avoid division by zero
-		assert val < oldMax && val > oldMin; // check inputs
-		assert newMax > newMin;
-		float oldRange = oldMax - oldMin;
-		float newRange = newMax - newMin;
-		return (val - oldMin) / oldRange * newRange + newMin;
 	}
 
 	/**
@@ -58,9 +32,10 @@ public abstract class OnvifProperty extends ControllerProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		log("Sending operation properties. ");
 		try {
-			encodeStore(os);
+			log("Preparing operation properties... ");
+			encodeStore();
+			log("Operation properties sent. ");
 		} catch (ServiceNotSupportedException e) {
 			logFailure(e.getMessage());
 		}
@@ -77,27 +52,43 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	/**
+	 * @return a float remapped to a new range
+	 * @throws AssertionError if oldMin == oldMax
+	 */
+	protected float resize(float val,
+		float oldMin, float oldMax,
+		float newMin, float newMax)
+		throws AssertionError
+	{
+		assert oldMin != oldMax; // avoid division by zero
+		assert val < oldMax && val > oldMin; // check inputs
+		assert newMax > newMin;
+		float oldRange = oldMax - oldMin;
+		float newRange = newMax - newMin;
+		return (val - oldMin) / oldRange * newRange + newMin;
+	}
+
+	/**
 	 * A way of requiring concrete implementations of this class to check
 	 * that the session is initialized before sending a request
 	 */
-	protected abstract void encodeStore(OutputStream os)
-		throws IOException;
+	protected abstract void encodeStore() throws IOException;
 
 	/**
 	 * may be overridden by concrete implementations if errors may be
 	 * produced by encodeStore()
 	 */
 	protected void decodeStore() throws IOException {
-		log(response.getClass().getSimpleName());
+		log("Device responded: " + response.getClass().getSimpleName());
 	}
 
 	protected void log(String msg) {
-		OnvifPoller.log(this.getClass().getSimpleName() + ": " + msg);
+		session.log(getClass().getSimpleName() + ": " + msg);
 	}
 
 	protected void logFailure(String msg) throws IOException {
-		String m = this.getClass().getSimpleName() + ": " + msg;
-		OnvifPoller.log(m);
+		String m = getClass().getSimpleName() + ": " + msg;
+		session.log(m);
 		throw new IOException(m);
 	}
 }

@@ -40,15 +40,12 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifProperty p =
+			prop =
 				(pan == 0 && tilt == 0 && zoom == 0) ?
 					new OnvifPTZStopProperty(session)
 					: new OnvifPTZMoveProperty(pan, tilt,
 					zoom,
 					session);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
 			return null;
 		}
 	}

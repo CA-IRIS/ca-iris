@@ -41,11 +41,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifPTZStopProperty p =
-				new OnvifPTZStopProperty(session);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = new OnvifPTZStopProperty(session);
 			return new StoreMove();
 		}
 	}
@@ -54,12 +50,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifPTZPresetStoreProperty p =
-				new OnvifPTZPresetStoreProperty(session,
-					preset);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = new OnvifPTZPresetStoreProperty(session, preset);
 			return null;
 		}
 	}
@@ -68,12 +59,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifPTZPresetRecallProperty p =
-				new OnvifPTZPresetRecallProperty(session,
-					preset);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = new OnvifPTZPresetRecallProperty(session, preset);
 			return null;
 		}
 	}

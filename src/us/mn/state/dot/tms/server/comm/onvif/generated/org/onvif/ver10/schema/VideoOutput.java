@@ -15,9 +15,9 @@ import javax.xml.namespace.QName;
 /**
  * Representation of a physical video outputs.
  * 
- * <p>Java class for VideoOutput complex type.
+ * <prop>Java class for VideoOutput complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="VideoOutput"&gt;
@@ -203,7 +203,7 @@ public class VideoOutput
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

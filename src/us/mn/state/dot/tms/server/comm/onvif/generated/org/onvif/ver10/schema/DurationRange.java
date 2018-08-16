@@ -12,9 +12,9 @@ import javax.xml.datatype.Duration;
 /**
  * Range of duration greater equal Min duration and less equal Max duration.
  * 
- * <p>Java class for DurationRange complex type.
+ * <prop>Java class for DurationRange complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="DurationRange"&gt;

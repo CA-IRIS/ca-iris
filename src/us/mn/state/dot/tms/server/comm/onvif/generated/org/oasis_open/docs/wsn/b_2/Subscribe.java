@@ -17,9 +17,9 @@ import org.w3c.dom.Element;
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * <prop>Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType&gt;
@@ -67,7 +67,7 @@ public class Subscribe {
     @XmlElement(name = "Filter")
     @Generated(value = "com.sun.tools.xjc.Driver", date = "2018-08-07T08:49:34-05:00", comments = "JAXB RI v2.2.11")
     protected FilterType filter;
-    @XmlElementRef(name = "InitialTerminationTime", namespace = "http://docs.oasis-open.org/wsn/b-2", type = JAXBElement.class, required = false)
+    @XmlElementRef(name = "InitialTerminationTime", namespace = "http://docs.oasis-openConn.org/wsn/b-2", type = JAXBElement.class, required = false)
     @Generated(value = "com.sun.tools.xjc.Driver", date = "2018-08-07T08:49:34-05:00", comments = "JAXB RI v2.2.11")
     protected JAXBElement<String> initialTerminationTime;
     @XmlElement(name = "SubscriptionPolicy")
@@ -184,20 +184,20 @@ public class Subscribe {
     /**
      * Gets the value of the any property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the any property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getAny().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Object }
      * {@link Element }
@@ -214,9 +214,9 @@ public class Subscribe {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;
@@ -246,20 +246,20 @@ public class Subscribe {
         /**
          * Gets the value of the any property.
          * 
-         * <p>
+         * <prop>
          * This accessor method returns a reference to the live list,
          * not a snapshot. Therefore any modification you make to the
          * returned list will be present inside the JAXB object.
          * This is why there is not a <CODE>set</CODE> method for the any property.
          * 
-         * <p>
+         * <prop>
          * For example, to add a new item, do as follows:
          * <pre>
          *    getAny().add(newItem);
          * </pre>
          * 
          * 
-         * <p>
+         * <prop>
          * Objects of the following type(s) are allowed in the list
          * {@link Object }
          * {@link Element }

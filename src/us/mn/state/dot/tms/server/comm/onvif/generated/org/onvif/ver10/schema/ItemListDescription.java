@@ -22,9 +22,9 @@ import javax.xml.namespace.QName;
  * 			Use ElementItems only when complex structures are inevitable.
  * 		
  * 
- * <p>Java class for ItemListDescription complex type.
+ * <prop>Java class for ItemListDescription complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="ItemListDescription"&gt;
@@ -86,20 +86,20 @@ public class ItemListDescription {
     /**
      * Gets the value of the simpleItemDescription property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the simpleItemDescription property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getSimpleItemDescription().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link ItemListDescription.SimpleItemDescription }
      * 
@@ -116,20 +116,20 @@ public class ItemListDescription {
     /**
      * Gets the value of the elementItemDescription property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the elementItemDescription property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getElementItemDescription().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link ItemListDescription.ElementItemDescription }
      * 
@@ -172,7 +172,7 @@ public class ItemListDescription {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 
@@ -190,9 +190,9 @@ public class ItemListDescription {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;
@@ -275,9 +275,9 @@ public class ItemListDescription {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;

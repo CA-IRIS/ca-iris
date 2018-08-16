@@ -13,9 +13,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Base type defining the common properties of a configuration.
  * 
- * <p>Java class for ConfigurationEntity complex type.
+ * <prop>Java class for ConfigurationEntity complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="ConfigurationEntity"&gt;

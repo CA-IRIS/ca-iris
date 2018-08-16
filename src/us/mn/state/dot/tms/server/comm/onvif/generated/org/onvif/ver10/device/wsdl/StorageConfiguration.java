@@ -10,9 +10,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.De
 
 
 /**
- * <p>Java class for StorageConfiguration complex type.
+ * <prop>Java class for StorageConfiguration complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="StorageConfiguration"&gt;

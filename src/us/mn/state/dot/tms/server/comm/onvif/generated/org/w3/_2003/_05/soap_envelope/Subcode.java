@@ -10,9 +10,9 @@ import javax.xml.namespace.QName;
 
 
 /**
- * <p>Java class for subcode complex type.
+ * <prop>Java class for subcode complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="subcode"&gt;

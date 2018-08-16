@@ -12,9 +12,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Type describing whether WDR mode is enabled or disabled (on/off).
  * 
- * <p>Java class for WideDynamicRange20 complex type.
+ * <prop>Java class for WideDynamicRange20 complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="WideDynamicRange20"&gt;

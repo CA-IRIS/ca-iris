@@ -1,7 +1,5 @@
 package us.mn.state.dot.tms.server.comm.onvif.session;
 
-import us.mn.state.dot.tms.server.comm.onvif.OnvifPoller;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -69,7 +67,7 @@ public class WSUsernameToken {
 		try {
 			messageDigest = MessageDigest.getInstance("SHA-1");
 		} catch (NoSuchAlgorithmException e) {
-			log(
+			System.err.println(
 				"ONVIF-required SHA-1 digest algorithm is " +
 					"not implemented or not detected. ");
 			throw e;
@@ -125,9 +123,5 @@ public class WSUsernameToken {
 			nonce = createNonce();
 		}
 		return nonce;
-	}
-
-	private static void log(String msg) {
-		OnvifPoller.log(msg);
 	}
 }

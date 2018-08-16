@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Range of values greater equal Min value and less equal Max value.
  * 
- * <p>Java class for FloatRange complex type.
+ * <prop>Java class for FloatRange complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="FloatRange"&gt;

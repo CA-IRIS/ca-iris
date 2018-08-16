@@ -12,9 +12,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Type describing whether BLC mode is enabled or disabled (on/off).
  * 
- * <p>Java class for BacklightCompensation20 complex type.
+ * <prop>Java class for BacklightCompensation20 complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="BacklightCompensation20"&gt;

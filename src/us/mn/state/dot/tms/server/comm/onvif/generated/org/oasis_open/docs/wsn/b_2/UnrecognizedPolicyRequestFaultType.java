@@ -13,9 +13,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.
 
 
 /**
- * <p>Java class for UnrecognizedPolicyRequestFaultType complex type.
+ * <prop>Java class for UnrecognizedPolicyRequestFaultType complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="UnrecognizedPolicyRequestFaultType"&gt;
@@ -48,20 +48,20 @@ public class UnrecognizedPolicyRequestFaultType
     /**
      * Gets the value of the unrecognizedPolicy property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the unrecognizedPolicy property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getUnrecognizedPolicy().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link QName }
      * 

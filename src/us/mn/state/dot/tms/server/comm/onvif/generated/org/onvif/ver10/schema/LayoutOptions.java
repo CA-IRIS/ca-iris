@@ -17,9 +17,9 @@ import javax.xml.namespace.QName;
 /**
  * The options supported for a display layout.
  * 
- * <p>Java class for LayoutOptions complex type.
+ * <prop>Java class for LayoutOptions complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="LayoutOptions"&gt;
@@ -58,20 +58,20 @@ public class LayoutOptions {
     /**
      * Gets the value of the paneLayoutOptions property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the paneLayoutOptions property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getPaneLayoutOptions().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PaneLayoutOptions }
      * 
@@ -114,7 +114,7 @@ public class LayoutOptions {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

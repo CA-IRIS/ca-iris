@@ -10,9 +10,9 @@ import javax.xml.namespace.QName;
 
 
 /**
- * <p>Java class for faultcode complex type.
+ * <prop>Java class for faultcode complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="faultcode"&gt;

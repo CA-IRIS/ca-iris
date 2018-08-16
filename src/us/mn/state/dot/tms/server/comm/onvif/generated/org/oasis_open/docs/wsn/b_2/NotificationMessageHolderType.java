@@ -12,9 +12,9 @@ import org.w3c.dom.Element;
 
 
 /**
- * <p>Java class for NotificationMessageHolderType complex type.
+ * <prop>Java class for NotificationMessageHolderType complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="NotificationMessageHolderType"&gt;
@@ -172,9 +172,9 @@ public class NotificationMessageHolderType {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;

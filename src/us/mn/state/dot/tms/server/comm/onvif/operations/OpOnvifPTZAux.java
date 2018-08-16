@@ -40,11 +40,7 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifPTZWiperProperty p =
-				new OnvifPTZWiperProperty(session, true);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = new OnvifPTZWiperProperty(session, true);
 			return new WiperOff();
 		}
 	}
@@ -53,11 +49,7 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
 			throws IOException
 		{
-			OnvifPTZWiperProperty p =
-				new OnvifPTZWiperProperty(session, false);
-			cm.add(p);
-			cm.storeProps();
-			logSent(p);
+			prop = new OnvifPTZWiperProperty(session, false);
 			return null;
 		}
 	}

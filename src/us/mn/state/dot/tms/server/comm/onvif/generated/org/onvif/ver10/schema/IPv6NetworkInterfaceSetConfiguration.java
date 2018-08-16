@@ -12,9 +12,9 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for IPv6NetworkInterfaceSetConfiguration complex type.
+ * <prop>Java class for IPv6NetworkInterfaceSetConfiguration complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="IPv6NetworkInterfaceSetConfiguration"&gt;
@@ -112,20 +112,20 @@ public class IPv6NetworkInterfaceSetConfiguration {
     /**
      * Gets the value of the manual property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the manual property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getManual().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link PrefixedIPv6Address }
      * 

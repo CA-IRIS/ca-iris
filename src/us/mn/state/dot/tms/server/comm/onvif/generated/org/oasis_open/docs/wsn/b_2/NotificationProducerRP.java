@@ -14,9 +14,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsn.t
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * <prop>Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType&gt;
@@ -56,27 +56,27 @@ public class NotificationProducerRP {
     @XmlSchemaType(name = "anyURI")
     @Generated(value = "com.sun.tools.xjc.Driver", date = "2018-08-07T08:49:34-05:00", comments = "JAXB RI v2.2.11")
     protected List<String> topicExpressionDialect;
-    @XmlElement(name = "TopicSet", namespace = "http://docs.oasis-open.org/wsn/t-1")
+    @XmlElement(name = "TopicSet", namespace = "http://docs.oasis-openConn.org/wsn/t-1")
     @Generated(value = "com.sun.tools.xjc.Driver", date = "2018-08-07T08:49:34-05:00", comments = "JAXB RI v2.2.11")
     protected TopicSetType topicSet;
 
     /**
      * Gets the value of the topicExpression property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the topicExpression property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getTopicExpression().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link TopicExpressionType }
      * 
@@ -119,20 +119,20 @@ public class NotificationProducerRP {
     /**
      * Gets the value of the topicExpressionDialect property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the topicExpressionDialect property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getTopicExpressionDialect().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link String }
      * 

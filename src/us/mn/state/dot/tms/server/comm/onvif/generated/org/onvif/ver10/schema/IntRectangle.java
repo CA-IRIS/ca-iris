@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Rectangle defined by lower left corner position and size. Units are pixel.
  * 
- * <p>Java class for IntRectangle complex type.
+ * <prop>Java class for IntRectangle complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="IntRectangle"&gt;

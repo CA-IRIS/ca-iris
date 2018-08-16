@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Range of a rectangle. The rectangle itself is defined by lower left corner position and size. Units are pixel.
  * 
- * <p>Java class for IntRectangleRange complex type.
+ * <prop>Java class for IntRectangleRange complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="IntRectangleRange"&gt;

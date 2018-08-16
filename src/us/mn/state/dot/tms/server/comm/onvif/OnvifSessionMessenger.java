@@ -1,5 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
+import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTime;
@@ -11,35 +13,56 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptions;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptionsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
-import us.mn.state.dot.tms.server.comm.onvif.session.HttpMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotInitializedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapWrapperException;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.soap.SOAPConnection;
+import javax.xml.soap.SOAPConnectionFactory;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPMessage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
- * Keeps track of device authentication session, capabilities, and some constant
- * device information.
+ * Caches device authentication session, capabilities, and some constant
+ * device information for as long as the Messenger is open.
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
-public class OnvifSessionMessenger extends HttpMessenger {
-
+public class OnvifSessionMessenger extends Messenger {
+	private static final DebugLog ONVIF_SESSION_LOG = new DebugLog(
+		"onvif");
+	private static final DebugLog SOAP_LOG = new DebugLog("soap");
 	private static final String DEVICE_SERVICE_PATH =
 		"/onvif/device_service";
-	private String baseUri;
-	private boolean initialized = false;
+
+	// onvif session properties
+	private URL deviceServiceUri;
 	private WSUsernameToken auth;
+	/**
+	 * Our proxy for an open session are the capabilities. If they are set,
+	 * we are open
+	 */
 	private Capabilities capabilities;
+
+	// messenger properties
+	private String currentUri;
+//	private URL currentService;
+//	private HttpURLConnection httpURLConnection;
+	private int timeout = 5000;
+
+	// cached onvif device values
 	private List<Profile> mediaProfiles;
 	private PTZSpaces ptzSpaces;
 	private List<PTZNode> nodes;
@@ -47,122 +70,92 @@ public class OnvifSessionMessenger extends HttpMessenger {
 
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
-	 * 	the port (always 80)
-	 * @throws IOException if the uri is invalid
+	 * 	the port (always 80) and DEVICE_SERVICE_PATH path.
+	 * @throws IOException if the currentUri is invalid
 	 */
 	public OnvifSessionMessenger(String uri) throws IOException {
-		super();
-		try {
-			baseUri = normalizeUri(uri);
-		} catch (IllegalArgumentException e) {
-			throw new IOException("Bad ONVIF URI: " + uri, e);
-		}
-		setUri(getDeviceServiceUri());
+		deviceServiceUri = normalizeDevServUri(uri);
 	}
 
-	/** @return true iff the device is ready for service requests */
-	public boolean isInitialized() {
-		return initialized;
+	boolean authNotSet() {
+		return auth == null;
 	}
 
-	/**
-	 * Sets this device's authentication. Must be set before the device can
-	 * be initialized. Neither username nor password may be null!
-	 */
 	void setAuth(String username, String password) {
-		close();
 		auth = new WSUsernameToken(username, password);
 	}
 
-	/**
-	 * Initializes the session with device
-	 *
-	 * @throws IOException if there are problems opening the connection
-	 * @throws SessionNotInitializedException if this was not able to init
-	 * @throws ServiceNotSupportedException if there was an error during
-	 * 	init
-	 * @throws SoapWrapperException if there was an error placing an init
-	 * 	request
-	 */
 	@Override
-	public void open() throws SessionNotInitializedException,
-		ServiceNotSupportedException, SoapWrapperException,
-		IOException
-	{
-		initialize();
-		super.open();
+	public void open() throws IOException {
+		log("Starting session... ");
+		try {
+			selectService(OnvifService.DEVICE);
+			setAuthClockOffset();
+			capabilities = initCapabilities();
+			mediaProfiles = initMediaProfiles();
+		} catch (SoapTransmissionException e) {
+			log("Failed to start session. " + e.getMessage());
+			close();
+			throw e;
+		}
+		log("Session started. ");
 	}
 
-	/**
-	 * Get this ready to re-initialize.
-	 */
 	@Override
 	public void close() {
-		initialized = false;
-		super.close();
+		log("Closing session... ");
+		resetSession();
+//		closeConnection();
+		log("Session closed. ");
+	}
+
+	@Override
+	public void setTimeout(int t) {
+		timeout = t;
+//		if (httpURLConnection != null) {
+//			httpURLConnection.setConnectTimeout(timeout);
+//			httpURLConnection.setReadTimeout(timeout);
+//		}
+	}
+
+	@Override
+	public int getTimeout() {
+		return timeout;
 	}
 
 	/**
-	 * Sets the session uri for subsequent requests.
+	 * Sets the session currentUri for subsequent requests.
 	 *
-	 * @throws SessionNotInitializedException if this is not initialized
+	 * @throws SessionNotStartedException if this is not initialized
 	 * @throws ServiceNotSupportedException if s is not supported
 	 */
-	public void setUri(OnvifService s)
-		throws SessionNotInitializedException,
-		ServiceNotSupportedException
+	void selectService(OnvifService s)
+		throws SessionNotStartedException,
+		ServiceNotSupportedException, SoapTransmissionException
 	{
-		if (capabilities == null)
-			throw new SessionNotInitializedException();
-		switch (s) {
-		case DEVICE:
-			setUri(getDeviceServiceUri());
-			break;
-		case MEDIA:
-			setUri(getMediaServiceUri());
-			break;
-		case PTZ:
-			setUri(getPTZServiceUri());
-			break;
-		case IMAGING:
-			setUri(getImagingServiceUri());
-			break;
+		if (capabilities == null && !s.equals(OnvifService.DEVICE))
+			throw new SessionNotStartedException(
+				"Capabilities not found. ");
+		try {
+			switch (s) {
+			case DEVICE:
+				setCurrentUri(getDeviceServiceUri());
+				break;
+			case MEDIA:
+				setCurrentUri(getMediaServiceUri());
+				break;
+			case PTZ:
+				setCurrentUri(getPTZServiceUri());
+				break;
+			case IMAGING:
+				setCurrentUri(getImagingServiceUri());
+				break;
+			}
+		} catch (ServiceNotSupportedException e) {
+			throw e;
+		} catch (IOException e) {
+			throw new SoapTransmissionException("Bad URI or network connection. ");
 		}
-	}
-
-	/**
-	 * Places the request to the selected service uri and returns a
-	 * response
-	 * Class
-	 *
-	 * @param request the request xml object
-	 * @param responseClass the response Object format
-	 * @return the response xml Object
-	 * @throws SoapWrapperException if there is a problem during
-	 * 	communication or soap formatting
-	 */
-	public Object makeRequest(Object request, Class<?> responseClass)
-		throws SoapWrapperException
-	{
-		return SoapWrapper
-			.callWebService(request, getUri(), responseClass,
-				auth);
-	}
-
-	/**
-	 * @return all the PTZ Nodes (provides ranges for PTZ request values)
-	 */
-	public List<PTZNode> getNodes()
-		throws ServiceNotSupportedException,
-		SessionNotInitializedException, SoapWrapperException
-	{
-		if (nodes == null) {
-			setUri(OnvifService.PTZ);
-			GetNodes getNodes = new GetNodes();
-			nodes = ((GetNodesResponse) makeRequest(getNodes,
-				GetNodesResponse.class)).getPTZNode();
-		}
-		return nodes;
 	}
 
 	/**
@@ -170,19 +163,11 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	 * 	have at least one media profile. This is frequently required
 	 * 	for PTZ
 	 * 	and Imaging Service requests.
-	 * @throws ServiceNotSupportedException if the Media Service is not
-	 * 	supported (unexpected)
-	 * @throws SessionNotInitializedException if this is not initialized
-	 * @throws SoapWrapperException if the request fails (unexpected)
 	 */
-	public String getMediaProfileTok()
-		throws ServiceNotSupportedException,
-		SessionNotInitializedException, SoapWrapperException
-	{
+	public String getMediaProfileTok() throws SessionNotStartedException {
 		if (mediaProfiles == null)
-			mediaProfiles = initMediaProfiles();
-		// all devices are required to have at least one media
-		// profile
+			throw new SessionNotStartedException(
+				"No media xtoken found. ");
 		return mediaProfiles.get(0).getToken();
 	}
 
@@ -190,12 +175,12 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	 * @return PTZ spaces correspond to the different types of PTZ requests
 	 * @throws ServiceNotSupportedException if the PTZ Service is not
 	 * 	supported
-	 * @throws SessionNotInitializedException if this is not initialized
-	 * @throws SoapWrapperException if the request fails (unexpected)
+	 * @throws SessionNotStartedException if this is not initialized
+	 * @throws SoapTransmissionException if the request fails (unexpected)
 	 */
 	public PTZSpaces getPtzSpaces()
-		throws ServiceNotSupportedException, SoapWrapperException,
-		SessionNotInitializedException
+		throws ServiceNotSupportedException, SoapTransmissionException,
+		SessionNotStartedException
 	{
 		if (ptzSpaces == null)
 			ptzSpaces = initPTZSpaces();
@@ -203,15 +188,28 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	}
 
 	/**
+	 * @return all the PTZ Nodes (provides ranges for PTZ request values)
+	 */
+	public List<PTZNode> getNodes()
+		throws ServiceNotSupportedException,
+		SessionNotStartedException, SoapTransmissionException
+	{
+		if (nodes == null) {
+			nodes = initNodes();
+		}
+		return nodes;
+	}
+
+	/**
 	 * @return supported focus move requests and ranges
 	 * @throws ServiceNotSupportedException if the Imaging Service is not
 	 * 	supported
-	 * @throws SessionNotInitializedException if this is not initialized
-	 * @throws SoapWrapperException if the request fails (unexpected)
+	 * @throws SessionNotStartedException if this is not initialized
+	 * @throws SoapTransmissionException if the request fails (unexpected)
 	 */
 	public MoveOptions20 getImagingMoveOptions()
-		throws ServiceNotSupportedException, SoapWrapperException,
-		SessionNotInitializedException
+		throws ServiceNotSupportedException, SoapTransmissionException,
+		SessionNotStartedException
 	{
 		if (imagingMoveOptions == null)
 			imagingMoveOptions = initImagingMoveOptions();
@@ -219,122 +217,181 @@ public class OnvifSessionMessenger extends HttpMessenger {
 	}
 
 	/**
-	 * user input self defense
+	 * Places the request to the selected currentService currentUri and
+	 * returns a response Class
 	 *
-	 * @param uri gets checked
-	 * @return a normalized version of the uri (protocol, ip, and port)
-	 * @throws IllegalArgumentException if the uri is malformed
+	 * @param request the request xml object
+	 * @param responseClass the response Object format
+	 * @return the response xml Object
+	 * @throws SoapTransmissionException if there is a problem during
+	 * 	communication or soap formatting or transmission
 	 */
-	private String normalizeUri(String uri)
-		throws IllegalArgumentException
+	public Object makeRequest(Object request, Class<?> responseClass)
+		throws SoapTransmissionException
 	{
-		// basic null, protocol, and form check
-		URL url;
 		try {
-			url = new URL(uri);
-		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException(e);
+			SOAPMessage soap = SoapWrapper.newMessage(request);
+			SoapWrapper.addAuthHeader(soap, auth);
+			SOAPConnection soapConnection =
+				SOAPConnectionFactory.newInstance()
+					.createConnection();
+			logSoap("Request SOAPMessage", request.getClass(),
+				responseClass, soap);
+//			SOAPMessage response =
+//				soapConnection.call(soap, currentService);
+			SOAPMessage response = soapConnection.call(soap, currentUri);
+			if (response.getSOAPBody().hasFault()) {
+				logSoap("SOAPFault", request.getClass(),
+					responseClass, response);
+				throw new SoapTransmissionException(
+					response.getSOAPBody().getFault()
+						.getFaultString());
+			}
+			logSoap("Response SOAPMessage", request.getClass(),
+				responseClass,
+				response);
+			return SoapWrapper
+				.convertToObject(response, responseClass);
+		} catch (JAXBException
+			| ParserConfigurationException
+			| NoSuchAlgorithmException e) {
+			System.err.println(
+				"Unable to make request: " + e.getMessage());
+			throw new SoapTransmissionException(e);
+		} catch (SOAPException e) {
+			int err = parseSoapErrStatus(e);
+			if (err >= 400 && err <= 403)
+				throw new SoapTransmissionException(
+					"Bad username or password. ", e);
+			throw new SoapTransmissionException(e);
 		}
-		// protocol check
-		if (!url.getProtocol().equalsIgnoreCase("http"))
-			throw new IllegalArgumentException(
-				"ONVIF URI protocol is not http. ");
-		// path normalization and check
-		String tmp = uri;
-		if (tmp.endsWith("/"))
-			tmp = uri.substring(0, uri.length() - 2);
-		if (tmp.endsWith(DEVICE_SERVICE_PATH))
-			tmp = uri.substring(0, tmp.length()
-				- DEVICE_SERVICE_PATH.length() - 1);
-		// strip off the protocol and port
-		String uriParts[] =
-			tmp.substring("http://".length()).split(":");
-		// check port
-		if (uriParts.length != 1) {
-			if (uriParts.length != 2)
-				throw new IllegalArgumentException(
-					"ONVIF port is malformed. ");
-			if (!uriParts[1].equals("80"))
-				throw new IllegalArgumentException(
-					"ONVIF port is not 80. ");
+	}
+
+	private void setCurrentUri(String uri) throws IOException {
+		if (uri == null)
+			throw new IOException("Attempt to set URI to null. ");
+		if (currentUri == null
+			|| !currentUri.equals(uri))
+		{
+//			closeConnection();
+			currentUri = uri;
+//			openConnection();
 		}
-		// check the ip
-		String ipParts[] = uriParts[0].split("\\.");
-		if (ipParts.length != 4)
-			throw new IllegalArgumentException(
-				"ONVIF IP does not have four parts. ");
-		for (String p : ipParts)
-			if (!p.matches("[0-9]+"))
-				throw new IllegalArgumentException(
-					"ONVIF IP contains values that are " +
-						"not numbers. ");
-		return tmp;
+	}
+//
+//	private void openConnection() throws IOException {
+//		if (currentUri == null)
+//			throw new SoapTransmissionException("URI missing. ");
+//		currentService = new URL(currentUri);
+//		httpURLConnection =
+//			(HttpURLConnection) currentService.openConnection();
+//		httpURLConnection.setConnectTimeout(timeout);
+//		httpURLConnection.setReadTimeout(timeout);
+//		httpURLConnection.setDoOutput(true);
+//		output = httpURLConnection.getOutputStream();
+//	}
+//
+//	private void closeConnection() {
+//		if (input != null) {
+//			try {
+//				input.close();
+//				input = null;
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		if (output != null) {
+//			try {
+//				output.close();
+//				output = null;
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		if (httpURLConnection != null) {
+//			httpURLConnection.disconnect();
+//			httpURLConnection = null;
+//		}
+//		currentService = null;
+//	}
+
+	private int parseSoapErrStatus(SOAPException e)
+		throws SoapTransmissionException
+	{
+		String msg = e.getMessage();
+		String strB4Stats = "Bad response: (";
+		if (!msg.contains(strB4Stats))
+			throw new SoapTransmissionException(e);
+		int startI = msg.indexOf(strB4Stats);
+		if (msg.length() < strB4Stats.length() + 3)
+			throw new SoapTransmissionException(e);
+		String statusStr = msg.substring(startI + strB4Stats.length(),
+			startI + strB4Stats.length() + 3);
+		int status;
+		try {
+			status = Integer.parseInt(statusStr);
+		} catch (NumberFormatException e1) {
+			throw new SoapTransmissionException(e);
+		}
+		return status;
+	}
+
+	private void resetSession() {
+		auth = null;
+		capabilities = null;
+		mediaProfiles = null;
+		ptzSpaces = null;
+		nodes = null;
+		imagingMoveOptions = null;
 	}
 
 	/**
-	 * Establish a session with the device, determine the device's
-	 * capabilities, and get the media profiles (which sets the default
-	 * profile token).
+	 * user input self defense
 	 *
-	 * @throws SessionNotInitializedException if the session could not be
-	 * 	initialized
-	 * @throws SoapWrapperException if there was a soap error (unexpected)
-	 * @throws ServiceNotSupportedException if there was an issue with the
-	 * 	media service (unexpected)
+	 * @param uri gets checked
+	 * @return a normalized version of the currentUri (protocol, ip, and
+	 * 	port)
+	 * @throws IllegalArgumentException if the currentUri is malformed
 	 */
-	private void initialize()
-		throws SessionNotInitializedException, SoapWrapperException,
-		ServiceNotSupportedException
-	{
-		log("Attempting to start session... ");
-		if (auth == null)
-			throw new SessionNotInitializedException();
-		// for safety we will set uri again (ignored if already set to
-		// the correct Device Service URI).
-		setUri(baseUri + "/onvif/device_service");
-		try {
-			setAuthClockOffset();
-		} catch (SoapWrapperException e) {
-			if (e.getHttpErr() != null)
-				switch (e.getHttpErr()) {
-				case 400:
-				case 401:
-				case 402:
-				case 403:
-					throw new SessionNotInitializedException(
-						"username or password");
-				case 404:
-					throw new SessionNotInitializedException(
-						"URI");
-				}
-			throw new SessionNotInitializedException(e);
-		}
-		GetCapabilities getCapabilities = new GetCapabilities();
-		capabilities =
-			((GetCapabilitiesResponse) makeRequest(getCapabilities,
-				GetCapabilitiesResponse.class))
-				.getCapabilities();
-		mediaProfiles = initMediaProfiles();
-		initialized = true;
-		log("Session started. ");
+	private URL normalizeDevServUri(String uri) throws IOException {
+		URL url = new URL(uri);
+		if (url.getPath().equals(""))
+			url = new URL(url.getProtocol()
+				+ "://"
+				+ url.getAuthority()
+				+ DEVICE_SERVICE_PATH);
+		else
+			throw new IOException(
+				"ONVIF URI path may only be \""
+					+ DEVICE_SERVICE_PATH
+					+ "\" or empty. ");
+		if (!url.getProtocol().equalsIgnoreCase("http"))
+			throw new IOException(
+				"ONVIF URI protocol is not \"http\". ");
+		if (url.getPort() != 80)
+			throw new IOException(
+				"ONVIF URI port is not \"80\". ");
+		return url;
 	}
 
 	/**
 	 * Get our current timestamp and then make a request for the device's
 	 * date and time. Next format the response, and send off to the auth to
-	 * set the clock offset
+	 * set the clock offset. Caution! If you set a breakpoint in this
+	 * method, it may cause inaccurate calculation of device clock which
+	 * may
+	 * cause the device to reject requests.
 	 */
-	private void setAuthClockOffset() throws SoapWrapperException {
-		GetSystemDateAndTime request = new GetSystemDateAndTime();
-		SystemDateTime response;
+	private void setAuthClockOffset() throws SoapTransmissionException {
 		// add one second for travel delay as the ONVIF programmer
-		// guide does
-		ZonedDateTime ourDateTime = ZonedDateTime
-			.now(ZoneOffset.UTC).plusSeconds(1);
-		response = ((GetSystemDateAndTimeResponse) makeRequest(
-			request,
-			GetSystemDateAndTimeResponse.class))
-			.getSystemDateAndTime();
+		// guide shows
+		ZonedDateTime ourDateTime =
+			ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(1);
+		SystemDateTime response =
+			((GetSystemDateAndTimeResponse) makeRequest(
+				new GetSystemDateAndTime(),
+				GetSystemDateAndTimeResponse.class))
+				.getSystemDateAndTime();
 		DateTime deviceDT = response.getUTCDateTime();
 		ZoneOffset zoneID = ZoneOffset.UTC;
 		// we will may only get one of the time formats (UTC only
@@ -355,41 +412,49 @@ public class OnvifSessionMessenger extends HttpMessenger {
 		auth.setClockOffset(ourDateTime, deviceDateTime);
 	}
 
-	private List<Profile> initMediaProfiles()
-		throws SessionNotInitializedException,
-		ServiceNotSupportedException, SoapWrapperException
+	private Capabilities initCapabilities()
+		throws SoapTransmissionException
 	{
-		setUri(OnvifService.MEDIA);
-		List<Profile> profiles;
-		GetProfiles getProfiles = new GetProfiles();
-		profiles = ((GetProfilesResponse) (makeRequest(getProfiles,
-			GetProfilesResponse.class))).getProfiles();
-		if (profiles.size() < 1
+		GetCapabilities getCapabilities = new GetCapabilities();
+		return ((GetCapabilitiesResponse) makeRequest(getCapabilities,
+			GetCapabilitiesResponse.class))
+			.getCapabilities();
+	}
+
+	private List<Profile> initMediaProfiles()
+		throws SessionNotStartedException,
+		ServiceNotSupportedException,
+		SoapTransmissionException
+	{
+		selectService(OnvifService.MEDIA);
+		List<Profile> profiles =
+			((GetProfilesResponse) makeRequest(new GetProfiles(),
+				GetProfilesResponse.class)).getProfiles();
+		if (profiles == null
+			|| profiles.size() < 1
 			|| profiles.get(0).getToken() == null
 			|| profiles.get(0).getToken().isEmpty())
-			throw new ServiceNotSupportedException(
-				OnvifService.MEDIA,
+			throw new SessionNotStartedException(
 				"Missing required Media Profile. ");
 		return profiles;
 	}
 
-	private PTZSpaces initPTZSpaces() throws SessionNotInitializedException,
-		ServiceNotSupportedException, SoapWrapperException
+	private PTZSpaces initPTZSpaces()
+		throws SessionNotStartedException,
+		ServiceNotSupportedException,
+		SoapTransmissionException
 	{
-		setUri(OnvifService.PTZ);
-		GetConfigurations getConfigurations = new GetConfigurations();
-		GetConfigurationOptions getConfigurationOptions =
-			new GetConfigurationOptions();
+		selectService(OnvifService.PTZ);
 		GetConfigurationsResponse getConfigurationsResponse =
 			(GetConfigurationsResponse) makeRequest(
-				getConfigurations,
+				new GetConfigurations(),
 				GetConfigurationsResponse.class);
+		GetConfigurationOptions getConfigurationOptions =
+			new GetConfigurationOptions();
 		String token =
 			getConfigurationsResponse.getPTZConfiguration().get(0)
 				.getToken();
 		getConfigurationOptions.setConfigurationToken(token);
-		// the getConfigurationOptionsResponse has info about the
-		// Spaces of movement and their range limits
 		GetConfigurationOptionsResponse
 			getConfigurationOptionsResponse =
 			(GetConfigurationOptionsResponse) makeRequest(
@@ -399,11 +464,23 @@ public class OnvifSessionMessenger extends HttpMessenger {
 			.getPTZConfigurationOptions().getSpaces();
 	}
 
+	private List<PTZNode> initNodes()
+		throws SessionNotStartedException,
+		ServiceNotSupportedException,
+		SoapTransmissionException
+	{
+		selectService(OnvifService.PTZ);
+		GetNodes getNodes =
+			new GetNodes();
+		return ((GetNodesResponse) makeRequest(getNodes,
+			GetNodesResponse.class)).getPTZNode();
+	}
+
 	private MoveOptions20 initImagingMoveOptions()
 		throws ServiceNotSupportedException,
-		SessionNotInitializedException, SoapWrapperException
+		SessionNotStartedException, SoapTransmissionException
 	{
-		setUri(OnvifService.IMAGING);
+		selectService(OnvifService.IMAGING);
 		GetMoveOptions getMoveOptions = new GetMoveOptions();
 		getMoveOptions.setVideoSourceToken(getMediaProfileTok());
 		return ((GetMoveOptionsResponse) makeRequest(getMoveOptions,
@@ -412,9 +489,10 @@ public class OnvifSessionMessenger extends HttpMessenger {
 
 	private String getDeviceServiceUri() {
 		String uri;
-		if (capabilities.getDevice() == null
+		if (capabilities == null
+			|| capabilities.getDevice() == null
 			|| capabilities.getDevice().getXAddr() == null)
-			uri = baseUri + DEVICE_SERVICE_PATH;
+			uri = deviceServiceUri.toString();
 		else
 			uri = capabilities.getDevice().getXAddr();
 		return uri;
@@ -448,7 +526,37 @@ public class OnvifSessionMessenger extends HttpMessenger {
 		return capabilities.getImaging().getXAddr();
 	}
 
-	private void log(String msg) {
-		OnvifPoller.log("Session (" + baseUri + "): " + msg);
+	public void log(String msg) {
+		ONVIF_SESSION_LOG
+			.log("<" + deviceServiceUri.getHost() + "> " + msg);
+	}
+
+	/**
+	 * Formats context information and msg and writes to soap logSoap file.
+	 */
+	private void logSoap(
+		String context, Class<?> requestClass, Class<?> responseClass,
+		SOAPMessage msg)
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			msg.writeTo(out);
+		} catch (Exception e) {
+			System.err.println(
+				"Could not convert SOAP message to string for "
+					+ context + " to service: " + currentUri
+					+ "\n");
+			e.printStackTrace();
+			return;
+		}
+		SOAP_LOG.log(
+			context + "\n"
+				+ "Service: " + currentUri +
+				"\n"
+				+ "Request class: " + requestClass
+				.getSimpleName() + "\n"
+				+ "Expected response class: " + responseClass
+				.getSimpleName() + "\n"
+				+ "Soap: " + new String(out.toByteArray()));
 	}
 }

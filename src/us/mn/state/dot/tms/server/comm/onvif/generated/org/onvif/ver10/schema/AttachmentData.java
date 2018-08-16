@@ -11,9 +11,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.w3._2004._08.xop.incl
 
 
 /**
- * <p>Java class for AttachmentData complex type.
+ * <prop>Java class for AttachmentData complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="AttachmentData"&gt;

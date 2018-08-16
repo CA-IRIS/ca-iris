@@ -12,9 +12,9 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Type describing the exposure settings.
  * 
- * <p>Java class for Exposure20 complex type.
+ * <prop>Java class for Exposure20 complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="Exposure20"&gt;

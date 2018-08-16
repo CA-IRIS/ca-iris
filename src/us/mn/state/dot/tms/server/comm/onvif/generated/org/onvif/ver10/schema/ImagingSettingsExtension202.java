@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for ImagingSettingsExtension202 complex type.
+ * <prop>Java class for ImagingSettingsExtension202 complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="ImagingSettingsExtension202"&gt;
@@ -48,20 +48,20 @@ public class ImagingSettingsExtension202 {
     /**
      * Gets the value of the irCutFilterAutoAdjustment property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the irCutFilterAutoAdjustment property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getIrCutFilterAutoAdjustment().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link IrCutFilterAutoAdjustment }
      * 

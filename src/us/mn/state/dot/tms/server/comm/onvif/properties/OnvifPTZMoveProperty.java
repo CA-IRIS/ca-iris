@@ -2,17 +2,15 @@ package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZSpaces;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZSpeed;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Vector1D;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Vector2D;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.ContinuousMove;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.ContinuousMoveResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -34,9 +32,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	}
 
 	@Override
-	protected void encodeStore(OutputStream os)
-		throws IOException, ServiceNotSupportedException
-	{
+	protected void encodeStore() throws IOException {
 		if (!supportsContinuousPTZMove())
 			logFailure("ContinuousPTZMove not supported. ");
 		else {
@@ -45,9 +41,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 		}
 	}
 
-	private boolean supportsContinuousPTZMove()
-		throws IOException, ServiceNotSupportedException
-	{
+	private boolean supportsContinuousPTZMove() throws IOException {
 		return session.getPtzSpaces()
 			.getContinuousPanTiltVelocitySpace() != null
 			&& session.getPtzSpaces()
@@ -61,9 +55,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	 * (though 100% of the devices we have seen so far map from -1 to 1
 	 * also), so this is just for safety
 	 */
-	private void resizeInputs()
-		throws IOException, ServiceNotSupportedException
-	{
+	private void resizeInputs() throws IOException {
 		float sourceMin = -1;
 		float sourceMax = 1;
 		float targetMin = session.getPtzSpaces()
@@ -91,9 +83,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 			targetMax);
 	}
 
-	private PTZSpeed createPTZSpeed()
-		throws IOException, ServiceNotSupportedException
-	{
+	private PTZSpeed createPTZSpeed() throws IOException {
 		PTZSpeed speed = new PTZSpeed();
 		PTZSpaces spaces = session.getPtzSpaces();
 		Vector2D vector2D = new Vector2D();
@@ -111,9 +101,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 		return speed;
 	}
 
-	private void continuousMove(PTZSpeed speed)
-		throws IOException, ServiceNotSupportedException
-	{
+	private void continuousMove(PTZSpeed speed) throws IOException {
 		ContinuousMove continuousMove = new ContinuousMove();
 		continuousMove.setProfileToken(session.getMediaProfileTok());
 		continuousMove.setVelocity(speed);

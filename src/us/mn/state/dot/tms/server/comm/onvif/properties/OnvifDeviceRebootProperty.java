@@ -1,12 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.SystemReboot;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.SystemRebootResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
@@ -19,7 +18,7 @@ public class OnvifDeviceRebootProperty extends OnvifProperty {
 	}
 
 	@Override
-	protected void encodeStore(OutputStream os) throws IOException {
+	protected void encodeStore() throws IOException {
 		response = session.makeRequest(new SystemReboot(),
 			SystemRebootResponse.class);
 	}

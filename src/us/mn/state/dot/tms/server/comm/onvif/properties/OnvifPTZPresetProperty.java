@@ -1,11 +1,10 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresets;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresetsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,8 +13,11 @@ import java.util.List;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public abstract class OnvifPTZPresetProperty extends OnvifProperty {
-	public OnvifPTZPresetProperty(OnvifSessionMessenger session) {
+	protected Integer preset;
+
+	public OnvifPTZPresetProperty(OnvifSessionMessenger session, int num) {
 		super(session);
+		preset = num;
 	}
 
 	/**
@@ -23,9 +25,7 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	 * @param presets the presets to look in
 	 * @return null if not found else contains the presetToken
 	 */
-	String findPresetToken(
-		Integer preset, List<PTZPreset> presets)
-	{
+	String findPresetToken(Integer preset, List<PTZPreset> presets) {
 		for (PTZPreset p : presets) {
 			if (p.getName().equals("IRIS" + preset))
 				return p.getToken();
@@ -33,9 +33,7 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 		return null;
 	}
 
-	protected List<PTZPreset> getPresets()
-		throws IOException, ServiceNotSupportedException
-	{
+	protected List<PTZPreset> getPresets() throws IOException {
 		GetPresets getPresets = new GetPresets();
 		getPresets.setProfileToken(session.getMediaProfileTok());
 		return ((GetPresetsResponse) session.makeRequest(getPresets,
@@ -47,9 +45,7 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	 * preset
 	 * 	commands
 	 */
-	boolean supportsPresets()
-		throws IOException, ServiceNotSupportedException
-	{
+	boolean supportsPresets() throws IOException {
 		return session.getNodes().get(0)
 			.getMaximumNumberOfPresets() > 0;
 	}

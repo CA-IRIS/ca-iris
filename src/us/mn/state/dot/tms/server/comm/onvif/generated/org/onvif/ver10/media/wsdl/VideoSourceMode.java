@@ -19,9 +19,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Vi
 
 
 /**
- * <p>Java class for VideoSourceMode complex type.
+ * <prop>Java class for VideoSourceMode complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="VideoSourceMode"&gt;
@@ -134,20 +134,20 @@ public class VideoSourceMode {
     /**
      * Gets the value of the encodings property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the encodings property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getEncodings().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link String }
      * 
@@ -286,7 +286,7 @@ public class VideoSourceMode {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

@@ -16,9 +16,9 @@ import javax.xml.namespace.QName;
 /**
  * The value range of "Transparent" could be defined by vendors only should follow this rule: the minimum value means non-transparent and the maximum value maens fully transparent.
  * 
- * <p>Java class for OSDColor complex type.
+ * <prop>Java class for OSDColor complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="OSDColor"&gt;
@@ -108,7 +108,7 @@ public class OSDColor {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

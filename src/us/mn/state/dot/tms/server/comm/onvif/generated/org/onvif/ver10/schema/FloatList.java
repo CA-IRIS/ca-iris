@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for FloatList complex type.
+ * <prop>Java class for FloatList complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="FloatList"&gt;
@@ -43,20 +43,20 @@ public class FloatList {
     /**
      * Gets the value of the items property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the items property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getItems().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Float }
      * 

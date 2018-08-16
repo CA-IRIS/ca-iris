@@ -12,9 +12,9 @@ import javax.xml.datatype.Duration;
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * <prop>Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType&gt;

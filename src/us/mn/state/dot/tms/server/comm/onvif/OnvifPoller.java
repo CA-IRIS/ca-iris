@@ -1,11 +1,17 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
-import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.CommLink;
+import us.mn.state.dot.tms.CommLinkHelper;
+import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.CommLinkImpl;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
 import us.mn.state.dot.tms.server.comm.onvif.operations.*;
+
+import java.util.LinkedList;
 
 /**
  * An OnvifPoller represents a single Onvif device. It dispatches OpOnvifs in
@@ -16,43 +22,43 @@ import us.mn.state.dot.tms.server.comm.onvif.operations.*;
 public class OnvifPoller extends TransientPoller<OnvifProperty>
 	implements CameraPoller
 {
-	private static final DebugLog ONVIF_LOG = new DebugLog("onvif");
 	/**
 	 * This is just a more specific reference to our messenger (which
 	 * happens to be a session) for convenience
 	 */
-	private OnvifSessionMessenger session
-		= (OnvifSessionMessenger) messenger;
+	private OnvifSessionMessenger session = (OnvifSessionMessenger) messenger;
+	private String name;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
-		log("Onvif device created: " + name);
+		this.name = name;
+		log("Created " + this.name + ". ");
 	}
 
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		addOperation(new OpOnvifPTZ(c, p, t, z, session));
+		setAuthAddOp(new OpOnvifPTZ(c, p, t, z, session));
 	}
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
-		addOperation(new OpOnvifPTZPreset(c, preset, true, session));
+		setAuthAddOp(new OpOnvifPTZPreset(c, preset, true, session));
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
-		addOperation(new OpOnvifPTZPreset(c, preset, false, session));
+		setAuthAddOp(new OpOnvifPTZPreset(c, preset, false, session));
 	}
 
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
-			addOperation(
+			setAuthAddOp(
 				new OpOnvifPTZ(c, 0, 0, 0, session));
 			break;
 		case CAMERA_WIPER_ONESHOT:
-			addOperation(new OpOnvifPTZAux(c, session));
+			setAuthAddOp(new OpOnvifPTZAux(c, session));
 			break;
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
@@ -67,7 +73,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case BRIGHTNESS_GOOD:
 		case BRIGHTNESS_TOO_DIM:
 		case BRIGHTNESS_TOO_BRIGHT:
-			addOperation(new OpOnvifImaging(c, session, r));
+			setAuthAddOp(new OpOnvifImaging(c, session, r));
 			break;
 		case RESET_DEVICE:
 		case QUERY_CONFIGURATION:
@@ -83,7 +89,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case QUERY_LEDSTAR_SETTINGS:
 		case DISABLE_SYSTEM:
 		case NO_REQUEST:
-			addOperation(new OpOnvifDevice(c, session, r));
+			setAuthAddOp(new OpOnvifDevice(c, session, r));
 			break;
 		}
 	}
@@ -93,11 +99,39 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		log("Drop addresses not valid for Onvif devices");
+		log("Drop addresses are not valid for Onvif devices. ");
 		return true;
 	}
 
-	public static void log(String message) {
-		ONVIF_LOG.log(": " + message);
+	private void setAuthAddOp(OpOnvif<OnvifProperty> op) {
+		if (session.authNotSet())
+			applySessionCredentials();
+		addOperation(op);
+	}
+
+	private void applySessionCredentials() {
+		CommLink cl = CommLinkHelper.lookup(name);
+		ControllerImpl c = null;
+		if (cl == null)
+			log("Failed to find CommLink for" + name + ". ");
+		else
+			c = getControllerImpl((CommLinkImpl) cl);
+		if (c == null)
+			log("Failed to find Controller for " + name + ". ");
+		else
+			session.setAuth(c.getUsername(), c.getPassword());
+	}
+
+	private ControllerImpl getControllerImpl(CommLinkImpl cl) {
+		ControllerImpl found = null;
+		LinkedList<Controller> controllers = cl.getActiveControllers();
+		for (Controller c : controllers)
+			if (c.getCommLink().getName().equals(cl.getName()))
+				found = (ControllerImpl) c;
+		return found;
+	}
+
+	private void log(String message) {
+		session.log(getClass().getSimpleName() + ": " + message);
 	}
 }

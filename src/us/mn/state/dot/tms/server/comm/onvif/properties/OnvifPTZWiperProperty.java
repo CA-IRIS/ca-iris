@@ -1,13 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommand;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommandResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
@@ -30,9 +28,7 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	}
 
 	@Override
-	protected void encodeStore(OutputStream os)
-		throws IOException, ServiceNotSupportedException
-	{
+	protected void encodeStore() throws IOException {
 		// ensure that the device supports wiper auxiliary command
 		SendAuxiliaryCommand supportedCmd = findSupportedCmd();
 		if (supportedCmd == null)
@@ -61,9 +57,7 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 			SendAuxiliaryCommandResponse.class);
 	}
 
-	private SendAuxiliaryCommand findSupportedCmd()
-		throws IOException, ServiceNotSupportedException
-	{
+	private SendAuxiliaryCommand findSupportedCmd() throws IOException {
 		return switchOn ?
 			initCmd(matchAny(
 				(String[]) session.getNodes().get(0)
@@ -79,9 +73,7 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	/**
 	 * @return a initialized AuxiliaryCommand if the param is not null
 	 */
-	private SendAuxiliaryCommand initCmd(String param)
-		throws IOException, ServiceNotSupportedException
-	{
+	private SendAuxiliaryCommand initCmd(String param) throws IOException {
 		SendAuxiliaryCommand cmd = null;
 		if (param != null) {
 			cmd = new SendAuxiliaryCommand();

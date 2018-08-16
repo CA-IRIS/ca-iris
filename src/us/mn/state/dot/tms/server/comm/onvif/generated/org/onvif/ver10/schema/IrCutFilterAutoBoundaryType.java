@@ -8,10 +8,10 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for IrCutFilterAutoBoundaryType.
+ * <prop>Java class for IrCutFilterAutoBoundaryType.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p>
+ * <prop>The following schema fragment specifies the expected content contained within this class.
+ * <prop>
  * <pre>
  * &lt;simpleType name="IrCutFilterAutoBoundaryType"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;

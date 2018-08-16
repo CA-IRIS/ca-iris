@@ -24,9 +24,9 @@ import org.w3c.dom.Element;
  * 			Each item in the list shall have a unique name.
  * 		
  * 
- * <p>Java class for ItemList complex type.
+ * <prop>Java class for ItemList complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="ItemList"&gt;
@@ -90,20 +90,20 @@ public class ItemList {
     /**
      * Gets the value of the simpleItem property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the simpleItem property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getSimpleItem().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link ItemList.SimpleItem }
      * 
@@ -120,20 +120,20 @@ public class ItemList {
     /**
      * Gets the value of the elementItem property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the elementItem property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getElementItem().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link ItemList.ElementItem }
      * 
@@ -176,7 +176,7 @@ public class ItemList {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 
@@ -194,9 +194,9 @@ public class ItemList {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;
@@ -285,9 +285,9 @@ public class ItemList {
 
 
     /**
-     * <p>Java class for anonymous complex type.
+     * <prop>Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <prop>The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType&gt;

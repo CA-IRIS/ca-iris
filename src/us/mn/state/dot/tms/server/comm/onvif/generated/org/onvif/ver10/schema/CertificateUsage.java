@@ -10,9 +10,9 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for CertificateUsage complex type.
+ * <prop>Java class for CertificateUsage complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="CertificateUsage"&gt;

@@ -7,10 +7,10 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for RotateMode.
+ * <prop>Java class for RotateMode.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p>
+ * <prop>The following schema fragment specifies the expected content contained within this class.
+ * <prop>
  * <pre>
  * &lt;simpleType name="RotateMode"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;

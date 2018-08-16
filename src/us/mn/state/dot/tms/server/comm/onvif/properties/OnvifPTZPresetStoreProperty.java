@@ -1,13 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -17,24 +15,20 @@ import java.util.List;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
-	private Integer preset;
 	private String presetToken;
 
 	public OnvifPTZPresetStoreProperty(
 		OnvifSessionMessenger session, int num)
 	{
-		super(session);
-		preset = num;
+		super(session, num);
 	}
 
 	@Override
-	protected void encodeStore(OutputStream os)
-		throws IOException, ServiceNotSupportedException
-	{
+	protected void encodeStore() throws IOException {
 		if (!supportsPresets())
 			logFailure("Presets not supported. ");
 		else {
-			List<PTZPreset> presets = null;
+			List<PTZPreset> presets;
 			presets = getPresets();
 			presetToken = findPresetToken(preset, presets);
 			if (presetToken != null)
@@ -78,9 +72,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 
 	}
 
-	private boolean hasRoomForAnotherPreset()
-		throws IOException, ServiceNotSupportedException
-	{
+	private boolean hasRoomForAnotherPreset() throws IOException {
 		return getPresets().size()
 			< session.getNodes().get(0).getMaximumNumberOfPresets();
 	}
@@ -89,9 +81,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	 * @param preset the preset number
 	 * @param presetToken if null, then a new preset will be created
 	 */
-	private void setPreset(Integer preset, String presetToken)
-		throws IOException, ServiceNotSupportedException
-	{
+	private void setPreset(Integer preset, String presetToken) throws IOException {
 		SetPreset setPreset = new SetPreset();
 		setPreset.setProfileToken(session.getMediaProfileTok());
 		setPreset.setPresetName("IRIS" + preset);

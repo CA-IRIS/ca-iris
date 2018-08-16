@@ -11,9 +11,9 @@ import javax.xml.datatype.Duration;
 
 
 /**
- * <p>Java class for RelayOutputSettings complex type.
+ * <prop>Java class for RelayOutputSettings complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="RelayOutputSettings"&gt;

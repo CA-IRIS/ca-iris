@@ -1,13 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.Stop;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.StopResponse;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
@@ -19,9 +17,7 @@ public class OnvifPTZStopProperty extends OnvifProperty {
 	}
 
 	@Override
-	protected void encodeStore(OutputStream os)
-		throws IOException, ServiceNotSupportedException
-	{
+	protected void encodeStore() throws IOException {
 		// All onvif ptz devices must implement stop.
 		// Therefore, if we support the ptz service,
 		// we can assume the feature will be present

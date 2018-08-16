@@ -18,9 +18,9 @@ import javax.xml.namespace.QName;
 
 
 /**
- * <p>Java class for Dot11AvailableNetworks complex type.
+ * <prop>Java class for Dot11AvailableNetworks complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="Dot11AvailableNetworks"&gt;
@@ -142,20 +142,20 @@ public class Dot11AvailableNetworks {
     /**
      * Gets the value of the authAndMangementSuite property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the authAndMangementSuite property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getAuthAndMangementSuite().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Dot11AuthAndMangementSuite }
      * 
@@ -172,20 +172,20 @@ public class Dot11AvailableNetworks {
     /**
      * Gets the value of the pairCipher property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the pairCipher property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getPairCipher().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Dot11Cipher }
      * 
@@ -202,20 +202,20 @@ public class Dot11AvailableNetworks {
     /**
      * Gets the value of the groupCipher property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the groupCipher property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getGroupCipher().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Dot11Cipher }
      * 
@@ -284,7 +284,7 @@ public class Dot11AvailableNetworks {
     /**
      * Gets a map that contains attributes that aren't bound to any typed property on this class.
      * 
-     * <p>
+     * <prop>
      * the map is keyed by the name of the attribute and 
      * the value is the string value of the attribute.
      * 

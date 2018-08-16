@@ -11,7 +11,7 @@ import javax.xml.namespace.QName;
  * This object contains factory methods for each 
  * Java content interface and Java element interface 
  * generated in the us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.bf_2 package.
- * <p>An ObjectFactory allows you to programatically 
+ * <prop>An ObjectFactory allows you to programatically
  * construct new instances of the Java representation 
  * for XML content. The Java representation of XML 
  * content can consist of schema derived interfaces 
@@ -24,7 +24,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _BaseFault_QNAME = new QName("http://docs.oasis-open.org/wsrf/bf-2", "BaseFault");
+    private final static QName _BaseFault_QNAME = new QName("http://docs.oasis-openConn.org/wsrf/bf-2", "BaseFault");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: us.mn.state.dot.tms.server.comm.onvif.generated.org.oasis_open.docs.wsrf.bf_2
@@ -69,7 +69,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link BaseFaultType }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://docs.oasis-open.org/wsrf/bf-2", name = "BaseFault")
+    @XmlElementDecl(namespace = "http://docs.oasis-openConn.org/wsrf/bf-2", name = "BaseFault")
     public JAXBElement<BaseFaultType> createBaseFault(BaseFaultType value) {
         return new JAXBElement<BaseFaultType>(_BaseFault_QNAME, BaseFaultType.class, null, value);
     }

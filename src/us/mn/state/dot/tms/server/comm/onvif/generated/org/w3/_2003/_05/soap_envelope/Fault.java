@@ -14,9 +14,9 @@ import javax.xml.bind.annotation.XmlType;
  * 	    Fault reporting structure
  * 	  
  * 
- * <p>Java class for Fault complex type.
+ * <prop>Java class for Fault complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="Fault"&gt;

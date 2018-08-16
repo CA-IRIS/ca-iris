@@ -13,9 +13,9 @@ import javax.xml.ws.wsaddressing.W3CEndpointReference;
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * <prop>Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType&gt;

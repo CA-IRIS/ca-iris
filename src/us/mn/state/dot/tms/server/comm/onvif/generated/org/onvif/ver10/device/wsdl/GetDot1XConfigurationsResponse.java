@@ -13,9 +13,9 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Do
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * <prop>Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <prop>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType&gt;
@@ -46,20 +46,20 @@ public class GetDot1XConfigurationsResponse {
     /**
      * Gets the value of the dot1XConfiguration property.
      * 
-     * <p>
+     * <prop>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the dot1XConfiguration property.
      * 
-     * <p>
+     * <prop>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getDot1XConfiguration().add(newItem);
      * </pre>
      * 
      * 
-     * <p>
+     * <prop>
      * Objects of the following type(s) are allowed in the list
      * {@link Dot1XConfiguration }
      * 
