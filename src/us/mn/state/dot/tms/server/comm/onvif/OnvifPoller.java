@@ -37,28 +37,28 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		setAuthAddOp(new OpOnvifPTZ(c, p, t, z, session));
+		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session));
 	}
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
-		setAuthAddOp(new OpOnvifPTZPreset(c, preset, true, session));
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session));
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
-		setAuthAddOp(new OpOnvifPTZPreset(c, preset, false, session));
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session));
 	}
 
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
-			setAuthAddOp(
+			prepAndAddOp(
 				new OpOnvifPTZ(c, 0, 0, 0, session));
 			break;
 		case CAMERA_WIPER_ONESHOT:
-			setAuthAddOp(new OpOnvifPTZAux(c, session));
+			prepAndAddOp(new OpOnvifPTZAux(c, session));
 			break;
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
@@ -73,7 +73,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case BRIGHTNESS_GOOD:
 		case BRIGHTNESS_TOO_DIM:
 		case BRIGHTNESS_TOO_BRIGHT:
-			setAuthAddOp(new OpOnvifImaging(c, session, r));
+			prepAndAddOp(new OpOnvifImaging(c, session, r));
 			break;
 		case RESET_DEVICE:
 		case QUERY_CONFIGURATION:
@@ -89,7 +89,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case QUERY_LEDSTAR_SETTINGS:
 		case DISABLE_SYSTEM:
 		case NO_REQUEST:
-			setAuthAddOp(new OpOnvifDevice(c, session, r));
+			prepAndAddOp(new OpOnvifDevice(c, session, r));
 			break;
 		}
 	}
@@ -103,13 +103,18 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		return true;
 	}
 
-	private void setAuthAddOp(OpOnvif<OnvifProperty> op) {
+	/**
+	 * Sets the timeout (see MessagePoller) and the auth credentials
+	 * (see OnvifSessionMessenger).
+	 */
+	private void prepAndAddOp(OpOnvif<OnvifProperty> op) {
 		if (session.authNotSet())
-			applySessionCredentials();
+			applyAuthCredentials();
+		setIdleSecs(session.getTimeout());
 		addOperation(op);
 	}
 
-	private void applySessionCredentials() {
+	private void applyAuthCredentials() {
 		CommLink cl = CommLinkHelper.lookup(name);
 		ControllerImpl c = null;
 		if (cl == null)

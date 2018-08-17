@@ -52,20 +52,22 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	/**
-	 * @return a float remapped to a new range
-	 * @throws AssertionError if oldMin == oldMax
+	 * @return val remapped to a new range
+	 * @throws AssertionError if inputs are invalid (e.g. a min is not less
+	 * 	than a max or val is not between oldMin and oldMax inclusive).
 	 */
-	protected float resize(float val,
+	protected float resize(
+		float val,
 		float oldMin, float oldMax,
 		float newMin, float newMax)
 		throws AssertionError
 	{
+		assert oldMin <= val && val <= oldMax; // validate inputs
 		assert oldMin != oldMax; // avoid division by zero
-		assert val < oldMax && val > oldMin; // check inputs
-		assert newMax > newMin;
+		assert newMin < newMax; // also assures no division by zero
 		float oldRange = oldMax - oldMin;
 		float newRange = newMax - newMin;
-		return (val - oldMin) / oldRange * newRange + newMin;
+		return newRange * (val - oldMin) / oldRange + newMin;
 	}
 
 	/**

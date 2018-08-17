@@ -35,8 +35,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
- * Caches device authentication session, capabilities, and some constant
- * device information for as long as the Messenger is open.
+ * Caches device authentication session, capabilities, and some constant device
+ * information for as long as the Messenger is open.
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
@@ -58,8 +58,6 @@ public class OnvifSessionMessenger extends Messenger {
 
 	// messenger properties
 	private String currentUri;
-//	private URL currentService;
-//	private HttpURLConnection httpURLConnection;
 	private int timeout = 5000;
 
 	// cached onvif device values
@@ -104,18 +102,18 @@ public class OnvifSessionMessenger extends Messenger {
 	@Override
 	public void close() {
 		log("Closing session... ");
-		resetSession();
-//		closeConnection();
+		auth = null;
+		capabilities = null;
+		mediaProfiles = null;
+		ptzSpaces = null;
+		nodes = null;
+		imagingMoveOptions = null;
 		log("Session closed. ");
 	}
 
 	@Override
 	public void setTimeout(int t) {
 		timeout = t;
-//		if (httpURLConnection != null) {
-//			httpURLConnection.setConnectTimeout(timeout);
-//			httpURLConnection.setReadTimeout(timeout);
-//		}
 	}
 
 	@Override
@@ -131,30 +129,26 @@ public class OnvifSessionMessenger extends Messenger {
 	 */
 	void selectService(OnvifService s)
 		throws SessionNotStartedException,
-		ServiceNotSupportedException, SoapTransmissionException
+		ServiceNotSupportedException
 	{
 		if (capabilities == null && !s.equals(OnvifService.DEVICE))
 			throw new SessionNotStartedException(
 				"Capabilities not found. ");
-		try {
-			switch (s) {
-			case DEVICE:
-				setCurrentUri(getDeviceServiceUri());
-				break;
-			case MEDIA:
-				setCurrentUri(getMediaServiceUri());
-				break;
-			case PTZ:
-				setCurrentUri(getPTZServiceUri());
-				break;
-			case IMAGING:
-				setCurrentUri(getImagingServiceUri());
-				break;
-			}
-		} catch (ServiceNotSupportedException e) {
-			throw e;
-		} catch (IOException e) {
-			throw new SoapTransmissionException("Bad URI or network connection. ");
+		switch (s) {
+		case DEVICE:
+			currentUri = getDeviceServiceUri();
+			break;
+		case MEDIA:
+			currentUri = getMediaServiceUri();
+			break;
+		case PTZ:
+			currentUri = getPTZServiceUri();
+			break;
+		case IMAGING:
+			currentUri = getImagingServiceUri();
+			break;
+		default:
+			throw new ServiceNotSupportedException(s);
 		}
 	}
 
@@ -237,9 +231,8 @@ public class OnvifSessionMessenger extends Messenger {
 					.createConnection();
 			logSoap("Request SOAPMessage", request.getClass(),
 				responseClass, soap);
-//			SOAPMessage response =
-//				soapConnection.call(soap, currentService);
-			SOAPMessage response = soapConnection.call(soap, currentUri);
+			SOAPMessage response =
+				soapConnection.call(soap, currentUri);
 			if (response.getSOAPBody().hasFault()) {
 				logSoap("SOAPFault", request.getClass(),
 					responseClass, response);
@@ -267,54 +260,6 @@ public class OnvifSessionMessenger extends Messenger {
 		}
 	}
 
-	private void setCurrentUri(String uri) throws IOException {
-		if (uri == null)
-			throw new IOException("Attempt to set URI to null. ");
-		if (currentUri == null
-			|| !currentUri.equals(uri))
-		{
-//			closeConnection();
-			currentUri = uri;
-//			openConnection();
-		}
-	}
-//
-//	private void openConnection() throws IOException {
-//		if (currentUri == null)
-//			throw new SoapTransmissionException("URI missing. ");
-//		currentService = new URL(currentUri);
-//		httpURLConnection =
-//			(HttpURLConnection) currentService.openConnection();
-//		httpURLConnection.setConnectTimeout(timeout);
-//		httpURLConnection.setReadTimeout(timeout);
-//		httpURLConnection.setDoOutput(true);
-//		output = httpURLConnection.getOutputStream();
-//	}
-//
-//	private void closeConnection() {
-//		if (input != null) {
-//			try {
-//				input.close();
-//				input = null;
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		if (output != null) {
-//			try {
-//				output.close();
-//				output = null;
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		if (httpURLConnection != null) {
-//			httpURLConnection.disconnect();
-//			httpURLConnection = null;
-//		}
-//		currentService = null;
-//	}
-
 	private int parseSoapErrStatus(SOAPException e)
 		throws SoapTransmissionException
 	{
@@ -334,15 +279,6 @@ public class OnvifSessionMessenger extends Messenger {
 			throw new SoapTransmissionException(e);
 		}
 		return status;
-	}
-
-	private void resetSession() {
-		auth = null;
-		capabilities = null;
-		mediaProfiles = null;
-		ptzSpaces = null;
-		nodes = null;
-		imagingMoveOptions = null;
 	}
 
 	/**

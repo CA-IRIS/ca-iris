@@ -4,12 +4,10 @@ import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZWiperProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-
-import java.io.IOException;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
@@ -37,18 +35,14 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 * has a wiper command at all. This the best attempt at a one shot
 	 */
 	protected class WiperOn extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
-			throws IOException
-		{
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
 			prop = new OnvifPTZWiperProperty(session, true);
 			return new WiperOff();
 		}
 	}
 
 	protected class WiperOff extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
-			throws IOException
-		{
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
 			prop = new OnvifPTZWiperProperty(session, false);
 			return null;
 		}

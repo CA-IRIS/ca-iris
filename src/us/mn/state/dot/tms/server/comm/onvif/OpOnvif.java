@@ -39,12 +39,16 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 	protected abstract OnvifPhase phaseTwo();
 
 	protected abstract class OnvifPhase extends Phase<T> {
-		// OpOnvifs only ever have one OnvifProperty, so it doesn't
+		// OnvifPhases only ever have one OnvifProperty, so it doesn't
 		// make sense to queue them in the CommMessageImpl.
 		// Furthermore, bypassing the usual add() and storeProps() of
-		// the CommMessage allows bypassing of the null
+		// the CommMessageImpl allows bypassing the null
 		// checking on the input and output streams of the Messenger,
 		// because we don't use them directly for blocking soap calls.
+		// Furthermore, most OnvifProperties have a response, so it
+		// makes sense to encodeStore() and decodeStore() for each
+		// OnvifProperty rather than doing all encodeStores() and
+		// then all decodeStores().
 		protected T prop;
 
 		protected abstract OnvifPhase poll2(

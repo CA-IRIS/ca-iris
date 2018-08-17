@@ -11,8 +11,6 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoPro
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
-import java.io.IOException;
-
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
@@ -34,22 +32,17 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	}
 
 	protected class Adjust extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
-			throws IOException
-		{
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
 			prop = selectProperty(request);
 			return null;
 		}
 	}
 
-	private OnvifProperty selectProperty(DeviceRequest r)
-		throws IOException
-	{
-		OnvifProperty out;
+	private OnvifProperty selectProperty(DeviceRequest r) {
+		OnvifProperty out = null;
 		switch (r) {
 		case CAMERA_FOCUS_NEAR:
-			out = new OnvifImagingFocusMoveProperty(session,
-				-0.2f);
+			out = new OnvifImagingFocusMoveProperty(session, -0.2f);
 			break;
 		case CAMERA_FOCUS_FAR:
 			out = new OnvifImagingFocusMoveProperty(session, 0.2f);
@@ -73,7 +66,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 				"supports absolute iris adjustments, but Iris " +
 				"only supports continuous iris adjustments. ");
 		default:
-			throw new IOException("Unsupported: " + r);
+			log("Unrecognized: " + r);
 		}
 		return out;
 	}

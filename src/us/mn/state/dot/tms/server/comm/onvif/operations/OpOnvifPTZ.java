@@ -4,13 +4,11 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
-
-import java.io.IOException;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -37,15 +35,11 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 	}
 
 	protected class PTZ extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
-			throws IOException
-		{
-			prop =
-				(pan == 0 && tilt == 0 && zoom == 0) ?
+		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
+			prop = (pan == 0 && tilt == 0 && zoom == 0) ?
 					new OnvifPTZStopProperty(session)
-					: new OnvifPTZMoveProperty(pan, tilt,
-					zoom,
-					session);
+					: new OnvifPTZMoveProperty(
+						pan, tilt, zoom, session);
 			return null;
 		}
 	}
