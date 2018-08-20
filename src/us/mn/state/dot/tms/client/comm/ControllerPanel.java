@@ -14,17 +14,17 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
-import java.awt.event.ActionEvent;
-import javax.swing.GroupLayout;
-import javax.swing.JComboBox;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.client.widget.IAction;
-import us.mn.state.dot.tms.client.widget.IComboBoxModel;
 import us.mn.state.dot.tms.client.widget.ILabel;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
@@ -73,6 +73,26 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	private final JComboBox<CommState> comm_cbx =
 		new JComboBox<CommState>(CommState.values_with_null());
 
+	private final ILabel dev_name_label = new ILabel(
+		"controller.dev.filter");
+
+	private final IAction dev_name_act = new IAction(
+		"controller.dev")
+	{
+		@Override
+		protected void doActionPerformed(ActionEvent ev)
+			throws Exception
+		{
+			String v = dev_name_txt.getText();
+			if (v != null)
+				setDevSearch(v);
+			else
+				setDevSearch(null);
+		}
+	};
+
+	private final JTextField dev_name_txt = new JTextField(16);
+
 	/** Create a new controller panel */
 	public ControllerPanel(Session s) {
 		super(new ControllerTableModel(s));
@@ -85,6 +105,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		cond_cbx.setAction(cond_act);
 		comm_cbx.setRenderer(new CommListRenderer());
 		comm_cbx.setAction(comm_act);
+		dev_name_txt.setAction(dev_name_act);
 	}
 
 	/** Add create/delete widgets to the button panel */
@@ -103,6 +124,12 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		hg.addGap(UI.hgap);
 		hg.addComponent(comm_cbx);
 		vg.addComponent(comm_cbx);
+		hg.addGap(UI.hgap);
+		hg.addComponent(dev_name_label);
+		vg.addComponent(dev_name_label);
+		hg.addGap(UI.hgap);
+		hg.addComponent(dev_name_txt);
+		vg.addComponent(dev_name_txt);
 		hg.addGap(UI.hgap);
 		super.addCreateDeleteWidgets(hg, vg);
 	}
@@ -130,6 +157,14 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		if (model instanceof ControllerTableModel) {
 			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setCommState(cs);
+			updateSortFilter();
+		}
+	}
+
+	private void setDevSearch(String s) {
+		if (model instanceof ControllerTableModel) {
+			ControllerTableModel mdl = (ControllerTableModel) model;
+			mdl.setDevSearch(s);
 			updateSortFilter();
 		}
 	}

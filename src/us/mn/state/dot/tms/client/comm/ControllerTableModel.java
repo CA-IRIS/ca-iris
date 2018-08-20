@@ -14,30 +14,21 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
-import java.awt.Component;
+import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.proxy.ProxyColumn;
+import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
+import us.mn.state.dot.tms.server.ControllerImpl;
+
+import javax.swing.*;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
-import javax.swing.AbstractCellEditor;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JComboBox;
-import javax.swing.JSpinner;
-import javax.swing.JTable;
-import javax.swing.RowFilter;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
-import us.mn.state.dot.tms.CommLink;
-import us.mn.state.dot.tms.Controller;
-import us.mn.state.dot.tms.ControllerHelper;
-import us.mn.state.dot.tms.CtrlCondition;
-import us.mn.state.dot.tms.GeoLocHelper;
-import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.ProxyColumn;
-import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
 
 /**
  * Table model for controllers.
@@ -168,6 +159,12 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		comm_state = cs;
 	}
 
+	private String dev_search = null;
+
+	public void setDevSearch(String s) {
+		dev_search = s;
+	}
+
 	/** Get a proxy comparator */
 	@Override
 	protected Comparator<Controller> comparator() {
@@ -237,7 +234,8 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	private boolean isFiltered() {
 		return (comm_link != null)
 		    || (condition != null)
-		    || (comm_state != null);
+		    || (comm_state != null)
+			|| (dev_search != null);
 	}
 
 	/** Create a row filter */
@@ -252,7 +250,8 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 				return (c != null)
 				    && isMatchingLink(c)
 				    && isMatchingCondition(c)
-				    && isMatchingCommState(c);
+				    && isMatchingCommState(c)
+					&& isMatchingDevSearch(c);
 			}
 		};
 	}
@@ -273,6 +272,21 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	private boolean isMatchingCommState(Controller c) {
 		return (comm_state == null)
 		    || (comm_state == getCommState(c));
+	}
+
+	private boolean isMatchingDevSearch(Controller c) {
+		return (dev_search == null)
+			|| hasMatchingDevice((ControllerImpl) c);
+	}
+
+	private boolean hasMatchingDevice(ControllerImpl c) {
+		boolean matched = false;
+		for (ControllerIO cio : c.getDevices()) {
+			if (cio.getName().toLowerCase()
+				.contains(dev_search.toLowerCase()))
+				matched = true;
+		}
+		return matched;
 	}
 
 	/** Check if the user can add a controller */
