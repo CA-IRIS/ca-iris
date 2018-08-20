@@ -18,17 +18,13 @@ import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
-import us.mn.state.dot.tms.server.ControllerImpl;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Table model for controllers.
@@ -159,9 +155,9 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		comm_state = cs;
 	}
 
-	private String dev_search = null;
+	private Set<String> dev_search = null;
 
-	public void setDevSearch(String s) {
+	public void setDevSearch(Set<String> s) {
 		dev_search = s;
 	}
 
@@ -276,16 +272,13 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 
 	private boolean isMatchingDevSearch(Controller c) {
 		return (dev_search == null)
-			|| hasMatchingDevice((ControllerImpl) c);
+			|| hasMatchingDevice(c);
 	}
 
-	private boolean hasMatchingDevice(ControllerImpl c) {
+	private boolean hasMatchingDevice(Controller c) {
 		boolean matched = false;
-		for (ControllerIO cio : c.getDevices()) {
-			if (cio.getName().toLowerCase()
-				.contains(dev_search.toLowerCase()))
-				matched = true;
-		}
+		if (dev_search != null && dev_search.contains(c.getName()))
+			matched = true;
 		return matched;
 	}
 

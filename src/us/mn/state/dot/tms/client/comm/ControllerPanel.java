@@ -14,16 +14,24 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
+import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CommLink;
 import us.mn.state.dot.tms.Controller;
+import us.mn.state.dot.tms.ControllerIO;
 import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.ILabel;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
@@ -63,7 +71,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		protected void doActionPerformed(ActionEvent e) {
 			Object v = comm_cbx.getSelectedItem();
 			if (v instanceof CommState)
-				setCommState((CommState)v);
+				setCommState((CommState) v);
 			else
 				setCommState(null);
 		}
@@ -76,26 +84,14 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	private final ILabel dev_name_label = new ILabel(
 		"controller.dev.filter");
 
-	private final IAction dev_name_act = new IAction(
-		"controller.dev")
-	{
-		@Override
-		protected void doActionPerformed(ActionEvent ev)
-			throws Exception
-		{
-			String v = dev_name_txt.getText();
-			if (v != null)
-				setDevSearch(v);
-			else
-				setDevSearch(null);
-		}
-	};
-
 	private final JTextField dev_name_txt = new JTextField(16);
+
+	private final SonarState state;
 
 	/** Create a new controller panel */
 	public ControllerPanel(Session s) {
 		super(new ControllerTableModel(s));
+		state = s.getSonarState();
 	}
 
 	/** Initialize the panel */
@@ -105,12 +101,22 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		cond_cbx.setAction(cond_act);
 		comm_cbx.setRenderer(new CommListRenderer());
 		comm_cbx.setAction(comm_act);
-		dev_name_txt.setAction(dev_name_act);
+		dev_name_txt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				String v = dev_name_txt.getText();
+				if (v != null)
+					setDevSearch(v);
+				else
+					setDevSearch(null);
+			}
+		});
 	}
 
 	/** Add create/delete widgets to the button panel */
 	@Override
-	protected void addCreateDeleteWidgets(GroupLayout.SequentialGroup hg,
+	protected void addCreateDeleteWidgets(
+		GroupLayout.SequentialGroup hg,
 		GroupLayout.ParallelGroup vg)
 	{
 		hg.addComponent(cond_lbl);
@@ -137,7 +143,8 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set comm link filter */
 	public void setCommLink(CommLink cl) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel)model;
+			ControllerTableModel mdl =
+				(ControllerTableModel) model;
 			mdl.setCommLink(cl);
 			updateSortFilter();
 		}
@@ -146,7 +153,8 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set condition filter */
 	private void setCondition(CtrlCondition c) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel)model;
+			ControllerTableModel mdl =
+				(ControllerTableModel) model;
 			mdl.setCondition(c);
 			updateSortFilter();
 		}
@@ -155,7 +163,8 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set comm state filter */
 	private void setCommState(CommState cs) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel)model;
+			ControllerTableModel mdl =
+				(ControllerTableModel) model;
 			mdl.setCommState(cs);
 			updateSortFilter();
 		}
@@ -163,9 +172,62 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	private void setDevSearch(String s) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel) model;
-			mdl.setDevSearch(s);
+			ControllerTableModel mdl =
+				(ControllerTableModel) model;
+			mdl.setDevSearch(getMatchingControllers(s));
 			updateSortFilter();
 		}
+	}
+
+	/**
+	 * @return a set of controller names for any attached io device for
+	 * which devSearch matches any part of, ignoring case.
+	 */
+	Set<String> getMatchingControllers(String devSearch) {
+		Set<String> matched = new HashSet<String>();
+		if (devSearch != null) {
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getAlarms()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getCamCache().getCameras()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getDetCache().getDetectors()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getDmsCache().getDMSs()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getGateArms()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getLaneMarkings()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getLcsCache().getLCSIndications()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getRampMeters()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getBeacons()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getWeatherSensorsCache()
+					.getWeatherSensors()));
+			matched.addAll(collectMatchingNames(devSearch,
+				state.getTagReaders()));
+		}
+		return matched;
+	}
+
+	private Set<String> collectMatchingNames(
+		String devSearch, TypeCache devices)
+	{
+		Set<String> matched = new HashSet<String>();
+		Iterator<ControllerIO> i = devices.iterator();
+		while (i.hasNext()) {
+			ControllerIO cio = i.next();
+			if (cio.getName() != null
+				&& cio.getController() != null
+				&& cio.getController().getName() != null
+				&& cio.getName().toLowerCase().contains(
+					devSearch.toLowerCase()))
+					matched.add(cio.getController()
+						.getName());
+		}
+		return matched;
 	}
 }
