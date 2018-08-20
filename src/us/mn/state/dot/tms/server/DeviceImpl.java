@@ -302,7 +302,7 @@ abstract public class DeviceImpl extends BaseObjectImpl implements Device,
 		return (c != null) ? c.getPollPeriod() : 30;
 	}
 
-	/** Check if the device is on a "connected" comm link */
+	/** Check if the device is on a "connected" comm link  */
 	protected boolean isConnected() {
 		ControllerImpl c = controller;
 		return (c != null) && c.isConnected();
