@@ -67,7 +67,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		protected void doActionPerformed(ActionEvent e) {
 			Object v = comm_cbx.getSelectedItem();
 			if (v instanceof CommState)
-				setCommState((CommState) v);
+				setCommState((CommState)v);
 			else
 				setCommState(null);
 		}
@@ -122,8 +122,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	/** Add create/delete widgets to the button panel */
 	@Override
-	protected void addCreateDeleteWidgets(
-		GroupLayout.SequentialGroup hg,
+	protected void addCreateDeleteWidgets(GroupLayout.SequentialGroup hg,
 		GroupLayout.ParallelGroup vg)
 	{
 		hg.addComponent(cond_lbl);
@@ -157,8 +156,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set comm link filter */
 	public void setCommLink(CommLink cl) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl =
-				(ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel) model;
 			mdl.setCommLink(cl);
 			updateSortFilter();
 		}
@@ -167,8 +165,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set condition filter */
 	private void setCondition(CtrlCondition c) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl =
-				(ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel) model;
 			mdl.setCondition(c);
 			updateSortFilter();
 		}
@@ -177,8 +174,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	/** Set comm state filter */
 	private void setCommState(CommState cs) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl =
-				(ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel) model;
 			mdl.setCommState(cs);
 			updateSortFilter();
 		}
@@ -187,8 +183,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	private void setDeviceType(DeviceType d) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl =
-				(ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel) model;
 			mdl.setDeviceType(d);
 			updateSortFilter();
 		}
