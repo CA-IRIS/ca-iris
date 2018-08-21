@@ -17,26 +17,38 @@
  */
 package us.mn.state.dot.tms.server;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.sql.ResultSet;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.SonarException;
-import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.Cabinet;
+import us.mn.state.dot.tms.CommLink;
+import us.mn.state.dot.tms.CommProtocol;
+import static us.mn.state.dot.tms.CommProtocol.MSG_FEED;
+import us.mn.state.dot.tms.Controller;
+import us.mn.state.dot.tms.ControllerHelper;
+import us.mn.state.dot.tms.ControllerIO;
+import us.mn.state.dot.tms.CtrlCondition;
+import static us.mn.state.dot.tms.DeviceRequest.QUERY_MESSAGE;
+import static us.mn.state.dot.tms.DeviceRequest.QUERY_STATUS;
+import us.mn.state.dot.tms.EventType;
+import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.VehLengthClass;
 import us.mn.state.dot.tms.geo.Position;
+import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
+import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.SamplePoller;
 import us.mn.state.dot.tms.server.comm.WeatherPoller;
 import us.mn.state.dot.tms.server.comm.incfeed.IncFeedPoller;
 import us.mn.state.dot.tms.server.comm.msgfeed.MsgFeedPoller;
 import us.mn.state.dot.tms.server.event.CommEvent;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.sql.ResultSet;
-import java.util.*;
-
-import static us.mn.state.dot.tms.DeviceRequest.QUERY_MESSAGE;
-import static us.mn.state.dot.tms.DeviceRequest.QUERY_STATUS;
-import static us.mn.state.dot.tms.server.Constants.MISSING_DATA;
-import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 
 /**
  * A controller represents a field device controller.
