@@ -14,40 +14,19 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
-import java.awt.Component;
-import java.util.LinkedList;
-import javax.swing.AbstractCellEditor;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JComboBox;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.Alarm;
-import us.mn.state.dot.tms.Beacon;
-import us.mn.state.dot.tms.Camera;
-import us.mn.state.dot.tms.Controller;
-import us.mn.state.dot.tms.ControllerIO;
-import us.mn.state.dot.tms.Detector;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.GateArm;
-import us.mn.state.dot.tms.LaneMarking;
-import us.mn.state.dot.tms.LaneUseIndication;
-import us.mn.state.dot.tms.LCS;
-import us.mn.state.dot.tms.LCSIndication;
-import us.mn.state.dot.tms.RampMeter;
-import us.mn.state.dot.tms.TagReader;
-import us.mn.state.dot.tms.WeatherSensor;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.proxy.ProxyListModel;
 import us.mn.state.dot.tms.client.widget.IComboBoxModel;
 import us.mn.state.dot.tms.client.widget.IListCellRenderer;
 import us.mn.state.dot.tms.utils.I18N;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.util.LinkedList;
 
 /**
  * Special table model for Controller I/O pins.
@@ -69,14 +48,14 @@ public class ControllerIOModel extends AbstractTableModel {
 	static private final int COL_DEVICE = 2;
 
 	/** Device types which can be associated with controller IO */
-	private enum DeviceType {
+	enum DeviceType {
 		Alarm, Camera, Detector, DMS, Gate_Arm, Lane_Marking,
 		LCSIndication, Ramp_Meter, Beacon, Beacon_Verify,
 		Weather_Sensor, Tag_Reader
 	}
 
 	/** Types of IO devices */
-	static private final LinkedList<DeviceType> IO_TYPE =
+	static final LinkedList<DeviceType> IO_TYPE =
 		new LinkedList<DeviceType>();
 	static {
 		IO_TYPE.add(null);
@@ -95,7 +74,7 @@ public class ControllerIOModel extends AbstractTableModel {
 	}
 
 	/** Get the type of the specified ControllerIO device */
-	static private DeviceType getType(ControllerIO cio) {
+	static DeviceType getType(ControllerIO cio) {
 		if (cio instanceof Alarm)
 			return DeviceType.Alarm;
 		else if (cio instanceof Camera)

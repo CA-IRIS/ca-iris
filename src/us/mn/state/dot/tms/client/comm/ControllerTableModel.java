@@ -14,8 +14,11 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
+import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
+import us.mn.state.dot.tms.client.SonarState;
+import us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType;
 import us.mn.state.dot.tms.client.proxy.ProxyColumn;
 import us.mn.state.dot.tms.client.proxy.ProxyTableModel;
 
@@ -25,6 +28,9 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.*;
+
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Beacon_Verify;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.getType;
 
 /**
  * Table model for controllers.
@@ -155,10 +161,20 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		comm_state = cs;
 	}
 
-	private Set<String> dev_search = null;
+	private Set<String> matched_controllers = null;
 
-	public void setDevSearch(Set<String> s) {
+	private DeviceType dev_type = null;
+
+	public void setDeviceType(DeviceType d) {
+		dev_type = d;
+		matched_controllers = getMatchingControllers();
+	}
+
+	private String dev_search = null;
+
+	public void setDevSearch(String s) {
 		dev_search = s;
+		matched_controllers = getMatchingControllers();
 	}
 
 	/** Get a proxy comparator */
@@ -179,12 +195,15 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		};
 	}
 
+	private final SonarState state;
+
 	/** Create a new controller table model */
 	public ControllerTableModel(Session s) {
 		super(s, s.getSonarState().getConCache().getControllers(),
 		      true,	/* has_properties */
 		      true,	/* has_create_delete */
 		      false);	/* has_name */
+		state = s.getSonarState();
 	}
 
 	/** Get the SONAR type name */
@@ -231,7 +250,8 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		return (comm_link != null)
 		    || (condition != null)
 		    || (comm_state != null)
-			|| (dev_search != null);
+			|| (dev_type != null)
+			|| (dev_search != null && !dev_search.isEmpty());
 	}
 
 	/** Create a row filter */
@@ -247,6 +267,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 				    && isMatchingLink(c)
 				    && isMatchingCondition(c)
 				    && isMatchingCommState(c)
+					&& isMatchingDevType(c)
 					&& isMatchingDevSearch(c);
 			}
 		};
@@ -271,13 +292,19 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	}
 
 	private boolean isMatchingDevSearch(Controller c) {
-		return (dev_search == null)
+		return (dev_search == null || dev_search.isEmpty())
+			|| hasMatchingDevice(c);
+	}
+
+
+	private boolean isMatchingDevType(Controller c) {
+		return (dev_type == null)
 			|| hasMatchingDevice(c);
 	}
 
 	private boolean hasMatchingDevice(Controller c) {
 		boolean matched = false;
-		if (dev_search != null && dev_search.contains(c.getName()))
+		if (matched_controllers.contains(c.getName()))
 			matched = true;
 		return matched;
 	}
@@ -334,5 +361,75 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		public Object getCellEditorValue() {
 			return spinner.getValue();
 		}
+	}
+
+
+	/**
+	 * @return a set of controller names for any attached io device for
+	 * which devSearch matches any part of, ignoring case. If the input is
+	 * null or empty, the output is null.
+	 */
+	Set<String> getMatchingControllers() {
+		Set<String> matched = new HashSet<String>();
+		matched.addAll(matchAnyDev(state.getAlarms()));
+		matched.addAll(matchAnyDev(state.getCamCache().getCameras()));
+		matched.addAll(matchAnyDev(state.getDetCache().getDetectors()));
+		matched.addAll(matchAnyDev(state.getDmsCache().getDMSs()));
+		matched.addAll(matchAnyDev(state.getGateArms()));
+		matched.addAll(matchAnyDev(state.getLaneMarkings()));
+		matched.addAll(matchAnyDev(state.getLcsCache()
+			.getLCSIndications()));
+		matched.addAll(matchAnyDev(state.getRampMeters()));
+		matched.addAll(matchAnyDev(state.getBeacons()));
+		matched.addAll(matchAnyDev(state.getWeatherSensorsCache()
+			.getWeatherSensors()));
+		matched.addAll(matchAnyDev(state.getTagReaders()));
+		return matched;
+	}
+
+	/**
+	 * @return a set of Controller names that are linked to ControllerIO
+	 * found in the TypeCache of devices such the dev_search matches any
+	 * part of the Controller name if it is not null and not empty and
+	 * the ControllerIO matches dev_type if the dev_type is not null.
+	 */
+	private Set<String> matchAnyDev(TypeCache devices)
+	{
+		Set<String> matched = new HashSet<String>();
+		Iterator<ControllerIO> i = devices.iterator();
+		while (i.hasNext()) {
+			ControllerIO cio = i.next();
+			// check that the ControllerIO is assigned to a
+			// Controller
+			if (cio.getController() != null
+				&& cio.getController().getName() != null
+				&& typeMatch(cio)
+				&& searchMatch(cio))
+				matched.add(cio.getController().getName());
+		}
+		return matched;
+	}
+
+	/**
+	 * @return true if the device type is not specified (null) or it
+	 * matches the type
+	 */
+	private boolean typeMatch(ControllerIO cio) {
+		return dev_type == null || dev_type == getType(cio)
+			|| (dev_type == Beacon_Verify
+			&& cio instanceof Beacon
+			&& ((Beacon) cio).getVerifyPin() != null);
+	}
+
+	 /**
+	  * @return true if dev_search is null or empty, we take all or if the
+	  * ControllerIO name contains the dev_search string
+	  */
+	private boolean searchMatch(ControllerIO cio) {
+		return dev_search == null
+			|| dev_search.isEmpty()
+			|| cio.getName() != null
+			&& cio.getName().toLowerCase()
+			.contains(dev_search.toLowerCase());
 	}
 }
