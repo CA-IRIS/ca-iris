@@ -14,12 +14,12 @@
  */
 package us.mn.state.dot.tms.server.comm;
 
-import us.mn.state.dot.sched.DebugLog;
-import us.mn.state.dot.tms.server.ControllerImpl;
-
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.LinkedList;
+import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.server.ControllerImpl;
 
 /**
  * Comm message implementation.

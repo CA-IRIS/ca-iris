@@ -1055,7 +1055,6 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 		Cabinet cab = getCabinet();
 		if (cab != null && cab.toString().length() > 0)
 			w.write(createAttribute("cabinet", getCabinet()));
-		// todo username fields??
 		if (getNotes().length() > 0)
 			w.write(createAttribute("notes", getNotes()));
 		w.write("/>\n");

@@ -88,7 +88,7 @@ abstract public class Messenger {
 	}
 
 	/** Get the output stream */
-	public OutputStream getOutputStream() throws IOException {
+	public OutputStream getOutputStream() {
 		return output;
 	}
 
