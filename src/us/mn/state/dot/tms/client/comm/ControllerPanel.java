@@ -137,7 +137,6 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		hg.addComponent(comm_cbx);
 		vg.addComponent(comm_cbx);
 		hg.addGap(UI.hgap);
-		vg.addGap(UI.vgap);
 		hg.addComponent(dev_type_label);
 		vg.addComponent(dev_type_label);
 		hg.addGap(UI.hgap);
