@@ -52,7 +52,7 @@ public class OnvifSessionMessenger extends Messenger {
 	private WSUsernameToken auth;
 	/**
 	 * Our proxy for an open session are the capabilities. If they are set,
-	 * we are open
+	 * we are open.
 	 */
 	private Capabilities capabilities;
 
@@ -75,10 +75,14 @@ public class OnvifSessionMessenger extends Messenger {
 		deviceServiceUri = normalizeDevServUri(uri);
 	}
 
+	/**
+	 * @return true if the auth credentials have been set
+	 */
 	boolean authNotSet() {
 		return auth == null;
 	}
 
+	/** set the auth credentials */
 	void setAuth(String username, String password) {
 		auth = new WSUsernameToken(username, password);
 	}
@@ -155,8 +159,7 @@ public class OnvifSessionMessenger extends Messenger {
 	/**
 	 * @return The first media profile token (all devices are required to
 	 * 	have at least one media profile. This is frequently required
-	 * 	for PTZ
-	 * 	and Imaging Service requests.
+	 * 	for PTZ and Imaging Service requests.
 	 */
 	public String getMediaProfileTok() throws SessionNotStartedException {
 		if (mediaProfiles == null)
@@ -183,6 +186,10 @@ public class OnvifSessionMessenger extends Messenger {
 
 	/**
 	 * @return all the PTZ Nodes (provides ranges for PTZ request values)
+	 * @throws ServiceNotSupportedException if the PTZ Service is not
+	 * 	supported
+	 * @throws SessionNotStartedException if this is not initialized
+	 * @throws SoapTransmissionException if the request fails
 	 */
 	public List<PTZNode> getNodes()
 		throws ServiceNotSupportedException,
@@ -199,7 +206,7 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @throws ServiceNotSupportedException if the Imaging Service is not
 	 * 	supported
 	 * @throws SessionNotStartedException if this is not initialized
-	 * @throws SoapTransmissionException if the request fails (unexpected)
+	 * @throws SoapTransmissionException if the request fails
 	 */
 	public MoveOptions20 getImagingMoveOptions()
 		throws ServiceNotSupportedException, SoapTransmissionException,
@@ -211,8 +218,8 @@ public class OnvifSessionMessenger extends Messenger {
 	}
 
 	/**
-	 * Places the request to the selected currentService currentUri and
-	 * returns a response Class
+	 * Places the request to the currentUri and returns a response Class on
+	 * success
 	 *
 	 * @param request the request xml object
 	 * @param responseClass the response Object format

@@ -41,17 +41,13 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 			resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax));
 	}
 
-	private boolean supportsFocusMove()
-		throws IOException, ServiceNotSupportedException
-	{
+	private boolean supportsFocusMove() throws IOException {
 		return session.getImagingMoveOptions().getContinuous() != null
 			&& session.getImagingMoveOptions().getContinuous()
 			.getSpeed() != null;
 	}
 
-	private void continuousFocus(float speed)
-		throws IOException, ServiceNotSupportedException
-	{
+	private void continuousFocus(float speed) throws IOException {
 		Move request = new Move();
 		request.setVideoSourceToken(session.getMediaProfileTok());
 		ContinuousFocus val = new ContinuousFocus();

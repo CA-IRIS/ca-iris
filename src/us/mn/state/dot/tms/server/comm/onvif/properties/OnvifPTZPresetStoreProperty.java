@@ -81,7 +81,9 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	 * @param preset the preset number
 	 * @param presetToken if null, then a new preset will be created
 	 */
-	private void setPreset(Integer preset, String presetToken) throws IOException {
+	private void setPreset(Integer preset, String presetToken)
+		throws IOException
+	{
 		SetPreset setPreset = new SetPreset();
 		setPreset.setProfileToken(session.getMediaProfileTok());
 		setPreset.setPresetName("IRIS" + preset);

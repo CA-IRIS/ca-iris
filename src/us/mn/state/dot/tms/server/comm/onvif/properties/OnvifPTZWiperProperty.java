@@ -11,7 +11,7 @@ import java.io.IOException;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OnvifPTZWiperProperty extends OnvifProperty {
-	/** true if we should swith the wiper on, else false */
+	/** true if we should switch the wiper on, else false */
 	private boolean switchOn;
 	/**
 	 * based on the onvif spec, these are the only foreseeable free form
@@ -68,7 +68,6 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 				.getAuxiliaryCommands().toArray(),
 			WIPER_OFF));
 	}
-
 
 	/**
 	 * @return a initialized AuxiliaryCommand if the param is not null

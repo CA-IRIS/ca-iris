@@ -41,7 +41,7 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 	}
 
 	private void setAutoFocusMode(ImagingSettings20 currentSettings)
-		throws IOException, ServiceNotSupportedException
+		throws IOException
 	{
 		SetImagingSettings request = new SetImagingSettings();
 		request.setVideoSourceToken(session.getMediaProfileTok());
@@ -52,9 +52,7 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 			SetImagingSettingsResponse.class);
 	}
 
-	private ImagingSettings20 getImagingSettings()
-		throws IOException, ServiceNotSupportedException
-	{
+	private ImagingSettings20 getImagingSettings() throws IOException {
 		GetImagingSettings request = new GetImagingSettings();
 		request.setVideoSourceToken(session.getMediaProfileTok());
 		return ((GetImagingSettingsResponse) session
