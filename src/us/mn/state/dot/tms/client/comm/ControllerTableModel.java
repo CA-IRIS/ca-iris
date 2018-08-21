@@ -36,6 +36,7 @@ import static us.mn.state.dot.tms.client.comm.ControllerIOModel.getType;
  * Table model for controllers.
  *
  * @author Douglas Lau
+ * @author Wesley Skillern (Southwest Research Institute)
  */
 public class ControllerTableModel extends ProxyTableModel<Controller> {
 

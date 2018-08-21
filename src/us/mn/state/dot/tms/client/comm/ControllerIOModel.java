@@ -32,6 +32,7 @@ import java.util.LinkedList;
  * Special table model for Controller I/O pins.
  *
  * @author Douglas Lau
+ * @author Wesley Skillern (Southwest Research Institute)
  */
 public class ControllerIOModel extends AbstractTableModel {
 

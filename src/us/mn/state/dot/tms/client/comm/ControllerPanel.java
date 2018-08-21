@@ -35,6 +35,7 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * A panel for displaying a table of controllers.
  *
  * @author Douglas Lau
+ * @author Wesley Skillern (Southwest Research Institute)
  */
 public class ControllerPanel extends ProxyTablePanel<Controller> {
 
