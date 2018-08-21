@@ -879,7 +879,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	}
 
 	/** Get a list of all devices on controller */
-	public synchronized Set<ControllerIO> getDevices() {
+	private synchronized Set<ControllerIO> getDevices() {
 		return new HashSet<ControllerIO>(io_pins.values());
 	}
 
