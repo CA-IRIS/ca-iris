@@ -77,9 +77,11 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 	private final JComboBox<CommState> comm_cbx =
 		new JComboBox<CommState>(CommState.values_with_null());
 
+	/** label for the dev type filter */
 	private final ILabel dev_type_label = new ILabel(
 		"controller.dev.type.filter");
 
+	/** device type filter action */
 	private Action dev_type_act = new IAction(
 		"controller.dev.type") {
 		protected void doActionPerformed(ActionEvent e) {
@@ -91,12 +93,15 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		}
 	};
 
+	/** device type filter combobox (all DeviceTypes and null is default) */
 	private final JComboBox<DeviceType> dev_type_cbx =
 		new JComboBox<DeviceType>(IO_TYPE.toArray(new DeviceType[0]));
 
+	/** a string to search for and use to filter Controller IO names */
 	private final ILabel dev_name_label = new ILabel(
 		"controller.dev.name.search");
 
+	/** a text field to hold the Controller IO search text */
 	private final JTextField dev_name_txt = new JTextField(16);
 
 	/** Create a new controller panel */
@@ -179,18 +184,19 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		}
 	}
 
-
+	/** set the device type filter */
 	private void setDeviceType(DeviceType d) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setDeviceType(d);
 			updateSortFilter();
 		}
 	}
 
+	/** set the device name search string */
 	private void setDevSearch(String s) {
 		if (model instanceof ControllerTableModel) {
-			ControllerTableModel mdl = (ControllerTableModel) model;
+			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setDevSearch(s);
 			updateSortFilter();
 		}

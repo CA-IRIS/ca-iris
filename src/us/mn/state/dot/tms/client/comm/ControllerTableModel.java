@@ -161,17 +161,28 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		comm_state = cs;
 	}
 
+	/**
+	 * A set of Controller names that match the current dev_type (or any
+	 * if null) and have a ControllerIO that match the current dev_search
+	 * String (or any if null or empty).
+	 */
 	private Set<String> matched_controllers = null;
 
+	/** a device type to filter */
 	private DeviceType dev_type = null;
 
+	/** set the device type filter */
 	public void setDeviceType(DeviceType d) {
 		dev_type = d;
 		matched_controllers = getMatchingControllers();
 	}
 
+	/** a String to match against any part of any Controller IO name to
+	 * filter attached Controller.
+	 */
 	private String dev_search = null;
 
+	/** Set the ControllerIO name filter String */
 	public void setDevSearch(String s) {
 		dev_search = s;
 		matched_controllers = getMatchingControllers();
@@ -267,8 +278,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 				    && isMatchingLink(c)
 				    && isMatchingCondition(c)
 				    && isMatchingCommState(c)
-					&& isMatchingDevType(c)
-					&& isMatchingDevSearch(c);
+					&& isMatchingDevice(c);
 			}
 		};
 	}
@@ -291,20 +301,15 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		    || (comm_state == getCommState(c));
 	}
 
-	private boolean isMatchingDevSearch(Controller c) {
-		return (dev_search == null || dev_search.isEmpty())
-			|| hasMatchingDevice(c);
-	}
-
-
-	private boolean isMatchingDevType(Controller c) {
-		return (dev_type == null)
-			|| hasMatchingDevice(c);
-	}
-
-	private boolean hasMatchingDevice(Controller c) {
+	/**
+	 *
+	 * @return true if the Controller has a ControllerIO that matches
+	 * that dev_type or dev_search filters. 
+	 */
+	private boolean isMatchingDevice(Controller c) {
 		boolean matched = false;
-		if (matched_controllers.contains(c.getName()))
+		if (matched_controllers != null
+			&& matched_controllers.contains(c.getName()))
 			matched = true;
 		return matched;
 	}
