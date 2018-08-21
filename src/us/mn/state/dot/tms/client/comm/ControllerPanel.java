@@ -181,11 +181,13 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	/**
 	 * @return a set of controller names for any attached io device for
-	 * which devSearch matches any part of, ignoring case.
+	 * which devSearch matches any part of, ignoring case. If the input is
+	 * null or empty, the output is null.
 	 */
 	Set<String> getMatchingControllers(String devSearch) {
-		Set<String> matched = new HashSet<String>();
-		if (devSearch != null) {
+		Set<String> matched = null;
+		if (devSearch != null && !devSearch.isEmpty()) {
+			matched = new HashSet<String>();
 			matched.addAll(collectMatchingNames(devSearch,
 				state.getAlarms()));
 			matched.addAll(collectMatchingNames(devSearch,
