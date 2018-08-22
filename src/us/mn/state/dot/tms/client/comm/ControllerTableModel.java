@@ -165,11 +165,13 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	/**
 	 * A set of Controller names that match the current dev_type (or any
 	 * if null) and have a ControllerIO that match the current dev_search
-	 * String (or any if null or empty).
+	 * String (or any if null or empty). If dev_type and dev_search are both
+	 * null (and empty in the case of dev_search, then matched_controllers
+	 * will also be null.
 	 */
 	private Set<String> matched_controllers = null;
 
-	/** a device type to filter */
+	/** a device type to filter (null means match all types) */
 	private DeviceType dev_type = null;
 
 	/** set the device type filter */
@@ -179,7 +181,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	}
 
 	/** a String to match against any part of any Controller IO name to
-	 * filter attached Controller.
+	 * filter attached Controller (null or empty means match all names).
 	 */
 	private String dev_search = null;
 
@@ -207,6 +209,9 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		};
 	}
 
+	/**
+	 * container of all TypeCaches of Devices
+	 */
 	private final SonarState state;
 
 	/** Create a new controller table model */
@@ -305,12 +310,14 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	/**
 	 *
 	 * @return true if the Controller has a ControllerIO that matches
-	 * that dev_type or dev_search filters. 
+	 * that dev_type or dev_search filters or if we are filtering
+	 * neither dev_type nor dev_search
 	 */
 	private boolean isMatchingDevice(Controller c) {
 		boolean matched = false;
-		if (matched_controllers != null
-			&& matched_controllers.contains(c.getName()))
+		// null matched_controllers means do not filter
+		if (matched_controllers == null
+			|| matched_controllers.contains(c.getName()))
 			matched = true;
 		return matched;
 	}
@@ -371,25 +378,34 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 
 
 	/**
-	 * @return a set of controller names for any attached io device for
-	 * which devSearch matches any part of, ignoring case. If the input is
-	 * null or empty, the output is null.
+	 * @return a set of controller names for which any attached io device
+	 * has a name that contains dev_search ingoring case or null if no
+	 * filtering.
 	 */
 	Set<String> getMatchingControllers() {
-		Set<String> matched = new HashSet<String>();
-		matched.addAll(matchAnyDev(state.getAlarms()));
-		matched.addAll(matchAnyDev(state.getCamCache().getCameras()));
-		matched.addAll(matchAnyDev(state.getDetCache().getDetectors()));
-		matched.addAll(matchAnyDev(state.getDmsCache().getDMSs()));
-		matched.addAll(matchAnyDev(state.getGateArms()));
-		matched.addAll(matchAnyDev(state.getLaneMarkings()));
-		matched.addAll(matchAnyDev(state.getLcsCache()
-			.getLCSIndications()));
-		matched.addAll(matchAnyDev(state.getRampMeters()));
-		matched.addAll(matchAnyDev(state.getBeacons()));
-		matched.addAll(matchAnyDev(state.getWeatherSensorsCache()
-			.getWeatherSensors()));
-		matched.addAll(matchAnyDev(state.getTagReaders()));
+		Set<String> matched = null;
+		// only build set if we are filtering on type or search
+		if (dev_type != null
+			|| dev_search != null && !dev_search.isEmpty()) {
+			matched = new HashSet<String>();
+			matched.addAll(matchAnyDev(state.getAlarms()));
+			matched.addAll(matchAnyDev(
+				state.getCamCache().getCameras()));
+			matched.addAll(matchAnyDev(
+				state.getDetCache().getDetectors()));
+			matched.addAll(matchAnyDev(
+				state.getDmsCache().getDMSs()));
+			matched.addAll(matchAnyDev(state.getGateArms()));
+			matched.addAll(matchAnyDev(state.getLaneMarkings()));
+			matched.addAll(matchAnyDev(
+				state.getLcsCache().getLCSIndications()));
+			matched.addAll(matchAnyDev(state.getRampMeters()));
+			matched.addAll(matchAnyDev(state.getBeacons()));
+			matched.addAll(matchAnyDev(
+				state.getWeatherSensorsCache()
+					.getWeatherSensors()));
+			matched.addAll(matchAnyDev(state.getTagReaders()));
+		}
 		return matched;
 	}
 
@@ -421,21 +437,21 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	 * matches the type
 	 */
 	private boolean typeMatch(ControllerIO cio) {
-		return dev_type == null || dev_type == getType(cio)
+		return dev_type == null
+			|| dev_type == getType(cio)
 			|| (dev_type == Beacon_Verify
-			&& cio instanceof Beacon
-			&& ((Beacon) cio).getVerifyPin() != null);
+				&& cio instanceof Beacon
+				&& ((Beacon) cio).getVerifyPin() != null);
 	}
 
 	 /**
-	  * @return true if dev_search is null or empty, we take all or if the
-	  * ControllerIO name contains the dev_search string
+	  * @return true if dev_search is null or empty or if the
+	  * ControllerIO name contains the dev_search string ignoring case.
 	  */
 	private boolean searchMatch(ControllerIO cio) {
-		return dev_search == null
-			|| dev_search.isEmpty()
-			|| cio.getName() != null
-			&& cio.getName().toLowerCase()
-			.contains(dev_search.toLowerCase());
+		return dev_search == null || dev_search.isEmpty()
+			|| (cio.getName() != null
+				&& cio.getName().toLowerCase()
+				.contains(dev_search.toLowerCase()));
 	}
 }
