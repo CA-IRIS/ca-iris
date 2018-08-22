@@ -80,11 +80,11 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	/** label for the dev type filter */
 	private final ILabel dev_type_label = new ILabel(
-		"controller.dev.type.filter");
+		"device.type.filter");
 
 	/** device type filter action */
 	private Action dev_type_act = new IAction(
-		"controller.dev.type") {
+		"device.type") {
 		protected void doActionPerformed(ActionEvent e) {
 			Object v = dev_type_cbx.getSelectedItem();
 			if (v instanceof DeviceType)
@@ -100,7 +100,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 
 	/** a string to search for and use to filter Controller IO names */
 	private final ILabel dev_name_label = new ILabel(
-		"controller.dev.name.search");
+		"device.search");
 
 	/** a text field to hold the Controller IO search text */
 	private final JTextField dev_name_txt = new JTextField(16);
