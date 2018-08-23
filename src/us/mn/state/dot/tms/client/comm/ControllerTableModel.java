@@ -27,6 +27,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Beacon_Verify;
 
@@ -169,13 +170,20 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	 */
 	private Set<String> matched_controllers = null;
 
+	/**
+	 * A list of Device names that match the same criteria as
+	 * matched_controllers.
+	 */
+	private List<String> devices = null;
+
+
 	/** a device type to filter (null means match all types) */
 	private DeviceType dev_type = null;
 
 	/** set the device type filter */
 	public void setDeviceType(DeviceType d) {
 		dev_type = d;
-		matched_controllers = getMatchingControllers();
+		findDevices();
 	}
 
 	/** a String to match against any part of any Controller IO name to
@@ -184,9 +192,13 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	private String dev_search = null;
 
 	/** Set the ControllerIO name filter String */
-	public void setDevSearch(String s) {
-		dev_search = s;
-		matched_controllers = getMatchingControllers();
+	public void setDeviceSearch(String s) {
+		dev_search = s.trim();
+		findDevices();
+	}
+
+	public String getDevSearch() {
+		return dev_search;
 	}
 
 	/** Get a proxy comparator */
@@ -373,34 +385,39 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		}
 	}
 
-	/**
-	 * @return a set of controller names for which any attached io device
-	 * has a name that contains dev_search ignoring case or null if no
-	 * filtering.
-	 */
-	private Set<String> getMatchingControllers() {
-		Set<String> matched = null;
-		// only build set and iterate if we are filtering
-		// on type or search
-		if (dev_type != null
-			|| dev_search != null && !dev_search.isEmpty()) {
-			matched = new HashSet<String>();
-			Iterator<ControllerIO> iter = dev_type == null ?
-				 new DeviceIterator(state)
-				: new DeviceIterator(state, dev_type);
-			while (iter.hasNext()) {
-				ControllerIO cio = iter.next();
-				// first check that the ControllerIO is
-				// assigned to a Controller
-				if (cio.getController() != null
-					&& cio.getController().getName() != null
-					&& beaconVerifyMatch(cio)
-					&& searchMatch(cio))
-					matched.add(
+	public List<String> getMatchedDevices() {
+		if (devices == null)
+			findDevices();
+		return devices;
+	}
+
+	private void findDevices() {
+		matched_controllers = dev_type != null
+			|| dev_search != null && !dev_search.isEmpty() ?
+			new HashSet<String>() : null;
+		Iterator<ControllerIO> iter = dev_type == null ?
+			new DeviceIterator(state)
+			: new DeviceIterator(state, dev_type);
+		devices = new ArrayList<String>();
+			devices.add("");
+			while(iter.hasNext()) {
+			ControllerIO cio = iter.next();
+			if (cio.getController() != null
+				&& cio.getController().getName() != null
+				&& cio.getName() != null
+				&& beaconVerifyMatch(cio)
+				&& (dev_search == null
+				|| dev_search.isEmpty()
+				|| cio.getName().toLowerCase().contains(
+				dev_search.toLowerCase()))) {
+				devices.add(cio.getName());
+				if (matched_controllers != null)
+					matched_controllers.add(
 						cio.getController().getName());
 			}
+
 		}
-		return matched;
+		Collections.sort(devices);
 	}
 
 	/**
@@ -410,16 +427,5 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	private boolean beaconVerifyMatch(ControllerIO cio) {
 		return dev_type != Beacon_Verify
 				|| ((Beacon) cio).getVerifyPin() != null;
-	}
-
-	 /**
-	  * @return true if dev_search is null or empty or if the
-	  * ControllerIO name contains the dev_search string ignoring case.
-	  */
-	private boolean searchMatch(ControllerIO cio) {
-		return dev_search == null || dev_search.isEmpty()
-			|| (cio.getName() != null
-				&& cio.getName().toLowerCase()
-				.contains(dev_search.toLowerCase()));
 	}
 }
