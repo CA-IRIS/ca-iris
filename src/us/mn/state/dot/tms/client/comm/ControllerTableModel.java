@@ -172,7 +172,8 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 
 	/**
 	 * A list of Device names that match the same criteria as
-	 * matched_controllers.
+	 * matched_controllers, except that in the case no filter is applied,
+	 * it is not null as matched_controllers is.
 	 */
 	private List<String> devices = null;
 
@@ -231,6 +232,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		      true,	/* has_create_delete */
 		      false);	/* has_name */
 		state = s.getSonarState();
+		findDevices();
 	}
 
 	/** Get the SONAR type name */
@@ -386,38 +388,54 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	}
 
 	public List<String> getMatchedDevices() {
-		if (devices == null)
-			findDevices();
 		return devices;
 	}
 
+	/**
+	 * If either dev_type or dev_search is set for filtering, then
+	 * findDevices will build the set of names of matched_controllers
+	 * and build the list of devices for which the filters are satisfied.
+	 */
 	private void findDevices() {
 		matched_controllers = dev_type != null
 			|| dev_search != null && !dev_search.isEmpty() ?
 			new HashSet<String>() : null;
+		devices = new ArrayList<String>();
 		Iterator<ControllerIO> iter = dev_type == null ?
 			new DeviceIterator(state)
 			: new DeviceIterator(state, dev_type);
-		devices = new ArrayList<String>();
-			devices.add("");
-			while(iter.hasNext()) {
+		// always include the empty reset sentinel value
+		devices.add("");
+		// unfortunately linear search is our only option, because
+		// we are only given devices via the iterator. Should be fine
+		// for a few thousand devices.
+		while (iter.hasNext()) {
 			ControllerIO cio = iter.next();
-			if (cio.getController() != null
+			if (cio != null
+				&& cio.getController() != null
 				&& cio.getController().getName() != null
 				&& cio.getName() != null
 				&& beaconVerifyMatch(cio)
-				&& (dev_search == null
-				|| dev_search.isEmpty()
-				|| cio.getName().toLowerCase().contains(
-				dev_search.toLowerCase()))) {
+				&& nameMatch(cio)) {
 				devices.add(cio.getName());
 				if (matched_controllers != null)
 					matched_controllers.add(
 						cio.getController().getName());
 			}
-
 		}
 		Collections.sort(devices);
+	}
+
+	/**
+	 *
+	 * @return true if the device search is not set or the device name
+	 * contains the search string
+	 */
+	private boolean nameMatch(ControllerIO cio) {
+		return dev_search == null
+			|| dev_search.isEmpty()
+			|| cio.getName().toLowerCase().contains(
+			dev_search.toLowerCase());
 	}
 
 	/**
