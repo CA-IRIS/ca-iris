@@ -43,14 +43,13 @@ public class DeviceIterator implements Iterator<ControllerIO> {
 	public ControllerIO next() {
 		return iterator.next();
 	}
-	String recursionCheck = "a";
+
 	/**
 	 * A state machine to increment the iterator if it is consumed.
 	 * It will recursively call itself until it can find a Device Type that
 	 * has an iterator that hasNext().
 	 */
 	private void nextIterator() {
-		recursionCheck += "a";
 		if (nextType != null) {
 			switch (nextType) {
 			case Alarm:
