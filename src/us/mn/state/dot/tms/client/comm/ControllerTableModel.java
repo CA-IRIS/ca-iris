@@ -406,10 +406,12 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 			: new DeviceIterator(state, dev_type);
 		// always include the empty reset sentinel value
 		devices.add("");
-		// unfortunately linear search is our only option, because
-		// we are only given devices via the iterator. Should be fine
-		// for a few thousand devices.
+		// Unfortunately, linear search is our only option, because
+		// we are only given devices via the iterator. Tested with
+		// 10K devices, and it was okay.
+		int i = 0;
 		while (iter.hasNext()) {
+			i ++;
 			ControllerIO cio = iter.next();
 			if (cio != null
 				&& cio.getController() != null
@@ -423,6 +425,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 						cio.getController().getName());
 			}
 		}
+		System.out.println(i);
 		Collections.sort(devices);
 	}
 
