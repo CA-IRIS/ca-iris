@@ -14,7 +14,6 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
-import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.SonarState;
@@ -30,7 +29,6 @@ import java.awt.*;
 import java.util.*;
 
 import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Beacon_Verify;
-import static us.mn.state.dot.tms.client.comm.ControllerIOModel.getType;
 
 /**
  * Table model for controllers.
@@ -267,8 +265,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		return (comm_link != null)
 		    || (condition != null)
 		    || (comm_state != null)
-			|| (dev_type != null)
-			|| (dev_search != null && !dev_search.isEmpty());
+			|| (matched_controllers != null);
 	}
 
 	/** Create a row filter */
@@ -376,72 +373,43 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		}
 	}
 
-
 	/**
 	 * @return a set of controller names for which any attached io device
-	 * has a name that contains dev_search ingoring case or null if no
+	 * has a name that contains dev_search ignoring case or null if no
 	 * filtering.
 	 */
-	Set<String> getMatchingControllers() {
+	private Set<String> getMatchingControllers() {
 		Set<String> matched = null;
-		// only build set if we are filtering on type or search
+		// only build set and iterate if we are filtering
+		// on type or search
 		if (dev_type != null
 			|| dev_search != null && !dev_search.isEmpty()) {
 			matched = new HashSet<String>();
-			matched.addAll(matchAnyDev(state.getAlarms()));
-			matched.addAll(matchAnyDev(
-				state.getCamCache().getCameras()));
-			matched.addAll(matchAnyDev(
-				state.getDetCache().getDetectors()));
-			matched.addAll(matchAnyDev(
-				state.getDmsCache().getDMSs()));
-			matched.addAll(matchAnyDev(state.getGateArms()));
-			matched.addAll(matchAnyDev(state.getLaneMarkings()));
-			matched.addAll(matchAnyDev(
-				state.getLcsCache().getLCSIndications()));
-			matched.addAll(matchAnyDev(state.getRampMeters()));
-			matched.addAll(matchAnyDev(state.getBeacons()));
-			matched.addAll(matchAnyDev(
-				state.getWeatherSensorsCache()
-					.getWeatherSensors()));
-			matched.addAll(matchAnyDev(state.getTagReaders()));
+			Iterator<ControllerIO> iter = dev_type == null ?
+				 new DeviceIterator(state)
+				: new DeviceIterator(state, dev_type);
+			while (iter.hasNext()) {
+				ControllerIO cio = iter.next();
+				// first check that the ControllerIO is
+				// assigned to a Controller
+				if (cio.getController() != null
+					&& cio.getController().getName() != null
+					&& beaconVerifyMatch(cio)
+					&& searchMatch(cio))
+					matched.add(
+						cio.getController().getName());
+			}
 		}
 		return matched;
 	}
 
 	/**
-	 * @return a set of Controller names that are linked to ControllerIO
-	 * found in the TypeCache of devices such the dev_search matches any
-	 * part of the Controller name if it is not null and not empty and
-	 * the ControllerIO matches dev_type if the dev_type is not null.
+	 * @return true if the device type is not a beacon verify or has a
+	 * verify pin
 	 */
-	private Set<String> matchAnyDev(TypeCache devices)
-	{
-		Set<String> matched = new HashSet<String>();
-		Iterator<ControllerIO> i = devices.iterator();
-		while (i.hasNext()) {
-			ControllerIO cio = i.next();
-			// check that the ControllerIO is assigned to a
-			// Controller
-			if (cio.getController() != null
-				&& cio.getController().getName() != null
-				&& typeMatch(cio)
-				&& searchMatch(cio))
-				matched.add(cio.getController().getName());
-		}
-		return matched;
-	}
-
-	/**
-	 * @return true if the device type is not specified (null) or it
-	 * matches the type
-	 */
-	private boolean typeMatch(ControllerIO cio) {
-		return dev_type == null
-			|| dev_type == getType(cio)
-			|| (dev_type == Beacon_Verify
-				&& cio instanceof Beacon
-				&& ((Beacon) cio).getVerifyPin() != null);
+	private boolean beaconVerifyMatch(ControllerIO cio) {
+		return dev_type != Beacon_Verify
+				|| ((Beacon) cio).getVerifyPin() != null;
 	}
 
 	 /**
