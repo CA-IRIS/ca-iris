@@ -416,7 +416,8 @@ CREATE TABLE iris.controller (
 	condition INTEGER NOT NULL REFERENCES iris.condition,
 	password VARCHAR(16),
 	notes VARCHAR(128) NOT NULL,
-	fail_time timestamp WITH time zone
+	fail_time timestamp WITH time zone,
+	username VARCHAR(16)
 );
 
 CREATE UNIQUE INDEX ctrl_link_drop_idx ON iris.controller
@@ -2361,6 +2362,7 @@ COPY iris.comm_protocol (id, description) FROM stdin;
 34	Incident Feed
 35	CA RWIS
 36	TTIP DMS
+37  ONVIF PTZ
 \.
 
 COPY iris.cabinet_style (name, dip) FROM stdin;
