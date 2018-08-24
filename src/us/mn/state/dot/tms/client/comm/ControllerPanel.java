@@ -100,40 +100,31 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		new JComboBox<DeviceType>(IO_TYPE.toArray(new DeviceType[0]));
 
 	/** a string to search for and use to filter Controller IO names */
-	private final ILabel dev_name_label = new ILabel(
-		"device.search");
-
-	/** a text field to hold the Controller IO name search */
-	private final JComboBox<ControllerIO> dev_name_cbx;
+	private final ILabel dev_label = new ILabel(
+		"device.filter");
 
 	/**
-	 * Handles selected items from the dev_name_cbx drop down.
+	 * Handles selected items from the dev_cbx drop down.
 	 */
-	private ActionListener dev_name_act = new ActionListener() {
+	private ActionListener dev_act = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			switch (e.getActionCommand()) {
-			case "comboBoxChanged":
-				if (!updatingDeviceList) {
-					String item = (String)
-						dev_name_cbx.getSelectedItem();
-					setDeviceSearch(item);
-					dev_name_cbx.getEditor().setItem(item);
-					if (item == null || item.isEmpty())
-						updateDeviceList();
-				}
-				break;
-			case "comboBoxEdited":
-//				dev_name_cbx.hidePopup();
-				break;
+			if (e.getActionCommand().equals("comboBoxChanged")
+				&& !updatingDeviceList) {
+				String item = (String)
+					dev_cbx.getSelectedItem();
+				setDeviceSearch(item);
+				dev_cbx.getEditor().setItem(item);
+				if (item == null || item.isEmpty())
+					updateDeviceList();
 			}
 		}
 	};
 
 	/**
-	 * Handles search text in the dev_name_cbx
+	 * Handles search text in the dev_cbx
 	 */
-	private KeyListener dev_name_key_act = new KeyAdapter() {
+	private KeyListener dev_key_act = new KeyAdapter() {
 		@Override
 		public void keyReleased(KeyEvent e) {
 			switch (e.getKeyCode()) {
@@ -144,19 +135,22 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 			case VK_ENTER:
 				break;
 			default:
-				dev_name_cbx.showPopup();
+				dev_cbx.showPopup();
 				String s = (String)
-					dev_name_cbx.getEditor().getItem();
+					dev_cbx.getEditor().getItem();
 				setDeviceSearch(s);
 				updateDeviceList();
 			}
 		}
 	};
 
+	/** a text field to hold the Controller IO name search */
+	private final JComboBox<ControllerIO> dev_cbx;
+
 	/** Create a new controller panel */
 	public ControllerPanel(Session s) {
 		super(new ControllerTableModel(s));
-		dev_name_cbx = new JComboBox(((ControllerTableModel) model)
+		dev_cbx = new JComboBox(((ControllerTableModel) model)
 			.getMatchedDevices().toArray());
 	}
 
@@ -168,25 +162,28 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		comm_cbx.setRenderer(new CommListRenderer());
 		comm_cbx.setAction(comm_act);
 		dev_type_cbx.setAction(dev_type_act);
-		dev_name_cbx.setEditable(true);
-		dev_name_cbx.addActionListener(dev_name_act);
-		dev_name_cbx.getEditor().getEditorComponent().addKeyListener(dev_name_key_act);
+		dev_cbx.setEditable(true);
+		dev_cbx.addActionListener(dev_act);
+		dev_cbx.getEditor().getEditorComponent().addKeyListener(
+			dev_key_act);
 	}
 
 	private boolean updatingDeviceList = false;
 
 	/**
-	 * updates the the device list in dev_name_cbx
+	 * updates the the device list in dev_cbx
 	 */
 	private void updateDeviceList() {
 		updatingDeviceList = true;
-		boolean visibility = dev_name_cbx.isPopupVisible();
-		dev_name_cbx.setPopupVisible(false);
-		String s = (String) dev_name_cbx.getEditor().getItem();
-		dev_name_cbx.removeAllItems();
-		dev_name_cbx.setModel(new DefaultComboBoxModel(((ControllerTableModel) model).getMatchedDevices().toArray()));
-		dev_name_cbx.getEditor().setItem(s);
-		dev_name_cbx.setPopupVisible(visibility);
+		boolean visibility = dev_cbx.isPopupVisible();
+		dev_cbx.setPopupVisible(false);
+		String s = (String) dev_cbx.getEditor().getItem();
+		dev_cbx.removeAllItems();
+		dev_cbx.setModel(new DefaultComboBoxModel((
+			(ControllerTableModel) model)
+			.getMatchedDevices().toArray()));
+		dev_cbx.getEditor().setItem(s);
+		dev_cbx.setPopupVisible(visibility);
 		updatingDeviceList = false;
 	}
 
@@ -213,11 +210,11 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 		hg.addComponent(dev_type_cbx);
 		vg.addComponent(dev_type_cbx);
 		hg.addGap(UI.hgap);
-		hg.addComponent(dev_name_label);
-		vg.addComponent(dev_name_label);
+		hg.addComponent(dev_label);
+		vg.addComponent(dev_label);
 		hg.addGap(UI.hgap);
-		hg.addComponent(dev_name_cbx);
-		vg.addComponent(dev_name_cbx);
+		hg.addComponent(dev_cbx);
+		vg.addComponent(dev_cbx);
 		hg.addGap(UI.hgap);
 		super.addCreateDeleteWidgets(hg, vg);
 	}

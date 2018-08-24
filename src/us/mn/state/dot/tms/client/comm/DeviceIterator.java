@@ -10,7 +10,7 @@ import static us.mn.state.dot.tms.client.comm.ControllerIOModel.*;
 import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.*;
 
 /**
- * A class used for iterating over all devices in state.
+ * A class used for iterating over all devices for the state.
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class DeviceIterator implements Iterator<ControllerIO> {

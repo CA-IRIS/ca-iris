@@ -407,8 +407,8 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		// always include the empty reset sentinel value
 		devices.add("");
 		// Unfortunately, linear search is our only option, because
-		// we are only given devices via the iterator. Tested with
-		// 10K devices, and it was okay.
+		// we are only given devices via an iterator. Tested with
+		// 10K devices, and responsiveness was okay.
 		while (iter.hasNext()) {
 			ControllerIO cio = iter.next();
 			if (cio != null
