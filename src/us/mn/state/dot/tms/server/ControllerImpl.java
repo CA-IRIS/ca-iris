@@ -885,7 +885,7 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	public void pollDevices() {
 		// Feed are not associated with devices
 		queryFeeds();
-		// Must call getMatchedDevices so we don't hold the lock
+		// Must call getDevices so we don't hold the lock
 		for (ControllerIO io: getDevices())
 			pollDevice(io);
 	}
