@@ -10,8 +10,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsd
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfilesResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Capabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptions;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptionsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
@@ -64,6 +63,8 @@ public class OnvifSessionMessenger extends Messenger {
 	private List<Profile> mediaProfiles;
 	private PTZSpaces ptzSpaces;
 	private List<PTZNode> nodes;
+	private ImagingOptions20 imagingOptions;
+	private ImagingSettings20 imagingSettings;
 	private MoveOptions20 imagingMoveOptions;
 
 	/**
@@ -195,10 +196,26 @@ public class OnvifSessionMessenger extends Messenger {
 		throws ServiceNotSupportedException,
 		SessionNotStartedException, SoapTransmissionException
 	{
-		if (nodes == null) {
+		if (nodes == null)
 			nodes = initNodes();
-		}
 		return nodes;
+	}
+
+	public ImagingOptions20 getImagingOptions()
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
+	{
+		if (imagingOptions == null)
+			imagingOptions = initImagingOptions();
+		return imagingOptions;
+	}
+
+	public ImagingSettings20 getImagingSettings()
+		throws SessionNotStartedException, SoapTransmissionException
+	{
+		if (imagingSettings == null)
+			imagingSettings = initImagingSettings();
+		return imagingSettings;
 	}
 
 	/**
@@ -417,6 +434,30 @@ public class OnvifSessionMessenger extends Messenger {
 			new GetNodes();
 		return ((GetNodesResponse) makeRequest(getNodes,
 			GetNodesResponse.class)).getPTZNode();
+	}
+
+	private ImagingOptions20 initImagingOptions()
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
+	{
+		selectService(OnvifService.IMAGING);
+		GetOptions getOptions = new GetOptions();
+		getOptions.setVideoSourceToken(getMediaProfileTok());
+		GetOptionsResponse getOptionsResponse =
+			(GetOptionsResponse) makeRequest(
+				getOptions, GetOptionsResponse.class);
+		return getOptionsResponse.getImagingOptions();
+	}
+
+	private ImagingSettings20 initImagingSettings()
+		throws SessionNotStartedException, SoapTransmissionException
+	{
+		GetImagingSettings request = new GetImagingSettings();
+		request.setVideoSourceToken(getMediaProfileTok());
+		GetImagingSettingsResponse response =
+			(GetImagingSettingsResponse) makeRequest(
+				request, GetImagingSettingsResponse.class);
+		return response.getImagingSettings();
 	}
 
 	private MoveOptions20 initImagingMoveOptions()
