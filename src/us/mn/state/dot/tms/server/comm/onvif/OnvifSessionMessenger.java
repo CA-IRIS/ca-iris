@@ -12,6 +12,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Ca
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
@@ -66,6 +67,9 @@ public class OnvifSessionMessenger extends Messenger {
 	private ImagingOptions20 imagingOptions;
 	private ImagingSettings20 imagingSettings;
 	private MoveOptions20 imagingMoveOptions;
+	
+	// iris move thread
+	private Thread irisMover;
 
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
@@ -107,6 +111,17 @@ public class OnvifSessionMessenger extends Messenger {
 	@Override
 	public void close() {
 		log("Closing session... ");
+		while (irisMover != null) {
+			log("Cannot close session. " +
+				"Iris move command in progress... ");
+			try {
+				Thread.sleep(timeout);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				log("Pause interrupted. " +
+					"Checking iris move command status. ");
+			}
+		}
 		auth = null;
 		capabilities = null;
 		mediaProfiles = null;
@@ -282,6 +297,15 @@ public class OnvifSessionMessenger extends Messenger {
 					"Bad username or password. ", e);
 			throw new SoapTransmissionException(e);
 		}
+	}
+
+	public void startMovingIris(Runnable t) {
+		irisMover = new Thread(t);
+		irisMover.start();
+	}
+
+	public void stopMovingIris() {
+		irisMover.interrupt();
 	}
 
 	private int parseSoapErrStatus(SOAPException e)

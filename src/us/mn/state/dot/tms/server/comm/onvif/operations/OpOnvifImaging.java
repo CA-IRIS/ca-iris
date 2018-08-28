@@ -10,6 +10,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisAutoProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
 /**
@@ -53,26 +54,21 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			out = new OnvifImagingFocusMoveProperty(session, 0f);
 			break;
 		case CAMERA_FOCUS_MANUAL:
-			out = new OnvifImagingFocusAutoProperty(session,
-				false);
+			out = new OnvifImagingFocusAutoProperty(session, false);
 			break;
 		case CAMERA_FOCUS_AUTO:
 			out = new OnvifImagingFocusAutoProperty(session, true);
+			break;
+		case CAMERA_IRIS_CLOSE:
+		case CAMERA_IRIS_OPEN:
+		case CAMERA_IRIS_STOP:
+			out = new OnvifImagingIrisMoveProperty(session, r);
 			break;
 		case CAMERA_IRIS_MANUAL:
 			out = new OnvifImagingIrisAutoProperty(session, false);
 			break;
 		case CAMERA_IRIS_AUTO:
 			out = new OnvifImagingIrisAutoProperty(session, true);
-			break;
-		case CAMERA_IRIS_CLOSE:
-			// todo
-			break;
-		case CAMERA_IRIS_OPEN:
-			// todo
-			break;
-		case CAMERA_IRIS_STOP:
-			log(r.toString());
 			break;
 		default:
 			log("Unrecognized: " + r);
