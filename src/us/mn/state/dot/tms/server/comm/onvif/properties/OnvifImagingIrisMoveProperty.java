@@ -14,7 +14,7 @@ import java.io.IOException;
 
 /**
  * A class that makes continuous iris movements from the absolute iris movement
- * interface provided by ONVIF. 
+ * interface provided by ONVIF.
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OnvifImagingIrisMoveProperty extends OnvifProperty
@@ -24,8 +24,12 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty
 	 * The granularity of individual requests. A larger number means
 	 * the stepping of iris movements will be more smooth. A smaller number
 	 * will mean larger jumps and a stepped feel to iris movements.
+	 * Since we must receive a response from the device before we can
+	 * proceed to the next request, this does not represent a linear
+	 * relationship. A larger number will mean more requests which are
+	 * effectively slower.
 	 */
-	private static final float GRANULARITY = 50;
+	private static final float GRANULARITY_OF_MOVEMENT = 50;
 	private final DeviceRequest req;
 
 	public OnvifImagingIrisMoveProperty(
@@ -88,7 +92,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty
 				.getExposure().getIris();
 			final float min = range.getMin();
 			final float max = range.getMax();
-			final float incr = (max - min) / GRANULARITY;
+			final float incr = (max - min) / GRANULARITY_OF_MOVEMENT;
 			float val;
 			SetImagingSettings setReq = new SetImagingSettings();
 			setReq.setVideoSourceToken(

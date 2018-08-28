@@ -20,7 +20,7 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 
 	/**
 	 * @param speed negative value focuses near and positive value focuses
-	 * 	far
+	 * 	far (expected range is from NEAR_MIN to FAR_MAX). 
 	 */
 	public OnvifImagingFocusMoveProperty(
 		OnvifSessionMessenger session, float speed)

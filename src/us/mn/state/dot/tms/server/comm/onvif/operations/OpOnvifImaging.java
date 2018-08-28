@@ -45,10 +45,10 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		switch (r) {
 		case CAMERA_FOCUS_NEAR:
 			out = new OnvifImagingFocusMoveProperty(session,
-				-0.2f);
+				-0.1f);
 			break;
 		case CAMERA_FOCUS_FAR:
-			out = new OnvifImagingFocusMoveProperty(session, 0.2f);
+			out = new OnvifImagingFocusMoveProperty(session, 0.1f);
 			break;
 		case CAMERA_FOCUS_STOP:
 			out = new OnvifImagingFocusMoveProperty(session, 0f);
