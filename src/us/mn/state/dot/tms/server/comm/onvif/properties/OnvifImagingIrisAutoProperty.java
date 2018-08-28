@@ -48,7 +48,8 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 	}
 
 	private void setAutoIrisMode()
-		throws SessionNotStartedException, SoapTransmissionException
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
 	{
 		ImagingSettings20 settings = session.getImagingSettings();
 		settings.getExposure().setMode(enable ?
