@@ -13,11 +13,19 @@ import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmission
 import java.io.IOException;
 
 /**
+ * A class that makes continuous iris movements from the absolute iris movement
+ * interface provided by ONVIF. 
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OnvifImagingIrisMoveProperty extends OnvifProperty
 	implements Runnable
 {
+	/**
+	 * The granularity of individual requests. A larger number means
+	 * the stepping of iris movements will be more smooth. A smaller number
+	 * will mean larger jumps and a stepped feel to iris movements.
+	 */
+	private static final float GRANULARITY = 50;
 	private final DeviceRequest req;
 
 	public OnvifImagingIrisMoveProperty(
@@ -80,7 +88,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty
 				.getExposure().getIris();
 			final float min = range.getMin();
 			final float max = range.getMax();
-			final float incr = (max - min) / 25;
+			final float incr = (max - min) / GRANULARITY;
 			float val;
 			SetImagingSettings setReq = new SetImagingSettings();
 			setReq.setVideoSourceToken(
@@ -112,7 +120,8 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty
 	}
 
 	private void updateVal(float val, SetImagingSettings request)
-		throws SessionNotStartedException, SoapTransmissionException
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
 	{
 		session.getImagingSettings().getExposure().setIris(val);
 		request.setImagingSettings(session.getImagingSettings());

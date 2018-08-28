@@ -12,7 +12,6 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Ca
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.*;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.*;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
@@ -37,6 +36,20 @@ import java.util.List;
 /**
  * Caches device authentication session, capabilities, and some constant device
  * information for as long as the Messenger is open.
+ * Typical use:
+ * 	1. instantiate instance of this
+ * 	2. setAuth()
+ * 	3. open() // requires setAuth()
+ * 	4. selectService)() // requires open()
+ * 	5. makeRequest() // requires selectService() if making call to different
+ * 		service than previous call(s)
+ *	6. repeat 4 & 5 as needed
+ *	7. close()
+ *
+ * There are many cached values in the session. These are 'live' values (Java
+ * values by reference like all others). If you are going to send a request to
+ * update one of the values to the device, then you should also update the
+ * cached value.
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
@@ -58,7 +71,7 @@ public class OnvifSessionMessenger extends Messenger {
 
 	// messenger properties
 	private String currentUri;
-	private int timeout = 5000;
+	private int timeout = 5000; // in milliseconds
 
 	// cached onvif device values
 	private List<Profile> mediaProfiles;
@@ -112,6 +125,7 @@ public class OnvifSessionMessenger extends Messenger {
 	public void close() {
 		log("Closing session... ");
 		while (irisMover != null) {
+			stopMovingIris();
 			log("Cannot close session. " +
 				"Iris move command in progress... ");
 			try {
@@ -128,6 +142,8 @@ public class OnvifSessionMessenger extends Messenger {
 		ptzSpaces = null;
 		nodes = null;
 		imagingMoveOptions = null;
+		imagingSettings = null;
+		imagingOptions = null;
 		log("Session closed. ");
 	}
 
@@ -180,7 +196,7 @@ public class OnvifSessionMessenger extends Messenger {
 	public String getMediaProfileTok() throws SessionNotStartedException {
 		if (mediaProfiles == null)
 			throw new SessionNotStartedException(
-				"No media xtoken found. ");
+				"No media token found. ");
 		return mediaProfiles.get(0).getToken();
 	}
 
@@ -216,6 +232,15 @@ public class OnvifSessionMessenger extends Messenger {
 		return nodes;
 	}
 
+	public ImagingSettings20 getImagingSettings()
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
+	{
+		if (imagingSettings == null)
+			imagingSettings = initImagingSettings();
+		return imagingSettings;
+	}
+
 	public ImagingOptions20 getImagingOptions()
 		throws SessionNotStartedException, SoapTransmissionException,
 		ServiceNotSupportedException
@@ -223,14 +248,6 @@ public class OnvifSessionMessenger extends Messenger {
 		if (imagingOptions == null)
 			imagingOptions = initImagingOptions();
 		return imagingOptions;
-	}
-
-	public ImagingSettings20 getImagingSettings()
-		throws SessionNotStartedException, SoapTransmissionException
-	{
-		if (imagingSettings == null)
-			imagingSettings = initImagingSettings();
-		return imagingSettings;
 	}
 
 	/**
@@ -299,13 +316,26 @@ public class OnvifSessionMessenger extends Messenger {
 		}
 	}
 
+	/**
+	 * If a call is previously made that hasn't been stopped, it will be
+	 * interrupted.
+	 * @param t a thread that requires persistence beyond a single call
+	 */
 	public void startMovingIris(Runnable t) {
+		if (irisMover != null)
+			stopMovingIris();
 		irisMover = new Thread(t);
 		irisMover.start();
 	}
 
+	/**
+	 * If there is a Thread to stop, it will be interrupted.
+	 */
 	public void stopMovingIris() {
-		irisMover.interrupt();
+		if (irisMover != null) {
+			irisMover.interrupt();
+			irisMover = null;
+		}
 	}
 
 	private int parseSoapErrStatus(SOAPException e)
@@ -428,11 +458,11 @@ public class OnvifSessionMessenger extends Messenger {
 		ServiceNotSupportedException,
 		SoapTransmissionException
 	{
-		selectService(OnvifService.PTZ);
 		GetConfigurationsResponse getConfigurationsResponse =
-			(GetConfigurationsResponse) makeRequest(
+			(GetConfigurationsResponse) makeInternalRequest(
 				new GetConfigurations(),
-				GetConfigurationsResponse.class);
+				GetConfigurationsResponse.class,
+				OnvifService.PTZ);
 		GetConfigurationOptions getConfigurationOptions =
 			new GetConfigurationOptions();
 		String token =
@@ -441,9 +471,10 @@ public class OnvifSessionMessenger extends Messenger {
 		getConfigurationOptions.setConfigurationToken(token);
 		GetConfigurationOptionsResponse
 			getConfigurationOptionsResponse =
-			(GetConfigurationOptionsResponse) makeRequest(
+			(GetConfigurationOptionsResponse) makeInternalRequest(
 				getConfigurationOptions,
-				GetConfigurationOptionsResponse.class);
+				GetConfigurationOptionsResponse.class,
+				OnvifService.PTZ);
 		return getConfigurationOptionsResponse
 			.getPTZConfigurationOptions().getSpaces();
 	}
@@ -453,34 +484,35 @@ public class OnvifSessionMessenger extends Messenger {
 		ServiceNotSupportedException,
 		SoapTransmissionException
 	{
-		selectService(OnvifService.PTZ);
 		GetNodes getNodes =
 			new GetNodes();
-		return ((GetNodesResponse) makeRequest(getNodes,
-			GetNodesResponse.class)).getPTZNode();
+		return ((GetNodesResponse) makeInternalRequest(getNodes,
+			GetNodesResponse.class, OnvifService.PTZ)).getPTZNode();
 	}
 
 	private ImagingOptions20 initImagingOptions()
 		throws SessionNotStartedException, SoapTransmissionException,
 		ServiceNotSupportedException
 	{
-		selectService(OnvifService.IMAGING);
 		GetOptions getOptions = new GetOptions();
 		getOptions.setVideoSourceToken(getMediaProfileTok());
 		GetOptionsResponse getOptionsResponse =
-			(GetOptionsResponse) makeRequest(
-				getOptions, GetOptionsResponse.class);
+			(GetOptionsResponse) makeInternalRequest(
+				getOptions, GetOptionsResponse.class,
+				OnvifService.IMAGING);
 		return getOptionsResponse.getImagingOptions();
 	}
 
 	private ImagingSettings20 initImagingSettings()
-		throws SessionNotStartedException, SoapTransmissionException
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException
 	{
 		GetImagingSettings request = new GetImagingSettings();
 		request.setVideoSourceToken(getMediaProfileTok());
 		GetImagingSettingsResponse response =
-			(GetImagingSettingsResponse) makeRequest(
-				request, GetImagingSettingsResponse.class);
+			(GetImagingSettingsResponse) makeInternalRequest(
+				request, GetImagingSettingsResponse.class,
+				OnvifService.IMAGING);
 		return response.getImagingSettings();
 	}
 
@@ -488,11 +520,29 @@ public class OnvifSessionMessenger extends Messenger {
 		throws ServiceNotSupportedException,
 		SessionNotStartedException, SoapTransmissionException
 	{
-		selectService(OnvifService.IMAGING);
 		GetMoveOptions getMoveOptions = new GetMoveOptions();
 		getMoveOptions.setVideoSourceToken(getMediaProfileTok());
-		return ((GetMoveOptionsResponse) makeRequest(getMoveOptions,
-			GetMoveOptionsResponse.class)).getMoveOptions();
+		return ((GetMoveOptionsResponse) makeInternalRequest(
+			getMoveOptions, GetMoveOptionsResponse.class,
+			OnvifService.IMAGING)).getMoveOptions();
+	}
+
+	/**
+	 * For internal requests that would otherwise overwrite the external
+	 * selectService() call.
+	 */
+	private Object makeInternalRequest(Object request, Class<?> responseClass,
+					   OnvifService service)
+		throws SessionNotStartedException, ServiceNotSupportedException,
+		SoapTransmissionException
+	{
+		String savedUri = currentUri;
+		selectService(service);
+		try {
+			return makeRequest(request, responseClass);
+		} finally {
+			currentUri = savedUri;
+		}
 	}
 
 	private String getDeviceServiceUri() {
