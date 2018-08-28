@@ -70,27 +70,13 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_STOP:
 		case CAMERA_IRIS_MANUAL:
 		case CAMERA_IRIS_AUTO:
-		case BRIGHTNESS_GOOD:
-		case BRIGHTNESS_TOO_DIM:
-		case BRIGHTNESS_TOO_BRIGHT:
 			prepAndAddOp(new OpOnvifImaging(c, session, r));
 			break;
 		case RESET_DEVICE:
-		case QUERY_CONFIGURATION:
-		case QUERY_MESSAGE:
-		case QUERY_STATUS:
-		case QUERY_PIXEL_FAILURES:
-		case TEST_PIXELS:
-		case TEST_FANS:
-		case TEST_LAMPS:
-		case RESET_MODEM:
-		case SEND_SETTINGS:
-		case SEND_LEDSTAR_SETTINGS:
-		case QUERY_LEDSTAR_SETTINGS:
-		case DISABLE_SYSTEM:
-		case NO_REQUEST:
 			prepAndAddOp(new OpOnvifDevice(c, session, r));
 			break;
+		default:
+			log("Unsupported " + r + ". ");
 		}
 	}
 
