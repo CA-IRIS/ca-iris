@@ -2,12 +2,12 @@ package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.DeviceImpl;
-import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.AutoFocusMode;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ExposureMode;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisAutoProperty;
@@ -37,6 +37,8 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		switch (request) {
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
+		case CAMERA_IRIS_CLOSE:
+		case CAMERA_IRIS_OPEN:
 			op = new ModeCheck();
 			break;
 		default:
@@ -45,14 +47,31 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		return op;
 	}
 
+	/**
+	 * Some manufacturers will ignore manual focus or iris adjustments if
+	 * the device is currently in auto mode.
+	 */
 	protected class ModeCheck extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty out = null;
-			if (session.getImagingSettings().getFocus()
-				.getAutoFocusMode() == AutoFocusMode.AUTO)
-				out = new OnvifImagingFocusAutoProperty(
-					session, false);
+			switch (request) {
+			case CAMERA_FOCUS_NEAR:
+			case CAMERA_FOCUS_FAR:
+				if (session.getImagingSettings().getFocus()
+					.getAutoFocusMode()
+					== AutoFocusMode.AUTO)
+					out = new OnvifImagingFocusAutoProperty(
+						session, false);
+				break;
+			case CAMERA_IRIS_CLOSE:
+			case CAMERA_IRIS_OPEN:
+				if (session.getImagingSettings().getExposure()
+					.getMode() == ExposureMode.AUTO)
+					out = new OnvifImagingIrisAutoProperty(
+						session, false);
+				break;
+			}
 			return out;
 		}
 

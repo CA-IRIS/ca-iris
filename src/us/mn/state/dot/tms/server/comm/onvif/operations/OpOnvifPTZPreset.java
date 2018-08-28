@@ -35,7 +35,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 	}
 
 	/**
-	 * Onvif devices must be in a stopped state in order to save position
+	 * Onvif devices must be in a stopped state in order to store preset
 	 */
 	protected class EnsureStopped extends OnvifPhase {
 		@Override
