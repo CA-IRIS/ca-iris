@@ -49,8 +49,6 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 		// makes sense to encodeStore() and decodeStore() for each
 		// OnvifProperty rather than doing all encodeStores() and
 		// then all decodeStores().
-		protected T prop;
-
 		protected abstract T selectProperty()
 			throws IOException;
 
@@ -63,7 +61,7 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 			try {
 				log("Preparing for operation... ");
 				session.selectService(service);
-				prop = selectProperty();
+				T prop = selectProperty();
 				if (prop != null) {
 					mess.logStore(prop);
 					prop.encodeStore(null, null);
