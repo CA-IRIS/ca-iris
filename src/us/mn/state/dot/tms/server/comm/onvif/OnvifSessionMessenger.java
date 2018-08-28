@@ -37,12 +37,12 @@ import java.util.List;
  * Caches device authentication session, capabilities, and some constant device
  * information for as long as the Messenger is open.
  * Typical use:
- * 	1. instantiate instance of this
+ * 	1. instantiate this
  * 	2. setAuth()
  * 	3. open() // requires setAuth()
  * 	4. selectService)() // requires open()
  * 	5. makeRequest() // requires selectService() if making call to different
- * 		service than previous call(s)
+ * 		service than was previously selected
  *	6. repeat 4 & 5 as needed
  *	7. close()
  *
@@ -106,7 +106,6 @@ public class OnvifSessionMessenger extends Messenger {
 	public void open() throws IOException {
 		log("Starting session... ");
 		try {
-			selectService(OnvifService.DEVICE);
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
@@ -359,15 +358,19 @@ public class OnvifSessionMessenger extends Messenger {
 	 * may
 	 * cause the device to reject requests.
 	 */
-	private void setAuthClockOffset() throws SoapTransmissionException {
+	private void setAuthClockOffset()
+		throws SoapTransmissionException, SessionNotStartedException,
+		ServiceNotSupportedException
+	{
 		// add one second for travel delay as the ONVIF programmer
 		// guide shows
 		ZonedDateTime ourDateTime =
 			ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(1);
 		SystemDateTime response =
-			((GetSystemDateAndTimeResponse) makeRequest(
+			((GetSystemDateAndTimeResponse) makeInternalRequest(
 				new GetSystemDateAndTime(),
-				GetSystemDateAndTimeResponse.class))
+				GetSystemDateAndTimeResponse.class,
+				OnvifService.DEVICE))
 				.getSystemDateAndTime();
 		DateTime deviceDT = response.getUTCDateTime();
 		ZoneOffset zoneID = ZoneOffset.UTC;
@@ -390,11 +393,13 @@ public class OnvifSessionMessenger extends Messenger {
 	}
 
 	private Capabilities initCapabilities()
-		throws SoapTransmissionException
+		throws SoapTransmissionException, SessionNotStartedException,
+		ServiceNotSupportedException
 	{
 		GetCapabilities getCapabilities = new GetCapabilities();
-		return ((GetCapabilitiesResponse) makeRequest(getCapabilities,
-			GetCapabilitiesResponse.class))
+		return ((GetCapabilitiesResponse) makeInternalRequest(
+			getCapabilities, GetCapabilitiesResponse.class,
+			OnvifService.DEVICE))
 			.getCapabilities();
 	}
 
@@ -403,10 +408,10 @@ public class OnvifSessionMessenger extends Messenger {
 		ServiceNotSupportedException,
 		SoapTransmissionException
 	{
-		selectService(OnvifService.MEDIA);
 		List<Profile> profiles =
-			((GetProfilesResponse) makeRequest(new GetProfiles(),
-				GetProfilesResponse.class)).getProfiles();
+			((GetProfilesResponse) makeInternalRequest(
+				new GetProfiles(), GetProfilesResponse.class,
+				OnvifService.MEDIA)).getProfiles();
 		if (profiles == null
 			|| profiles.size() < 1
 			|| profiles.get(0).getToken() == null
@@ -491,7 +496,7 @@ public class OnvifSessionMessenger extends Messenger {
 	}
 
 	/**
-	 * For internal requests that would otherwise overwrite the external
+	 * For internal requests that might overwrite the external
 	 * selectService() call.
 	 */
 	private Object makeInternalRequest(Object request, Class<?> responseClass,
