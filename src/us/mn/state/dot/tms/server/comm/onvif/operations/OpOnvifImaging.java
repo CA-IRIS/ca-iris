@@ -35,11 +35,9 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	protected OnvifPhase phaseTwo() {
 		OnvifPhase op;
 		switch (request) {
-		case CAMERA_FOCUS_NEAR:
-		case CAMERA_FOCUS_FAR:
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
-			op = new ModeCheck();
+			op = new IrisModeCheck();
 			break;
 		default:
 			op = new Adjust();
@@ -48,30 +46,17 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	}
 
 	/**
-	 * Some manufacturers will ignore manual focus or iris adjustments if
+	 * Some manufacturers will ignore manual iris adjustments if
 	 * the device is currently in auto mode.
 	 */
-	protected class ModeCheck extends OnvifPhase {
+	protected class IrisModeCheck extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty out = null;
-			switch (request) {
-			case CAMERA_FOCUS_NEAR:
-			case CAMERA_FOCUS_FAR:
-				if (session.getImagingSettings().getFocus()
-					.getAutoFocusMode()
-					== AutoFocusMode.AUTO)
-					out = new OnvifImagingFocusAutoProperty(
-						session, false);
-				break;
-			case CAMERA_IRIS_CLOSE:
-			case CAMERA_IRIS_OPEN:
-				if (session.getImagingSettings().getExposure()
-					.getMode() == ExposureMode.AUTO)
-					out = new OnvifImagingIrisAutoProperty(
-						session, false);
-				break;
-			}
+			if (session.getImagingSettings().getExposure()
+				.getMode() == ExposureMode.AUTO)
+				out = new OnvifImagingIrisAutoProperty(
+					session, false);
 			return out;
 		}
 

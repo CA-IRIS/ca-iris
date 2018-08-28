@@ -30,7 +30,7 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 	protected void encodeStore() throws IOException {
 		if (!supportsAutoIris())
 			logFailure("Camera does not support " + (enable ?
-				"auto" : "manual") + "requests. ");
+				"auto" : "manual") + " iris requests. ");
 		setAutoIrisMode();
 	}
 
