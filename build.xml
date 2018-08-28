@@ -223,7 +223,7 @@
 	        description="Compile all of the source files">
 		<javac srcdir="${build.src}"
 		       destdir="${build.classes}"
-		       debug="true"
+		       debug="${debug}"
 		       deprecation="on"
 		       includeantruntime="false"
 		       source="1.7"
