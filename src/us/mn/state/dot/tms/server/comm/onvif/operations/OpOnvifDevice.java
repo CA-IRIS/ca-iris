@@ -38,20 +38,18 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 
 	protected class Reboot extends OnvifPhase {
 		@Override
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm)
-			throws IOException
-		{
-			prop = selectProperty(request);
-			return null;
+		protected OnvifProperty selectProperty() throws IOException {
+			switch (request) {
+			case RESET_DEVICE:
+				return new OnvifDeviceRebootProperty(session);
+			default:
+				throw new IOException("Unsupported: " + request);
+			}
 		}
-	}
 
-	private OnvifProperty selectProperty(DeviceRequest r) throws IOException {
-		switch (r) {
-		case RESET_DEVICE:
-			return new OnvifDeviceRebootProperty(session);
-		default:
-			throw new IOException("Unsupported: " + r);
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return null;
 		}
 	}
 }

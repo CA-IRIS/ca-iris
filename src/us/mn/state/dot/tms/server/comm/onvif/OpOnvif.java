@@ -51,8 +51,10 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 		// then all decodeStores().
 		protected T prop;
 
-		protected abstract OnvifPhase poll2(
-			CommMessage<T> cm)
+		protected abstract T selectProperty()
+			throws IOException;
+
+		protected abstract OnvifPhase nextPhase()
 			throws IOException;
 
 		protected OnvifPhase poll(CommMessage<T> mess)
@@ -61,15 +63,13 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 			try {
 				log("Preparing for operation... ");
 				session.selectService(service);
-				OnvifPhase op = poll2(mess);
-				if (prop == null)
-					log("Missing property");
-				else {
+				prop = selectProperty();
+				if (prop != null) {
 					mess.logStore(prop);
 					prop.encodeStore(null, null);
 					prop.decodeStore(null, null);
 				}
-				return op;
+				return nextPhase();
 			} catch (SoapTransmissionException
 				| SessionNotStartedException
 				| ServiceNotSupportedException e) {
@@ -77,7 +77,8 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 				log(e.getMessage());
 				throw new IOException(e.getMessage());
 			} finally {
-				log("Operation " + (isSuccess() ? "succeeded" :
+				log("Operation " + (isSuccess() ?
+					"succeeded" :
 					"failed") + ". ");
 			}
 		}

@@ -9,6 +9,8 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZWiperProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
+import java.io.IOException;
+
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
@@ -35,15 +37,25 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 * has a wiper command at all. This the best attempt at a one shot
 	 */
 	protected class WiperOn extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
-			prop = new OnvifPTZWiperProperty(session, true);
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZWiperProperty(session, true);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
 			return new WiperOff();
 		}
 	}
 
 	protected class WiperOff extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
-			prop = new OnvifPTZWiperProperty(session, false);
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZWiperProperty(session, false);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
 			return null;
 		}
 	}

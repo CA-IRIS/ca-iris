@@ -81,7 +81,8 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 * produced by encodeStore()
 	 */
 	protected void decodeStore() throws IOException {
-		log("Device responded: " + response.getClass().getSimpleName());
+		log("Device responded: " +
+			response.getClass().getSimpleName());
 	}
 
 	protected void log(String msg) {

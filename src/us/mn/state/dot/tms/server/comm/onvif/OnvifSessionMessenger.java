@@ -80,9 +80,6 @@ public class OnvifSessionMessenger extends Messenger {
 	private ImagingOptions20 imagingOptions;
 	private ImagingSettings20 imagingSettings;
 	private MoveOptions20 imagingMoveOptions;
-	
-	// iris move thread
-	private Thread irisMover;
 
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
@@ -124,18 +121,6 @@ public class OnvifSessionMessenger extends Messenger {
 	@Override
 	public void close() {
 		log("Closing session... ");
-		while (irisMover != null) {
-			stopMovingIris();
-			log("Cannot close session. " +
-				"Iris move command in progress... ");
-			try {
-				Thread.sleep(timeout);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				log("Pause interrupted. " +
-					"Checking iris move command status. ");
-			}
-		}
 		auth = null;
 		capabilities = null;
 		mediaProfiles = null;
@@ -313,28 +298,6 @@ public class OnvifSessionMessenger extends Messenger {
 				throw new SoapTransmissionException(
 					"Bad username or password. ", e);
 			throw new SoapTransmissionException(e);
-		}
-	}
-
-	/**
-	 * If a call is previously made that hasn't been stopped, it will be
-	 * interrupted.
-	 * @param t a thread that requires persistence beyond a single call
-	 */
-	public void startMovingIris(Runnable t) {
-		if (irisMover != null)
-			stopMovingIris();
-		irisMover = new Thread(t);
-		irisMover.start();
-	}
-
-	/**
-	 * If there is a Thread to stop, it will be interrupted.
-	 */
-	public void stopMovingIris() {
-		if (irisMover != null) {
-			irisMover.interrupt();
-			irisMover = null;
 		}
 	}
 

@@ -20,7 +20,7 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 
 	/**
 	 * @param speed negative value focuses near and positive value focuses
-	 * 	far (expected range is from NEAR_MIN to FAR_MAX). 
+	 * 	far (expected range is from NEAR_MIN to FAR_MAX).
 	 */
 	public OnvifImagingFocusMoveProperty(
 		OnvifSessionMessenger session, float speed)
@@ -55,7 +55,6 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 		val.setSpeed(speed);
 		focusMove.setContinuous(val);
 		request.setFocus(focusMove);
-		response = session.makeRequest(request,
-			MoveResponse.class);
+		response = session.makeRequest(request, MoveResponse.class);
 	}
 }

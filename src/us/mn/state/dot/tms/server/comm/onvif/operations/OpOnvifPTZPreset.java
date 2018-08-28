@@ -11,6 +11,8 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetStorePrope
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
+import java.io.IOException;
+
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
@@ -29,29 +31,45 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return store ? new StoreStop() : new Recall();
+		return store ? new EnsureStopped() : new Recall();
 	}
 
 	/**
 	 * Onvif devices must be in a stopped state in order to save position
 	 */
-	protected class StoreStop extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
-			prop = new OnvifPTZStopProperty(session);
-			return new StoreMove();
+	protected class EnsureStopped extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZStopProperty(session);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return new Store();
 		}
 	}
 
-	protected class StoreMove extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
-			prop = new OnvifPTZPresetStoreProperty(session, preset);
+	protected class Store extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZPresetStoreProperty(session, preset);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
 			return null;
 		}
 	}
 
 	protected class Recall extends OnvifPhase {
-		protected OnvifPhase poll2(CommMessage<OnvifProperty> cm) {
-			prop = new OnvifPTZPresetRecallProperty(session, preset);
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZPresetRecallProperty(session,
+				preset);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
 			return null;
 		}
 	}
