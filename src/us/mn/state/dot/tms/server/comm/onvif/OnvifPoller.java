@@ -26,7 +26,8 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 * This is just a more specific reference to our messenger (which
 	 * happens to be a session) for convenience
 	 */
-	private OnvifSessionMessenger session = (OnvifSessionMessenger) messenger;
+	private OnvifSessionMessenger session =
+		(OnvifSessionMessenger) messenger;
 	private String name;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
@@ -94,8 +95,8 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	}
 
 	/**
-	 * Sets the timeout (see MessagePoller) and the auth credentials
-	 * (see OnvifSessionMessenger).
+	 * Sets the timeout (see MessagePoller) and the auth credentials (see
+	 * OnvifSessionMessenger).
 	 */
 	private void prepAndAddOp(OpOnvif<OnvifProperty> op) {
 		if (session.authNotSet())
