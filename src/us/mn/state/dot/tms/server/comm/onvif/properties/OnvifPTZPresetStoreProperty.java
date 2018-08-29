@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * All iris presets on the device will have names that begin with IRIS Preset
- * operation fails if the device is moving during the preset
+ * All iris presets on the device will have names that begin with "IRIS". Preset
+ * operations fail if the device is moving during the preset.
  *
  * @author Wesley Skillern (Southwest Research Institute)
  */
@@ -49,7 +49,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	}
 
 	@Override
-	public void decodeStore() throws IOException {
+	protected void decodeStore() throws IOException {
 		// null check then:
 		// if we are overwriting, we should get back the same token
 		// if we are creating, we should get any token back

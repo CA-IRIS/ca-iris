@@ -31,8 +31,7 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 	}
 
 	@Override
-	public void decodeStore() throws IOException {
-		super.decodeStore();
+	protected void decodeStore() throws IOException {
 		GotoPresetResponse gotoPresetResponse =
 			(GotoPresetResponse) response;
 		log(gotoPresetResponse.getClass().getSimpleName()

@@ -2,16 +2,15 @@ package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.ControllerProperty;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * A OnvifPoperty knows how to get information required for an OpOnvif and how
- * to send the specific OpOnvif. Usually a ControllerProperty is the encoded
- * message.
+ * An OnvifPoperty knows how to get the information required for an OpOnvif and
+ * how to send the specific OpOnvif. Usually a ControllerProperty is the encoded
+ * message and the sending logic.
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
@@ -25,20 +24,13 @@ public abstract class OnvifProperty extends ControllerProperty {
 		this.session = session;
 	}
 
-	/**
-	 * Encode a store request and send it to the device
-	 */
 	@Override
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		try {
-			log("Preparing operation properties... ");
-			encodeStore();
-			log("Operation properties sent. ");
-		} catch (ServiceNotSupportedException e) {
-			logFailure(e.getMessage());
-		}
+		log("Preparing operation properties... ");
+		encodeStore();
+		log("Operation properties sent. ");
 	}
 
 	@Override
@@ -47,9 +39,24 @@ public abstract class OnvifProperty extends ControllerProperty {
 	{
 		if (response == null)
 			log("No response received from device. ");
-		else
+		else {
+			log("Device responded: " +
+				response.getClass().getSimpleName());
 			decodeStore();
+		}
 	}
+
+	/**
+	 * Send this property to the device. Should set response.
+	 * @throws IOException
+	 */
+	protected abstract void encodeStore() throws IOException;
+
+	/**
+	 * Handle errors or additional checking as needed from response to
+	 * encodeStore().
+	 */
+	protected void decodeStore() throws IOException {}
 
 	/**
 	 * @return val remapped to a new range
@@ -68,21 +75,6 @@ public abstract class OnvifProperty extends ControllerProperty {
 		float oldRange = oldMax - oldMin;
 		float newRange = newMax - newMin;
 		return newRange * (val - oldMin) / oldRange + newMin;
-	}
-
-	/**
-	 * A way of requiring concrete implementations of this class to check
-	 * that the session is initialized before sending a request
-	 */
-	protected abstract void encodeStore() throws IOException;
-
-	/**
-	 * may be overridden by concrete implementations if errors may be
-	 * produced by encodeStore()
-	 */
-	protected void decodeStore() throws IOException {
-		log("Device responded: " +
-			response.getClass().getSimpleName());
 	}
 
 	protected void log(String msg) {

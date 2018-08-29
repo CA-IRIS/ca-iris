@@ -37,21 +37,25 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
+		log("Sending PTZ. ");
 		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session));
 	}
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
+		log("Storing preset. ");
 		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session));
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
+		log("Recalling preset. ");
 		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session));
 	}
 
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
+		log("Requesting " + r + ". ");
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
 			prepAndAddOp(
@@ -76,7 +80,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 			prepAndAddOp(new OpOnvifDevice(c, session, r));
 			break;
 		default:
-			log("Unsupported " + r + ". ");
+			log("Unsupported: " + r + ". ");
 		}
 	}
 
@@ -85,7 +89,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		log("Drop addresses are not valid for Onvif devices. ");
+		log("Drop addresses are invalid for Onvif devices. ");
 		return true;
 	}
 
@@ -123,6 +127,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	}
 
 	private void log(String message) {
+		setStatus(message);
 		session.log(getClass().getSimpleName() + ": " + message);
 	}
 }

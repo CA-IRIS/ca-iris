@@ -2,17 +2,18 @@ package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.DeviceImpl;
-import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
+import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceRebootProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
-import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 
 import java.io.IOException;
 
 /**
+ * An OpOnvifDevice sends OnvifDevice*Properties to the Device Service.
+ *
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OpOnvifDevice extends OpOnvif<OnvifProperty> {

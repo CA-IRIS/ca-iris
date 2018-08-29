@@ -14,6 +14,9 @@ import java.io.IOException;
 /**
  * An OpOnvif contains the logic for interpreting a specific IRIS client UI
  * request and converting it into one or more sequential OnvifProperties.
+ * Sequential parts of the OpOnvif are sent using sequential OnvifPhases. In
+ * the case of other Comms, more than one Property may be sent by an OpDevice,
+ * but in the case of OpOnvifs, only one OnvifProperty is ever sent per OpOnvif.
  *
  * @author Wesley Skillern (Southwest Research Institue)
  */
@@ -49,11 +52,9 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 		// makes sense to encodeStore() and decodeStore() for each
 		// OnvifProperty rather than doing all encodeStores() and
 		// then all decodeStores().
-		protected abstract T selectProperty()
-			throws IOException;
+		protected abstract T selectProperty() throws IOException;
 
-		protected abstract OnvifPhase nextPhase()
-			throws IOException;
+		protected abstract OnvifPhase nextPhase() throws IOException;
 
 		protected OnvifPhase poll(CommMessage<T> mess)
 			throws IOException

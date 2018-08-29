@@ -1,7 +1,6 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.server.DeviceImpl;
-import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
@@ -12,6 +11,9 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import java.io.IOException;
 
 /**
+ * An OpOnvifPTZ sends OnvifPTZ*Properties to the PTZ Service that are
+ * non-standard.
+ *
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {

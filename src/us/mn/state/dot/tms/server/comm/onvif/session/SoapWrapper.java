@@ -22,9 +22,11 @@ public class SoapWrapper {
 		throws SOAPException, JAXBException,
 		ParserConfigurationException
 	{
-		MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+		MessageFactory messageFactory = MessageFactory
+			.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
 		SOAPMessage soapMessage = messageFactory.createMessage();
-		soapMessage.setProperty(SOAPMessage.WRITE_XML_DECLARATION, "true");
+		soapMessage.setProperty(SOAPMessage.WRITE_XML_DECLARATION,
+			"true");
 		Document document = convertToXml(o);
 		createSoapBody(document, soapMessage);
 		return soapMessage;
@@ -34,7 +36,9 @@ public class SoapWrapper {
 	 * @param document the body content to add
 	 * @throws SOAPException malformed soap
 	 */
-	private static void createSoapBody(Document document, SOAPMessage msg) throws SOAPException {
+	private static void createSoapBody(Document document, SOAPMessage msg)
+		throws SOAPException
+	{
 		SOAPPart soapPart = msg.getSOAPPart();
 		SOAPEnvelope envelope = soapPart.getEnvelope();
 		SOAPBody soapBody = envelope.getBody();
@@ -48,7 +52,8 @@ public class SoapWrapper {
 	 * @throws SOAPException malformed soap
 	 * @throws NoSuchAlgorithmException cannot generate password digest
 	 */
-	public static void addAuthHeader(SOAPMessage msg,
+	public static void addAuthHeader(
+		SOAPMessage msg,
 		WSUsernameToken tok)
 		throws NoSuchAlgorithmException, SOAPException
 	{

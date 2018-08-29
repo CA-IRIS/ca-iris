@@ -17,6 +17,7 @@ import java.io.IOException;
 /**
  * A class that makes continuous iris movements from the absolute iris movement
  * interface provided by ONVIF.
+ *
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OnvifImagingIrisMoveProperty extends OnvifProperty {
@@ -68,7 +69,6 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		if (!(response instanceof SetImagingSettingsResponse))
 			throw new IOException("Unexpected response to Iris" +
 				"Move request. ");
-		super.decodeStore();
 		GetImagingSettings getImagingSettings =
 			new GetImagingSettings();
 		getImagingSettings.setVideoSourceToken(

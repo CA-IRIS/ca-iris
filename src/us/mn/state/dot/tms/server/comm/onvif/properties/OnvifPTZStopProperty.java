@@ -18,8 +18,8 @@ public class OnvifPTZStopProperty extends OnvifProperty {
 
 	@Override
 	protected void encodeStore() throws IOException {
-		// All onvif ptz devices must implement stop.
-		// Therefore, if we support the ptz service,
+		// All Onvif PTZ devices must implement stop.
+		// Therefore, if we support the PTZ Service,
 		// we can assume the feature will be present
 		Stop stop = new Stop();
 		stop.setProfileToken(session.getMediaProfileTok());

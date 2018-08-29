@@ -12,6 +12,8 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import java.io.IOException;
 
 /**
+ * An OpOnvifPTZ sends OnvifPTZ*Properties to the PTZ Service.
+ *
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {

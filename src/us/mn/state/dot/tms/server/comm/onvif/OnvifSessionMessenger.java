@@ -34,8 +34,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
- * Caches device authentication session, capabilities, and some constant device
- * information for as long as the Messenger is open.
+ * An OnvifSessionMessenger caches device authentication session, capabilities,
+ * and some constant device information for as long as the it is open.
+ *
  * Typical use:
  * 	1. instantiate this
  * 	2. setAuth()

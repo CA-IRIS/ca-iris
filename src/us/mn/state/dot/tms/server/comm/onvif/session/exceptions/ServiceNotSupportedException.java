@@ -13,8 +13,4 @@ public class ServiceNotSupportedException extends IOException {
 	public ServiceNotSupportedException(OnvifService type) {
 		super("Device does not support " + type + " Service requests. ");
 	}
-
-	public ServiceNotSupportedException(OnvifService type, String reason) {
-		super("Device does not support " + type + " Service requests. Cause: " + reason);
-	}
 }

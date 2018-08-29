@@ -6,7 +6,6 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.AutoFocusMode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ExposureMode;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
@@ -17,6 +16,8 @@ import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import java.io.IOException;
 
 /**
+ * An OpOnvifImaging sends OnvifImaging*Properties to the Imaging Service.
+ *
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
@@ -68,7 +69,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 
 	protected class Adjust extends OnvifPhase {
 		@Override
-		protected OnvifProperty selectProperty() {
+		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty out = null;
 			switch (request) {
 			case CAMERA_FOCUS_NEAR:

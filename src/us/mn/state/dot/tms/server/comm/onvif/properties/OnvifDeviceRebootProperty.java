@@ -24,7 +24,7 @@ public class OnvifDeviceRebootProperty extends OnvifProperty {
 	}
 
 	@Override
-	public void decodeStore() throws IOException {
+	protected void decodeStore() throws IOException {
 		SystemRebootResponse status = (SystemRebootResponse) response;
 		log(status.getClass().getSimpleName() + ": " + status
 			.getMessage());
