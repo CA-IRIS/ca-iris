@@ -27,3 +27,7 @@ SET SESSION AUTHORIZATION 'tms';
 INSERT INTO iris.comm_protocol VALUES (37, 'ONVIF PTZ');
 
 ALTER TABLE iris.controller ADD COLUMN username VARCHAR(16);
+
+UPDATE iris.system_attribute
+    SET value = regexp_replace(value, '10\.3\.\d+.*\s+\[', '10.4.0 [')
+    WHERE NAME = 'window_title';
