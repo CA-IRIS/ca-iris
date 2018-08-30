@@ -11,6 +11,7 @@ import java.io.IOException;
  */
 public class ServiceNotSupportedException extends IOException {
 	public ServiceNotSupportedException(OnvifService type) {
-		super("Device does not support " + type + " Service requests. ");
+		super("Device does not support " + type + " Service requests." +
+			" ");
 	}
 }

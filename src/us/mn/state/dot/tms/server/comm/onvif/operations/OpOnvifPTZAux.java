@@ -27,7 +27,6 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	/**
 	 * More Auxiliary commands may be supported in the future, but wiper is
 	 * all that the UI supports for now.
-	 *
 	 */
 	@Override
 	protected OnvifPhase phaseTwo() {

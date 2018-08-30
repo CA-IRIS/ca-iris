@@ -53,7 +53,8 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 	protected class Store extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			return new OnvifPTZPresetStoreProperty(session, preset);
+			return new OnvifPTZPresetStoreProperty(session,
+				preset);
 		}
 
 		@Override

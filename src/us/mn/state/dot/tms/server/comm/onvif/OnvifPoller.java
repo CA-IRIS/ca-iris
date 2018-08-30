@@ -9,7 +9,11 @@ import us.mn.state.dot.tms.server.CommLinkImpl;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.CameraPoller;
 import us.mn.state.dot.tms.server.comm.TransientPoller;
-import us.mn.state.dot.tms.server.comm.onvif.operations.*;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifDevice;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifImaging;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZ;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZAux;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZPreset;
 
 import java.util.LinkedList;
 

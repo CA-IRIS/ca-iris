@@ -65,7 +65,8 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 				"preset, but response preset token did not " +
 				"match found preset token. ");
 			throw new IOException(
-				"Unexpected response to store preset request." +
+				"Unexpected response to store preset request" +
+					"." +
 					" ");
 		}
 		log("Preset overwritten for number: " + preset);

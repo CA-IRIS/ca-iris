@@ -44,7 +44,8 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 			case RESET_DEVICE:
 				return new OnvifDeviceRebootProperty(session);
 			default:
-				throw new IOException("Unsupported: " + request);
+				throw new IOException(
+					"Unsupported: " + request);
 			}
 		}
 

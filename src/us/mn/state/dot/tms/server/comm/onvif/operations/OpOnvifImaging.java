@@ -47,8 +47,8 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	}
 
 	/**
-	 * Some manufacturers will ignore manual iris adjustments if
-	 * the device is currently in auto mode.
+	 * Some manufacturers will ignore manual iris adjustments if the device
+	 * is currently in auto mode.
 	 */
 	protected class IrisModeCheck extends OnvifPhase {
 		@Override
@@ -73,23 +73,28 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			OnvifProperty out = null;
 			switch (request) {
 			case CAMERA_FOCUS_NEAR:
-				out = new OnvifImagingFocusMoveProperty(session,
+				out =
+					new OnvifImagingFocusMoveProperty(session,
 					-0.1f);
 				break;
 			case CAMERA_FOCUS_FAR:
-				out = new OnvifImagingFocusMoveProperty(session,
+				out =
+					new OnvifImagingFocusMoveProperty(session,
 					0.1f);
 				break;
 			case CAMERA_FOCUS_STOP:
-				out = new OnvifImagingFocusMoveProperty(session,
+				out =
+					new OnvifImagingFocusMoveProperty(session,
 					0f);
 				break;
 			case CAMERA_FOCUS_MANUAL:
-				out = new OnvifImagingFocusAutoProperty(session,
+				out =
+					new OnvifImagingFocusAutoProperty(session,
 					false);
 				break;
 			case CAMERA_FOCUS_AUTO:
-				out = new OnvifImagingFocusAutoProperty(session,
+				out =
+					new OnvifImagingFocusAutoProperty(session,
 					true);
 				break;
 			case CAMERA_IRIS_CLOSE:

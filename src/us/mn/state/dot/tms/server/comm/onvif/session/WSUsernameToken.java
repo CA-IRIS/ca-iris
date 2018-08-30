@@ -10,15 +10,9 @@ import java.util.Random;
 
 /**
  * The logic for WSUsernameToken session authentication.
- *
- * The intended flow of control:
- * 	1. instantiate this
- * 	2. getUsername()
- * 	3. getPasswordDigest()
- * 	4. getEncodedNonce()
- * 	5. getUTCTime() // requires previous corresponding gePasswordDigest()
- *
- *
+ * The intended flow of control: 1. instantiate this 2. getUsername() 3.
+ * getPasswordDigest() 4. getEncodedNonce() 5. getUTCTime() // requires previous
+ * corresponding gePasswordDigest()
  * http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext
  * -1.0.xsd http://docs.oasis-open
  * .org/wss/2004/01/oasis-200401-wss-wssecurity-utility
