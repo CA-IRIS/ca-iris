@@ -211,10 +211,6 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 		findDevices();
 	}
 
-	public String getDevSearch() {
-		return dev_search;
-	}
-
 	/** Get a proxy comparator */
 	@Override
 	protected Comparator<Controller> comparator() {
