@@ -14,7 +14,13 @@
  */
 package us.mn.state.dot.tms.client.comm;
 
-import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.Beacon;
+import us.mn.state.dot.tms.CommLink;
+import us.mn.state.dot.tms.Controller;
+import us.mn.state.dot.tms.ControllerHelper;
+import us.mn.state.dot.tms.ControllerIO;
+import us.mn.state.dot.tms.CtrlCondition;
+import us.mn.state.dot.tms.GeoLocHelper;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType;
@@ -26,8 +32,15 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Beacon_Verify;
 

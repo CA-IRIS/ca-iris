@@ -6,8 +6,18 @@ import us.mn.state.dot.tms.client.SonarState;
 
 import java.util.Iterator;
 
-import static us.mn.state.dot.tms.client.comm.ControllerIOModel.*;
-import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.*;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Alarm;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Beacon;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Camera;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.DMS;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Detector;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Gate_Arm;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.LCSIndication;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Lane_Marking;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Ramp_Meter;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Tag_Reader;
+import static us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType.Weather_Sensor;
 
 /**
  * A class used for iterating over all devices for the state.

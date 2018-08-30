@@ -19,15 +19,23 @@ import us.mn.state.dot.tms.Controller;
 import us.mn.state.dot.tms.ControllerIO;
 import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType;
+import us.mn.state.dot.tms.client.proxy.ProxyTablePanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.ILabel;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-import static java.awt.event.KeyEvent.*;
+import static java.awt.event.KeyEvent.VK_DOWN;
+import static java.awt.event.KeyEvent.VK_ENTER;
+import static java.awt.event.KeyEvent.VK_LEFT;
+import static java.awt.event.KeyEvent.VK_RIGHT;
+import static java.awt.event.KeyEvent.VK_UP;
 import static us.mn.state.dot.tms.client.comm.ControllerIOModel.IO_TYPE;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
