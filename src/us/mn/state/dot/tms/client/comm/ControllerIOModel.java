@@ -68,7 +68,7 @@ public class ControllerIOModel extends AbstractTableModel {
 	static private final int COL_DEVICE = 2;
 
 	/** Device types which can be associated with controller IO */
-	enum DeviceType {
+	public enum DeviceType {
 		Alarm, Camera, Detector, DMS, Gate_Arm, Lane_Marking,
 		LCSIndication, Ramp_Meter, Beacon, Beacon_Verify,
 		Weather_Sensor, Tag_Reader
@@ -94,7 +94,7 @@ public class ControllerIOModel extends AbstractTableModel {
 	}
 
 	/** Get the type of the specified ControllerIO device */
-	static DeviceType getType(ControllerIO cio) {
+	static private DeviceType getType(ControllerIO cio) {
 		if (cio instanceof Alarm)
 			return DeviceType.Alarm;
 		else if (cio instanceof Camera)

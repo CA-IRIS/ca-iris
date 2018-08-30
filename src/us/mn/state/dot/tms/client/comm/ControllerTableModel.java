@@ -21,6 +21,7 @@ import us.mn.state.dot.tms.ControllerHelper;
 import us.mn.state.dot.tms.ControllerIO;
 import us.mn.state.dot.tms.CtrlCondition;
 import us.mn.state.dot.tms.GeoLocHelper;
+import us.mn.state.dot.tms.client.DeviceIterator;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.SonarState;
 import us.mn.state.dot.tms.client.comm.ControllerIOModel.DeviceType;

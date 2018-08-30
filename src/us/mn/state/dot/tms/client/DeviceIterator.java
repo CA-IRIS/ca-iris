@@ -1,8 +1,7 @@
-package us.mn.state.dot.tms.client.comm;
+package us.mn.state.dot.tms.client;
 
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.ControllerIO;
-import us.mn.state.dot.tms.client.SonarState;
 
 import java.util.Iterator;
 
@@ -35,6 +34,9 @@ public class DeviceIterator implements Iterator<ControllerIO> {
 		nextIterator();
 	}
 
+	/**
+	 * @param type restricts iterated type to single type
+	 */
 	public DeviceIterator(SonarState state, DeviceType type) {
 		singleType = true;
 		this.state = state;
