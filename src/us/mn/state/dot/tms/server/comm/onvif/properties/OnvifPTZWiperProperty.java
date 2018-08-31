@@ -5,8 +5,12 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommand;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommandResponse;
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
+import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author Wesley Skillern (Southwest Research Institute)
@@ -45,22 +49,23 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 			doneMsg = "Wiping";
 	}
 
-	private SendAuxiliaryCommand findSupportedCmd() throws IOException {
+	private SendAuxiliaryCommand findSupportedCmd()
+		throws SessionNotStartedException, SoapTransmissionException,
+		ServiceNotSupportedException, OperationNotSupportedException
+	{
+		List<String> strCmds = session.getNodes().get(0)
+			.getAuxiliaryCommands();
 		return switchOn ?
-			initCmd(matchAny(
-				(String[]) session.getNodes().get(0)
-					.getAuxiliaryCommands().toArray(),
-				WIPER_ON))
-			: initCmd(matchAny(
-			(String[]) session.getNodes().get(0)
-				.getAuxiliaryCommands().toArray(),
-			WIPER_OFF));
+			initCmd(matchAny(strCmds, WIPER_ON))
+			: initCmd(matchAny(strCmds, WIPER_OFF));
 	}
 
 	/**
 	 * @return a initialized AuxiliaryCommand if the param is not null
 	 */
-	private SendAuxiliaryCommand initCmd(String param) throws IOException {
+	private SendAuxiliaryCommand initCmd(String param)
+		throws SessionNotStartedException
+	{
 		SendAuxiliaryCommand cmd = null;
 		if (param != null) {
 			cmd = new SendAuxiliaryCommand();
@@ -74,7 +79,7 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	 * @return the last String in reference that matches any String in
 	 * 	findAny (null if none found)
 	 */
-	private String matchAny(String[] reference, String[] findAny) {
+	private String matchAny(List<String> reference, String[] findAny) {
 		String match = null;
 		if (reference != null && findAny != null) {
 			for (String s : reference) {

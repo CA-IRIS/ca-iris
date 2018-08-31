@@ -5,6 +5,8 @@ import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformation;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTime;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTimeResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfiles;
@@ -136,12 +138,26 @@ public class OnvifSessionMessenger extends Messenger {
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
+			logDeviceInfo();
 		} catch (SoapTransmissionException e) {
 			log("Failed to start session" + e.getMessage(), this);
 			close();
 			throw e;
 		}
 		log("Session started", this);
+	}
+
+	private void logDeviceInfo() throws SoapTransmissionException {
+		GetDeviceInformationResponse response =
+			(GetDeviceInformationResponse)
+				makeRequest(new GetDeviceInformation(),
+				GetDeviceInformationResponse.class);
+		log("{\n" +
+			"\tManufacturer: " + response.getManufacturer() + "\n" +
+			"\tModel: " + response.getModel() + "\n" +
+			"\tFirmware version: " + response.getFirmwareVersion() + "\n" +
+			"\tSerial number: " + response.getSerialNumber() + "\n" +
+			"}", this);
 	}
 
 	@Override

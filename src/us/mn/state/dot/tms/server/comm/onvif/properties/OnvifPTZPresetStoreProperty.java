@@ -57,7 +57,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	protected void decodeStore() throws IOException {
 		// null check then:
 		// if we are overwriting, we should get back the same token
-		// if we are creating, we should get any token back
+		// if we are creating, we should get any new token back
 		SetPresetResponse setPresetResponse =
 			(SetPresetResponse) response;
 		if (setPresetResponse.getPresetToken() == null
@@ -71,8 +71,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 				"match found preset token. ");
 			throw new IOException(
 				"Unexpected response to store preset request" +
-					"." +
-					" ");
+					". ");
 		}
 		log("Set preset for number: " + preset);
 
