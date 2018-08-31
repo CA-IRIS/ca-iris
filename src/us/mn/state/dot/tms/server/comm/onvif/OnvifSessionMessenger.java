@@ -55,7 +55,7 @@ import java.util.List;
 
 /**
  * An OnvifSessionMessenger caches device authentication session, capabilities,
- * and some constant device information for as long as the it is open.
+ * and some constant device information for as long as it is open.
  *
  * Typical use:
  * 	1. instantiate this
