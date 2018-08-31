@@ -7,6 +7,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Im
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
@@ -29,8 +30,8 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsAutoIris())
-			logFailure("Camera does not support " + (enable ?
-				"auto" : "manual") + " iris requests. ");
+			throw new OperationNotSupportedException(
+				(enable ? "Auto" : "Manual") + "Iris");
 		setAutoIrisMode();
 	}
 

@@ -8,6 +8,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.w
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 
@@ -27,10 +28,10 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		ImagingSettings20 settings = getImagingSettings();
-		if (!supportsAutoFocusMode(settings))
-			logFailure(
-				"Device does not support auto focus mode " +
-					"change. ");
+		if (!supportsAutoFocusMode(settings)) {
+			throw new OperationNotSupportedException(
+				(enable ? "Auto" : "Manual") + "Focus");
+		}
 		setAutoFocusMode(settings);
 	}
 

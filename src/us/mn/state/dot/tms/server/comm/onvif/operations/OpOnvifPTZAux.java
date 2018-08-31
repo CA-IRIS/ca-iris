@@ -45,6 +45,19 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
+			// Onvif does not have the idea of a wiper one shot;
+			// in fact, it barely has a wiper command at all.
+			// This one second delay is the best attempt at a one
+			// shot.
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				log("Pause between wiper on " +
+					"and wiper off was " +
+					"interrupted. Wiper " +
+					"operation may not " +
+					"have completed correctly. ");
+			}
 			return new WiperOff();
 		}
 	}

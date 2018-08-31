@@ -9,6 +9,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Ve
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Vector2D;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.ContinuousMove;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.ContinuousMoveResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 
@@ -34,10 +35,13 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsContinuousPTZMove())
-			logFailure("ContinuousPTZMove not supported. ");
+			throw new OperationNotSupportedException(
+				"ContinuousPTZMove");
 		else {
 			resizeInputs();
 			continuousMove(createPTZSpeed());
+			if (pan != 0 || tilt != 0 || zoom != 0)
+				doneMsg = "PTZMoving";
 		}
 	}
 

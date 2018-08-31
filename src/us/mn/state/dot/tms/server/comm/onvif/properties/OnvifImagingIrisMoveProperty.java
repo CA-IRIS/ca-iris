@@ -8,6 +8,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.w
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
@@ -44,10 +45,11 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsIrisMove())
-			logFailure("Device does not support Iris Move. ");
+			throw new OperationNotSupportedException("IrisMove");
 		switch (req) {
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
+			doneMsg = "IrisMoving";
 			stepIris();
 			break;
 		case CAMERA_IRIS_STOP:
@@ -56,7 +58,8 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 				" ");
 			break;
 		default:
-			logFailure("Unexpected: " + req);
+			throw new IllegalArgumentException(
+				"Unexpected: " + req);
 		}
 	}
 

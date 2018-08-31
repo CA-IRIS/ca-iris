@@ -4,6 +4,8 @@ import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
@@ -46,8 +48,8 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 		// make sense to queue them in the CommMessageImpl.
 		// Furthermore, bypassing the usual add() and storeProps() of
 		// the CommMessageImpl allows bypassing the null
-		// checking on the input and output streams of the Messenger,
-		// because we don't use them directly for blocking soap calls.
+		// checking on the input and output streams of the Messenger.
+		// We don't use the streams directly for blocking soap calls.
 		// Furthermore, most OnvifProperties have a response, so it
 		// makes sense to encodeStore() and decodeStore() for each
 		// OnvifProperty rather than doing all encodeStores() and
@@ -60,21 +62,35 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 			throws IOException
 		{
 			try {
-				log("Preparing for operation... ");
+				log("Preparing for operation");
 				session.selectService(service);
 				T prop = selectProperty();
+				OnvifPhase onvifPhase = null;
 				if (prop != null) {
 					mess.logStore(prop);
 					prop.encodeStore(null, null);
 					prop.decodeStore(null, null);
+					session.setStatus(prop.getDoneMsg());
+					if ((onvifPhase = nextPhase()) == null)
+						session.setStatus(prop.getDoneMsg());
 				}
-				return nextPhase();
-			} catch (SoapTransmissionException
-				| SessionNotStartedException
-				| ServiceNotSupportedException e) {
+				return onvifPhase;
+			} catch (ServiceNotSupportedException
+				| OperationNotSupportedException
+				| OperationFailedException e) {
 				setFailed();
 				log(e.getMessage());
-				throw new IOException(e.getMessage());
+				session.setStatus(e.getMessage());
+				return null;
+			} catch (SessionNotStartedException
+				| SoapTransmissionException e) {
+				setFailed();
+				log(e.getMessage());
+				e.printStackTrace();
+				session.setStatus(e.getMessage());
+				// when we leak an exception from here, the
+				// MessagePoller will open() our Messenger again.
+				throw e;
 			} finally {
 				log("Operation " + (isSuccess() ?
 					"succeeded" :
@@ -83,13 +99,7 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 		}
 	}
 
-	protected void updateOpStatus(String stat) {
-		String s = getOperationDescription() + ": " + stat;
-		device.setOpStatus(s);
-	}
-
 	protected void log(String msg) {
-		updateOpStatus(msg);
-		session.log(getOpName() + ": " + msg);
+		session.log(msg, this);
 	}
 }

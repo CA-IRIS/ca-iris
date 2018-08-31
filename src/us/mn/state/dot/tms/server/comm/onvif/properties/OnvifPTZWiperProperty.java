@@ -4,6 +4,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommand;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SendAuxiliaryCommandResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 
@@ -32,29 +33,16 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 		// ensure that the device supports wiper auxiliary command
 		SendAuxiliaryCommand supportedCmd = findSupportedCmd();
 		if (supportedCmd == null)
-			logFailure("Wiper command not supported. ");
+			throw new OperationNotSupportedException("Wiper");
 		else
 			doWiper(supportedCmd);
 	}
 
 	private void doWiper(SendAuxiliaryCommand cmd) throws IOException {
-		// Onvif does not have the idea of a wiper one shot;
-		// in fact, it barely has a wiper command at all.
-		// This one second delay is the best attempt at a one
-		// shot.
-		if (!switchOn) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				log("Pause between wiper on " +
-					"and wiper off was " +
-					"interrupted. Wiper " +
-					"operation may not " +
-					"have completed correctly. ");
-			}
-		}
 		response = session.makeRequest(cmd,
 			SendAuxiliaryCommandResponse.class);
+		if (switchOn)
+			doneMsg = "Wiping";
 	}
 
 	private SendAuxiliaryCommand findSupportedCmd() throws IOException {

@@ -3,6 +3,8 @@ package us.mn.state.dot.tms.server.comm.onvif.properties;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GotoPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GotoPresetResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 
@@ -19,13 +21,13 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsPresets())
-			logFailure("Presets not supported. ");
+			throw new OperationNotSupportedException("RecallPreset");
 		else {
 			String token;
 			token = findPresetToken(preset, getPresets());
 			if (token == null)
-				throw new IOException(
-					"Could not find preset. ");
+				throw new OperationFailedException(
+					"PresetNotFound");
 			goToPreset(token);
 		}
 	}
@@ -36,7 +38,6 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 			(GotoPresetResponse) response;
 		log(gotoPresetResponse.getClass().getSimpleName()
 			+ ": Went to preset: " + preset);
-
 	}
 
 	/**

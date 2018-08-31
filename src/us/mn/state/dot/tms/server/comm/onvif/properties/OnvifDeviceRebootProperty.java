@@ -28,5 +28,7 @@ public class OnvifDeviceRebootProperty extends OnvifProperty {
 		SystemRebootResponse status = (SystemRebootResponse) response;
 		log(status.getClass().getSimpleName() + ": " + status
 			.getMessage());
+		doneMsg = status.getMessage();
+		session.close();
 	}
 }

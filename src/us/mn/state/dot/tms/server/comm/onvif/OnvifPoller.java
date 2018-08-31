@@ -37,37 +37,33 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
 		this.name = name;
-		log("Created " + this.name + ". ");
+		log("Created " + this.name);
 	}
 
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		log("Sending PTZ. ");
-		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session));
+		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session), c);
 	}
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
-		log("Storing preset. ");
-		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session));
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session), c);
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
-		log("Recalling preset. ");
-		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session));
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session), c);
 	}
 
 	@Override
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
-		log("Requesting " + r + ". ");
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
 			prepAndAddOp(
-				new OpOnvifPTZ(c, 0, 0, 0, session));
+				new OpOnvifPTZ(c, 0, 0, 0, session), c);
 			break;
 		case CAMERA_WIPER_ONESHOT:
-			prepAndAddOp(new OpOnvifPTZAux(c, session));
+			prepAndAddOp(new OpOnvifPTZAux(c, session), c);
 			break;
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
@@ -79,10 +75,11 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_STOP:
 		case CAMERA_IRIS_MANUAL:
 		case CAMERA_IRIS_AUTO:
-			prepAndAddOp(new OpOnvifImaging(c, session, r));
+			prepAndAddOp(new OpOnvifImaging(c, session, r), c);
 			break;
 		case RESET_DEVICE:
-			prepAndAddOp(new OpOnvifDevice(c, session, r));
+		case NO_REQUEST:
+			prepAndAddOp(new OpOnvifDevice(c, session, r), c);
 			break;
 		default:
 			log("Unsupported: " + r + ". ");
@@ -94,7 +91,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		log("Drop addresses are invalid for Onvif devices. ");
+		log("Drop addresses are invalid for Onvif devices");
 		return true;
 	}
 
@@ -102,7 +99,8 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 * Sets the timeout (see MessagePoller) and the auth credentials (see
 	 * OnvifSessionMessenger).
 	 */
-	private void prepAndAddOp(OpOnvif<OnvifProperty> op) {
+	private void prepAndAddOp(OpOnvif<OnvifProperty> op, CameraImpl ci) {
+		session.setCamera(ci);
 		if (session.authNotSet())
 			applyAuthCredentials();
 		setIdleSecs(session.getTimeout());
@@ -113,11 +111,11 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		CommLink cl = CommLinkHelper.lookup(name);
 		ControllerImpl c = null;
 		if (cl == null)
-			log("Failed to find CommLink for" + name + ". ");
+			log("Failed to find CommLink for" + name);
 		else
 			c = getControllerImpl((CommLinkImpl) cl);
 		if (c == null)
-			log("Failed to find Controller for " + name + ". ");
+			log("Failed to find Controller for " + name);
 		else
 			session.setAuth(c.getUsername(), c.getPassword());
 	}
@@ -132,7 +130,6 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	}
 
 	private void log(String message) {
-		setStatus(message);
-		session.log(getClass().getSimpleName() + ": " + message);
+		session.log(message, this);
 	}
 }

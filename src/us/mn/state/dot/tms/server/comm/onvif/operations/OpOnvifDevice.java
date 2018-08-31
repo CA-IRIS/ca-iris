@@ -6,6 +6,7 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceInfoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceRebootProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
@@ -28,25 +29,27 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 		request = r;
 	}
 
-	/**
-	 * More Device commands may be supported in the future, but Reboot is
-	 * all the UI supports for now.
-	 */
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new Reboot();
+		return new Device();
 	}
 
-	protected class Reboot extends OnvifPhase {
+	protected class Device extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
+			OnvifProperty rv;
 			switch (request) {
+			case NO_REQUEST:
+				rv = new OnvifDeviceInfoProperty(session);
+				break;
 			case RESET_DEVICE:
-				return new OnvifDeviceRebootProperty(session);
+				 rv = new OnvifDeviceRebootProperty(session);
+				 break;
 			default:
 				throw new IOException(
 					"Unsupported: " + request);
 			}
+			return rv;
 		}
 
 		@Override

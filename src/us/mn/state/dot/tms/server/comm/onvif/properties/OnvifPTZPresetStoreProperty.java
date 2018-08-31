@@ -4,6 +4,8 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +28,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsPresets())
-			logFailure("Presets not supported. ");
+			throw new OperationNotSupportedException("StorePreset");
 		else {
 			List<PTZPreset> presets;
 			presets = getPresets();
@@ -35,8 +37,8 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 				setPreset(preset, presetToken);
 			else if (hasRoomForAnotherPreset())
 				setPreset(preset, null);
-			else throw new IOException(
-					"Device does not have room " +
+			else {
+				log("Device does not have room " +
 						"for" +
 						" more presets. Try " +
 						"using the device's " +
@@ -45,6 +47,9 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 						"non-IRIS presets, or " +
 						"overwrite a lower " +
 						"numbered preset. ");
+				throw new OperationFailedException(
+					"NoMoreRoomForPresets");
+			}
 		}
 	}
 
@@ -69,7 +74,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 					"." +
 					" ");
 		}
-		log("Preset overwritten for number: " + preset);
+		log("Set preset for number: " + preset);
 
 	}
 

@@ -9,9 +9,9 @@ import java.io.IOException;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class SessionNotStartedException extends IOException {
-	private static String NOT_INITIALIZED = "Session not started. ";
+	private static String NOT_INITIALIZED = "FailedToConnect";
 
 	public SessionNotStartedException(String cause) {
-		super(NOT_INITIALIZED + cause);
+		super(NOT_INITIALIZED + ": " + cause);
 	}
 }

@@ -6,6 +6,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Co
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.FocusMove;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.Move;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.MoveResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
 
@@ -31,13 +32,15 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 	@Override
 	protected void encodeStore() throws IOException {
 		if (!supportsFocusMove())
-			logFailure("Device does not support Focus Move. ");
+			throw new OperationNotSupportedException("FocusMove");
 		float newMin = session.getImagingMoveOptions().getContinuous()
 			.getSpeed().getMin();
 		float newMax = session.getImagingMoveOptions().getContinuous()
 			.getSpeed().getMax();
 		continuousFocus(
 			resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax));
+		if (speed != 0)
+			doneMsg = "FocusMoving";
 	}
 
 	private boolean supportsFocusMove() throws IOException {

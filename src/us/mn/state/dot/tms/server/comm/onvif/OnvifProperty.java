@@ -20,6 +20,9 @@ public abstract class OnvifProperty extends ControllerProperty {
 	/** any response to the call to the Service */
 	protected Object response;
 
+	/** message to display after decodeStore() */
+	protected String doneMsg = "Ready";
+
 	protected OnvifProperty(OnvifSessionMessenger session) {
 		this.session = session;
 	}
@@ -28,9 +31,9 @@ public abstract class OnvifProperty extends ControllerProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		log("Preparing operation properties... ");
+		log("Preparing operation properties");
 		encodeStore();
-		log("Operation properties sent. ");
+		log("Operation properties sent");
 	}
 
 	@Override
@@ -38,12 +41,16 @@ public abstract class OnvifProperty extends ControllerProperty {
 		throws IOException
 	{
 		if (response == null)
-			log("No response received from device. ");
+			log("No response received from device");
 		else {
 			log("Device responded: " +
 				response.getClass().getSimpleName());
 			decodeStore();
 		}
+	}
+
+	public String getDoneMsg() {
+		return doneMsg;
 	}
 
 	/**
@@ -78,12 +85,6 @@ public abstract class OnvifProperty extends ControllerProperty {
 	}
 
 	protected void log(String msg) {
-		session.log(getClass().getSimpleName() + ": " + msg);
-	}
-
-	protected void logFailure(String msg) throws IOException {
-		String m = getClass().getSimpleName() + ": " + msg;
-		session.log(m);
-		throw new IOException(m);
+		session.log(msg, this);
 	}
 }

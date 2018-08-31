@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.server.CameraImpl;
 import us.mn.state.dot.tms.server.comm.Messenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
@@ -56,7 +57,8 @@ import java.util.List;
  *
  * Typical use:
  * 	1. instantiate this
- * 	2. setAuth()
+ *  	2. setCamera()	// required to display messages to client
+ * 	3. setAuth()
  * 	3. open() // requires setAuth()
  * 	4. selectService)() // requires open()
  * 	5. makeRequest() // requires selectService() if making call to different
@@ -99,6 +101,9 @@ public class OnvifSessionMessenger extends Messenger {
 	private ImagingSettings20 imagingSettings;
 	private MoveOptions20 imagingMoveOptions;
 
+	// we hold onto a camera to centralize status reporting
+	private CameraImpl camera;
+
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
 	 * 	the port (always 80) and DEVICE_SERVICE_PATH path.
@@ -120,24 +125,28 @@ public class OnvifSessionMessenger extends Messenger {
 		auth = new WSUsernameToken(username, password);
 	}
 
+	public void setCamera(CameraImpl c) {
+		this.camera = c;
+	}
+
 	@Override
 	public void open() throws IOException {
-		log("Starting session... ");
+		log("Starting session", this);
 		try {
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
 		} catch (SoapTransmissionException e) {
-			log("Failed to start session. " + e.getMessage());
+			log("Failed to start session" + e.getMessage(), this);
 			close();
 			throw e;
 		}
-		log("Session started. ");
+		log("Session started", this);
 	}
 
 	@Override
 	public void close() {
-		log("Closing session... ");
+		log("Closing session", this);
 		auth = null;
 		capabilities = null;
 		mediaProfiles = null;
@@ -146,7 +155,8 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingMoveOptions = null;
 		imagingSettings = null;
 		imagingOptions = null;
-		log("Session closed. ");
+		setStatus("Closed");
+		log("Session closed", this);
 	}
 
 	@Override
@@ -281,6 +291,7 @@ public class OnvifSessionMessenger extends Messenger {
 	public Object makeRequest(Object request, Class<?> responseClass)
 		throws SoapTransmissionException
 	{
+		setStatus(request.getClass().getSimpleName() + "Request");
 		try {
 			SOAPMessage soap = SoapWrapper.newMessage(request);
 			SoapWrapper.addAuthHeader(soap, auth);
@@ -301,13 +312,16 @@ public class OnvifSessionMessenger extends Messenger {
 			logSoap("Response SOAPMessage", request.getClass(),
 				responseClass,
 				response);
-			return SoapWrapper
+			Object out = SoapWrapper
 				.convertToObject(response, responseClass);
+			setStatus(request.getClass().getSimpleName());
+			return out;
 		} catch (JAXBException
 			| ParserConfigurationException
 			| NoSuchAlgorithmException e) {
 			System.err.println(
 				"Unable to make request: " + e.getMessage());
+			log(e.getMessage(), this);
 			throw new SoapTransmissionException(e);
 		} catch (SOAPException e) {
 			int err = parseSoapErrStatus(e);
@@ -570,9 +584,15 @@ public class OnvifSessionMessenger extends Messenger {
 		return capabilities.getImaging().getXAddr();
 	}
 
-	public void log(String msg) {
+	public void log(String msg, Object reporter) {
 		ONVIF_SESSION_LOG
-			.log("<" + deviceServiceUri.getHost() + "> " + msg);
+			.log("<" + deviceServiceUri.getHost() + "> "
+			+ reporter.getClass().getSimpleName() +  ": " + msg);
+	}
+
+	public void setStatus(String msg) {
+		if (camera != null)
+			camera.setOpStatus(msg);
 	}
 
 	/**
