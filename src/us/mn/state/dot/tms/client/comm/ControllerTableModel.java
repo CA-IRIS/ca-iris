@@ -208,7 +208,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 
 	/** Set the ControllerIO name filter String */
 	public void setDeviceSearch(String s) {
-		dev_search = s.trim();
+		dev_search = s == null ? null : s.trim().toLowerCase();
 		findDevices();
 	}
 
@@ -444,8 +444,7 @@ public class ControllerTableModel extends ProxyTableModel<Controller> {
 	private boolean nameMatch(ControllerIO cio) {
 		return dev_search == null
 			|| dev_search.isEmpty()
-			|| cio.getName().toLowerCase().contains(
-			dev_search.toLowerCase());
+			|| cio.getName().toLowerCase().contains(dev_search);
 	}
 
 	/**

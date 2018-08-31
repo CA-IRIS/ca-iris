@@ -25,6 +25,7 @@ import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.ILabel;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -46,6 +47,32 @@ import static us.mn.state.dot.tms.client.widget.Widgets.UI;
  * @author Wesley Skillern (Southwest Research Institute)
  */
 public class ControllerPanel extends ProxyTablePanel<Controller> {
+
+	private static final Color COLOR_FILTERED = Color.BLUE;
+	private static final Color COLOR_UNFILTERED = Color.BLACK;
+
+	/**
+	 * Set the color of the filter label when filtered.
+	 */
+	private void indicateFiltered(boolean filtered, ILabel lbl) {
+		lbl.setForeground(filtered ? COLOR_FILTERED : COLOR_UNFILTERED);
+	}
+
+	/**
+	 * clear filters when the user clicks create
+	 */
+	@Override
+	protected void createObject() {
+		super.createObject();
+		clearFilters();
+	}
+
+	private void clearFilters() {
+		cond_cbx.setSelectedItem(null);
+		comm_cbx.setSelectedItem(null);
+		dev_cbx.setSelectedItem(null);
+		dev_type_cbx.setSelectedItem(null);
+	}
 
 	/** Condition filter label */
 	private final ILabel cond_lbl = new ILabel(
@@ -99,7 +126,6 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 				setDeviceType((DeviceType) v);
 			else
 				setDeviceType(null);
-			updateDeviceList();
 		}
 	};
 
@@ -242,6 +268,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setCondition(c);
 			updateSortFilter();
+			indicateFiltered(c != null, cond_lbl);
 		}
 	}
 
@@ -251,6 +278,7 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setCommState(cs);
 			updateSortFilter();
+			indicateFiltered(cs != null, comm_lbl);
 		}
 	}
 
@@ -260,6 +288,8 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setDeviceType(d);
 			updateSortFilter();
+			updateDeviceList();
+			indicateFiltered(d != null, dev_type_label);
 		}
 	}
 
@@ -269,6 +299,8 @@ public class ControllerPanel extends ProxyTablePanel<Controller> {
 			ControllerTableModel mdl = (ControllerTableModel)model;
 			mdl.setDeviceSearch(s);
 			updateSortFilter();
+			indicateFiltered(s != null && !s.isEmpty(),
+				dev_label);
 		}
 	}
 }
