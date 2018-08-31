@@ -83,7 +83,8 @@ public class SiteDataHelperClient extends SiteDataHelper {
 		@Override
 		public void proxyRemoved(final GeoLoc proxy) {
 			SiteData sd = lookupByGeoLoc(proxy.getName());
-			sd.destroy();
+			if (sd != null)
+				sd.destroy();
 		}
 
 		@Override
