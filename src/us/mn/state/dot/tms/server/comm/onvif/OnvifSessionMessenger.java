@@ -59,7 +59,7 @@ import java.util.List;
  *
  * Typical use:
  * 	1. instantiate this
- *  	2. setCamera()	// required to display messages to client
+ *  	2. setCamera() // required to display messages to client
  * 	3. setAuth()
  * 	3. open() // requires setAuth()
  * 	4. selectService)() // requires open()

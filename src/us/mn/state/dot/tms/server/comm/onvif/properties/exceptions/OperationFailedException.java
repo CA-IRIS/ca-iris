@@ -3,7 +3,8 @@ package us.mn.state.dot.tms.server.comm.onvif.properties.exceptions;
 import java.io.IOException;
 
 /**
- * Thrown when an operation fails.
+ * Thrown when the response from the Camera to an OnvifProperty's request
+ * indicates that the Camera failed to successfully perform the request.
  *
  * @author Wesley Skillern (Southwest Research Institute)
  */
