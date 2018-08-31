@@ -113,6 +113,7 @@ public class OnvifSessionMessenger extends Messenger {
 	 */
 	public OnvifSessionMessenger(String uri) throws IOException {
 		deviceServiceUri = normalizeDevServUri(uri);
+		currentUri = deviceServiceUri.toString();
 	}
 
 	/**
@@ -337,6 +338,7 @@ public class OnvifSessionMessenger extends Messenger {
 			| NoSuchAlgorithmException e) {
 			System.err.println(
 				"Unable to make request: " + e.getMessage());
+			e.printStackTrace();
 			log(e.getMessage(), this);
 			throw new SoapTransmissionException(e);
 		} catch (SOAPException e) {
@@ -344,6 +346,8 @@ public class OnvifSessionMessenger extends Messenger {
 			if (err >= 400 && err <= 403)
 				throw new SoapTransmissionException(
 					"Bad username or password. ", e);
+			else
+				e.printStackTrace();
 			throw new SoapTransmissionException(e);
 		}
 	}
@@ -364,6 +368,7 @@ public class OnvifSessionMessenger extends Messenger {
 		try {
 			status = Integer.parseInt(statusStr);
 		} catch (NumberFormatException e1) {
+			e.printStackTrace();
 			throw new SoapTransmissionException(e);
 		}
 		return status;
@@ -378,6 +383,8 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @throws IllegalArgumentException if the currentUri is malformed
 	 */
 	private URL normalizeDevServUri(String uri) throws IOException {
+		if (uri == null)
+			throw new IOException("URI not set. ");
 		URL url = new URL(uri);
 		if (url.getPath().equals(""))
 			url = new URL(url.getProtocol()
@@ -621,7 +628,8 @@ public class OnvifSessionMessenger extends Messenger {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
 			msg.writeTo(out);
-		} catch (Exception e) {
+		} catch (SOAPException
+			| IOException e) {
 			System.err.println(
 				"Could not convert SOAP message to string for "
 					+ context + " to service: " + currentUri

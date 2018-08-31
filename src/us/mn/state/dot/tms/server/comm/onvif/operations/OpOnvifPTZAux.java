@@ -57,6 +57,7 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 					"interrupted. Wiper " +
 					"operation may not " +
 					"have completed correctly. ");
+				e.printStackTrace();
 			}
 			return new WiperOff();
 		}

@@ -86,7 +86,6 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 				| SoapTransmissionException e) {
 				setFailed();
 				log(e.getMessage());
-				e.printStackTrace();
 				session.setStatus(e.getMessage());
 				// when we leak an IOException from here, the
 				// MessagePoller will close() and open() our
