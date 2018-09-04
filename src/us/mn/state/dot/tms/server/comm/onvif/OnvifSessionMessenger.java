@@ -47,6 +47,7 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
@@ -83,7 +84,7 @@ public class OnvifSessionMessenger extends Messenger {
 		"/onvif/device_service";
 
 	// onvif session properties
-	private URL deviceServiceUri;
+	private URL baseUri;
 	private WSUsernameToken auth;
 	/**
 	 * Our proxy for an open session are the capabilities. If they are set,
@@ -92,7 +93,7 @@ public class OnvifSessionMessenger extends Messenger {
 	private Capabilities capabilities;
 
 	// messenger properties
-	private String currentUri;
+	private URL currentUri;
 	private int timeout = 5000; // in milliseconds
 
 	// cached onvif device values
@@ -112,8 +113,8 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @throws IOException if the currentUri is invalid
 	 */
 	public OnvifSessionMessenger(String uri) throws IOException {
-		deviceServiceUri = normalizeDevServUri(uri);
-		currentUri = deviceServiceUri.toString();
+		baseUri = checkUri(uri);
+		currentUri = new URL(uri);
 	}
 
 	/**
@@ -199,20 +200,26 @@ public class OnvifSessionMessenger extends Messenger {
 		if (capabilities == null && !s.equals(OnvifService.DEVICE))
 			throw new SessionNotStartedException(
 				"Capabilities not found. ");
-		switch (s) {
-		case DEVICE:
-			currentUri = getDeviceServiceUri();
-			break;
-		case MEDIA:
-			currentUri = getMediaServiceUri();
-			break;
-		case PTZ:
-			currentUri = getPTZServiceUri();
-			break;
-		case IMAGING:
-			currentUri = getImagingServiceUri();
-			break;
-		default:
+		try {
+			switch (s) {
+			case DEVICE:
+				currentUri = getDeviceServiceUri();
+				break;
+			case MEDIA:
+				currentUri = getMediaServiceUri();
+				break;
+			case PTZ:
+				currentUri = getPTZServiceUri();
+				break;
+			case IMAGING:
+				currentUri = getImagingServiceUri();
+				break;
+			default:
+				throw new ServiceNotSupportedException(s);
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			log(e.getMessage(), this);
 			throw new ServiceNotSupportedException(s);
 		}
 	}
@@ -380,28 +387,18 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @param uri gets checked
 	 * @return a normalized version of the currentUri (protocol, ip, and
 	 * 	port)
-	 * @throws IllegalArgumentException if the currentUri is malformed
+	 * @throws IOException if the currentUri is malformed
 	 */
-	private URL normalizeDevServUri(String uri) throws IOException {
+	private URL checkUri(String uri) throws IOException {
 		if (uri == null)
 			throw new IOException("URI not set. ");
 		URL url = new URL(uri);
-		if (url.getPath().equals(""))
-			url = new URL(url.getProtocol()
-				+ "://"
-				+ url.getAuthority()
-				+ DEVICE_SERVICE_PATH);
-		else
-			throw new IOException(
-				"ONVIF URI path may only be \""
-					+ DEVICE_SERVICE_PATH
-					+ "\" or empty. ");
 		if (!url.getProtocol().equalsIgnoreCase("http"))
 			throw new IOException(
 				"ONVIF URI protocol is not \"http\". ");
-		if (url.getPort() != 80)
+		if (!url.getPath().equals(""))
 			throw new IOException(
-				"ONVIF URI port is not \"80\". ");
+				"ONVIF URI path may only be empty. ");
 		return url;
 	}
 
@@ -559,7 +556,7 @@ public class OnvifSessionMessenger extends Messenger {
 		throws SessionNotStartedException, ServiceNotSupportedException,
 		SoapTransmissionException
 	{
-		String savedUri = currentUri;
+		URL savedUri = currentUri;
 		selectService(service);
 		try {
 			return makeRequest(request, responseClass);
@@ -568,48 +565,56 @@ public class OnvifSessionMessenger extends Messenger {
 		}
 	}
 
-	private String getDeviceServiceUri() {
-		String uri;
-		if (capabilities == null
-			|| capabilities.getDevice() == null
-			|| capabilities.getDevice().getXAddr() == null)
-			uri = deviceServiceUri.toString();
-		else
-			uri = capabilities.getDevice().getXAddr();
-		return uri;
+	private URL getDeviceServiceUri() throws MalformedURLException {
+		return new URL(baseUri, DEVICE_SERVICE_PATH);
 	}
 
-	private String getMediaServiceUri()
-		throws ServiceNotSupportedException
+	private URL getMediaServiceUri()
+		throws ServiceNotSupportedException, MalformedURLException
 	{
 		if (capabilities.getMedia() == null
 			|| capabilities.getMedia().getXAddr() == null)
 			throw new ServiceNotSupportedException(
 				OnvifService.MEDIA);
-		return capabilities.getMedia().getXAddr();
+		return buildUri(capabilities.getMedia().getXAddr());
 	}
 
-	private String getPTZServiceUri() throws ServiceNotSupportedException {
+	private URL getPTZServiceUri()
+		throws ServiceNotSupportedException, MalformedURLException
+	{
 		if (capabilities.getPTZ() == null
 			|| capabilities.getPTZ().getXAddr() == null)
 			throw new ServiceNotSupportedException(
 				OnvifService.PTZ);
-		return capabilities.getPTZ().getXAddr();
+		return buildUri(capabilities.getPTZ().getXAddr());
 	}
 
-	private String getImagingServiceUri()
-		throws ServiceNotSupportedException
+	private URL getImagingServiceUri()
+		throws ServiceNotSupportedException, MalformedURLException
 	{
 		if (capabilities.getImaging() == null
 			|| capabilities.getImaging().getXAddr() == null)
 			throw new ServiceNotSupportedException(
 				OnvifService.IMAGING);
-		return capabilities.getImaging().getXAddr();
+		return buildUri(capabilities.getImaging().getXAddr());
+	}
+
+	/**
+	 * Handles case where device may be behind a NAT.
+	 *
+	 * @param xAddr the path from xAddr will be used
+	 * @return baseUri with the path from xAddr
+	 * @throws MalformedURLException
+	 */
+	private URL buildUri(String xAddr) throws MalformedURLException {
+		return new URL(baseUri,
+			(new URL(xAddr))
+				.getPath());
 	}
 
 	public void log(String msg, Object reporter) {
 		ONVIF_SESSION_LOG
-			.log("<" + deviceServiceUri.getHost() + "> "
+			.log("<" + baseUri.getHost() + "> "
 			+ reporter.getClass().getSimpleName() +  ": " + msg);
 	}
 
