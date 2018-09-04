@@ -26,7 +26,7 @@ SET SESSION AUTHORIZATION 'tms';
 -- feature 599 onvif profile s
 INSERT INTO iris.comm_protocol VALUES (37, 'ONVIF PTZ');
 
-ALTER TABLE iris.controller ADD COLUMN username VARCHAR(16);
+ALTER TABLE iris.controller ADD COLUMN username VARCHAR(128);
 
 UPDATE iris.system_attribute
     SET value = regexp_replace(value, '10\.3\.\d+.*\s+\[', '10.4.0 [')
