@@ -91,7 +91,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		log("Drop addresses are invalid for Onvif devices");
+		// drop addresses are invalid for Onvif devices
 		return true;
 	}
 
