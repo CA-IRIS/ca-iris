@@ -38,7 +38,7 @@ import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 
-import static us.mn.state.dot.tms.DeviceRequest.NO_REQUEST;
+import static us.mn.state.dot.tms.DeviceRequest.CAMERA_PREPARE;
 import static us.mn.state.dot.tms.PresetAliasName.HOME;
 import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
@@ -552,7 +552,7 @@ public class CameraDispatcher extends JPanel {
 			cache.ignoreObject(selected);
 		cam_ptz.setCamera(camera);
 		// allows camera to initialize when selected
-		cam_ptz.sendRequest(NO_REQUEST);
+		cam_ptz.sendRequest(CAMERA_PREPARE);
 		selected = camera;
 		if (camera != null) {
 			name_lbl.setText(camera.getName());

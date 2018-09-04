@@ -78,7 +78,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 			prepAndAddOp(new OpOnvifImaging(c, session, r), c);
 			break;
 		case RESET_DEVICE:
-		case NO_REQUEST:
+		case CAMERA_PREPARE:
 			prepAndAddOp(new OpOnvifDevice(c, session, r), c);
 			break;
 		default:
@@ -94,7 +94,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		// TODO: Drop addresses are invalid for Onvif devices.
 		// Return true to keep caller happy, but this method does not
 		// appear to be called anywhere. Maybe it is an artifact of an
-		// older implementation that needs to be removed. 
+		// older implementation that needs to be removed.
 		return true;
 	}
 

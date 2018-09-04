@@ -6,7 +6,7 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceNoRequestProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDevicePrepareProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifDeviceRebootProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
@@ -39,8 +39,8 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty rv;
 			switch (request) {
-			case NO_REQUEST:
-				rv = new OnvifDeviceNoRequestProperty(session);
+			case CAMERA_PREPARE:
+				rv = new OnvifDevicePrepareProperty(session);
 				break;
 			case RESET_DEVICE:
 				 rv = new OnvifDeviceRebootProperty(session);

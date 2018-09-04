@@ -108,7 +108,10 @@ public enum DeviceRequest {
 	CAMERA_PTZ_FULL_STOP,
 
 	/** CAMERA: wiper one-shot */
-	CAMERA_WIPER_ONESHOT;
+	CAMERA_WIPER_ONESHOT,
+
+	/** CAMERA: establish connection with [ONVIF] device */
+	CAMERA_PREPARE;
 
 	/** Get device request from an ordinal value */
 	static public DeviceRequest fromOrdinal(int o) {

@@ -8,9 +8,9 @@ import java.io.IOException;
 /**
  * @author Wesley Skillern (Southwest Research Institute)
  */
-public class OnvifDeviceNoRequestProperty extends OnvifProperty
+public class OnvifDevicePrepareProperty extends OnvifProperty
 {
-	public OnvifDeviceNoRequestProperty(OnvifSessionMessenger session) {
+	public OnvifDevicePrepareProperty(OnvifSessionMessenger session) {
 		super(session);
 	}
 
