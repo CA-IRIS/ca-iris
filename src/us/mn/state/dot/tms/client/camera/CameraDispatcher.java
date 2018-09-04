@@ -551,8 +551,6 @@ public class CameraDispatcher extends JPanel {
 		if (selected != null)
 			cache.ignoreObject(selected);
 		cam_ptz.setCamera(camera);
-		// allows camera to initialize when selected
-		cam_ptz.sendRequest(CAMERA_PREPARE);
 		selected = camera;
 		if (camera != null) {
 			name_lbl.setText(camera.getName());
@@ -564,6 +562,9 @@ public class CameraDispatcher extends JPanel {
 			updateCamControls();
 		} else
 			clear();
+		if (cam_ptz.isCameraSelected() && cam_ptz.isControlEnabled())
+			// allows camera to initialize when selected
+			cam_ptz.sendRequest(CAMERA_PREPARE);
 		updateOutputComboCA();
 	}
 
