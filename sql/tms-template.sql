@@ -417,7 +417,7 @@ CREATE TABLE iris.controller (
 	password VARCHAR(16),
 	notes VARCHAR(128) NOT NULL,
 	fail_time timestamp WITH time zone,
-	username VARCHAR(128)
+	username VARCHAR(16)
 );
 
 CREATE UNIQUE INDEX ctrl_link_drop_idx ON iris.controller
