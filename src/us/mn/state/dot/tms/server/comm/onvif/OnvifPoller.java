@@ -124,8 +124,10 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		ControllerImpl found = null;
 		LinkedList<Controller> controllers = cl.getActiveControllers();
 		for (Controller c : controllers)
-			if (c.getCommLink().getName().equals(cl.getName()))
+			if (c.getCommLink().getName().equals(cl.getName())) {
 				found = (ControllerImpl) c;
+				break;
+			}
 		return found;
 	}
 
