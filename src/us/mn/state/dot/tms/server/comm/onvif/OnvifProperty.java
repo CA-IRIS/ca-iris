@@ -20,7 +20,13 @@ public abstract class OnvifProperty extends ControllerProperty {
 	/** any response to the call to the Service */
 	protected Object response;
 
-	/** message to display after decodeStore() */
+	/**
+	 * message to display after decodeStore()
+	 * Concrete OnvifProperties may change this message if they do not want
+	 * "Ready" to be displayed when they are done. For example,
+	 * OnvifPTZMoveProperty should be followed by OnvifPTZStopProperty, so
+	 * we change the doneMsg to "PTZMoving" between those two properties. 
+	 */
 	protected String doneMsg = "Ready";
 
 	protected OnvifProperty(OnvifSessionMessenger session) {
