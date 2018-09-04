@@ -149,19 +149,6 @@ public class OnvifSessionMessenger extends Messenger {
 		log("Session started", this);
 	}
 
-	private void logDeviceInfo() throws SoapTransmissionException {
-		GetDeviceInformationResponse response =
-			(GetDeviceInformationResponse)
-				makeRequest(new GetDeviceInformation(),
-				GetDeviceInformationResponse.class);
-		log("{\n" +
-			"\tManufacturer: " + response.getManufacturer() + "\n" +
-			"\tModel: " + response.getModel() + "\n" +
-			"\tFirmware version: " + response.getFirmwareVersion() + "\n" +
-			"\tSerial number: " + response.getSerialNumber() + "\n" +
-			"}", this);
-	}
-
 	@Override
 	public void close() {
 		log("Closing session", this);
@@ -471,6 +458,26 @@ public class OnvifSessionMessenger extends Messenger {
 			throw new SessionNotStartedException(
 				"Missing required Media Profile. ");
 		return profiles;
+	}
+
+	/**
+	 * log device info in case debugging is needed
+	 */
+	private void logDeviceInfo()
+		throws SoapTransmissionException, SessionNotStartedException,
+		ServiceNotSupportedException
+	{
+		GetDeviceInformationResponse response =
+			(GetDeviceInformationResponse)
+				makeInternalRequest(new GetDeviceInformation(),
+					GetDeviceInformationResponse.class,
+					OnvifService.DEVICE);
+		log("{\n" +
+			"\tManufacturer: " + response.getManufacturer() + "\n" +
+			"\tModel: " + response.getModel() + "\n" +
+			"\tFirmware version: " + response.getFirmwareVersion() + "\n" +
+			"\tSerial number: " + response.getSerialNumber() + "\n" +
+			"}", this);
 	}
 
 	private PTZSpaces initPTZSpaces()
