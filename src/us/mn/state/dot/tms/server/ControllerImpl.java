@@ -92,8 +92,8 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 					row.getString(2),	// cabinet
 					row.getString(3),	// comm_link
 					row.getShort(4),	// drop_id
-					row.getInt(5),		// condition
-					row.getString(9), // username is last col
+					row.getInt(5),	// condition
+					row.getString(9),	// username (last col)
 					row.getString(6),	// password
 					row.getString(7),	// notes
 					row.getTimestamp(8)	// failTime
