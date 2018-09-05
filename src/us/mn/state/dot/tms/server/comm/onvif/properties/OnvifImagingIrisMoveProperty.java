@@ -1,19 +1,21 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.DeviceRequest;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.FloatRange;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingOptions20;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * A class that makes continuous iris movements from the absolute iris movement
@@ -24,26 +26,31 @@ import java.io.IOException;
 public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	/**
 	 * The granularity of individual requests. A larger number means the
-	 * stepping of iris movements will be more smooth. A smaller number
-	 * will
-	 * mean larger jumps and a stepped feel to iris movements. Since we
-	 * must
+	 * stepping of iris movements will be more smooth. A smaller number will
+	 * mean larger jumps and a stepped feel to iris movements. Since we must
 	 * receive a response from the device before we can proceed to the next
 	 * request, this does not represent a linear relationship. A larger
 	 * number will mean more requests which are effectively slower.
 	 */
 	private static final float GRANULARITY_OF_MOVEMENT = 25;
 	private final DeviceRequest req;
+	private ImagingSettings20 settings;
+	private ImagingOptions20 options;
 
 	public OnvifImagingIrisMoveProperty(
-		OnvifSessionMessenger session, DeviceRequest r)
-	{
+		OnvifSessionMessenger session, DeviceRequest r,
+		ImagingSettings20 settings,
+		ImagingOptions20 options) {
 		super(session);
 		this.req = r;
+		this.settings = settings;
+		this.options = options;
 	}
 
 	@Override
-	protected void encodeStore() throws IOException {
+	public void encodeStore(ControllerImpl c, OutputStream os)
+		throws IOException
+	{
 		if (!supportsIrisMove())
 			throw new OperationNotSupportedException("IrisMove");
 		switch (req) {
@@ -53,8 +60,9 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			stepIris();
 			break;
 		case CAMERA_IRIS_STOP:
-			log(req + " ignored. " +
-				"ONVIF only supports absolute iris movements." +
+			log(req + " intentionally ignored. " +
+				"ONVIF only supports absolute iris movements" +
+				"." +
 				" ");
 			break;
 		default:
@@ -66,15 +74,13 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	/**
 	 * Some camera manufacturers have applied ceiling rounding in the case
 	 * of negative attenuation values, so we must anticipate this and
-	 * ensure
-	 * that we have the correct value in our session cache after the device
-	 * response is retrieved.
+	 * ensure that we have the correct value in our session cache after the
+	 * device response is retrieved.
 	 */
 	@Override
-	protected void decodeStore() throws IOException {
-		if (!(response instanceof SetImagingSettingsResponse))
-			throw new IOException("Unexpected response to Iris" +
-				"Move request. ");
+	public void decodeStore(ControllerImpl c, InputStream is)
+		throws IOException
+	{
 		GetImagingSettings getImagingSettings =
 			new GetImagingSettings();
 		getImagingSettings.setVideoSourceToken(
@@ -83,30 +89,21 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			= (GetImagingSettingsResponse)
 			session.makeRequest(getImagingSettings,
 				GetImagingSettingsResponse.class);
-		session.getImagingSettings().getExposure().setIris(
+		settings.getExposure().setIris(
 			getImagingSettingsResponse.getImagingSettings()
 				.getExposure().getIris());
 	}
 
-	private boolean supportsIrisMove()
-		throws SoapTransmissionException, ServiceNotSupportedException,
-		SessionNotStartedException
-	{
+	private boolean supportsIrisMove() throws IOException {
 		boolean supported = true;
-		if (session.getImagingOptions() == null
-			|| session.getImagingOptions().getExposure() == null
-			|| session.getImagingOptions().getExposure()
-			.getIris() == null
+		if (options.getExposure() == null
+			|| options.getExposure().getIris() == null
 			// ONVIF states that min == max is indicative of
 			// unsupported iris move
-			|| session.getImagingOptions().getExposure().getIris()
-			.getMin()
-			!= session.getImagingOptions().getExposure().getIris()
-			.getMax()
-			|| session.getImagingSettings() == null
-			|| session.getImagingSettings().getExposure() == null
-			|| session.getImagingSettings().getExposure()
-			.getIris() == null)
+			|| options.getExposure().getIris().getMin()
+			== options.getExposure().getIris().getMax()
+			|| settings.getExposure() == null
+			|| settings.getExposure().getIris() == null)
 			supported = false;
 		return supported;
 	}
@@ -120,17 +117,12 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	 * absolute value of attenuation (the spec is unclear). Therefore, we
 	 * must write the logic for either case.
 	 */
-	private void stepIris()
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		FloatRange range = session.getImagingOptions()
-			.getExposure().getIris();
+	private void stepIris() throws IOException {
+		FloatRange range = options.getExposure().getIris();
 		final float min = range.getMin();
 		final float max = range.getMax();
 		final float incr = (max - min) / GRANULARITY_OF_MOVEMENT;
-		float val =
-			session.getImagingSettings().getExposure().getIris();
+		float val = settings.getExposure().getIris();
 		val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
 		if (max == 0f)
 			negativeAttenuation(val, min, max);
@@ -140,8 +132,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 
 
 	private void negativeAttenuation(float val, float min, float max)
-		throws SoapTransmissionException, ServiceNotSupportedException,
-		SessionNotStartedException
+		throws IOException
 	{
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val > max)
 			updateVal(max);
@@ -152,8 +143,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	}
 
 	private void absValAttenuation(float val, float min, float max)
-		throws SoapTransmissionException, ServiceNotSupportedException,
-		SessionNotStartedException
+		throws IOException
 	{
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val < min)
 			updateVal(min);
@@ -163,14 +153,11 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			updateVal(val);
 	}
 
-	private void updateVal(float val)
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		session.getImagingSettings().getExposure().setIris(val);
+	private void updateVal(float val) throws IOException {
+		settings.getExposure().setIris(val);
 		SetImagingSettings setReq = new SetImagingSettings();
 		setReq.setVideoSourceToken(session.getMediaProfileTok());
-		setReq.setImagingSettings(session.getImagingSettings());
+		setReq.setImagingSettings(settings);
 		response = session.makeRequest(setReq,
 			SetImagingSettingsResponse.class);
 	}

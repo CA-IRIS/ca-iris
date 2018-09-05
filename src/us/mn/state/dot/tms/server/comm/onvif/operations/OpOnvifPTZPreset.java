@@ -5,6 +5,7 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZNodesProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetRecallProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetStoreProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
@@ -32,7 +33,20 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return store ? new EnsureStopped() : new Recall();
+		return new NodesCheck();
+	}
+
+	protected class NodesCheck extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return session.getNodes() == null ?
+				new OnvifPTZNodesProperty(session) : null;
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return store ? new EnsureStopped() : new Recall();
+		}
 	}
 
 	/**
@@ -54,7 +68,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZPresetStoreProperty(session,
-				preset);
+				preset, session.getNodes());
 		}
 
 		@Override
@@ -66,8 +80,8 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 	protected class Recall extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			return new OnvifPTZPresetRecallProperty(session,
-				preset);
+			return new OnvifPTZPresetRecallProperty(session, preset,
+				session.getNodes());
 		}
 
 		@Override

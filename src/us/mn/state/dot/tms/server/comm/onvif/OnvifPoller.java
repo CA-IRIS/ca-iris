@@ -104,7 +104,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	private void prepAndAddOp(OpOnvif<OnvifProperty> op, CameraImpl ci) {
 		session.setCamera(ci);
-		if (session.authNotSet())
+		if (!session.isAuthSet())
 			applyAuthCredentials();
 		setIdleSecs(session.getTimeout());
 		addOperation(op);

@@ -2,6 +2,7 @@ package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZNode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresets;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetPresetsResponse;
@@ -14,10 +15,13 @@ import java.util.List;
  */
 public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	protected Integer preset;
+	protected final List<PTZNode> nodes;
 
-	public OnvifPTZPresetProperty(OnvifSessionMessenger session, int num) {
+	public OnvifPTZPresetProperty(OnvifSessionMessenger session, int num,
+				      List<PTZNode> nodes) {
 		super(session);
 		preset = num;
+		this.nodes = nodes;
 	}
 
 	/**
@@ -42,11 +46,10 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 
 	/**
 	 * @return any device that has at least 1 preset must support the
-	 * preset
-	 * 	commands
+	 * preset commands
 	 */
 	boolean supportsPresets() throws IOException {
-		return session.getNodes().get(0)
+		return nodes.get(0)
 			.getMaximumNumberOfPresets() > 0;
 	}
 }

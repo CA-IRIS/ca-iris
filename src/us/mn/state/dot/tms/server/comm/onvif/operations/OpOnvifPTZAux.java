@@ -5,6 +5,9 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZPreset.EnsureStopped;
+import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZPreset.Recall;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZNodesProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZWiperProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
@@ -30,7 +33,20 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 */
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new WiperOn();
+		return session.getNodes() == null ? new Nodes() : new WiperOn();
+	}
+
+
+	protected class Nodes extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			return new OnvifPTZNodesProperty(session);
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return new WiperOn();
+		}
 	}
 
 	/**
@@ -40,7 +56,8 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	protected class WiperOn extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			return new OnvifPTZWiperProperty(session, true);
+			return new OnvifPTZWiperProperty(session,
+				session.getNodes(), true);
 		}
 
 		@Override
@@ -66,7 +83,8 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	protected class WiperOff extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			return new OnvifPTZWiperProperty(session, false);
+			return new OnvifPTZWiperProperty(session,
+				session.getNodes(), false);
 		}
 
 		@Override

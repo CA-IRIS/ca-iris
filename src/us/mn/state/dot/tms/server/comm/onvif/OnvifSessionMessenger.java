@@ -1,12 +1,13 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
+import jdk.nashorn.internal.runtime.ParserException;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.comm.ControllerException;
 import us.mn.state.dot.tms.server.comm.Messenger;
+import us.mn.state.dot.tms.server.comm.ParsingException;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilities;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformation;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTime;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetSystemDateAndTimeResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.media.wsdl.GetProfiles;
@@ -16,28 +17,15 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Da
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingOptions20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.MoveOptions20;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZConfiguration;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZNode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZSpaces;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Profile;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.SystemDateTime;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettings;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettingsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptions;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetMoveOptionsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetOptions;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetOptionsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurationOptions;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurationOptionsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurations;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurationsResponse;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetNodes;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetNodesResponse;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,7 +36,10 @@ import javax.xml.soap.SOAPMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -83,29 +74,18 @@ public class OnvifSessionMessenger extends Messenger {
 	private static final String DEVICE_SERVICE_PATH =
 		"/onvif/device_service";
 
-	// onvif session properties
-	private URL baseUri;
-	private WSUsernameToken auth;
-	/**
-	 * Our proxy for an open session are the capabilities. If they are set,
-	 * we are open.
-	 */
-	private Capabilities capabilities;
-
 	// messenger properties
-	private URL currentUri;
+	private WSUsernameToken auth;
 	private int timeout = 5000; // in milliseconds
+	private URL baseUri;
+	private URL currentUri;
 
-	// cached onvif device values
-	private List<Profile> mediaProfiles;
-	private PTZSpaces ptzSpaces;
-	private List<PTZNode> nodes;
-	private ImagingOptions20 imagingOptions;
-	private ImagingSettings20 imagingSettings;
-	private MoveOptions20 imagingMoveOptions;
-
-	// we hold onto a camera to centralize status reporting
+	// we hold onto the CameraImpl to centralize status reporting
 	private CameraImpl camera;
+
+	// cached values required for any service requests
+	private Capabilities capabilities;
+	private List<Profile> mediaProfiles;
 
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
@@ -114,14 +94,14 @@ public class OnvifSessionMessenger extends Messenger {
 	 */
 	public OnvifSessionMessenger(String uri) throws IOException {
 		baseUri = checkUri(uri);
-		currentUri = new URL(uri);
+		currentUri = getDeviceServiceUri();
 	}
 
 	/**
 	 * @return true if the auth credentials have been set
 	 */
-	boolean authNotSet() {
-		return auth == null;
+	boolean isAuthSet() {
+		return auth != null;
 	}
 
 	/** set the auth credentials */
@@ -135,24 +115,25 @@ public class OnvifSessionMessenger extends Messenger {
 
 	@Override
 	public void open() throws IOException {
-		log("Starting session", this);
+		log("Starting session. ", this);
 		try {
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
-			logDeviceInfo();
-		} catch (SoapTransmissionException e) {
-			log("Failed to start session" + e.getMessage(), this);
+		} catch (IOException e) {
 			close();
+			setStatus("Failed");
+			log("Failed to start session. ", this);
 			throw e;
 		}
-		log("Session started", this);
+		log("Session started. ", this);
 	}
 
 	@Override
 	public void close() {
-		log("Closing session", this);
+		log("Closing session. ", this);
 		auth = null;
+		// clear cached values
 		capabilities = null;
 		mediaProfiles = null;
 		ptzSpaces = null;
@@ -161,7 +142,7 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingSettings = null;
 		imagingOptions = null;
 		setStatus("Closed");
-		log("Session closed", this);
+		log("Session closed. ", this);
 	}
 
 	@Override
@@ -177,116 +158,41 @@ public class OnvifSessionMessenger extends Messenger {
 	/**
 	 * Sets the session currentUri for subsequent requests.
 	 *
-	 * @throws SessionNotStartedException if this is not initialized
 	 * @throws ServiceNotSupportedException if s is not supported
 	 */
 	void selectService(OnvifService s)
-		throws SessionNotStartedException,
-		ServiceNotSupportedException
+		throws ControllerException, ServiceNotSupportedException,
+		MalformedURLException
 	{
 		if (capabilities == null && !s.equals(OnvifService.DEVICE))
-			throw new SessionNotStartedException(
-				"Capabilities not found. ");
-		try {
-			switch (s) {
-			case DEVICE:
-				currentUri = getDeviceServiceUri();
-				break;
-			case MEDIA:
-				currentUri = getMediaServiceUri();
-				break;
-			case PTZ:
-				currentUri = getPTZServiceUri();
-				break;
-			case IMAGING:
-				currentUri = getImagingServiceUri();
-				break;
-			default:
-				throw new ServiceNotSupportedException(s);
-			}
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			log(e.getMessage(), this);
+			throw new ControllerException("Missing capabilities");
+		switch (s) {
+		case DEVICE:
+			currentUri = getDeviceServiceUri();
+			break;
+		case MEDIA:
+			currentUri = getMediaServiceUri();
+			break;
+		case PTZ:
+			currentUri = getPTZServiceUri();
+			break;
+		case IMAGING:
+			currentUri = getImagingServiceUri();
+			break;
+		default:
 			throw new ServiceNotSupportedException(s);
 		}
 	}
 
 	/**
 	 * @return The first media profile token (all devices are required to
-	 * 	have at least one media profile. This is frequently required
+	 * 	have at least one media profile. This is generally required
 	 * 	for PTZ and Imaging Service requests.
 	 */
-	public String getMediaProfileTok() throws SessionNotStartedException {
+	public String getMediaProfileTok() throws ControllerException {
 		if (mediaProfiles == null)
-			throw new SessionNotStartedException(
-				"No media token found. ");
+			throw new ControllerException("Missing media profile");
 		return mediaProfiles.get(0).getToken();
-	}
-
-	/**
-	 * @return PTZ spaces correspond to the different types of PTZ requests
-	 * @throws ServiceNotSupportedException if the PTZ Service is not
-	 * 	supported
-	 * @throws SessionNotStartedException if this is not initialized
-	 * @throws SoapTransmissionException if the request fails (unexpected)
-	 */
-	public PTZSpaces getPtzSpaces()
-		throws ServiceNotSupportedException, SoapTransmissionException,
-		SessionNotStartedException
-	{
-		if (ptzSpaces == null)
-			ptzSpaces = initPTZSpaces();
-		return ptzSpaces;
-	}
-
-	/**
-	 * @return all the PTZ Nodes (provides ranges for PTZ request values)
-	 * @throws ServiceNotSupportedException if the PTZ Service is not
-	 * 	supported
-	 * @throws SessionNotStartedException if this is not initialized
-	 * @throws SoapTransmissionException if the request fails
-	 */
-	public List<PTZNode> getNodes()
-		throws ServiceNotSupportedException,
-		SessionNotStartedException, SoapTransmissionException
-	{
-		if (nodes == null)
-			nodes = initNodes();
-		return nodes;
-	}
-
-	public ImagingSettings20 getImagingSettings()
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		if (imagingSettings == null)
-			imagingSettings = initImagingSettings();
-		return imagingSettings;
-	}
-
-	public ImagingOptions20 getImagingOptions()
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		if (imagingOptions == null)
-			imagingOptions = initImagingOptions();
-		return imagingOptions;
-	}
-
-	/**
-	 * @return supported focus move requests and ranges
-	 * @throws ServiceNotSupportedException if the Imaging Service is not
-	 * 	supported
-	 * @throws SessionNotStartedException if this is not initialized
-	 * @throws SoapTransmissionException if the request fails
-	 */
-	public MoveOptions20 getImagingMoveOptions()
-		throws ServiceNotSupportedException, SoapTransmissionException,
-		SessionNotStartedException
-	{
-		if (imagingMoveOptions == null)
-			imagingMoveOptions = initImagingMoveOptions();
-		return imagingMoveOptions;
 	}
 
 	/**
@@ -296,11 +202,10 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @param request the request xml object
 	 * @param responseClass the response Object format
 	 * @return the response xml Object
-	 * @throws SoapTransmissionException if there is a problem during
-	 * 	communication or soap formatting or transmission
 	 */
 	public Object makeRequest(Object request, Class<?> responseClass)
-		throws SoapTransmissionException
+		throws SocketTimeoutException,
+		ControllerException, ParsingException
 	{
 		setStatus(request.getClass().getSimpleName() + "Request");
 		try {
@@ -316,46 +221,66 @@ public class OnvifSessionMessenger extends Messenger {
 			if (response.getSOAPBody().hasFault()) {
 				logSoap("SOAPFault", request.getClass(),
 					responseClass, response);
-				throw new SoapTransmissionException(
+				throw new ParsingException(
 					response.getSOAPBody().getFault()
 						.getFaultString());
 			}
 			logSoap("Response SOAPMessage", request.getClass(),
 				responseClass,
 				response);
-			Object out = SoapWrapper
-				.convertToObject(response, responseClass);
-			setStatus(request.getClass().getSimpleName());
-			return out;
-		} catch (JAXBException
-			| ParserConfigurationException
-			| NoSuchAlgorithmException e) {
+			Object o;
+			try {
+				o = SoapWrapper.convertToObject(
+					response, responseClass);
+			} catch (JAXBException e) {
+				e.printStackTrace();
+				log(e.getMessage(), this);
+				throw new ParserException(e.getMessage());
+			}
+			return o;
+		} catch (ParserConfigurationException
+			| NoSuchAlgorithmException
+			| JAXBException e) {
 			System.err.println(
 				"Unable to make request: " + e.getMessage());
 			e.printStackTrace();
 			log(e.getMessage(), this);
-			throw new SoapTransmissionException(e);
+			throw new ControllerException(e.getMessage());
 		} catch (SOAPException e) {
+			e.printStackTrace();
+			log(e.getMessage(), this);
+			if (e.getCause() != null
+				&& e.getCause().getCause() != null
+				&& e.getCause().getCause() instanceof
+				SocketTimeoutException) {
+				log("Hint: check URI, timeout, " +
+					"and network connection. ",
+					this);
+				// this exception is expected by caller (e.g.
+				// MessagePoller), so we strip off the wrappers
+				throw (SocketTimeoutException)
+					e.getCause().getCause();
+			}
 			int err = parseSoapErrStatus(e);
-			if (err >= 400 && err <= 403)
-				throw new SoapTransmissionException(
-					"Bad username or password. ", e);
-			else
-				e.printStackTrace();
-			throw new SoapTransmissionException(e);
+			if (err >= 400 && err <= 403) {
+				log("Hint: check username and password. ",
+					this);
+				throw new ControllerException("unauthorized");
+			}
+			throw new ControllerException(e.getMessage());
 		}
 	}
 
 	private int parseSoapErrStatus(SOAPException e)
-		throws SoapTransmissionException
+		throws ControllerException
 	{
 		String msg = e.getMessage();
 		String strB4Stats = "Bad response: (";
 		if (!msg.contains(strB4Stats))
-			throw new SoapTransmissionException(e);
+			throw new ControllerException(e.getMessage());
 		int startI = msg.indexOf(strB4Stats);
 		if (msg.length() < strB4Stats.length() + 3)
-			throw new SoapTransmissionException(e);
+			throw new ControllerException(e.getMessage());
 		String statusStr = msg.substring(startI + strB4Stats.length(),
 			startI + strB4Stats.length() + 3);
 		int status;
@@ -363,7 +288,7 @@ public class OnvifSessionMessenger extends Messenger {
 			status = Integer.parseInt(statusStr);
 		} catch (NumberFormatException e1) {
 			e.printStackTrace();
-			throw new SoapTransmissionException(e);
+			throw new ControllerException(e.getMessage());
 		}
 		return status;
 	}
@@ -397,10 +322,7 @@ public class OnvifSessionMessenger extends Messenger {
 	 * may
 	 * cause the device to reject requests.
 	 */
-	private void setAuthClockOffset()
-		throws SoapTransmissionException, SessionNotStartedException,
-		ServiceNotSupportedException
-	{
+	private void setAuthClockOffset() throws IOException {
 		// add one second for travel delay as the ONVIF programmer
 		// guide shows
 		ZonedDateTime ourDateTime =
@@ -431,10 +353,7 @@ public class OnvifSessionMessenger extends Messenger {
 		auth.setClockOffset(ourDateTime, deviceDateTime);
 	}
 
-	private Capabilities initCapabilities()
-		throws SoapTransmissionException, SessionNotStartedException,
-		ServiceNotSupportedException
-	{
+	private Capabilities initCapabilities() throws IOException {
 		GetCapabilities getCapabilities = new GetCapabilities();
 		return ((GetCapabilitiesResponse) makeInternalRequest(
 			getCapabilities, GetCapabilitiesResponse.class,
@@ -442,11 +361,7 @@ public class OnvifSessionMessenger extends Messenger {
 			.getCapabilities();
 	}
 
-	private List<Profile> initMediaProfiles()
-		throws SessionNotStartedException,
-		ServiceNotSupportedException,
-		SoapTransmissionException
-	{
+	private List<Profile> initMediaProfiles() throws IOException {
 		List<Profile> profiles =
 			((GetProfilesResponse) makeInternalRequest(
 				new GetProfiles(), GetProfilesResponse.class,
@@ -455,113 +370,20 @@ public class OnvifSessionMessenger extends Messenger {
 			|| profiles.size() < 1
 			|| profiles.get(0).getToken() == null
 			|| profiles.get(0).getToken().isEmpty())
-			throw new SessionNotStartedException(
-				"Missing required Media Profile. ");
+			throw new ControllerException("Missing required media profile");
 		return profiles;
 	}
 
 	/**
-	 * log device info in case debugging is needed
+	 * For internal requests that might otherwise overwrite the external
+	 * selectService() call set by OpOnvifs
 	 */
-	private void logDeviceInfo()
-		throws SoapTransmissionException, SessionNotStartedException,
-		ServiceNotSupportedException
-	{
-		GetDeviceInformationResponse response =
-			(GetDeviceInformationResponse)
-				makeInternalRequest(new GetDeviceInformation(),
-					GetDeviceInformationResponse.class,
-					OnvifService.DEVICE);
-		log("{\n" +
-			"\tManufacturer: " + response.getManufacturer() + "\n" +
-			"\tModel: " + response.getModel() + "\n" +
-			"\tFirmware version: " + response.getFirmwareVersion() + "\n" +
-			"\tSerial number: " + response.getSerialNumber() + "\n" +
-			"}", this);
-	}
-
-	private PTZSpaces initPTZSpaces()
-		throws SessionNotStartedException,
-		ServiceNotSupportedException,
-		SoapTransmissionException
-	{
-		GetConfigurationsResponse getConfigurationsResponse =
-			(GetConfigurationsResponse) makeInternalRequest(
-				new GetConfigurations(),
-				GetConfigurationsResponse.class,
-				OnvifService.PTZ);
-		GetConfigurationOptions getConfigurationOptions =
-			new GetConfigurationOptions();
-		String token =
-			getConfigurationsResponse.getPTZConfiguration().get(0)
-				.getToken();
-		getConfigurationOptions.setConfigurationToken(token);
-		GetConfigurationOptionsResponse
-			getConfigurationOptionsResponse =
-			(GetConfigurationOptionsResponse) makeInternalRequest(
-				getConfigurationOptions,
-				GetConfigurationOptionsResponse.class,
-				OnvifService.PTZ);
-		return getConfigurationOptionsResponse
-			.getPTZConfigurationOptions().getSpaces();
-	}
-
-	private List<PTZNode> initNodes()
-		throws SessionNotStartedException,
-		ServiceNotSupportedException,
-		SoapTransmissionException
-	{
-		GetNodes getNodes =
-			new GetNodes();
-		return ((GetNodesResponse) makeInternalRequest(getNodes,
-			GetNodesResponse.class, OnvifService.PTZ)).getPTZNode();
-	}
-
-	private ImagingOptions20 initImagingOptions()
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		GetOptions getOptions = new GetOptions();
-		getOptions.setVideoSourceToken(getMediaProfileTok());
-		GetOptionsResponse getOptionsResponse =
-			(GetOptionsResponse) makeInternalRequest(
-				getOptions, GetOptionsResponse.class,
-				OnvifService.IMAGING);
-		return getOptionsResponse.getImagingOptions();
-	}
-
-	private ImagingSettings20 initImagingSettings()
-		throws SessionNotStartedException, SoapTransmissionException,
-		ServiceNotSupportedException
-	{
-		GetImagingSettings request = new GetImagingSettings();
-		request.setVideoSourceToken(getMediaProfileTok());
-		GetImagingSettingsResponse response =
-			(GetImagingSettingsResponse) makeInternalRequest(
-				request, GetImagingSettingsResponse.class,
-				OnvifService.IMAGING);
-		return response.getImagingSettings();
-	}
-
-	private MoveOptions20 initImagingMoveOptions()
-		throws ServiceNotSupportedException,
-		SessionNotStartedException, SoapTransmissionException
-	{
-		GetMoveOptions getMoveOptions = new GetMoveOptions();
-		getMoveOptions.setVideoSourceToken(getMediaProfileTok());
-		return ((GetMoveOptionsResponse) makeInternalRequest(
-			getMoveOptions, GetMoveOptionsResponse.class,
-			OnvifService.IMAGING)).getMoveOptions();
-	}
-
-	/**
-	 * For internal requests that might overwrite the external
-	 * selectService() call.
-	 */
-	private Object makeInternalRequest(Object request, Class<?> responseClass,
+	private Object makeInternalRequest(Object request,
+					   Class<?> responseClass,
 					   OnvifService service)
-		throws SessionNotStartedException, ServiceNotSupportedException,
-		SoapTransmissionException
+		throws ServiceNotSupportedException, ParsingException,
+		SocketTimeoutException, ControllerException,
+		MalformedURLException
 	{
 		URL savedUri = currentUri;
 		selectService(service);
@@ -573,7 +395,7 @@ public class OnvifSessionMessenger extends Messenger {
 	}
 
 	private URL getDeviceServiceUri() throws MalformedURLException {
-		return new URL(baseUri, DEVICE_SERVICE_PATH);
+		return new URL(baseUri, DEVICE_SERVICE_PATH, streamHdlr());
 	}
 
 	private URL getMediaServiceUri()
@@ -611,12 +433,27 @@ public class OnvifSessionMessenger extends Messenger {
 	 *
 	 * @param xAddr the path from xAddr will be used
 	 * @return baseUri with the path from xAddr
-	 * @throws MalformedURLException
 	 */
 	private URL buildUri(String xAddr) throws MalformedURLException {
 		return new URL(baseUri,
-			(new URL(xAddr))
-				.getPath());
+			(new URL(xAddr)).getPath(),
+			streamHdlr());
+	}
+
+	private URLStreamHandler streamHdlr() {
+		return new URLStreamHandler() {
+			@Override
+			protected URLConnection openConnection(URL u)
+				throws IOException
+			{
+				URL copy = new URL(u.toString());
+				URLConnection connection =
+					copy.openConnection();
+				connection.setConnectTimeout(timeout);
+				connection.setReadTimeout(timeout);
+				return connection;
+			}
+		};
 	}
 
 	public void log(String msg, Object reporter) {
@@ -658,5 +495,75 @@ public class OnvifSessionMessenger extends Messenger {
 				+ "Expected response class: " + responseClass
 				.getSimpleName() + "\n"
 				+ "Soap: " + new String(out.toByteArray()));
+	}
+
+	/******** cached values required for some service requests ********/
+
+	private List<PTZConfiguration> ptzConfigurations;
+
+	public List<PTZConfiguration> getPtzConfigurations() {
+		return ptzConfigurations;
+	}
+
+	public void setPtzConfigurations(
+		List<PTZConfiguration> ptzConfigurations)
+	{
+		this.ptzConfigurations = ptzConfigurations;
+	}
+
+	private PTZSpaces ptzSpaces;
+
+	public PTZSpaces getPtzSpaces() {
+		return ptzSpaces;
+	}
+
+	public void setPtzSpaces(PTZSpaces ptzSpaces) {
+		this.ptzSpaces = ptzSpaces;
+	}
+
+	private List<PTZNode> nodes;
+
+	public List<PTZNode> getNodes() {
+		return nodes;
+	}
+
+	public void setNodes(List<PTZNode> nodes) {
+		this.nodes = nodes;
+	}
+
+	private ImagingSettings20 imagingSettings;
+
+	public ImagingSettings20 getImagingSettings(){
+		return imagingSettings;
+	}
+
+	public void setImagingSettings(
+		ImagingSettings20 imagingSettings)
+	{
+		this.imagingSettings = imagingSettings;
+	}
+
+	private ImagingOptions20 imagingOptions;
+
+	public ImagingOptions20 getImagingOptions() {
+		return imagingOptions;
+	}
+
+	public void setImagingOptions(
+		ImagingOptions20 imagingOptions)
+	{
+		this.imagingOptions = imagingOptions;
+	}
+
+	private MoveOptions20 imagingMoveOptions;
+
+	public MoveOptions20 getImagingMoveOptions() {
+		return imagingMoveOptions;
+	}
+
+	public void setImagingMoveOptions(
+		MoveOptions20 imagingMoveOptions)
+	{
+		this.imagingMoveOptions = imagingMoveOptions;
 	}
 }

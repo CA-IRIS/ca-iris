@@ -8,8 +8,6 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFail
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SessionNotStartedException;
-import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.SoapTransmissionException;
 
 import java.io.IOException;
 
@@ -65,31 +63,36 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 				log("Preparing for operation");
 				session.selectService(service);
 				T prop = selectProperty();
-				OnvifPhase onvifPhase = null;
+				OnvifPhase next = nextPhase();
 				if (prop != null) {
-					mess.logStore(prop);
-					prop.encodeStore(null, null);
-					prop.decodeStore(null, null);
-					session.setStatus(prop.getDoneMsg());
-					if ((onvifPhase = nextPhase()) == null)
+					if (prop.isQuery()) {
+						mess.logQuery(prop);
+						prop.encodeQuery(null, null);
+						prop.decodeQuery(null, null);
+					}
+					else {
+						mess.logStore(prop);
+						prop.encodeStore(null, null);
+						prop.decodeStore(null, null);
+					}
+					if (next == null)
 						session.setStatus(prop.getDoneMsg());
 				}
-				return onvifPhase;
+				return next;
 			} catch (ServiceNotSupportedException
 				| OperationNotSupportedException
 				| OperationFailedException e) {
+				// errors from which we can continue
 				setFailed();
 				log(e.getMessage());
 				session.setStatus(e.getMessage());
 				return null;
-			} catch (SessionNotStartedException
-				| SoapTransmissionException e) {
+			} catch (Exception e) {
+				// unrecoverable errors
 				setFailed();
 				log(e.getMessage());
+				e.printStackTrace();
 				session.setStatus(e.getMessage());
-				// when we leak an IOException from here, the
-				// MessagePoller will close() and open() our
-				// Messenger again.
 				throw e;
 			} finally {
 				log("Operation " + (isSuccess() ?

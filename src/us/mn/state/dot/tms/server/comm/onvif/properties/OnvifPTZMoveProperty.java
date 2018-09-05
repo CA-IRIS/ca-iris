@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZSpaces;
@@ -12,6 +13,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author Wesley Skillern (Southwest Research Institue)
@@ -21,34 +23,37 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	private Float pan;
 	private Float tilt;
 	private Float zoom;
+	private final PTZSpaces ptzSpaces;
 
 	public OnvifPTZMoveProperty(
 		float p, float t, float z,
-		OnvifSessionMessenger session)
+		OnvifSessionMessenger session,
+		PTZSpaces ptzSpaces)
 	{
 		super(session);
 		pan = p;
 		tilt = t;
 		zoom = z;
+		this.ptzSpaces = ptzSpaces;
 	}
 
 	@Override
-	protected void encodeStore() throws IOException {
+	public void encodeStore(ControllerImpl c, OutputStream os)
+		throws IOException
+	{
 		if (!supportsContinuousPTZMove())
 			throw new OperationNotSupportedException(
 				"ContinuousPTZMove");
-		else {
-			resizeInputs();
-			continuousMove(createPTZSpeed());
-			if (pan != 0 || tilt != 0 || zoom != 0)
-				doneMsg = "PTZMoving";
-		}
+		resizeInputs();
+		continuousMove(createPTZSpeed());
+		if (pan != 0 || tilt != 0 || zoom != 0)
+			doneMsg = "PTZMoving";
 	}
 
 	private boolean supportsContinuousPTZMove() throws IOException {
-		return session.getPtzSpaces()
+		return ptzSpaces
 			.getContinuousPanTiltVelocitySpace() != null
-			&& session.getPtzSpaces()
+			&& ptzSpaces
 			.getAbsolutePanTiltPositionSpace() != null;
 	}
 
@@ -62,26 +67,26 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	private void resizeInputs() throws IOException {
 		float sourceMin = -1;
 		float sourceMax = 1;
-		float targetMin = session.getPtzSpaces()
+		float targetMin = ptzSpaces
 			.getContinuousPanTiltVelocitySpace().get(0).getXRange()
 			.getMin();
-		float targetMax = session.getPtzSpaces()
+		float targetMax = ptzSpaces
 			.getContinuousPanTiltVelocitySpace().get(0).getXRange()
 			.getMax();
 		pan = resize(pan, sourceMin, sourceMax, targetMin, targetMax);
-		targetMin = session.getPtzSpaces()
+		targetMin = ptzSpaces
 			.getContinuousPanTiltVelocitySpace().get(0).getYRange()
 			.getMin();
-		targetMax = session.getPtzSpaces()
+		targetMax = ptzSpaces
 			.getContinuousPanTiltVelocitySpace().get(0).getYRange()
 			.getMax();
 		tilt = resize(tilt, sourceMin, sourceMax, targetMin,
 			targetMax);
 		targetMin =
-			session.getPtzSpaces().getContinuousZoomVelocitySpace()
+			ptzSpaces.getContinuousZoomVelocitySpace()
 				.get(0).getXRange().getMin();
 		targetMax =
-			session.getPtzSpaces().getContinuousZoomVelocitySpace()
+			ptzSpaces.getContinuousZoomVelocitySpace()
 				.get(0).getXRange().getMax();
 		zoom = resize(zoom, sourceMin, sourceMax, targetMin,
 			targetMax);
@@ -89,7 +94,7 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 
 	private PTZSpeed createPTZSpeed() throws IOException {
 		PTZSpeed speed = new PTZSpeed();
-		PTZSpaces spaces = session.getPtzSpaces();
+		PTZSpaces spaces = ptzSpaces;
 		Vector2D vector2D = new Vector2D();
 		vector2D.setX(pan);
 		vector2D.setY(tilt);

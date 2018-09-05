@@ -29,19 +29,18 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 */
 	protected String doneMsg = "Ready";
 
+	/**
+	 * OnvifPhases have OnvifProperties that are stores by default
+	 */
+	protected boolean isQuery = false;
+
 	protected OnvifProperty(OnvifSessionMessenger session) {
 		this.session = session;
 	}
 
-	@Override
-	public void encodeStore(ControllerImpl c, OutputStream os)
-		throws IOException
-	{
-		log("Preparing operation properties");
-		encodeStore();
-		log("Operation properties sent");
-	}
-
+	/**
+	 * by default, responses to stores are ignored but logged
+	 */
 	@Override
 	public void decodeStore(ControllerImpl c, InputStream is)
 		throws IOException
@@ -59,11 +58,9 @@ public abstract class OnvifProperty extends ControllerProperty {
 		return doneMsg;
 	}
 
-	/**
-	 * Send this property to the device. Should set response.
-	 * @throws IOException
-	 */
-	protected abstract void encodeStore() throws IOException;
+	public boolean isQuery() {
+		return isQuery;
+	}
 
 	/**
 	 * Handle errors or additional checking as needed from response to

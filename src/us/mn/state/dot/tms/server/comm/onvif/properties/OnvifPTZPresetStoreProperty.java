@@ -1,6 +1,8 @@
 package us.mn.state.dot.tms.server.comm.onvif.properties;
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZNode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPreset;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.SetPresetResponse;
@@ -8,6 +10,8 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFail
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -20,15 +24,18 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	private String presetToken;
 
 	public OnvifPTZPresetStoreProperty(
-		OnvifSessionMessenger session, int num)
+		OnvifSessionMessenger session, int num, List<PTZNode> nodes)
 	{
-		super(session, num);
+		super(session, num, nodes);
 	}
 
 	@Override
-	protected void encodeStore() throws IOException {
+	public void encodeStore(ControllerImpl c, OutputStream os)
+		throws IOException
+	{
 		if (!supportsPresets())
-			throw new OperationNotSupportedException("StorePreset");
+			throw new OperationNotSupportedException(
+				"StorePreset");
 		else {
 			List<PTZPreset> presets;
 			presets = getPresets();
@@ -39,14 +46,13 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 				setPreset(preset, null);
 			else {
 				log("Device does not have room " +
-						"for" +
-						" more presets. Try " +
-						"using the device's " +
-						"web app (if " +
-						"available) to delete " +
-						"non-IRIS presets, or " +
-						"overwrite a lower " +
-						"numbered preset. ");
+					"for more presets. Try " +
+					"using the device's " +
+					"web app (if " +
+					"available) to delete " +
+					"non-IRIS presets, or " +
+					"overwrite a lower-" +
+					"numbered preset. ");
 				throw new OperationFailedException(
 					"NoMoreRoomForPresets");
 			}
@@ -54,19 +60,18 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 	}
 
 	@Override
-	protected void decodeStore() throws IOException {
+	public void decodeStore(ControllerImpl c, InputStream is)
+		throws IOException
+	{
 		// null check then:
 		// if we are overwriting, we should get back the same token
 		// if we are creating, we should get any new token back
-		SetPresetResponse setPresetResponse =
-			(SetPresetResponse) response;
-		if (setPresetResponse.getPresetToken() == null
+		SetPresetResponse casted = (SetPresetResponse) response;
+		if (casted.getPresetToken() == null
 			|| (presetToken != null
-			&& !setPresetResponse.getPresetToken()
-			.equals(presetToken))
-			|| setPresetResponse.getPresetToken().isEmpty())
+			&& !casted.getPresetToken().equals(presetToken)))
 		{
-			log("Tried to set overwrite existing " +
+			log("Tried to overwrite existing " +
 				"preset, but response preset token did not " +
 				"match found preset token. ");
 			throw new IOException(
@@ -79,7 +84,7 @@ public class OnvifPTZPresetStoreProperty extends OnvifPTZPresetProperty {
 
 	private boolean hasRoomForAnotherPreset() throws IOException {
 		return getPresets().size()
-			< session.getNodes().get(0).getMaximumNumberOfPresets();
+			< nodes.get(0).getMaximumNumberOfPresets();
 	}
 
 	/**
