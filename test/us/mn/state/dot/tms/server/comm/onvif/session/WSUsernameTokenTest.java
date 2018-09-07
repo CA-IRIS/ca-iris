@@ -3,7 +3,6 @@ package us.mn.state.dot.tms.server.comm.onvif.session;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import junit.framework.TestCase;
 
 
