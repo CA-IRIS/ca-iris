@@ -27,7 +27,7 @@ public class WSUsernameToken {
 	/**
 	 * the session token (static for all sequential session transactions)
 	 */
-	private String nonce;
+	private byte [] nonce;
 	/** the date for the last call to passwordDigest() */
 	private String date;
 	/** positive value means device is ahead by clockOffset milliseconds */
@@ -66,6 +66,11 @@ public class WSUsernameToken {
 	 */
 	String getPasswordDigest() throws NoSuchAlgorithmException {
 		resetTime();
+		return _getPasswordDigest();
+	}
+
+	/** for testing purposes only */
+	String _getPasswordDigest() throws NoSuchAlgorithmException {
 		MessageDigest messageDigest;
 		try {
 			messageDigest = MessageDigest.getInstance("SHA-1");
@@ -75,8 +80,8 @@ public class WSUsernameToken {
 					"not implemented or not detected. ");
 			throw e;
 		}
-		messageDigest.update((getNonce() + getUTCTime() + password)
-			.getBytes());
+		messageDigest.update(getNonce());
+		messageDigest.update((getUTCTime() + password).getBytes());
 
 		return Base64.getEncoder()
 			.encodeToString(messageDigest.digest());
@@ -89,7 +94,7 @@ public class WSUsernameToken {
 		if (nonce == null) {
 			nonce = createNonce();
 		}
-		return Base64.getEncoder().encodeToString(nonce.getBytes());
+		return Base64.getEncoder().encodeToString(nonce);
 	}
 
 	/**
@@ -113,18 +118,27 @@ public class WSUsernameToken {
 	/**
 	 * @return a new random int
 	 */
-	private String createNonce() {
+	private byte [] createNonce() {
 		Random generator = new Random();
-		return "" + generator.nextInt();
+		return ("" + generator.nextInt()).getBytes();
 	}
 
 	/**
 	 * @return returns the current nonce else new nonce
 	 */
-	private String getNonce() {
+	private byte [] getNonce() {
 		if (nonce == null) {
 			nonce = createNonce();
 		}
 		return nonce;
+	}
+
+	//** methods for testing purposes only *//
+	void setNonce(String nonce) {
+		this.nonce = Base64.getDecoder().decode(nonce.getBytes());
+	}
+
+	void setDate(String date) {
+		this.date = date;
 	}
 }
