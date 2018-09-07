@@ -27,6 +27,7 @@ import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
+import javax.naming.ldap.Control;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.SOAPConnection;
@@ -247,7 +248,6 @@ public class OnvifSessionMessenger extends Messenger {
 			log(e.getMessage(), this);
 			throw new ControllerException(e.getMessage());
 		} catch (SOAPException e) {
-			e.printStackTrace();
 			log(e.getMessage(), this);
 			if (e.getCause() != null
 				&& e.getCause().getCause() != null
@@ -262,13 +262,41 @@ public class OnvifSessionMessenger extends Messenger {
 					e.getCause().getCause();
 			}
 			int err = parseSoapErrStatus(e);
-			if (err >= 400 && err <= 403) {
-				log("Hint: check username and password. ",
-					this);
-				throw new ControllerException("unauthorized");
-			}
-			throw new ControllerException(e.getMessage());
+			String msg = knownStatuses(e, err);
+			log(msg, this);
+			throw new ControllerException(msg);
 		}
+	}
+
+	private String knownStatuses(SOAPException e, int httpStatus) {
+		String reason;
+		String error;
+		switch (httpStatus) {
+		case 400:
+			reason = "Bad Request";
+			error = "Malformed Request";
+			break;
+		case 401:
+			reason = "Unauthorized";
+			error = "Requires Authorization";
+			break;
+		case 403:
+			// not an official ONVIF code, but some devices use it
+			reason = "Forbidden";
+			error = "";
+		case 405:
+			reason = "HTTP Method is neither POST or GET";
+			error = "Method Not Allowed";
+			break;
+		case 415:
+			reason = "Unsupported message encapsulation method";
+			error = "Unsupported Media";
+			break;
+		default:
+			reason = "" + httpStatus;
+			error = "Unrecognized";
+		}
+		return "Reason: " + reason + ", Error: " + error;
 	}
 
 	private int parseSoapErrStatus(SOAPException e)
