@@ -208,31 +208,40 @@ public class OnvifSessionMessenger extends Messenger {
 		throws SocketTimeoutException,
 		ControllerException, ParsingException
 	{
+		return _makeRequest(request, responseClass, true);
+	}
+
+	private Object _makeRequest(Object request, Class<?> responseClass,
+								boolean withAuth)
+			throws SocketTimeoutException, ControllerException,
+			ParsingException
+	{
 		setStatus(request.getClass().getSimpleName() + "Request");
 		try {
 			SOAPMessage soap = SoapWrapper.newMessage(request);
-			SoapWrapper.addAuthHeader(soap, auth);
+			if (withAuth)
+				SoapWrapper.addAuthHeader(soap, auth);
 			SOAPConnection soapConnection =
-				SOAPConnectionFactory.newInstance()
-					.createConnection();
+					SOAPConnectionFactory.newInstance()
+							.createConnection();
 			logSoap("Request SOAPMessage", request.getClass(),
-				responseClass, soap);
+					responseClass, soap);
 			SOAPMessage response =
-				soapConnection.call(soap, currentUri);
+					soapConnection.call(soap, currentUri);
 			if (response.getSOAPBody().hasFault()) {
 				logSoap("SOAPFault", request.getClass(),
-					responseClass, response);
+						responseClass, response);
 				throw new ParsingException(
-					response.getSOAPBody().getFault()
-						.getFaultString());
+						response.getSOAPBody().getFault()
+								.getFaultString());
 			}
 			logSoap("Response SOAPMessage", request.getClass(),
-				responseClass,
-				response);
+					responseClass,
+					response);
 			Object o;
 			try {
 				o = SoapWrapper.convertToObject(
-					response, responseClass);
+						response, responseClass);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 				log(e.getMessage(), this);
@@ -240,35 +249,35 @@ public class OnvifSessionMessenger extends Messenger {
 			}
 			return o;
 		} catch (ParserConfigurationException
-			| NoSuchAlgorithmException
-			| JAXBException e) {
+				| NoSuchAlgorithmException
+				| JAXBException e) {
 			System.err.println(
-				"Unable to make request: " + e.getMessage());
+					"Unable to make request: " + e.getMessage());
 			e.printStackTrace();
 			log(e.getMessage(), this);
 			throw new ControllerException(e.getMessage());
 		} catch (SOAPException e) {
 			log(e.getMessage(), this);
 			if (e.getCause() != null
-				&& e.getCause().getCause() != null
-				&& e.getCause().getCause() instanceof
-				SocketTimeoutException) {
+					&& e.getCause().getCause() != null
+					&& e.getCause().getCause() instanceof
+					SocketTimeoutException) {
 				log("Hint: check URI, timeout, " +
-					"and network connection. ",
-					this);
+								"and network connection. ",
+						this);
 				// this exception is expected by caller (e.g.
 				// MessagePoller), so we strip off the wrappers
 				throw (SocketTimeoutException)
-					e.getCause().getCause();
+						e.getCause().getCause();
 			}
 			int err = parseSoapErrStatus(e);
-			String msg = knownStatuses(e, err);
+			String msg = knownStatuses(err);
 			log(msg, this);
 			throw new ControllerException(msg);
 		}
 	}
 
-	private String knownStatuses(SOAPException e, int httpStatus) {
+	private String knownStatuses(int httpStatus) {
 		String reason;
 		String error;
 		switch (httpStatus) {
@@ -283,7 +292,8 @@ public class OnvifSessionMessenger extends Messenger {
 		case 403:
 			// not an official ONVIF code, but some devices use it
 			reason = "Forbidden";
-			error = "";
+			error = "Bad Username/Password";
+			break;
 		case 405:
 			reason = "HTTP Method is neither POST or GET";
 			error = "Method Not Allowed";
@@ -296,7 +306,9 @@ public class OnvifSessionMessenger extends Messenger {
 			reason = "" + httpStatus;
 			error = "Unrecognized";
 		}
-		return "Reason: " + reason + ", Error: " + error;
+		return "Status: " + httpStatus + ", " +
+				"Reason: " + reason + ", " +
+				"Error: " + error;
 	}
 
 	private int parseSoapErrStatus(SOAPException e)
@@ -359,7 +371,7 @@ public class OnvifSessionMessenger extends Messenger {
 			((GetSystemDateAndTimeResponse) makeInternalRequest(
 				new GetSystemDateAndTime(),
 				GetSystemDateAndTimeResponse.class,
-				OnvifService.DEVICE))
+				OnvifService.DEVICE, false))
 				.getSystemDateAndTime();
 		DateTime deviceDT = response.getUTCDateTime();
 		ZoneOffset zoneID = ZoneOffset.UTC;
@@ -385,7 +397,7 @@ public class OnvifSessionMessenger extends Messenger {
 		GetCapabilities getCapabilities = new GetCapabilities();
 		return ((GetCapabilitiesResponse) makeInternalRequest(
 			getCapabilities, GetCapabilitiesResponse.class,
-			OnvifService.DEVICE))
+			OnvifService.DEVICE, true))
 			.getCapabilities();
 	}
 
@@ -393,7 +405,7 @@ public class OnvifSessionMessenger extends Messenger {
 		List<Profile> profiles =
 			((GetProfilesResponse) makeInternalRequest(
 				new GetProfiles(), GetProfilesResponse.class,
-				OnvifService.MEDIA)).getProfiles();
+				OnvifService.MEDIA, true)).getProfiles();
 		if (profiles == null
 			|| profiles.size() < 1
 			|| profiles.get(0).getToken() == null
@@ -408,7 +420,7 @@ public class OnvifSessionMessenger extends Messenger {
 	 */
 	private Object makeInternalRequest(Object request,
 					   Class<?> responseClass,
-					   OnvifService service)
+					   OnvifService service, boolean withAuth)
 		throws ServiceNotSupportedException, ParsingException,
 		SocketTimeoutException, ControllerException,
 		MalformedURLException
@@ -416,7 +428,7 @@ public class OnvifSessionMessenger extends Messenger {
 		URL savedUri = currentUri;
 		selectService(service);
 		try {
-			return makeRequest(request, responseClass);
+			return _makeRequest(request, responseClass, withAuth);
 		} finally {
 			currentUri = savedUri;
 		}
