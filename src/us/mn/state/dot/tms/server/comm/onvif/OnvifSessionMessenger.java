@@ -528,13 +528,10 @@ public class OnvifSessionMessenger extends Messenger {
 		}
 		SOAP_LOG.log(
 			context + "\n"
-				+ "Service: " + currentUri +
-				"\n"
-				+ "Request class: " + requestClass
-				.getSimpleName() + "\n"
-				+ "Expected response class: " + responseClass
-				.getSimpleName() + "\n"
-				+ "Soap: " + new String(out.toByteArray()));
+				+ "\tService: " + currentUri + "\n"
+				+ "\tRequest class: " + requestClass.getSimpleName() + "\n"
+				+ "\tExpected response class: " + responseClass.getSimpleName() + "\n"
+				+ "\tSoap: " + new String(out.toByteArray()));
 	}
 
 	/******** cached values required for some service requests ********/
