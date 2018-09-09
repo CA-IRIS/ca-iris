@@ -80,6 +80,7 @@ public class OnvifSessionMessenger extends Messenger {
 	private int timeout = 5000; // in milliseconds
 	private URL baseUri;
 	private URL currentUri;
+	private SOAPConnection soapConnection;
 
 	// we hold onto the CameraImpl to centralize status reporting
 	private CameraImpl camera;
@@ -118,14 +119,17 @@ public class OnvifSessionMessenger extends Messenger {
 	public void open() throws IOException {
 		log("Starting session. ", this);
 		try {
+			soapConnection = SOAPConnectionFactory.newInstance()
+					.createConnection();
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
 		} catch (IOException e) {
-			close();
-			setStatus("Failed");
-			log("Failed to start session. ", this);
+			openFailed();
 			throw e;
+		} catch (SOAPException e) {
+			openFailed();
+			throw new IOException(e);
 		}
 		log("Session started. ", this);
 	}
@@ -142,6 +146,7 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingMoveOptions = null;
 		imagingSettings = null;
 		imagingOptions = null;
+		soapConnection = null;
 		setStatus("Closed");
 		log("Session closed. ", this);
 	}
@@ -221,9 +226,6 @@ public class OnvifSessionMessenger extends Messenger {
 			SOAPMessage soap = SoapWrapper.newMessage(request);
 			if (withAuth)
 				SoapWrapper.addAuthHeader(soap, auth);
-			SOAPConnection soapConnection =
-					SOAPConnectionFactory.newInstance()
-							.createConnection();
 			logSoap("Request SOAPMessage", request.getClass(),
 					responseClass, soap);
 			SOAPMessage response =
@@ -494,6 +496,12 @@ public class OnvifSessionMessenger extends Messenger {
 				return connection;
 			}
 		};
+	}
+
+	private void openFailed() {
+		close();
+		setStatus("Failed");
+		log("Failed to start session. ", this);
 	}
 
 	public void log(String msg, Object reporter) {
