@@ -81,6 +81,9 @@ public class SoapWrapper {
 
 		SOAPElement securityElement =
 			soapHeader.addChildElement("Security", "wsse");
+		securityElement.setAttribute(soapHeader.getPrefix()
+				+ ":mustUnderstand", "1");
+
 
 		SOAPElement usernameTokenElement = securityElement
 			.addChildElement("UsernameToken", "wsse");
@@ -96,6 +99,10 @@ public class SoapWrapper {
 		passwordElement.setTextContent(tok.getPasswordDigest());
 		SOAPElement nonceElement =
 			usernameTokenElement.addChildElement("Nonce", "wsse");
+		nonceElement.setAttribute("EncodingType",
+				"http://docs.oasis-open.org/wss/2004/01/" +
+						"oasis-200401-wss-soap-message-security-1.0" +
+						"#Base64Binary");
 		nonceElement.setTextContent(tok.getEncodedNonce());
 		SOAPElement createdElement =
 			usernameTokenElement.addChildElement("Created", "wsu");
