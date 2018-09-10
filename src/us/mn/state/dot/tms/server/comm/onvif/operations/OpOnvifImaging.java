@@ -46,17 +46,15 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty p = null;
-			if (session.getImagingSettings() == null) {
-				switch (request) {
-					case CAMERA_FOCUS_MANUAL:
-					case CAMERA_FOCUS_AUTO:
-					case CAMERA_IRIS_CLOSE:
-					case CAMERA_IRIS_OPEN:
-					case CAMERA_IRIS_MANUAL:
-					case CAMERA_IRIS_AUTO:
-						p = new OnvifImagingSettingsProperty(
-							session);
-				}
+			switch (request) {
+				case CAMERA_FOCUS_MANUAL:
+				case CAMERA_FOCUS_AUTO:
+				case CAMERA_IRIS_CLOSE:
+				case CAMERA_IRIS_OPEN:
+				case CAMERA_IRIS_MANUAL:
+				case CAMERA_IRIS_AUTO:
+					p = new OnvifImagingSettingsProperty(
+						session);
 			}
 			return p;
 		}

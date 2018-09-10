@@ -39,6 +39,7 @@ public class OnvifDeviceInfoProperty extends OnvifProperty {
 			"\tFirmware version: " + casted.getFirmwareVersion() + "\n" +
 			"\tSerial number: " + casted.getSerialNumber() + "\n" +
 			"}");
-		c.setVersion(casted.getFirmwareVersion());
+		if (c != null)
+			c.setVersion(casted.getFirmwareVersion());
 	}
 }

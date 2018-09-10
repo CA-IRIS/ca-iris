@@ -51,10 +51,8 @@ public class OnvifPTZMoveProperty extends OnvifProperty {
 	}
 
 	private boolean supportsContinuousPTZMove() throws IOException {
-		return ptzSpaces
-			.getContinuousPanTiltVelocitySpace() != null
-			&& ptzSpaces
-			.getAbsolutePanTiltPositionSpace() != null;
+		return ptzSpaces.getContinuousPanTiltVelocitySpace() != null
+			&& ptzSpaces.getAbsolutePanTiltPositionSpace() != null;
 	}
 
 	/**

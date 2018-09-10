@@ -9,7 +9,6 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFail
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 

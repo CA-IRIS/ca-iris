@@ -5,7 +5,6 @@ import us.mn.state.dot.tms.server.comm.ControllerProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * An OnvifPoperty knows how to get the information required for an OpOnvif and

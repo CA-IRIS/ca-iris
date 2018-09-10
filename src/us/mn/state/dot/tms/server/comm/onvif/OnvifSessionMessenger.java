@@ -27,7 +27,6 @@ import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
 import us.mn.state.dot.tms.server.comm.onvif.session.exceptions.ServiceNotSupportedException;
 
-import javax.naming.ldap.Control;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.SOAPConnection;
@@ -146,6 +145,12 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingMoveOptions = null;
 		imagingSettings = null;
 		imagingOptions = null;
+		try {
+			soapConnection.close();
+		} catch (SOAPException e) {
+			log(e.getMessage(), this);
+			e.printStackTrace();
+		}
 		soapConnection = null;
 		setStatus("Closed");
 		log("Session closed. ", this);
