@@ -221,7 +221,9 @@ public class OnvifSessionMessenger extends Messenger {
 			throws SocketTimeoutException, ControllerException,
 			ParsingException
 	{
-		setStatus(request.getClass().getSimpleName() + "Request");
+		String start = request.getClass().getSimpleName() + "Request";
+		setStatus(start);
+		log(start, this);
 		try {
 			SOAPMessage soap = SoapWrapper.newMessage(request);
 			if (withAuth)
