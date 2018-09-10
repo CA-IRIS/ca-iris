@@ -56,14 +56,11 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		switch (req) {
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
-			doneMsg = "IrisMoving";
 			stepIris();
 			break;
 		case CAMERA_IRIS_STOP:
-			log(req + " intentionally ignored. " +
-				"ONVIF only supports absolute iris movements" +
-				"." +
-				" ");
+			// intentionally ignored
+			// ONVIF only supports absolute iris movements
 			break;
 		default:
 			throw new IllegalArgumentException(
@@ -123,11 +120,14 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		final float max = range.getMax();
 		final float incr = (max - min) / GRANULARITY_OF_MOVEMENT;
 		float val = settings.getExposure().getIris();
-		val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
-		if (max == 0f)
+		if (max == 0f) {
+			val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
 			negativeAttenuation(val, min, max);
-		else if (min == 0f)
+		}
+		else if (min == 0f) {
+			val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? -1 : 1) * incr;
 			absValAttenuation(val, min, max);
+		}
 	}
 
 
