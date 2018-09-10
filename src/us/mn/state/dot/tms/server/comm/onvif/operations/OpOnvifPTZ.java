@@ -50,12 +50,9 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 				out = new OnvifPTZSpacesProperty(session,
 					session.getPtzConfigurations());
 			else {
-//				if (pan == 0 && tilt == 0 && zoom == 0)
-//					out = new OnvifPTZStopProperty(session);
-//				else
-					out = new OnvifPTZMoveProperty(
-						pan, tilt, zoom,
-					session, session.getPtzSpaces());
+				out = new OnvifPTZMoveProperty(
+					pan, tilt, zoom,
+				session, session.getPtzSpaces());
 				done = true;
 			}
 			return out;
