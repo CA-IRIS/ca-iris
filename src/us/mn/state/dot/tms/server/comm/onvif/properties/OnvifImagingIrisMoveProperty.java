@@ -32,7 +32,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	 * request, this does not represent a linear relationship. A larger
 	 * number will mean more requests which are effectively slower.
 	 */
-	private static final float GRANULARITY_OF_MOVEMENT = 25;
+	private static final float GRANULARITY_OF_MOVEMENT = 10;
 	private final DeviceRequest req;
 	private ImagingSettings20 settings;
 	private ImagingOptions20 options;
@@ -91,7 +91,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 				.getExposure().getIris());
 	}
 
-	private boolean supportsIrisMove() throws IOException {
+	private boolean supportsIrisMove() {
 		boolean supported = true;
 		if (options.getExposure() == null
 			|| options.getExposure().getIris() == null

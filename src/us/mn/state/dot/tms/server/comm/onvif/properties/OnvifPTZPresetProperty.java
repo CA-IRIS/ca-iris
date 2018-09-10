@@ -48,8 +48,7 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	 * @return any device that has at least 1 preset must support the
 	 * preset commands
 	 */
-	boolean supportsPresets() throws IOException {
-		return nodes.get(0)
-			.getMaximumNumberOfPresets() > 0;
+	boolean supportsPresets() {
+		return nodes.get(0).getMaximumNumberOfPresets() > 0;
 	}
 }

@@ -45,18 +45,15 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty p = null;
-			if (session.getImagingSettings() == null) {
-				switch (request) {
-				case CAMERA_FOCUS_MANUAL:
-				case CAMERA_FOCUS_AUTO:
-				case CAMERA_IRIS_STOP:
-				case CAMERA_IRIS_CLOSE:
-				case CAMERA_IRIS_OPEN:
-				case CAMERA_IRIS_MANUAL:
-				case CAMERA_IRIS_AUTO:
-					p = new OnvifImagingSettingsProperty(
-						session);
-				}
+			switch (request) {
+			case CAMERA_FOCUS_MANUAL:
+			case CAMERA_FOCUS_AUTO:
+			case CAMERA_IRIS_CLOSE:
+			case CAMERA_IRIS_OPEN:
+			case CAMERA_IRIS_MANUAL:
+			case CAMERA_IRIS_AUTO:
+				p = new OnvifImagingSettingsProperty(
+					session);
 			}
 			return p;
 		}
@@ -149,7 +146,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	protected class Adjust extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			OnvifProperty out;
+			OnvifProperty out = null;
 			switch (request) {
 			case CAMERA_FOCUS_NEAR:
 				out = new OnvifImagingFocusMoveProperty(session,
@@ -178,7 +175,6 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 				break;
 			case CAMERA_IRIS_CLOSE:
 			case CAMERA_IRIS_OPEN:
-			case CAMERA_IRIS_STOP:
 				out = new OnvifImagingIrisMoveProperty(session,
 					request,
 					session.getImagingSettings(),
@@ -195,6 +191,9 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 					true,
 					session.getImagingSettings(),
 					session.getImagingOptions());
+				break;
+			case CAMERA_IRIS_STOP:
+				// ignored
 				break;
 			default:
 				throw new IOException(
