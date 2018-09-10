@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
@@ -8,7 +9,6 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZConfigurationsProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZSpacesProperty;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
 import java.io.IOException;
@@ -25,9 +25,9 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 
 	public OpOnvifPTZ(
 		CameraImpl c, float p, float t, float z,
-		OnvifSessionMessenger session)
+		OnvifSessionMessenger session, ControllerImpl controller)
 	{
-		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ);
+		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ, controller);
 		pan = p;
 		tilt = t;
 		zoom = z;

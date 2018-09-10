@@ -16,10 +16,11 @@ import java.io.OutputStream;
 public class OnvifDeviceInfoProperty extends OnvifProperty {
 	public OnvifDeviceInfoProperty(OnvifSessionMessenger session) {
 		super(session);
+		isQuery = true;
 	}
 
 	@Override
-	public void encodeStore(ControllerImpl c, OutputStream os)
+	public void encodeQuery(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
 		response = session.makeRequest(new GetDeviceInformation(),
@@ -27,7 +28,7 @@ public class OnvifDeviceInfoProperty extends OnvifProperty {
 	}
 
 	@Override
-	public void decodeStore(ControllerImpl c, InputStream is)
+	public void decodeQuery(ControllerImpl c, InputStream is)
 		throws IOException
 	{
 		GetDeviceInformationResponse casted =
@@ -38,5 +39,6 @@ public class OnvifDeviceInfoProperty extends OnvifProperty {
 			"\tFirmware version: " + casted.getFirmwareVersion() + "\n" +
 			"\tSerial number: " + casted.getSerialNumber() + "\n" +
 			"}");
+		c.setVersion(casted.getFirmwareVersion());
 	}
 }

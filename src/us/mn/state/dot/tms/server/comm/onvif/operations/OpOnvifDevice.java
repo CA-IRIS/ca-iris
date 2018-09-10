@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.DeviceRequest;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
@@ -23,9 +24,9 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 	public OpOnvifDevice(
 		DeviceImpl d,
 		OnvifSessionMessenger session,
-		DeviceRequest r)
+		DeviceRequest r, ControllerImpl controller)
 	{
-		super(PriorityLevel.URGENT, d, session, OnvifService.DEVICE);
+		super(PriorityLevel.URGENT, d, session, OnvifService.DEVICE, controller);
 		request = r;
 	}
 

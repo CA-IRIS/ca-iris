@@ -1,12 +1,11 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZPreset.EnsureStopped;
-import us.mn.state.dot.tms.server.comm.onvif.operations.OpOnvifPTZPreset.Recall;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZNodesProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZWiperProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
@@ -22,9 +21,9 @@ import java.io.IOException;
 public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	public OpOnvifPTZAux(
 		DeviceImpl d,
-		OnvifSessionMessenger session)
+		OnvifSessionMessenger session, ControllerImpl controller)
 	{
-		super(PriorityLevel.COMMAND, d, session, OnvifService.PTZ);
+		super(PriorityLevel.COMMAND, d, session, OnvifService.PTZ, controller);
 	}
 
 	/**

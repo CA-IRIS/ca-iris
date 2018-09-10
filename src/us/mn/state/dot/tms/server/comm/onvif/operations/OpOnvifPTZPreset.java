@@ -1,6 +1,7 @@
 package us.mn.state.dot.tms.server.comm.onvif.operations;
 
 import us.mn.state.dot.tms.server.CameraImpl;
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
@@ -24,9 +25,9 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 	public OpOnvifPTZPreset(
 		CameraImpl c, int preset, boolean store,
-		OnvifSessionMessenger session)
+		OnvifSessionMessenger session, ControllerImpl controller)
 	{
-		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ);
+		super(PriorityLevel.COMMAND, c, session, OnvifService.PTZ, controller);
 		this.preset = preset;
 		this.store = store;
 	}

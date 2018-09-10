@@ -1,5 +1,6 @@
 package us.mn.state.dot.tms.server.comm.onvif;
 
+import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.OpDevice;
@@ -23,14 +24,16 @@ import java.io.IOException;
 public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 	protected final OnvifSessionMessenger session;
 	private final OnvifService service;
+	private final ControllerImpl controller;
 
 	protected OpOnvif(
 		PriorityLevel p, DeviceImpl d, OnvifSessionMessenger session,
-		OnvifService service)
+		OnvifService service, ControllerImpl controller)
 	{
 		super(p, d);
 		this.session = session;
 		this.service = service;
+		this.controller = controller;
 	}
 
 	/**
@@ -68,13 +71,13 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 					log("Sending " + prop.getClass().getSimpleName());
 					if (prop.isQuery()) {
 						mess.logQuery(prop);
-						prop.encodeQuery(null, null);
-						prop.decodeQuery(null, null);
+						prop.encodeQuery(controller, null);
+						prop.decodeQuery(controller, null);
 					}
 					else {
 						mess.logStore(prop);
-						prop.encodeStore(null, null);
-						prop.decodeStore(null, null);
+						prop.encodeStore(controller, null);
+						prop.decodeStore(controller, null);
 					}
 					if (next == null)
 						session.setStatus(prop.getDoneMsg());

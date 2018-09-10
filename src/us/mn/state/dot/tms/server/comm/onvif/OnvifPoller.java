@@ -33,6 +33,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	private OnvifSessionMessenger session =
 		(OnvifSessionMessenger) messenger;
 	private String name;
+	private ControllerImpl controller;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
@@ -42,17 +43,17 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 
 	@Override
 	public void sendPTZ(CameraImpl c, float p, float t, float z) {
-		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session), c);
+		prepAndAddOp(new OpOnvifPTZ(c, p, t, z, session, controller), c);
 	}
 
 	@Override
 	public void sendStorePreset(CameraImpl c, int preset) {
-		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session), c);
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, true, session, controller), c);
 	}
 
 	@Override
 	public void sendRecallPreset(CameraImpl c, int preset) {
-		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session), c);
+		prepAndAddOp(new OpOnvifPTZPreset(c, preset, false, session, controller), c);
 	}
 
 	@Override
@@ -60,10 +61,10 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
 			prepAndAddOp(
-				new OpOnvifPTZ(c, 0, 0, 0, session), c);
+				new OpOnvifPTZ(c, 0, 0, 0, session, controller), c);
 			break;
 		case CAMERA_WIPER_ONESHOT:
-			prepAndAddOp(new OpOnvifPTZAux(c, session), c);
+			prepAndAddOp(new OpOnvifPTZAux(c, session, controller), c);
 			break;
 		case CAMERA_FOCUS_NEAR:
 		case CAMERA_FOCUS_FAR:
@@ -75,11 +76,11 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_IRIS_STOP:
 		case CAMERA_IRIS_MANUAL:
 		case CAMERA_IRIS_AUTO:
-			prepAndAddOp(new OpOnvifImaging(c, session, r), c);
+			prepAndAddOp(new OpOnvifImaging(c, session, r, controller), c);
 			break;
 		case RESET_DEVICE:
 		case CAMERA_PREPARE:
-			prepAndAddOp(new OpOnvifDevice(c, session, r), c);
+			prepAndAddOp(new OpOnvifDevice(c, session, r, controller), c);
 			break;
 		default:
 			log("Unsupported: " + r + ". ");
@@ -91,7 +92,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 */
 	@Override
 	public boolean isAddressValid(int drop) {
-		// TODO: Drop addresses are invalid for Onvif devices.
+		// Drop addresses are invalid for Onvif devices.
 		// Return true to keep caller happy, but this method does not
 		// appear to be called anywhere. Maybe it is an artifact of an
 		// older implementation that needs to be removed.
@@ -119,8 +120,10 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 			c = getControllerImpl((CommLinkImpl) cl);
 		if (c == null)
 			log("Failed to find Controller for " + name);
-		else
+		else {
+			controller = c;
 			session.setAuth(c.getUsername(), c.getPassword());
+		}
 	}
 
 	private ControllerImpl getControllerImpl(CommLinkImpl cl) {

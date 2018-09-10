@@ -35,7 +35,7 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 			token = findPresetToken(preset, getPresets());
 			if (token == null)
 				throw new OperationFailedException(
-					"PresetNotSet");
+					"PresetNotFound");
 			goToPreset(token);
 		}
 	}
