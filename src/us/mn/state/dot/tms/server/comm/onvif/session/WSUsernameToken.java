@@ -24,9 +24,7 @@ public class WSUsernameToken {
 
 	private String username;
 	private String password;
-	/**
-	 * the session token (static for all sequential session transactions)
-	 */
+	/** the session token (used to prevent replay attacks) */
 	private byte [] nonce;
 	/** the date for the last call to passwordDigest() */
 	private String date;
@@ -108,7 +106,7 @@ public class WSUsernameToken {
 			date = Instant.now().plusMillis(clockOffset).toString();
 		return date;
 	}
-	
+
 	private void resetNonce() {
 		nonce = null;
 	}
