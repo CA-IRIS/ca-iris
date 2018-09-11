@@ -46,7 +46,9 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 		boolean supported = true;
 		if (options == null
 			|| options.getExposure() == null
-			|| options.getExposure().getMode() == null)
+			|| options.getExposure().getMode() == null
+			|| options.getExposure().getMode().contains(enable ?
+			ExposureMode.AUTO : ExposureMode.MANUAL))
 			supported = false;
 		return supported;
 	}
