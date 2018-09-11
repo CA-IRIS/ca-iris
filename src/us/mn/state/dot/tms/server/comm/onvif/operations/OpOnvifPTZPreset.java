@@ -6,7 +6,6 @@ import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
-import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZNodesProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetRecallProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZPresetStoreProperty;
