@@ -4,6 +4,7 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ExposureMode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.FloatRange;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingOptions20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
@@ -94,13 +95,13 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	private boolean supportsIrisMove() {
 		boolean supported = true;
 		if (options.getExposure() == null
-			|| options.getExposure().getIris() == null
+			|| options.getExposure().getMode() == null
+			|| !options.getExposure().getMode().contains(ExposureMode.MANUAL)
 			// ONVIF states that min == max is indicative of
 			// unsupported iris move
+			|| options.getExposure().getIris() == null
 			|| options.getExposure().getIris().getMin()
-			== options.getExposure().getIris().getMax()
-			|| settings.getExposure() == null
-			|| settings.getExposure().getIris() == null)
+			== options.getExposure().getIris().getMax())
 			supported = false;
 		return supported;
 	}
