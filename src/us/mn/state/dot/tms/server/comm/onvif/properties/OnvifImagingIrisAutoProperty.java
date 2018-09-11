@@ -42,15 +42,12 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 		setAutoIrisMode();
 	}
 
-	private boolean supportsAutoIris() throws IOException {
-		boolean supported = true;
-		if (options == null
-			|| options.getExposure() == null
-			|| options.getExposure().getMode() == null
-			|| !options.getExposure().getMode().contains(enable ?
-			ExposureMode.AUTO : ExposureMode.MANUAL))
-			supported = false;
-		return supported;
+	private boolean supportsAutoIris() {
+		return options != null
+			&& options.getExposure() != null
+			&& options.getExposure().getMode() != null
+			&& options.getExposure().getMode().contains(enable ?
+			ExposureMode.AUTO : ExposureMode.MANUAL);
 	}
 
 	private void setAutoIrisMode() throws IOException {

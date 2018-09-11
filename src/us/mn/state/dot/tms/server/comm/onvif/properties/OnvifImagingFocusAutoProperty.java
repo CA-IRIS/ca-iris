@@ -4,6 +4,7 @@ import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.AutoFocusMode;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingOptions20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
@@ -18,14 +19,17 @@ import java.io.OutputStream;
 public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 	private boolean enable;
 	private ImagingSettings20 settings;
+	private final ImagingOptions20 options;
 
 	public OnvifImagingFocusAutoProperty(
 		OnvifSessionMessenger session, boolean enable,
-		ImagingSettings20 settings)
+		ImagingSettings20 settings,
+		ImagingOptions20 options)
 	{
 		super(session);
 		this.enable = enable;
 		this.settings = settings;
+		this.options = options;
 	}
 
 	@Override
@@ -33,15 +37,21 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 		throws IOException
 	{
 		ImagingSettings20 settings = this.settings;
-		if (!supportsAutoFocusMode(settings))
+		if (!supportsAutoFocusMode())
 			throw new OperationNotSupportedException(
 				(enable ? "Auto" : "Manual") + "Focus");
 		setAutoFocusMode(settings);
 	}
 
-	private boolean supportsAutoFocusMode(ImagingSettings20 settings) {
-		return settings.getFocus() != null && settings.getFocus()
-			.getAutoFocusMode() != null;
+	private boolean supportsAutoFocusMode() {
+		return options != null
+			&& options.getFocus() != null
+			&& options.getFocus().getAutoFocusModes() != null
+			&& options.getFocus().getAutoFocusModes().contains(
+				enable ? AutoFocusMode.AUTO : AutoFocusMode.MANUAL)
+			&& settings != null
+			&& settings.getFocus() != null
+			&& settings.getFocus().getAutoFocusMode() != null;
 	}
 
 	private void setAutoFocusMode(ImagingSettings20 currentSettings)

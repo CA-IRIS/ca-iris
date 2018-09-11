@@ -26,8 +26,7 @@ public class OnvifImagingOptionsProperty extends OnvifProperty {
 	{
 		GetOptions request = new GetOptions();
 		request.setVideoSourceToken(session.getMediaProfileTok());
-		response = session.makeRequest(request,
-			GetOptionsResponse.class);
+		response = session.makeRequest(request, GetOptionsResponse.class);
 	}
 
 	public void decodeQuery(ControllerImpl c, InputStream is)

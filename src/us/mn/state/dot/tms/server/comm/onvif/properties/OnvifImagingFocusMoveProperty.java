@@ -41,20 +41,17 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 	{
 		if (!supportsFocusMove())
 			throw new OperationNotSupportedException("FocusMove");
-		float newMin = imagingMoveOptions.getContinuous()
-			.getSpeed().getMin();
-		float newMax = imagingMoveOptions.getContinuous()
-			.getSpeed().getMax();
-		continuousFocus(
-			resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax));
+		float newMin = imagingMoveOptions.getContinuous().getSpeed().getMin();
+		float newMax = imagingMoveOptions.getContinuous().getSpeed().getMax();
+		continuousFocus(resize(speed, NEAR_MIN, FAR_MAX, newMin, newMax));
 		if (speed != 0)
 			doneMsg = "FocusMoving";
 	}
 
-	private boolean supportsFocusMove() throws IOException {
-		return imagingMoveOptions.getContinuous() != null
-			&& imagingMoveOptions.getContinuous()
-			.getSpeed() != null;
+	private boolean supportsFocusMove() {
+		return imagingMoveOptions != null
+			&& imagingMoveOptions.getContinuous() != null
+			&& imagingMoveOptions.getContinuous().getSpeed() != null;
 	}
 
 	private void continuousFocus(float speed) throws IOException {

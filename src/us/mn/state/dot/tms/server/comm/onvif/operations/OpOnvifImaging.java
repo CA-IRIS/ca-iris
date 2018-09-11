@@ -42,6 +42,12 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 		return new NeedsSettings();
 	}
 
+	/**
+	 * Some camera manufacturers have applied rounding in the case
+	 * of negative attenuation values, so we must anticipate this and
+	 * ensure that we have the correct value in our session cache after the
+	 * device response is retrieved.
+	 */
 	protected class NeedsSettings extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
@@ -71,7 +77,8 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			OnvifProperty p = null;
 			if (session.getImagingOptions() == null) {
 				switch (request) {
-				case CAMERA_IRIS_STOP:
+				case CAMERA_FOCUS_MANUAL:
+				case CAMERA_FOCUS_AUTO:
 				case CAMERA_IRIS_CLOSE:
 				case CAMERA_IRIS_OPEN:
 				case CAMERA_IRIS_MANUAL:
@@ -167,12 +174,14 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			case CAMERA_FOCUS_MANUAL:
 				out = new OnvifImagingFocusAutoProperty(session,
 					false,
-					session.getImagingSettings());
+					session.getImagingSettings(),
+					session.getImagingOptions());
 				break;
 			case CAMERA_FOCUS_AUTO:
 				out = new OnvifImagingFocusAutoProperty(session,
 					true,
-					session.getImagingSettings());
+					session.getImagingSettings(),
+					session.getImagingOptions());
 				break;
 			case CAMERA_IRIS_CLOSE:
 			case CAMERA_IRIS_OPEN:

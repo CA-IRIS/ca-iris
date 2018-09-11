@@ -8,14 +8,11 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Ex
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.FloatRange;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingOptions20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettings;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
 import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -64,46 +61,23 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			// ONVIF only supports absolute iris movements
 			break;
 		default:
-			throw new IllegalArgumentException(
-				"Unexpected: " + req);
+			throw new IllegalArgumentException("Unexpected: " + req);
 		}
 	}
 
-	/**
-	 * Some camera manufacturers have applied ceiling rounding in the case
-	 * of negative attenuation values, so we must anticipate this and
-	 * ensure that we have the correct value in our session cache after the
-	 * device response is retrieved.
-	 */
-	@Override
-	public void decodeStore(ControllerImpl c, InputStream is)
-		throws IOException
-	{
-		GetImagingSettings getImagingSettings =
-			new GetImagingSettings();
-		getImagingSettings.setVideoSourceToken(
-			session.getMediaProfileTok());
-		GetImagingSettingsResponse getImagingSettingsResponse
-			= (GetImagingSettingsResponse)
-			session.makeRequest(getImagingSettings,
-				GetImagingSettingsResponse.class);
-		settings.getExposure().setIris(
-			getImagingSettingsResponse.getImagingSettings()
-				.getExposure().getIris());
-	}
-
 	private boolean supportsIrisMove() {
-		boolean supported = true;
-		if (options.getExposure() == null
-			|| options.getExposure().getMode() == null
-			|| !options.getExposure().getMode().contains(ExposureMode.MANUAL)
-			// ONVIF states that min == max is indicative of
-			// unsupported iris move
-			|| options.getExposure().getIris() == null
-			|| options.getExposure().getIris().getMin()
-			== options.getExposure().getIris().getMax())
-			supported = false;
-		return supported;
+		return options != null
+			&& options.getExposure() != null
+			&& options.getExposure().getMode() != null
+			&& options.getExposure().getMode().contains(ExposureMode.MANUAL)
+			&& settings != null
+			&& settings.getExposure() != null
+			&& settings.getExposure().getMode() != null
+			&& settings.getExposure().getMode() == ExposureMode.MANUAL
+			&& settings.getExposure().getMode() == ExposureMode.MANUAL
+			&& options.getExposure().getIris() != null
+			&& options.getExposure().getIris().getMin()
+			< options.getExposure().getIris().getMax();
 	}
 
 	/**
@@ -159,7 +133,6 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		SetImagingSettings setReq = new SetImagingSettings();
 		setReq.setVideoSourceToken(session.getMediaProfileTok());
 		setReq.setImagingSettings(settings);
-		response = session.makeRequest(setReq,
-			SetImagingSettingsResponse.class);
+		response = session.makeRequest(setReq, SetImagingSettingsResponse.class);
 	}
 }

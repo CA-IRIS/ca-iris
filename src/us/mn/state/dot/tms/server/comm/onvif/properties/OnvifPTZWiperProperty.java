@@ -57,8 +57,9 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	}
 
 	private SendAuxiliaryCommand findSupportedCmd() throws IOException {
-		List<String> strCmds = nodes.get(0)
-			.getAuxiliaryCommands();
+		List<String> strCmds = null;
+		if (nodes != null && nodes.get(0) != null)
+			strCmds = nodes.get(0).getAuxiliaryCommands();
 		return switchOn ?
 			initCmd(matchAny(strCmds, WIPER_ON))
 			: initCmd(matchAny(strCmds, WIPER_OFF));

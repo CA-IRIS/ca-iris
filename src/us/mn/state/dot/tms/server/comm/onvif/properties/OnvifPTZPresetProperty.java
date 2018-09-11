@@ -49,6 +49,8 @@ public abstract class OnvifPTZPresetProperty extends OnvifProperty {
 	 * preset commands
 	 */
 	boolean supportsPresets() {
-		return nodes.get(0).getMaximumNumberOfPresets() > 0;
+		return nodes != null
+			&& nodes.get(0) != null
+			&& nodes.get(0).getMaximumNumberOfPresets() > 0;
 	}
 }

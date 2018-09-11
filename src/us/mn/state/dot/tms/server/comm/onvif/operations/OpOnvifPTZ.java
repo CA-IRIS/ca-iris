@@ -50,9 +50,11 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 				out = new OnvifPTZSpacesProperty(session,
 					session.getPtzConfigurations());
 			else {
+				// we might use the PTZ stop property, but
+				// Caltrans' Pelco cameras do not seem to support it.
 				out = new OnvifPTZMoveProperty(
-					pan, tilt, zoom,
-				session, session.getPtzSpaces());
+					pan, tilt, zoom, session,
+					session.getPtzSpaces());
 				done = true;
 			}
 			return out;
