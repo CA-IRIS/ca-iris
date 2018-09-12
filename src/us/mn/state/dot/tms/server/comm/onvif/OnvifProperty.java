@@ -79,8 +79,8 @@ public abstract class OnvifProperty extends ControllerProperty {
 		throws AssertionError
 	{
 		assert oldMin <= val && val <= oldMax; // validate inputs
-		assert oldMin != oldMax; // avoid division by zero
-		assert newMin < newMax; // also assures no division by zero
+		assert oldMin < oldMax; // avoid division by zero
+		assert newMin <= newMax; // might be okay to constrain to a single value
 		float oldRange = oldMax - oldMin;
 		float newRange = newMax - newMin;
 		return newRange * (val - oldMin) / oldRange + newMin;

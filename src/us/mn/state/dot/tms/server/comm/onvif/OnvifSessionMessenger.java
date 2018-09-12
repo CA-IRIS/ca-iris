@@ -249,13 +249,13 @@ public class OnvifSessionMessenger extends Messenger {
 					response);
 			Object o;
 			try {
-				o = SoapWrapper.convertToObject(
-						response, responseClass);
+				o = SoapWrapper.convertToObject(response, responseClass);
 			} catch (JAXBException e) {
 				e.printStackTrace();
 				log(e.getMessage(), this);
 				throw new ParserException(e.getMessage());
 			}
+			log(responseClass.getSimpleName(), this);
 			return o;
 		} catch (ParserConfigurationException
 				| NoSuchAlgorithmException

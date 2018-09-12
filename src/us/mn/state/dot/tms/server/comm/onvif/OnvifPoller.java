@@ -115,7 +115,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		CommLink cl = CommLinkHelper.lookup(name);
 		ControllerImpl c = null;
 		if (cl == null)
-			log("Failed to find CommLink for" + name);
+			log("Failed to find CommLink for " + name);
 		else
 			c = getControllerImpl((CommLinkImpl) cl);
 		if (c == null)
