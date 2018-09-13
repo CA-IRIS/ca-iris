@@ -269,20 +269,14 @@ public class OnvifSessionMessenger extends Messenger {
 			SOAPMessage soap = SoapWrapper.newMessage(request);
 			if (withAuth)
 				SoapWrapper.addAuthHeader(soap, auth);
-			logSoap("Request SOAPMessage", request.getClass(),
-					responseClass, soap);
-			SOAPMessage response =
-					soapConnection.call(soap, currentUri);
+			logSoap("Request", request.getClass(), responseClass, soap);
+			SOAPMessage response = soapConnection.call(soap, currentUri);
 			if (response.getSOAPBody().hasFault()) {
-				logSoap("SOAPFault", request.getClass(),
-						responseClass, response);
+				logSoap("Fault", request.getClass(), responseClass, response);
 				throw new ParsingException(
-						response.getSOAPBody().getFault()
-								.getFaultString());
+					response.getSOAPBody().getFault().getFaultString());
 			}
-			logSoap("Response SOAPMessage", request.getClass(),
-					responseClass,
-					response);
+			logSoap("Response", request.getClass(), responseClass, response);
 			Object o;
 			try {
 				o = SoapWrapper.convertToObject(response, responseClass);
@@ -551,7 +545,7 @@ public class OnvifSessionMessenger extends Messenger {
 					+ "\n", this);
 			e.printStackTrace();
 		}
-		SOAP_LOG.log(context + "\n"
+		SOAP_LOG.log("SOAP" + context + "\n"
 				+ "\tService: " + currentUri + "\n"
 				+ "\tRequest class: " + requestClass.getSimpleName() + "\n"
 				+ "\tExpected response class: " + responseClass.getSimpleName() + "\n"
