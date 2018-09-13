@@ -198,9 +198,6 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 					session.getImagingSettings(),
 					session.getImagingOptions());
 				break;
-			case CAMERA_IRIS_STOP:
-				// ignored
-				break;
 			default:
 				throw new IOException(
 					"Unrecognized: " + request);

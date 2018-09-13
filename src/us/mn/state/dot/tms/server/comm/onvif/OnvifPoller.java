@@ -71,7 +71,6 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case CAMERA_FOCUS_AUTO:
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
-		case CAMERA_IRIS_STOP:
 		case CAMERA_IRIS_MANUAL:
 		case CAMERA_IRIS_AUTO:
 			prepAndAddOp(new OpOnvifImaging(c, session, r, controller), c);
@@ -79,6 +78,9 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 		case RESET_DEVICE:
 		case CAMERA_PREPARE:
 			prepAndAddOp(new OpOnvifDevice(c, session, r, controller), c);
+			break;
+		case CAMERA_IRIS_STOP:
+			// ignore and do not log
 			break;
 		default:
 			log("Unsupported: " + r + ". ");
