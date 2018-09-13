@@ -86,6 +86,7 @@ public class OnvifSessionMessenger extends Messenger {
 	// cached values required for any service requests
 	private Capabilities capabilities;
 	private List<Profile> mediaProfiles;
+	private String mediaProfileTok;
 	private String videoSourceTok;
 
 	/**
@@ -122,6 +123,24 @@ public class OnvifSessionMessenger extends Messenger {
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
+			if (mediaProfiles == null
+				|| mediaProfiles.size() < 1
+				|| mediaProfiles.get(0).getToken() == null
+				|| mediaProfiles.get(0).getToken().isEmpty())
+				throw new ControllerException("Missing required media profile");
+			// set to first media profile token first
+			mediaProfileTok = mediaProfiles.get(0).getToken();
+			for (Profile p : mediaProfiles) {
+				mediaProfileTok = p.getToken();
+				// if we find a profile that suits all our needs,
+				// set both tokens to that profile 
+				if (p.getVideoSourceConfiguration() != null
+					&& p.getVideoSourceConfiguration().getSourceToken() != null) {
+					mediaProfileTok = p.getToken();
+					videoSourceTok = p.getVideoSourceConfiguration().getSourceToken();
+					break;
+				}
+			}
 		} catch (IOException e) {
 			openFailed();
 			throw e;
@@ -207,9 +226,9 @@ public class OnvifSessionMessenger extends Messenger {
 	 * 	for PTZ Service requests.
 	 */
 	public String getMediaProfileTok() throws ControllerException {
-		if (mediaProfiles == null)
-			throw new ControllerException("Missing media profile");
-		return mediaProfiles.get(0).getToken();
+		if (mediaProfileTok == null)
+			throw new ControllerException("Missing media profile token");
+		return mediaProfileTok;
 	}
 
 	/**
@@ -419,24 +438,9 @@ public class OnvifSessionMessenger extends Messenger {
 	}
 
 	private List<Profile> initMediaProfiles() throws IOException {
-		List<Profile> profiles =
-			((GetProfilesResponse) makeInternalRequest(
+		List<Profile> profiles = ((GetProfilesResponse) makeInternalRequest(
 				new GetProfiles(), GetProfilesResponse.class,
 				OnvifService.MEDIA, true)).getProfiles();
-		if (profiles == null
-			|| profiles.size() < 1
-			|| profiles.get(0).getToken() == null
-			|| profiles.get(0).getToken().isEmpty())
-			throw new ControllerException("Missing required media profile");
-		if (mediaProfiles == null)
-			throw new ControllerException("Missing media profile");
-		for (Profile p : mediaProfiles) {
-			if (p.getVideoSourceConfiguration() != null
-				&& p.getVideoSourceConfiguration().getSourceToken() != null) {
-				videoSourceTok = p.getVideoSourceConfiguration().getSourceToken();
-				break;
-			}
-		}
 		return profiles;
 	}
 
