@@ -86,6 +86,7 @@ public class OnvifSessionMessenger extends Messenger {
 	// cached values required for any service requests
 	private Capabilities capabilities;
 	private List<Profile> mediaProfiles;
+	private String videoSourceTok;
 
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
@@ -149,6 +150,7 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingMoveOptions = null;
 		imagingSettings = null;
 		imagingOptions = null;
+		videoSourceTok = null;
 		try {
 			soapConnection.close();
 		} catch (SOAPException e) {
@@ -202,12 +204,23 @@ public class OnvifSessionMessenger extends Messenger {
 	/**
 	 * @return The first media profile token (all devices are required to
 	 * 	have at least one media profile. This is generally required
-	 * 	for PTZ and Imaging Service requests.
+	 * 	for PTZ Service requests.
 	 */
 	public String getMediaProfileTok() throws ControllerException {
 		if (mediaProfiles == null)
 			throw new ControllerException("Missing media profile");
 		return mediaProfiles.get(0).getToken();
+	}
+
+	/**
+	 * @return a video soure token is generally required for Imaging
+	 * Service requests.
+	 * @throws ControllerException
+	 */
+	public String getVideoSoureTok() throws ControllerException {
+		if (videoSourceTok == null)
+			throw new ControllerException("MissingVideoSourceToken");
+		return videoSourceTok;
 	}
 
 	/**
@@ -415,6 +428,15 @@ public class OnvifSessionMessenger extends Messenger {
 			|| profiles.get(0).getToken() == null
 			|| profiles.get(0).getToken().isEmpty())
 			throw new ControllerException("Missing required media profile");
+		if (mediaProfiles == null)
+			throw new ControllerException("Missing media profile");
+		for (Profile p : mediaProfiles) {
+			if (p.getVideoSourceConfiguration() != null
+				&& p.getVideoSourceConfiguration().getSourceToken() != null) {
+				videoSourceTok = p.getVideoSourceConfiguration().getSourceToken();
+				break;
+			}
+		}
 		return profiles;
 	}
 

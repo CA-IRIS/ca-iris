@@ -124,7 +124,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	private void updateVal(float val) throws IOException {
 		settings.getExposure().setIris(val);
 		SetImagingSettings setReq = new SetImagingSettings();
-		setReq.setVideoSourceToken(session.getMediaProfileTok());
+		setReq.setVideoSourceToken(session.getVideoSoureTok());
 		setReq.setImagingSettings(settings);
 		response = session.makeRequest(setReq, SetImagingSettingsResponse.class);
 	}

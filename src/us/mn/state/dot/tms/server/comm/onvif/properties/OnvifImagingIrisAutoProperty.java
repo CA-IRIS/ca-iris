@@ -54,7 +54,7 @@ public class OnvifImagingIrisAutoProperty extends OnvifProperty {
 		settings.getExposure().setMode(enable ?
 			ExposureMode.AUTO : ExposureMode.MANUAL);
 		SetImagingSettings request = new SetImagingSettings();
-		request.setVideoSourceToken(session.getMediaProfileTok());
+		request.setVideoSourceToken(session.getVideoSoureTok());
 		request.setImagingSettings(settings);
 		response = session.makeRequest(request,
 			SetImagingSettingsResponse.class);

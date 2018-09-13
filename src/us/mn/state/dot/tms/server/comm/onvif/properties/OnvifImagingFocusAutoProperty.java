@@ -58,7 +58,7 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 		throws IOException
 	{
 		SetImagingSettings request = new SetImagingSettings();
-		request.setVideoSourceToken(session.getMediaProfileTok());
+		request.setVideoSourceToken(session.getVideoSoureTok());
 		currentSettings.getFocus().setAutoFocusMode(
 			enable ? AutoFocusMode.AUTO : AutoFocusMode.MANUAL);
 		request.setImagingSettings(currentSettings);

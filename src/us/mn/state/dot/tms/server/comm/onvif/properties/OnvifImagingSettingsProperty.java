@@ -26,7 +26,7 @@ public class OnvifImagingSettingsProperty extends OnvifProperty {
 		throws IOException
 	{
 		GetImagingSettings request = new GetImagingSettings();
-		request.setVideoSourceToken(session.getMediaProfileTok());
+		request.setVideoSourceToken(session.getVideoSoureTok());
 		response = session.makeRequest(request, GetImagingSettingsResponse.class);
 	}
 

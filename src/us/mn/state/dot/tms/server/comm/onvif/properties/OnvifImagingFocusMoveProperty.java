@@ -56,7 +56,7 @@ public class OnvifImagingFocusMoveProperty extends OnvifProperty {
 
 	private void continuousFocus(float speed) throws IOException {
 		Move request = new Move();
-		request.setVideoSourceToken(session.getMediaProfileTok());
+		request.setVideoSourceToken(session.getVideoSoureTok());
 		ContinuousFocus val = new ContinuousFocus();
 		FocusMove focusMove = new FocusMove();
 		val.setSpeed(speed);

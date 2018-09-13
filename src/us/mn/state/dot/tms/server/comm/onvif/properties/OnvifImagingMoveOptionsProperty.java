@@ -26,7 +26,7 @@ public class OnvifImagingMoveOptionsProperty extends OnvifProperty {
 		throws IOException
 	{
 		GetMoveOptions request = new GetMoveOptions();
-		request.setVideoSourceToken(session.getMediaProfileTok());
+		request.setVideoSourceToken(session.getVideoSoureTok());
 		response = session.makeRequest(request, GetMoveOptionsResponse.class);
 	}
 
