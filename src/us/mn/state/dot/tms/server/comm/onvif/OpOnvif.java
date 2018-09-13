@@ -59,16 +59,20 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 
 		protected abstract OnvifPhase nextPhase() throws IOException;
 
+		private T prop = null;
+
+		private OnvifPhase next = null;
+
 		protected OnvifPhase poll(CommMessage<T> mess)
 			throws IOException
 		{
 			try {
-				log(this.getClass().getSimpleName());
+				logPhase("Starting");
 				session.selectService(service);
-				T prop = selectProperty();
-				OnvifPhase next = nextPhase();
+				prop = selectProperty();
+				next = nextPhase();
 				if (prop != null) {
-					log(prop.getClass().getSimpleName());
+					logPhase(prop.getClass().getSimpleName());
 					if (prop.isQuery()) {
 						mess.logQuery(prop);
 						prop.encodeQuery(controller, null);
@@ -87,22 +91,45 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 				| OperationNotSupportedException
 				| OperationFailedException e) {
 				// errors from which we can continue
-				setFailed();
-				log(e.getMessage());
-				session.setStatus(e.getMessage());
+				failed(e);
 				return null;
 			} catch (IOException e) {
 				// unrecoverable errors
-				setFailed();
-				log(e.getMessage());
+				failed(e);
 				e.printStackTrace();
-				session.setStatus(e.getMessage());
 				throw e;
 			} finally {
-				log("Operation " + (isSuccess() ?
-					"succeeded" :
-					"failed") + ". ");
+				report();
 			}
+		}
+
+		private void failed(IOException e) {
+			setFailed();
+			logPhase(e.getMessage());
+			session.setStatus(e.getMessage());
+		}
+
+		private void report() {
+			String endStatus;
+			if (prop == null)
+				endStatus = "Ignored";
+			else
+				endStatus = "Completed";
+			endStatus += "|";
+			if (!isSuccess())
+				endStatus += "Failed";
+			else
+				endStatus += "Success";
+			endStatus += "|";
+			if (next == null)
+				endStatus += "Final";
+			else
+				endStatus += "Proceeding";
+			logPhase(endStatus);
+		}
+
+		private void logPhase(String msg) {
+			log(this.getClass().getSimpleName() + ": " + msg);
 		}
 	}
 
