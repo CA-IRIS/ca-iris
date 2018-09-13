@@ -123,24 +123,7 @@ public class OnvifSessionMessenger extends Messenger {
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
-			if (mediaProfiles == null
-				|| mediaProfiles.size() < 1
-				|| mediaProfiles.get(0).getToken() == null
-				|| mediaProfiles.get(0).getToken().isEmpty())
-				throw new ControllerException("Missing required media profile");
-			// set to first media profile token first
-			mediaProfileTok = mediaProfiles.get(0).getToken();
-			for (Profile p : mediaProfiles) {
-				mediaProfileTok = p.getToken();
-				// if we find a profile that suits all our needs,
-				// set both tokens to that profile 
-				if (p.getVideoSourceConfiguration() != null
-					&& p.getVideoSourceConfiguration().getSourceToken() != null) {
-					mediaProfileTok = p.getToken();
-					videoSourceTok = p.getVideoSourceConfiguration().getSourceToken();
-					break;
-				}
-			}
+			setTokens();
 		} catch (IOException e) {
 			openFailed();
 			throw e;
@@ -149,12 +132,6 @@ public class OnvifSessionMessenger extends Messenger {
 			throw new IOException(e);
 		}
 		log("Session started. ", this);
-	}
-
-	private void openFailed() {
-		close();
-		setStatus("Failed");
-		log("Failed to start session. ", this);
 	}
 
 	@Override
@@ -436,6 +413,33 @@ public class OnvifSessionMessenger extends Messenger {
 				new GetProfiles(), GetProfilesResponse.class,
 				OnvifService.MEDIA, true)).getProfiles();
 		return profiles;
+	}
+
+	private void setTokens() throws ControllerException {
+		if (mediaProfiles == null
+			|| mediaProfiles.size() < 1
+			|| mediaProfiles.get(0).getToken() == null
+			|| mediaProfiles.get(0).getToken().isEmpty())
+			throw new ControllerException("Missing required media profile");
+		// set to first media profile token first
+		mediaProfileTok = mediaProfiles.get(0).getToken();
+		for (Profile p : mediaProfiles) {
+			mediaProfileTok = p.getToken();
+			// if we find a profile that suits all our needs,
+			// set both tokens to that profile
+			if (p.getVideoSourceConfiguration() != null
+				&& p.getVideoSourceConfiguration().getSourceToken() != null) {
+				mediaProfileTok = p.getToken();
+				videoSourceTok = p.getVideoSourceConfiguration().getSourceToken();
+				break;
+			}
+		}
+	}
+
+	private void openFailed() {
+		close();
+		setStatus("Failed");
+		log("Failed to start session. ", this);
 	}
 
 	/**
