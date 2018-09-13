@@ -22,6 +22,7 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PT
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZNode;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Profile;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.SystemDateTime;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotSupportedException;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 import us.mn.state.dot.tms.server.comm.onvif.session.SoapWrapper;
 import us.mn.state.dot.tms.server.comm.onvif.session.WSUsernameToken;
@@ -146,6 +147,7 @@ public class OnvifSessionMessenger extends Messenger {
 		imagingMoveOptions = null;
 		imagingSettings = null;
 		imagingOptions = null;
+		mediaProfileTok = null;
 		videoSourceTok = null;
 		try {
 			soapConnection.close();
@@ -213,9 +215,9 @@ public class OnvifSessionMessenger extends Messenger {
 	 * Service requests.
 	 * @throws ControllerException
 	 */
-	public String getVideoSoureTok() throws ControllerException {
+	public String getVideoSoureTok() throws OperationNotSupportedException {
 		if (videoSourceTok == null)
-			throw new ControllerException("MissingVideoSourceToken");
+			throw new OperationNotSupportedException("VideoSourceToken");
 		return videoSourceTok;
 	}
 
@@ -421,11 +423,11 @@ public class OnvifSessionMessenger extends Messenger {
 			|| mediaProfiles.get(0).getToken() == null
 			|| mediaProfiles.get(0).getToken().isEmpty())
 			throw new ControllerException("Missing required media profile");
-		// set to first media profile token first
+		// set to first media profile token by default
 		mediaProfileTok = mediaProfiles.get(0).getToken();
 		for (Profile p : mediaProfiles) {
 			mediaProfileTok = p.getToken();
-			// if we find a profile that suits all our needs,
+			// if we find a profile that also has videotok,
 			// set both tokens to that profile
 			if (p.getVideoSourceConfiguration() != null
 				&& p.getVideoSourceConfiguration().getSourceToken() != null) {
