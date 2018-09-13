@@ -95,8 +95,7 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		else if (min == 0f)
 			absValAttenuation(val, incr, min, max);
 	}
-
-
+	
 	private void negativeAttenuation(float oldVal, float incr, float min, float max)
 		throws IOException
 	{
