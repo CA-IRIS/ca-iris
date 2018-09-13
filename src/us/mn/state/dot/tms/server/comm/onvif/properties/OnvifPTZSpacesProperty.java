@@ -6,6 +6,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZConfiguration;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurationOptions;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.ptz.wsdl.GetConfigurationOptionsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +42,9 @@ public class OnvifPTZSpacesProperty extends OnvifProperty {
 	public void decodeQuery(ControllerImpl c, InputStream is)
 		throws IOException
 	{
-		session.setPtzSpaces(((GetConfigurationOptionsResponse)
-			response).getPTZConfigurationOptions().getSpaces());
+		if (!(response instanceof GetConfigurationOptionsResponse))
+			throw new OperationFailedException("GetConfigurationOptionsResponse");
+		session.setPTZConfigurationOptions(
+			((GetConfigurationOptionsResponse) response).getPTZConfigurationOptions());
 	}
 }

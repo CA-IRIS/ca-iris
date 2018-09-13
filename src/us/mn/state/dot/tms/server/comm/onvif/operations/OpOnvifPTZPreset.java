@@ -34,10 +34,10 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new NodesCheck();
+		return new NodesPhase();
 	}
 
-	protected class NodesCheck extends OnvifPhase {
+	protected class NodesPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return session.getNodes() == null ?
@@ -46,14 +46,14 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return store ? new EnsureStopped() : new Recall();
+			return store ? new EnsureStoppedPhase() : new RecallPhase();
 		}
 	}
 
 	/**
 	 * Onvif devices must be in a stopped state in order to store preset
 	 */
-	protected class EnsureStopped extends OnvifPhase {
+	protected class EnsureStoppedPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZStopProperty(session);
@@ -61,11 +61,11 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return new Store();
+			return new StorePhase();
 		}
 	}
 
-	protected class Store extends OnvifPhase {
+	protected class StorePhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZPresetStoreProperty(session,
@@ -78,7 +78,7 @@ public class OpOnvifPTZPreset extends OpOnvif<OnvifProperty> {
 		}
 	}
 
-	protected class Recall extends OnvifPhase {
+	protected class RecallPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZPresetRecallProperty(session, preset,

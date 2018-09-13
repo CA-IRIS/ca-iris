@@ -5,6 +5,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformation;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +32,9 @@ public class OnvifDeviceInfoProperty extends OnvifProperty {
 	public void decodeQuery(ControllerImpl c, InputStream is)
 		throws IOException
 	{
-		GetDeviceInformationResponse casted =
-			(GetDeviceInformationResponse) response;
+		if (!(response instanceof GetDeviceInformationResponse))
+			throw new OperationFailedException("GetDeviceInformationResponse");
+		GetDeviceInformationResponse casted = (GetDeviceInformationResponse) response;
 		log("{\n" +
 			"\tManufacturer: " + casted.getManufacturer() + "\n" +
 			"\tModel: " + casted.getModel() + "\n" +

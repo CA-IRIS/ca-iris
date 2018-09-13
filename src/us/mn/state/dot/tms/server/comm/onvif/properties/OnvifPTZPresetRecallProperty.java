@@ -33,8 +33,7 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 			String token;
 			token = findPresetToken(preset, getPresets());
 			if (token == null)
-				throw new OperationFailedException(
-					"PresetNotFound");
+				throw new OperationFailedException("PresetNotFound");
 			goToPreset(token);
 		}
 	}
@@ -46,7 +45,6 @@ public class OnvifPTZPresetRecallProperty extends OnvifPTZPresetProperty {
 		GotoPreset gotoPreset = new GotoPreset();
 		gotoPreset.setProfileToken(session.getMediaProfileTok());
 		gotoPreset.setPresetToken(token);
-		response = session.makeRequest(gotoPreset,
-			GotoPresetResponse.class);
+		response = session.makeRequest(gotoPreset, GotoPresetResponse.class);
 	}
 }

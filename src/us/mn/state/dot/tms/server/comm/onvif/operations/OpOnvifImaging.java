@@ -39,7 +39,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new NeedsSettings();
+		return new SettingsPhase();
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	 * ensure that we have the correct value in our session cache after the
 	 * device response is retrieved.
 	 */
-	protected class NeedsSettings extends OnvifPhase {
+	protected class SettingsPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty p = null;
@@ -59,19 +59,18 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 				case CAMERA_IRIS_OPEN:
 				case CAMERA_IRIS_MANUAL:
 				case CAMERA_IRIS_AUTO:
-					p = new OnvifImagingSettingsProperty(
-						session);
+					p = new OnvifImagingSettingsProperty(session);
 			}
 			return p;
 		}
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return new NeedsOptions();
+			return new OptionsPhase();
 		}
 	}
 
-	protected class NeedsOptions extends OnvifPhase {
+	protected class OptionsPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty p = null;
@@ -83,8 +82,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 				case CAMERA_IRIS_OPEN:
 				case CAMERA_IRIS_MANUAL:
 				case CAMERA_IRIS_AUTO:
-					p = new OnvifImagingOptionsProperty(
-						session);
+					p = new OnvifImagingOptionsProperty(session);
 				}
 			}
 			return p;
@@ -92,11 +90,11 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return new NeedsMoveOptions();
+			return new MoveOptionsPhase();
 		}
 	}
 
-	protected class NeedsMoveOptions extends OnvifPhase {
+	protected class MoveOptionsPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty p = null;
@@ -105,8 +103,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 				case CAMERA_FOCUS_NEAR:
 				case CAMERA_FOCUS_FAR:
 				case CAMERA_FOCUS_STOP:
-					p = new OnvifImagingMoveOptionsProperty(
-						session);
+					p = new OnvifImagingMoveOptionsProperty(session);
 				}
 			}
 			return p;
@@ -118,10 +115,10 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 			switch (request) {
 			case CAMERA_IRIS_CLOSE:
 			case CAMERA_IRIS_OPEN:
-				op = new IrisModeCheck();
+				op = new IrisModeCheckPhase();
 				break;
 			default:
-				op = new Adjust();
+				op = new AdjustPhase();
 			}
 			return op;
 		}
@@ -131,13 +128,12 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 	 * Some manufacturers will ignore manual iris adjustments if the device
 	 * is currently in auto mode.
 	 */
-	protected class IrisModeCheck extends OnvifPhase {
+	protected class IrisModeCheckPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty out = null;
 			if (session.getImagingSettings().getExposure() != null
-				&& session.getImagingSettings().getExposure()
-				.getMode() == ExposureMode.AUTO)
+				&& session.getImagingSettings().getExposure().getMode() == ExposureMode.AUTO)
 				out = new OnvifImagingIrisAutoProperty(
 					session, false,
 					session.getImagingSettings(),
@@ -147,11 +143,11 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return new Adjust();
+			return new AdjustPhase();
 		}
 	}
 
-	protected class Adjust extends OnvifPhase {
+	protected class AdjustPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty out = null;

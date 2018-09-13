@@ -56,10 +56,6 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		case CAMERA_IRIS_OPEN:
 			stepIris();
 			break;
-		case CAMERA_IRIS_STOP:
-			// intentionally ignored
-			// ONVIF only supports absolute iris movements
-			break;
 		default:
 			throw new IllegalArgumentException("Unexpected: " + req);
 		}
@@ -70,14 +66,13 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			&& options.getExposure() != null
 			&& options.getExposure().getMode() != null
 			&& options.getExposure().getMode().contains(ExposureMode.MANUAL)
+			&& options.getExposure().getIris() != null
+			&& options.getExposure().getIris().getMin()
+				< options.getExposure().getIris().getMax()
 			&& settings != null
 			&& settings.getExposure() != null
 			&& settings.getExposure().getMode() != null
-			&& settings.getExposure().getMode() == ExposureMode.MANUAL
-			&& settings.getExposure().getMode() == ExposureMode.MANUAL
-			&& options.getExposure().getIris() != null
-			&& options.getExposure().getIris().getMin()
-			< options.getExposure().getIris().getMax();
+			&& settings.getExposure().getMode() == ExposureMode.MANUAL;
 	}
 
 	/**
@@ -95,20 +90,17 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		final float max = range.getMax();
 		final float incr = (max - min) / GRANULARITY_OF_MOVEMENT;
 		float val = settings.getExposure().getIris();
-		if (max == 0f) {
-			val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
-			negativeAttenuation(val, min, max);
-		}
-		else if (min == 0f) {
-			val += (req == DeviceRequest.CAMERA_IRIS_OPEN ? -1 : 1) * incr;
-			absValAttenuation(val, min, max);
-		}
+		if (max == 0f)
+			negativeAttenuation(val, incr, min, max);
+		else if (min == 0f)
+			absValAttenuation(val, incr, min, max);
 	}
 
 
-	private void negativeAttenuation(float val, float min, float max)
+	private void negativeAttenuation(float oldVal, float incr, float min, float max)
 		throws IOException
 	{
+		float val = oldVal + (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val > max)
 			updateVal(max);
 		else if (req == DeviceRequest.CAMERA_IRIS_CLOSE && val < min)
@@ -117,9 +109,10 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 			updateVal(val);
 	}
 
-	private void absValAttenuation(float val, float min, float max)
+	private void absValAttenuation(float oldVal, float incr, float min, float max)
 		throws IOException
 	{
+		float val = oldVal + (req == DeviceRequest.CAMERA_IRIS_OPEN ? -1 : 1) * incr;
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val < min)
 			updateVal(min);
 		else if (req == DeviceRequest.CAMERA_IRIS_CLOSE && val > max)

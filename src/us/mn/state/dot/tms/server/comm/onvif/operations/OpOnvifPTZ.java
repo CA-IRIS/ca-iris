@@ -9,6 +9,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZConfigurationsProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZSpacesProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifPTZStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
 
 import java.io.IOException;
@@ -35,34 +36,58 @@ public class OpOnvifPTZ extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new PTZ();
+		return new ConfigPhase();
 	}
 
-	protected class PTZ extends OnvifPhase {
-		private boolean done = false;
-
+	private class ConfigPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
-			OnvifProperty out;
+			OnvifProperty out = null;
 			if (session.getPtzConfigurations() == null)
 				out = new OnvifPTZConfigurationsProperty(session);
-			else if (session.getPtzSpaces() == null)
-				out = new OnvifPTZSpacesProperty(session,
-					session.getPtzConfigurations());
-			else {
-				// we might use the PTZ stop property, but
-				// Caltrans' Pelco cameras do not seem to support it.
-				out = new OnvifPTZMoveProperty(
-					pan, tilt, zoom, session,
-					session.getPtzSpaces());
-				done = true;
-			}
 			return out;
 		}
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return done ? null : new PTZ();
+			return new ConfigOptionsPhase();
+		}
+	}
+
+	private class ConfigOptionsPhase extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			OnvifProperty out = null;
+			if (session.getPTZConfigurationOptions() == null)
+				out = new OnvifPTZSpacesProperty(session,
+					session.getPtzConfigurations());
+			return out;
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return new PTZPhase();
+		}
+	}
+
+	protected class PTZPhase extends OnvifPhase {
+		@Override
+		protected OnvifProperty selectProperty() throws IOException {
+			OnvifProperty out;
+			// we might use the PTZ stop property, but
+			// Caltrans' Pelco cameras do not seem to support it.
+			if (pan == 0 && tilt == 0 && zoom == 0)
+				out = new OnvifPTZStopProperty(session);
+			else
+				out = new OnvifPTZMoveProperty(
+					pan, tilt, zoom, session,
+					session.getPTZConfigurationOptions());
+			return out;
+		}
+
+		@Override
+		protected OnvifPhase nextPhase() throws IOException {
+			return null;
 		}
 	}
 }

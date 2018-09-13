@@ -30,15 +30,14 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	 * This is just a more specific reference to our messenger (which
 	 * happens to be a session) for convenience
 	 */
-	private OnvifSessionMessenger session =
-		(OnvifSessionMessenger) messenger;
+	private OnvifSessionMessenger session = (OnvifSessionMessenger) messenger;
 	private String name;
 	private ControllerImpl controller;
 
 	public OnvifPoller(String name, OnvifSessionMessenger m) {
 		super(name, m);
 		this.name = name;
-		log("Created " + this.name);
+		log("Created: " + this.name);
 	}
 
 	@Override
@@ -60,8 +59,7 @@ public class OnvifPoller extends TransientPoller<OnvifProperty>
 	public void sendRequest(CameraImpl c, DeviceRequest r) {
 		switch (r) {
 		case CAMERA_PTZ_FULL_STOP:
-			prepAndAddOp(
-				new OpOnvifPTZ(c, 0, 0, 0, session, controller), c);
+			prepAndAddOp(new OpOnvifPTZ(c, 0, 0, 0, session, controller), c);
 			break;
 		case CAMERA_WIPER_ONESHOT:
 			prepAndAddOp(new OpOnvifPTZAux(c, session, controller), c);

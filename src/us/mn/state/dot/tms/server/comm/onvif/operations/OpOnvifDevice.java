@@ -47,8 +47,7 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 				 rv = new OnvifDeviceRebootProperty(session);
 				 break;
 			default:
-				throw new IOException(
-					"Unsupported: " + request);
+				throw new IOException("Unsupported: " + request);
 			}
 			return rv;
 		}

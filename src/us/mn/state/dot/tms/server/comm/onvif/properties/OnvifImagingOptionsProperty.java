@@ -5,6 +5,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OnvifProperty;
 import us.mn.state.dot.tms.server.comm.onvif.OnvifSessionMessenger;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetOptions;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver20.imaging.wsdl.GetOptionsResponse;
+import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationFailedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,10 @@ public class OnvifImagingOptionsProperty extends OnvifProperty {
 	public void decodeQuery(ControllerImpl c, InputStream is)
 		throws IOException
 	{
-		session.setImagingOptions(((GetOptionsResponse)
-			response).getImagingOptions());
+		if (!(response instanceof GetOptionsResponse))
+			throw new OperationFailedException("GetOptionsResponse");
+		session.setImagingOptions(
+			((GetOptionsResponse) response).getImagingOptions());
+
 	}
 }

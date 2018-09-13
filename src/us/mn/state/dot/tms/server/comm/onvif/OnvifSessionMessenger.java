@@ -18,8 +18,8 @@ import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Im
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ImagingSettings20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.MoveOptions20;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZConfiguration;
+import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZConfigurationOptions;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZNode;
-import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.PTZSpaces;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.Profile;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.SystemDateTime;
 import us.mn.state.dot.tms.server.comm.onvif.session.OnvifService;
@@ -68,13 +68,12 @@ import java.util.List;
  * @author Wesley Skillern (Southwest Research Institue)
  */
 public class OnvifSessionMessenger extends Messenger {
-	private static final DebugLog ONVIF_SESSION_LOG = new DebugLog(
-		"onvif");
+	// logs
+	private static final DebugLog ONVIF_SESSION_LOG = new DebugLog("onvif");
 	private static final DebugLog SOAP_LOG = new DebugLog("soap");
-	private static final String DEVICE_SERVICE_PATH =
-		"/onvif/device_service";
 
 	// messenger properties
+	private static final String DEVICE_SERVICE_PATH = "/onvif/device_service";
 	private WSUsernameToken auth;
 	private int timeout = 5000; // in milliseconds
 	private URL baseUri;
@@ -91,7 +90,7 @@ public class OnvifSessionMessenger extends Messenger {
 	/**
 	 * @param uri including protocol (always http), ip, and, optionally,
 	 * 	the port (always 80) and DEVICE_SERVICE_PATH path.
-	 * @throws IOException if the currentUri is invalid
+	 * @throws IOException if the uri is invalid
 	 */
 	public OnvifSessionMessenger(String uri) throws IOException {
 		baseUri = checkUri(uri);
@@ -118,8 +117,7 @@ public class OnvifSessionMessenger extends Messenger {
 	public void open() throws IOException {
 		log("Starting session. ", this);
 		try {
-			soapConnection = SOAPConnectionFactory.newInstance()
-					.createConnection();
+			soapConnection = SOAPConnectionFactory.newInstance().createConnection();
 			setAuthClockOffset();
 			capabilities = initCapabilities();
 			mediaProfiles = initMediaProfiles();
@@ -133,6 +131,12 @@ public class OnvifSessionMessenger extends Messenger {
 		log("Session started. ", this);
 	}
 
+	private void openFailed() {
+		close();
+		setStatus("Failed");
+		log("Failed to start session. ", this);
+	}
+
 	@Override
 	public void close() {
 		log("Closing session. ", this);
@@ -140,7 +144,7 @@ public class OnvifSessionMessenger extends Messenger {
 		// clear cached values
 		capabilities = null;
 		mediaProfiles = null;
-		ptzSpaces = null;
+		configurationOptions = null;
 		nodes = null;
 		imagingMoveOptions = null;
 		imagingSettings = null;
@@ -260,24 +264,19 @@ public class OnvifSessionMessenger extends Messenger {
 		} catch (ParserConfigurationException
 				| NoSuchAlgorithmException
 				| JAXBException e) {
-			System.err.println(
-					"Unable to make request: " + e.getMessage());
 			e.printStackTrace();
 			log(e.getMessage(), this);
 			throw new ControllerException(e.getMessage());
 		} catch (SOAPException e) {
+			e.printStackTrace();
 			log(e.getMessage(), this);
 			if (e.getCause() != null
-					&& e.getCause().getCause() != null
-					&& e.getCause().getCause() instanceof
-					SocketTimeoutException) {
-				log("Hint: check URI, timeout, " +
-								"and network connection. ",
-						this);
+				&& e.getCause().getCause() != null
+				&& e.getCause().getCause() instanceof SocketTimeoutException) {
+				log("Hint: check uri, timeout, and network connection. ", this);
 				// this exception is expected by caller (e.g.
 				// MessagePoller), so we strip off the wrappers
-				throw (SocketTimeoutException)
-						e.getCause().getCause();
+				throw (SocketTimeoutException) e.getCause().getCause();
 			}
 			int err = parseSoapErrStatus(e);
 			String msg = knownStatuses(err);
@@ -320,9 +319,7 @@ public class OnvifSessionMessenger extends Messenger {
 				"Error: " + error;
 	}
 
-	private int parseSoapErrStatus(SOAPException e)
-		throws ControllerException
-	{
+	private int parseSoapErrStatus(SOAPException e) throws ControllerException {
 		String msg = e.getMessage();
 		String strB4Stats = "Bad response: (";
 		if (!msg.contains(strB4Stats))
@@ -355,11 +352,9 @@ public class OnvifSessionMessenger extends Messenger {
 			throw new IOException("URI not set. ");
 		URL url = new URL(uri);
 		if (!url.getProtocol().equalsIgnoreCase("http"))
-			throw new IOException(
-				"ONVIF URI protocol is not \"http\". ");
+			throw new IOException("ONVIF URI protocol is not \"http\". ");
 		if (!url.getPath().equals(""))
-			throw new IOException(
-				"ONVIF URI path may only be empty. ");
+			throw new IOException("ONVIF URI path may only be empty. ");
 		return url;
 	}
 
@@ -429,7 +424,8 @@ public class OnvifSessionMessenger extends Messenger {
 	 */
 	private Object makeInternalRequest(Object request,
 					   Class<?> responseClass,
-					   OnvifService service, boolean withAuth)
+					   OnvifService service,
+					   boolean withAuth)
 		throws ServiceNotSupportedException, ParsingException,
 		SocketTimeoutException, ControllerException,
 		MalformedURLException
@@ -484,9 +480,7 @@ public class OnvifSessionMessenger extends Messenger {
 	 * @return baseUri with the path from xAddr
 	 */
 	private URL buildUri(String xAddr) throws MalformedURLException {
-		return new URL(baseUri,
-			(new URL(xAddr)).getPath(),
-			streamHdlr());
+		return new URL(baseUri, (new URL(xAddr)).getPath(), streamHdlr());
 	}
 
 	private URLStreamHandler streamHdlr() {
@@ -496,8 +490,7 @@ public class OnvifSessionMessenger extends Messenger {
 				throws IOException
 			{
 				URL copy = new URL(u.toString());
-				URLConnection connection =
-					copy.openConnection();
+				URLConnection connection = copy.openConnection();
 				connection.setConnectTimeout(timeout);
 				connection.setReadTimeout(timeout);
 				return connection;
@@ -505,21 +498,14 @@ public class OnvifSessionMessenger extends Messenger {
 		};
 	}
 
-	private void openFailed() {
-		close();
-		setStatus("Failed");
-		log("Failed to start session. ", this);
-	}
-
-	public void log(String msg, Object reporter) {
-		ONVIF_SESSION_LOG
-			.log("<" + baseUri.getHost() + "> "
-			+ reporter.getClass().getSimpleName() +  ": " + msg);
-	}
-
 	public void setStatus(String msg) {
 		if (camera != null)
 			camera.setOpStatus(msg);
+	}
+
+	public void log(String msg, Object reporter) {
+		ONVIF_SESSION_LOG.log("<" + baseUri.getHost() + "> "
+				+ reporter.getClass().getSimpleName() +  ": " + msg);
 	}
 
 	/**
@@ -534,15 +520,12 @@ public class OnvifSessionMessenger extends Messenger {
 			msg.writeTo(out);
 		} catch (SOAPException
 			| IOException e) {
-			System.err.println(
-				"Could not convert SOAP message to string for "
+			log("Could not convert SOAP message to string for "
 					+ context + " to service: " + currentUri
-					+ "\n");
+					+ "\n", this);
 			e.printStackTrace();
-			return;
 		}
-		SOAP_LOG.log(
-			context + "\n"
+		SOAP_LOG.log(context + "\n"
 				+ "\tService: " + currentUri + "\n"
 				+ "\tRequest class: " + requestClass.getSimpleName() + "\n"
 				+ "\tExpected response class: " + responseClass.getSimpleName() + "\n"
@@ -563,14 +546,14 @@ public class OnvifSessionMessenger extends Messenger {
 		this.ptzConfigurations = ptzConfigurations;
 	}
 
-	private PTZSpaces ptzSpaces;
+	private PTZConfigurationOptions configurationOptions;
 
-	public PTZSpaces getPtzSpaces() {
-		return ptzSpaces;
+	public PTZConfigurationOptions getPTZConfigurationOptions() {
+		return configurationOptions;
 	}
 
-	public void setPtzSpaces(PTZSpaces ptzSpaces) {
-		this.ptzSpaces = ptzSpaces;
+	public void setPTZConfigurationOptions(PTZConfigurationOptions configurationOptions) {
+		this.configurationOptions = configurationOptions;
 	}
 
 	private List<PTZNode> nodes;

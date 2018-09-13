@@ -63,12 +63,12 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 			throws IOException
 		{
 			try {
-				log("Preparing for: " + this.getClass().getSimpleName());
+				log(this.getClass().getSimpleName());
 				session.selectService(service);
 				T prop = selectProperty();
 				OnvifPhase next = nextPhase();
 				if (prop != null) {
-					log("Sending: " + prop.getClass().getSimpleName());
+					log(prop.getClass().getSimpleName());
 					if (prop.isQuery()) {
 						mess.logQuery(prop);
 						prop.encodeQuery(controller, null);
@@ -91,7 +91,7 @@ public abstract class OpOnvif<T extends OnvifProperty> extends OpDevice<T> {
 				log(e.getMessage());
 				session.setStatus(e.getMessage());
 				return null;
-			} catch (Exception e) {
+			} catch (IOException e) {
 				// unrecoverable errors
 				setFailed();
 				log(e.getMessage());

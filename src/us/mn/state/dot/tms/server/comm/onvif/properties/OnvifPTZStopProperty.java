@@ -27,6 +27,10 @@ public class OnvifPTZStopProperty extends OnvifProperty {
 		// we can assume the feature will be present
 		Stop stop = new Stop();
 		stop.setProfileToken(session.getMediaProfileTok());
+		// setting these values to true should be optional by spec,
+		// but some cameras to honor the spec.
+		stop.setPanTilt(true);
+		stop.setZoom(true);
 		response = session.makeRequest(stop, StopResponse.class);
 	}
 }
