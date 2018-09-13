@@ -36,11 +36,10 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 	public void encodeStore(ControllerImpl c, OutputStream os)
 		throws IOException
 	{
-		ImagingSettings20 settings = this.settings;
 		if (!supportsAutoFocusMode())
 			throw new OperationNotSupportedException(
 				(enable ? "Auto" : "Manual") + "Focus");
-		setAutoFocusMode(settings);
+		setAutoFocusMode();
 	}
 
 	private boolean supportsAutoFocusMode() {
@@ -54,14 +53,14 @@ public class OnvifImagingFocusAutoProperty extends OnvifProperty {
 			&& settings.getFocus().getAutoFocusMode() != null;
 	}
 
-	private void setAutoFocusMode(ImagingSettings20 currentSettings)
+	private void setAutoFocusMode()
 		throws IOException
 	{
 		SetImagingSettings request = new SetImagingSettings();
 		request.setVideoSourceToken(session.getVideoSoureTok());
-		currentSettings.getFocus().setAutoFocusMode(
+		settings.getFocus().setAutoFocusMode(
 			enable ? AutoFocusMode.AUTO : AutoFocusMode.MANUAL);
-		request.setImagingSettings(currentSettings);
+		request.setImagingSettings(settings);
 		response = session.makeRequest(request,
 			SetImagingSettingsResponse.class);
 	}

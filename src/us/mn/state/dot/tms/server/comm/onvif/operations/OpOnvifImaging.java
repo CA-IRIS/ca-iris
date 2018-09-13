@@ -10,6 +10,7 @@ import us.mn.state.dot.tms.server.comm.onvif.OpOnvif;
 import us.mn.state.dot.tms.server.comm.onvif.generated.org.onvif.ver10.schema.ExposureMode;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusMoveProperty;
+import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingFocusStopProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisAutoProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingIrisMoveProperty;
 import us.mn.state.dot.tms.server.comm.onvif.properties.OnvifImagingMoveOptionsProperty;
@@ -163,8 +164,7 @@ public class OpOnvifImaging extends OpOnvif<OnvifProperty> {
 					session.getImagingMoveOptions());
 				break;
 			case CAMERA_FOCUS_STOP:
-				out = new OnvifImagingFocusMoveProperty(session,
-					0f,
+				out = new OnvifImagingFocusStopProperty(session,
 					session.getImagingMoveOptions());
 				break;
 			case CAMERA_FOCUS_MANUAL:
