@@ -11,6 +11,9 @@ import us.mn.state.dot.tms.server.comm.onvif.properties.exceptions.OperationNotS
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * @author Wesley Skillern (Southwest Research Institute)
+ */
 public class OnvifImagingFocusStopProperty extends OnvifProperty {
 	private final MoveOptions20 options;
 
