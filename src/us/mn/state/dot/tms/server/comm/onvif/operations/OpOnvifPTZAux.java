@@ -32,11 +32,11 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 */
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return session.getNodes() == null ? new Nodes() : new WiperOn();
+		return session.getNodes() == null ? new NodesPhase() : new WiperOnPhase();
 	}
 
 
-	protected class Nodes extends OnvifPhase {
+	protected class NodesPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZNodesProperty(session);
@@ -44,7 +44,7 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 
 		@Override
 		protected OnvifPhase nextPhase() throws IOException {
-			return new WiperOn();
+			return new WiperOnPhase();
 		}
 	}
 
@@ -52,7 +52,7 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 	 * Onvif does not have the idea of a wiper one shot; in fact, it barely
 	 * has a wiper command at all. This the best attempt at a one shot
 	 */
-	protected class WiperOn extends OnvifPhase {
+	protected class WiperOnPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZWiperProperty(session,
@@ -75,11 +75,11 @@ public class OpOnvifPTZAux extends OpOnvif<OnvifProperty> {
 					"have completed correctly. ");
 				e.printStackTrace();
 			}
-			return new WiperOff();
+			return new WiperOffPhase();
 		}
 	}
 
-	protected class WiperOff extends OnvifPhase {
+	protected class WiperOffPhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			return new OnvifPTZWiperProperty(session,

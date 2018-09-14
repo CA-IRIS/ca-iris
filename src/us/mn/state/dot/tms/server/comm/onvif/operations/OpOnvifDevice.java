@@ -32,10 +32,10 @@ public class OpOnvifDevice extends OpOnvif<OnvifProperty> {
 
 	@Override
 	protected OnvifPhase phaseTwo() {
-		return new Device();
+		return new DevicePhase();
 	}
 
-	protected class Device extends OnvifPhase {
+	protected class DevicePhase extends OnvifPhase {
 		@Override
 		protected OnvifProperty selectProperty() throws IOException {
 			OnvifProperty rv;
