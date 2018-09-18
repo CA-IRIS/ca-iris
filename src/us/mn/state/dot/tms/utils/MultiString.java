@@ -16,13 +16,14 @@
  */
 package us.mn.state.dot.tms.utils;
 
-import java.util.Arrays;
+import us.mn.state.dot.tms.PageTimeHelper;
+import us.mn.state.dot.tms.units.Interval;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import us.mn.state.dot.tms.PageTimeHelper;
-import us.mn.state.dot.tms.units.Interval;
 
 /**
  * MULTI String (MarkUp Language for Transportation Information), as specified
@@ -594,7 +595,9 @@ public class MultiString {
 	 * specified in the MULTI string, the default is returned.
 	 * @return The page-on interval. */
 	public Interval pageOnInterval() {
-		Interval dflt = PageTimeHelper.defaultPageOnInterval();
+		Interval dflt = singlePage() ?
+			new Interval(0)
+			: PageTimeHelper.defaultPageOnInterval();
 		Interval[] pg_on = pageOnIntervals(dflt);
 		// return 1st page on-time read, even if specified per page
 		return pg_on[0];

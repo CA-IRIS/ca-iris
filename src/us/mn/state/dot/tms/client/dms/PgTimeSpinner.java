@@ -14,16 +14,16 @@
  */
 package us.mn.state.dot.tms.client.dms;
 
-import javax.swing.AbstractSpinnerModel;
-import javax.swing.JFormattedTextField;
-import javax.swing.JSpinner;
 import us.mn.state.dot.tms.PageTimeHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.units.Interval;
-import static us.mn.state.dot.tms.units.Interval.Units.DECISECONDS;
 import us.mn.state.dot.tms.utils.I18N;
 import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SString;
+
+import javax.swing.*;
+
+import static us.mn.state.dot.tms.units.Interval.Units.DECISECONDS;
 
 /**
  * A spinner for the DMS message page time. This control is used to specify
@@ -52,6 +52,9 @@ public class PgTimeSpinner extends JSpinner {
 	static public boolean getIEnabled() {
 		return SystemAttrEnum.DMS_PAGE_ON_SELECTION_ENABLE.getBoolean();
 	}
+
+	/** did the external powers the say we can ever enable this spinner? */
+	private boolean can_enable = true;
 
 	/** Does the current message have single or multiple pages.
 	 *  This determines if zero is an acceptable value. */
@@ -150,10 +153,14 @@ public class PgTimeSpinner extends JSpinner {
 	/** Enable or disable */
 	@Override
 	public void setEnabled(boolean b) {
+		can_enable = b;
+		_setEnabled(b);
+	}
+
+	private void _setEnabled(boolean b) {
 		super.setEnabled(b);
-		// if disabled, reset value to default
 		if (!b)
-			setValue(PageTimeHelper.defaultPageOnInterval());
+			setValue(m_singlepg ? 0 : PageTimeHelper.defaultPageOnInterval());
 	}
 
 	/** Set value using seconds */
@@ -194,5 +201,8 @@ public class PgTimeSpinner extends JSpinner {
 	/** Set number of pages in current message. */
 	private void setSinglePage(boolean sp) {
 		m_singlepg = sp;
+		// disable this spinner for single page messages
+		if (can_enable)
+			_setEnabled(!sp);
 	}
 }

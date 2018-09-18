@@ -15,19 +15,6 @@
  */
 package us.mn.state.dot.tms.client.dms;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.CameraPreset;
@@ -41,14 +28,25 @@ import us.mn.state.dot.tms.client.camera.CameraPresetAction;
 import us.mn.state.dot.tms.client.proxy.IrisRunnable;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
-import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
+import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 
 /**
  * A SingleSignTab is a GUI component for displaying the status of a single
  * selected DMS within the DMS dispatcher.  One instance of this class is
  * created on client startup by DMSDispatcher.
- * @see DMSDispatcher.
+ * @see DMSDispatcher
  *
  * @author Douglas Lau
  * @author Michael Darter
