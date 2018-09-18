@@ -21,7 +21,9 @@ import us.mn.state.dot.tms.utils.I18N;
 import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SString;
 
-import javax.swing.*;
+import javax.swing.AbstractSpinnerModel;
+import javax.swing.JFormattedTextField;
+import javax.swing.JSpinner;
 
 import static us.mn.state.dot.tms.units.Interval.Units.DECISECONDS;
 
