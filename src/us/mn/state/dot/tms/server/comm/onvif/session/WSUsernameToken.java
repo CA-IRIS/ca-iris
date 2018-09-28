@@ -63,8 +63,6 @@ public class WSUsernameToken {
 	 * @return B64Encode(SHA1 ( B64Decode ( Nonce) + Date + Password ) )
 	 */
 	String getPasswordDigest() throws NoSuchAlgorithmException {
-		// Pelco s6320 reject successive requests made from the same
-		// nonce, so we always reset the nonce
 		resetNonce();
 		resetTime();
 		return _getPasswordDigest();
@@ -126,14 +124,14 @@ public class WSUsernameToken {
 	/**
 	 * @return returns the current nonce else new nonce
 	 */
-	private byte [] getNonce() {
+	byte [] getNonce() {
 		if (nonce == null)
 			nonce = createNonce();
 		return nonce;
 	}
 
 	//** methods for testing purposes only *//
-	void setNonce(String nonce) {
+	void setEncodedNonce(String nonce) {
 		this.nonce = Base64.getDecoder().decode(nonce.getBytes());
 	}
 

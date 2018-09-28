@@ -72,7 +72,7 @@ public abstract class OnvifProperty extends ControllerProperty {
 	 * @throws AssertionError if inputs are invalid (e.g. a min is not less
 	 * 	than a max or val is not between oldMin and oldMax inclusive).
 	 */
-	protected float resize(
+	protected static float resize(
 		float val,
 		float oldMin, float oldMax,
 		float newMin, float newMax)

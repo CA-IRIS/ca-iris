@@ -54,7 +54,8 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 		switch (req) {
 		case CAMERA_IRIS_CLOSE:
 		case CAMERA_IRIS_OPEN:
-			stepIris();
+			setVal(getNewVal(options.getExposure().getIris(),
+				settings.getExposure().getIris()));
 			break;
 		default:
 			throw new IllegalArgumentException("Unexpected: " + req);
@@ -84,47 +85,55 @@ public class OnvifImagingIrisMoveProperty extends OnvifProperty {
 	 * absolute value of attenuation (the spec is unclear). Therefore, we
 	 * must write the logic for either case.
 	 */
-	private void stepIris() throws IOException {
-		FloatRange range = options.getExposure().getIris();
+	Float getNewVal(FloatRange range, float oldVal) {
+		Float rv = null;
 		final float min = range.getMin();
 		final float max = range.getMax();
 		final float incr = (max - min) / GRANULARITY_OF_MOVEMENT;
-		float val = settings.getExposure().getIris();
 		if (max == 0f)
-			negativeAttenuation(val, incr, min, max);
+			rv = negativeAttenuation(oldVal, incr, min, max);
 		else if (min == 0f)
-			absValAttenuation(val, incr, min, max);
+			rv = absValAttenuation(oldVal, incr, min, max);
+		return rv;
 	}
 	
-	private void negativeAttenuation(float oldVal, float incr, float min, float max)
-		throws IOException
+	float negativeAttenuation(float oldVal, float incr,
+					    float min, float max)
 	{
+		float rv;
 		float val = oldVal + (req == DeviceRequest.CAMERA_IRIS_OPEN ? 1 : -1) * incr;
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val > max)
-			updateVal(max);
+			rv = max;
 		else if (req == DeviceRequest.CAMERA_IRIS_CLOSE && val < min)
-			updateVal(min);
+			rv = min;
 		else
-			updateVal(val);
+			rv = val;
+		return rv;
 	}
 
-	private void absValAttenuation(float oldVal, float incr, float min, float max)
-		throws IOException
+	float absValAttenuation(float oldVal, float incr,
+					  float min, float max)
 	{
-		float val = oldVal + (req == DeviceRequest.CAMERA_IRIS_OPEN ? -1 : 1) * incr;
+		float rv;
+		float val = oldVal +
+			(req == DeviceRequest.CAMERA_IRIS_OPEN ? -1 : 1) * incr;
 		if (req == DeviceRequest.CAMERA_IRIS_OPEN && val < min)
-			updateVal(min);
+			rv = min;
 		else if (req == DeviceRequest.CAMERA_IRIS_CLOSE && val > max)
-			updateVal(max);
+			rv = max;
 		else
-			updateVal(val);
+			rv = val;
+		return rv;
 	}
 
-	private void updateVal(float val) throws IOException {
-		settings.getExposure().setIris(val);
-		SetImagingSettings setReq = new SetImagingSettings();
-		setReq.setVideoSourceToken(session.getVideoSoureTok());
-		setReq.setImagingSettings(settings);
-		response = session.makeRequest(setReq, SetImagingSettingsResponse.class);
+	private void setVal(Float val) throws IOException {
+		if (val != null) {
+			settings.getExposure().setIris(val);
+			SetImagingSettings setReq = new SetImagingSettings();
+			setReq.setVideoSourceToken(session.getVideoSoureTok());
+			setReq.setImagingSettings(settings);
+			response = session.makeRequest(setReq,
+				SetImagingSettingsResponse.class);
+		}
 	}
 }

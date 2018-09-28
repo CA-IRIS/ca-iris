@@ -35,9 +35,23 @@ public class WSUsernameTokenTest extends TestCase {
 		WSUsernameToken auth = new WSUsernameToken(
 			"unused", "userpassword");
 		auth.setDate("2010-09-16T07:50:45Z");
-		auth.setNonce("LKqI6G/AikKCQrN0zqZFlg==");
+		auth.setEncodedNonce("LKqI6G/AikKCQrN0zqZFlg==");
 		String expected = "tuOSpGlFlIXsozq4HFNeeGeFLEI=";
 		String actual = auth._getPasswordDigest();
 		assertEquals(expected, actual);
+	}
+
+	public void testNonceEncoding() {
+		WSUsernameToken auth = new WSUsernameToken(
+			"unused", "userpassword");
+		String encodedNonce = "LKqI6G/AikKCQrN0zqZFlg==";
+		auth.setEncodedNonce(encodedNonce);
+		assertEquals(encodedNonce, auth.getEncodedNonce());
+		// https://cryptii.com/pipes/base64-to-hex
+		byte [] expected = {44, -86, -120, -24, 111, -64, -118,
+			66, -126, 66, -77, 116, -50, -90, 69, -106};
+		assertEquals(expected.length, auth.getNonce().length);
+		for (int pos = 0; pos < auth.getNonce().length; pos++)
+			assertEquals(expected[pos], auth.getNonce()[pos]);
 	}
 }

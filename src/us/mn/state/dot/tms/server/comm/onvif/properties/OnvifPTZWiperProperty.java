@@ -81,10 +81,10 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	}
 
 	/**
-	 * @return the last String in reference that matches any String in
+	 * @return the String in reference that matches any String in
 	 * 	findAny (null if none found)
 	 */
-	private String matchAny(List<String> reference, String[] findAny) {
+	static String matchAny(List<String> reference, String[] findAny) {
 		String match = null;
 		if (reference != null && findAny != null) {
 			for (String s : reference) {
