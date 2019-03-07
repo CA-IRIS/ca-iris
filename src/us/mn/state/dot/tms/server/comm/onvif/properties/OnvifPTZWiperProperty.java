@@ -24,8 +24,8 @@ public class OnvifPTZWiperProperty extends OnvifProperty {
 	 * based on the onvif spec, these are the only foreseeable free form
 	 * versions of these auxiliary commands
 	 */
-	private static String WIPER_OFF[] = {"tt:Wiper|Off", "wiperon"};
-	private static String WIPER_ON[] = {"tt:Wiper|On", "wiperoff"};
+	private static String WIPER_OFF[] = {"tt:Wiper|Off", "wiperoff"};
+	private static String WIPER_ON[] = {"tt:Wiper|On", "wiperon"};
 
 	public OnvifPTZWiperProperty(
 		OnvifSessionMessenger session,
