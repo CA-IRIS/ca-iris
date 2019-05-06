@@ -57,7 +57,11 @@ abstract public class SwingProxyAdapter<T extends SonarObject>
 				}
 			});
 		} else
-			proxies.add(proxy);
+			if (!proxies.add(proxy)) {
+				System.err.println("Attempt to cache " + proxy.getTypeName() + ": " + proxy.getName()
+					+ " failed due to overlapping sorting/display name. " +
+					"Try using a different sorting algorithm in the IRIS system attributes. ");
+			}
 	}
 
 	/** Enumeration of proxies is complete.
