@@ -2526,6 +2526,7 @@ dms_pixel_status_enable	true
 dms_pixel_test_timeout_secs	30
 dms_preview_instant	false
 dms_querymsg_enable	false
+dms_querymsg_after_send_new_msg false
 dms_quickmsg_store_enable	false
 dms_quickmsg_uppercase_names	false
 dms_reset_enable	false
