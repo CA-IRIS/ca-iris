@@ -1003,7 +1003,14 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		int ap = smn.getActivationPriority();
 		if (ap == OVERRIDE.ordinal())
 			formatter.clear();
+
 		p.sendMessage(this, smn, o);
+
+		if (SystemAttrEnum.DMS_QUERYMSG_AFTER_SEND_NEW_MSG.getBoolean())
+			// Query the message after sending a new message to the
+			// controller to ensure that the correct message is displayed
+			// in the IRIS client.
+			p.sendRequest(this, DeviceRequest.QUERY_MESSAGE);
 	}
 
 	/** Check if the sign has a reference to a sign message */

@@ -22,6 +22,7 @@ import us.mn.state.dot.tms.DeviceRequest;
 import us.mn.state.dot.tms.InvalidMessageException;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
+import us.mn.state.dot.tms.SystemAttrEnum;
 import us.mn.state.dot.tms.server.ControllerImpl;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
@@ -89,14 +90,15 @@ public class DmsXmlPoller extends MessagePoller implements DMSPoller {
 	public void sendMessage(DMSImpl dms, SignMessage m, User o)
 		throws InvalidMessageException
 	{
-		LOG.log("DmsXmlPoller.sendMessage(" + dms + ", " +
-			m + ", " + o+ ") called.");
+		boolean keepConnectionOpen = SystemAttrEnum.DMS_QUERYMSG_AFTER_SEND_NEW_MSG.getBoolean();
+			LOG.log("DmsXmlPoller.sendMessage(" + dms + ", " +
+			m + ", " + o+ ", KeepConnectionOpen: "+keepConnectionOpen+") called.");
 		if(dms == null || m == null)
 			return;
 		if(SignMessageHelper.isBlank(m))
-			addOperation(new OpBlank(dms, m, o));
+			addOperation(new OpBlank(dms, m, o, keepConnectionOpen));
 		else
-			addOperation(new OpMessage(dms, m, o));
+			addOperation(new OpMessage(dms, m, o, keepConnectionOpen));
 	}
 
 	/** Send a device request message to the sign, no user specified */

@@ -52,13 +52,21 @@ class OpMessage extends OpDms {
 	/** Bitmaps for all pages as a hex string */
 	private final String m_bitmaps;
 
-	/** Create a new DMS command message object */
-	public OpMessage(DMSImpl d, SignMessage m, User u) {
+	/** if false, the connection to the DMS should be
+	 * 			closed after setting the message */
+	private boolean keepConnectionOpen;
+
+	/** Create a new DMS command message object
+	 * @param keepConnectionOpen if false, allow sensorserver to close connection
+	 *                      to dms when done with this op
+	 * */
+ 	public OpMessage(DMSImpl d, SignMessage m, User u, boolean keepConnectionOpen) {
 		super(PriorityLevel.COMMAND, d, "Sending new message", u);
 		m_sm = m;
 		BitmapGraphic[] bitmaps = SignMessageHelper.getBitmaps(m, d);
 		m_npages = bitmaps != null ? bitmaps.length : 0;
 		m_bitmaps = convertToHexString(bitmaps);
+		this.keepConnectionOpen = keepConnectionOpen;
 	}
 
 	/** Operation equality test */
@@ -155,6 +163,7 @@ class OpMessage extends OpDms {
 	 *		<RunPriority>...</RunPriority>
 	 *		<Owner>...</Owner>
 	 *		<Msg>...</Msg>
+	 *		<KeepConnectionOpen>...</KeepConnectionOpen>
 	 *	</elemname></dmsxml>
 	 */
 	private XmlElem buildReqRes(String elemReqName, String elemResName) {
@@ -204,6 +213,9 @@ class OpMessage extends OpDms {
 
 		// bitmap
 		xrr.addReq("Bitmap", m_bitmaps);
+
+		// close dms connection when done
+		xrr.addReq("KeepConnectionOpen", keepConnectionOpen);
 
 		// response
 		xrr.addRes("Id");

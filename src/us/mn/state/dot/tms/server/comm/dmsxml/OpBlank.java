@@ -37,10 +37,18 @@ class OpBlank extends OpDms
 	/** blank message, which contains owner, duration, priority */
 	private final SignMessage m_sm;
 
-	/** Create a new DMS query configuration object */
-	OpBlank(DMSImpl d, SignMessage mess, User u) {
+	/** if false, the connection to the DMS should be
+	 * 			closed after setting the message */
+	private boolean keepConnectionOpen;
+
+	/** Create a new DMS query configuration object
+	 * @param keepConnectionOpen if false, allow sensorserver to close connection
+	 *                      to dms when done with this op
+	 * */
+	OpBlank(DMSImpl d, SignMessage mess, User u, boolean keepConnectionOpen) {
 		super(PriorityLevel.DOWNLOAD, d, "Blanking the CMS", u);
 		m_sm = mess;
+		this.keepConnectionOpen = keepConnectionOpen;
 	}
 
 	/** Create the second phase of the operation */
@@ -62,6 +70,7 @@ class OpBlank extends OpDms
 	 *		<ActPriority>3</ActPriority>
 	 *		<RunPriority>3</RunPriority>
 	 *		<Owner>bob</Owner>
+	 *		<KeepConnectionOpen>true</KeepConnectionOpen>
 	 *	</SetBlankMsgReqMsg></DmsXml>
 	 */
 	private XmlElem buildReqRes(String elemReqName, String elemResName) {
@@ -76,6 +85,7 @@ class OpBlank extends OpDms
 			m_sm.getRunTimePriority());
 		xrr.addReq("Owner", 
 			m_user != null ? m_user.getName() : "");
+		xrr.addReq("KeepConnectionOpen", keepConnectionOpen);
 
 		// response
 		xrr.addRes("Id");
