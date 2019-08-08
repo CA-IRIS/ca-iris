@@ -6,5 +6,5 @@
 SET SESSION AUTHORIZATION 'tms';
 
 UPDATE iris.system_attribute
-    SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.4.2 [')
+    SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.4.3 [')
     WHERE NAME = 'window_title';
