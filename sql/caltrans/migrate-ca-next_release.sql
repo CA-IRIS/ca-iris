@@ -7,7 +7,7 @@ SET SESSION AUTHORIZATION 'tms';
 INSERT INTO iris.system_attribute (name, value) VALUES ('dms_querymsg_after_send_new_msg', false);
 
 UPDATE iris.system_attribute
-    SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.4.4 [')
+    SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.4.5 [')
     WHERE NAME = 'window_title';
 
 -- CAIRISINT48/TT623
