@@ -77,7 +77,9 @@ public class MultiFormatter {
 		rv = (rv != null) ? advisory.replaceSpeedAdvisory(rv) : null;
 		rv = (rv != null) ? slow_warn.replaceSlowWarning(rv) : null;
 		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
-		rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(new MultiString(rv)) : null;
+		MultiString ms = new MultiString(rv);
+		if (ms.pageOnInterval() == null)
+			rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(ms) : null;
 		return rv;
 	}
 
