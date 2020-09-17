@@ -118,12 +118,6 @@ public class QuickMessageImpl extends BaseObjectImpl implements QuickMessage {
 		return multi;
 	}
 
-	/** Strip all tags from a MULTI string.
-	 *  @return Message text without MULTI tags.*/
-	public String stripMulti() {
-		return multi.replaceAll("\\[[^\\[\\]]*\\]", "");
-	}
-
 	/** Set the message MULTI string.
 	 * @return Message text in MULTI markup.
 	 * @see us.mn.state.dot.tms.utils.MultiString */

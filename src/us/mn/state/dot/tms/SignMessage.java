@@ -37,10 +37,6 @@ public interface SignMessage extends SonarObject {
 	 * @see us.mn.state.dot.tms.utils.MultiString */
 	String getMulti();
 
-	/** Strip all tags from a MULTI string.
-	 *  @return Message text without MULTI tags.*/
-	String stripMulti();
-
 	/** Get beacon enabled flag */
 	boolean getBeaconEnabled();
 

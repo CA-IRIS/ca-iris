@@ -167,13 +167,6 @@ public class SignMessageImpl extends BaseObjectImpl implements SignMessage {
 		return multi;
 	}
 
-	/** Strip all tags from a MULTI string.
-	 *  @return Message text without MULTI tags.*/
-	public String stripMulti() {
-		return multi.replaceAll("\\[[^\\[\\]]*\\]", "");
-	}
-
-
 	/** Beacon enabled flag */
 	private boolean beacon_enabled;
 

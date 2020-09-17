@@ -18,6 +18,8 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.tms.*;
@@ -238,7 +240,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		}
 		store.update(this, "phase", p);
 		setPhase(p);
-		doSetPlanStatus(checkPlanStatus(p));
+		doSetPlanStatus(checkPlanStatus());
 	}
 
 	/** Get the phase */
@@ -401,45 +403,45 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		setPlanStatus(s);
 	}
 
-	public String checkPlanStatus(PlanPhase p) {
-		String status = "Active";
-		Iterator<DmsAction> it = DmsActionHelper.iterator(); // DMS Actions list
-		while (it.hasNext()) { // While there are DMS Actions remaining
-			DmsAction da = it.next(); // Get a DMS Action
-			ActionPlan ap = da.getActionPlan(); // Get the DMS Action's Action Plan
-			if (ap != this) { // It's not part of this Action Plan and currently active
-				break;
-			}
+	public String checkPlanStatus() throws ChangeVetoException {
+		String status = "";
+		Iterator<DmsAction> it = DmsActionHelper.iterator();
+		while (it.hasNext()) {
+			DmsAction da = it.next();
+			ActionPlan ap = da.getActionPlan();
+			if (ap != this)
+				continue;
 			if (!getActive()) {
 				status = "Inactive";
 				break;
 			}
-			SignGroup sg = da.getSignGroup(); // Gets the sign group of this Action
-			Iterator<DmsSignGroup> dsgIt = DmsSignGroupHelper.iterator(); // DMS Sign Group list
-			while (dsgIt.hasNext()) { // While there are DMS Sign Groups remaining
-				DmsSignGroup dsg = dsgIt.next(); // Get a DMS Sign Group
-				if (dsg.getSignGroup() != sg) { // It's not part of this Sign Group
-					break;
-				}
-				DMS dms = dsg.getDms(); // Get its DMS
+			SignGroup sg = da.getSignGroup();
+			Iterator<DmsSignGroup> dsgIt = DmsSignGroupHelper.iterator();
+			while (dsgIt.hasNext()) {
+				DmsSignGroup dsg = dsgIt.next();
+				if (dsg.getSignGroup() != sg)
+					continue;
+				DMS dms = dsg.getDms();
 				if (!(dms instanceof DMSImpl)) {
-					// throw exception
+					throw new ChangeVetoException("DMS instance " +
+							da.getName() + " not an instance of DMSImpl");
 				}
-				if (!((DMSImpl) dms).isOnline()) {
+				if (!((DMSImpl) dms).isOnline())
 					status = dms.getName() + " offline";
-				}
-				if (((DMSImpl) dms).isFailed()) { // DMS is problematic
+				if (((DMSImpl) dms).isFailed()) {
 					status = dms.getName() + " failed";
 					break;
 				}
-				String prevPollMsg = dms.getMessageCurrent().stripMulti();
-				String currPollMsg = da.getQuickMessage().stripMulti();
-				if (!prevPollMsg.equals(currPollMsg)) {
+				String pollMsg = dms.getMessageCurrent().getMulti().replaceAll("\\[[^\\[\\]]*\\]", "");
+				String deployedMsg = da.getQuickMessage().getMulti().replaceAll("\\[[^\\[\\]]*\\]", "");
+				if (pollMsg.isEmpty()) // If plan was inactive
+					break;
+				if (!Objects.equals(pollMsg, deployedMsg)) {
 					status = dms.getName() + " msg err";
 					break;
 				}
 			}
 		}
-		return status;
+		return status.equals("") ? "Active" : status;
 	}
 }
