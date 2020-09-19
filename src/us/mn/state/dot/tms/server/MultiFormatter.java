@@ -14,10 +14,8 @@
  */
 package us.mn.state.dot.tms.server;
 
-import us.mn.state.dot.tms.DmsAction;
-import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.QuickMessage;
-import us.mn.state.dot.tms.QuickMessageHelper;
+import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.units.Interval;
 import us.mn.state.dot.tms.utils.MultiString;
 
 /**
@@ -78,7 +76,8 @@ public class MultiFormatter {
 		rv = (rv != null) ? slow_warn.replaceSlowWarning(rv) : null;
 		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
 		MultiString ms = new MultiString(rv);
-		if (ms.pageOnInterval() == null)
+		double pg_on = ms.pageOnInterval().seconds();
+		if (pg_on < SystemAttrEnum.DMS_PAGE_ON_DEFAULT_SECS.getInt())
 			rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(ms) : null;
 		return rv;
 	}
