@@ -82,8 +82,8 @@ public class QuickMessageHelper extends BaseHelper {
 	/** if the MultiString lacks a page-on-time tag, prepend one. */
 	static public String prependPageOnTime(MultiString ms) {
 		if (ms.getNumPages() <= 1) {
-			Integer pt_on = SystemAttrEnum.DMS_PAGE_ON_MIN_SECS.getInt();
-			Integer pt_off = SystemAttrEnum.DMS_PAGE_OFF_DEFAULT_SECS.getInt();
+			Integer pt_on = Math.round(SystemAttrEnum.DMS_PAGE_ON_DEFAULT_SECS.getFloat()) * 10;
+			Integer pt_off = Math.round(SystemAttrEnum.DMS_PAGE_OFF_DEFAULT_SECS.getFloat()) * 10;
 			return ms.replacePageTime(pt_on, pt_off);
 		}
 		return ms.toString();

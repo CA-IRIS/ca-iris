@@ -77,7 +77,7 @@ public class MultiFormatter {
 		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
 		MultiString ms = new MultiString(rv);
 		double pg_on = ms.pageOnInterval().seconds();
-		if (pg_on < SystemAttrEnum.DMS_PAGE_ON_DEFAULT_SECS.getInt())
+		if (pg_on < SystemAttrEnum.DMS_PAGE_ON_DEFAULT_SECS.getFloat())
 			rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(ms) : null;
 		return rv;
 	}
