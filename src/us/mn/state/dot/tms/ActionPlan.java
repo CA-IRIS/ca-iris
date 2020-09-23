@@ -61,4 +61,11 @@ public interface ActionPlan extends SonarObject {
 
 	/** Get the phase */
 	PlanPhase getPhase();
+
+	/** Get the sign plan status. If this attribute is set (not
+	 * an empty string), there is a critical error. */
+    String getPlanStatus();
+
+    /** Set the sign plan status */
+    void setPlanStatus(String s);
 }

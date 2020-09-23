@@ -254,6 +254,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		}
 		store.update(this, "phase", p);
 		setPhase(p);
+		doSetPlanStatus("Sign Plan Deployed"); // name of phase + "success"
 	}
 
 	/** Get the phase */
@@ -393,5 +394,27 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	private int phaseSecs() {
 		long elapsed = TimeSteward.currentTimeMillis() - phase_time;
 		return (int)(elapsed / 1000);
+	}
+
+	/** Sign plan status */
+	private String planStatus = "Not Deployed";
+
+	/** Get the sign plan status */
+	@Override
+	public String getPlanStatus() {
+		return planStatus;
+	}
+
+	/** Set the sign package status */
+	@Override
+	public void setPlanStatus(String s) {
+		planStatus = s;
+	}
+
+	public void doSetPlanStatus(String s) throws TMSException {
+		if (s == null || s.equals(planStatus))
+			return;
+		//store.update(this, "pkg_status", s);
+		setPlanStatus(s);
 	}
 }

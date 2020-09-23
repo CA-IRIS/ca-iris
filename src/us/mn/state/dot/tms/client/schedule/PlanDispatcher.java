@@ -73,6 +73,9 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 	/** Meter count component */
 	private final JLabel meter_lbl = createValueLabel();
 
+	/** Sign package status component */
+	private final JLabel plan_lbl = createValueLabel();
+
 	/** Plan phase combo box */
 	private final JComboBox<PlanPhase> phase_cbx =
 		new JComboBox<PlanPhase>();
@@ -124,6 +127,8 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		add(lane_lbl, Stretch.LAST);
 		add("ramp_meter.title");
 		add(meter_lbl, Stretch.LAST);
+		add("action.plan.status");
+		add(plan_lbl, Stretch.LAST);
 		add("action.plan.phase");
 		add(phase_cbx, Stretch.LAST);
 		watcher.initialize();
@@ -162,6 +167,8 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 			beacon_lbl.setText(Integer.toString(countBeacons(ap)));
 			lane_lbl.setText(Integer.toString(countLanes(ap)));
 			meter_lbl.setText(Integer.toString(countMeters(ap)));
+			description_lbl.setText(ap.getDescription());
+			plan_lbl.setText(ap.getPlanStatus());
 		}
 		if (a == null || a.equals("phase")) {
 			phase_cbx.setAction(null);
@@ -317,6 +324,7 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		lane_lbl.setText("");
 		meter_lbl.setText("");
 		phase_cbx.setAction(null);
+		plan_lbl.setText("");
 		phase_cbx.setModel(new DefaultComboBoxModel<PlanPhase>());
 		phase_cbx.setSelectedItem(null);
 		phase_cbx.setEnabled(false);
