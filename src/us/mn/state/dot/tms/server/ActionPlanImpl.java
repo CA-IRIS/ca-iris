@@ -20,25 +20,9 @@ import java.util.Iterator;
 import java.util.Map;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
-import us.mn.state.dot.tms.ActionPlan;
-import us.mn.state.dot.tms.Beacon;
-import us.mn.state.dot.tms.BeaconAction;
-import us.mn.state.dot.tms.BeaconActionHelper;
-import us.mn.state.dot.tms.ChangeVetoException;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DmsAction;
-import us.mn.state.dot.tms.DmsActionHelper;
-import us.mn.state.dot.tms.DmsSignGroup;
-import us.mn.state.dot.tms.DmsSignGroupHelper;
-import us.mn.state.dot.tms.LaneAction;
-import us.mn.state.dot.tms.LaneActionHelper;
-import us.mn.state.dot.tms.LaneMarking;
-import us.mn.state.dot.tms.MeterAction;
-import us.mn.state.dot.tms.MeterActionHelper;
-import us.mn.state.dot.tms.PlanPhase;
-import us.mn.state.dot.tms.RampMeter;
-import us.mn.state.dot.tms.SignGroup;
-import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.*;
+
+import javax.swing.*;
 
 /**
  * An action plan is a set of actions which can be deployed together.
@@ -254,7 +238,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		}
 		store.update(this, "phase", p);
 		setPhase(p);
-		doSetPlanStatus("Sign Plan Deployed"); // name of phase + "success"
+		doSetPlanStatus(checkPlanStatus(p));
 	}
 
 	/** Get the phase */
@@ -397,7 +381,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	}
 
 	/** Sign plan status */
-	private String planStatus = "Not Deployed";
+	private String planStatus = "";
 
 	/** Get the sign plan status */
 	@Override
@@ -414,7 +398,48 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	public void doSetPlanStatus(String s) throws TMSException {
 		if (s == null || s.equals(planStatus))
 			return;
-		//store.update(this, "pkg_status", s);
 		setPlanStatus(s);
+	}
+
+	public String checkPlanStatus(PlanPhase p) {
+		String status = "Active";
+		Iterator<DmsAction> it = DmsActionHelper.iterator(); // DMS Actions list
+		while (it.hasNext()) { // While there are DMS Actions remaining
+			DmsAction da = it.next(); // Get a DMS Action
+			ActionPlan ap = da.getActionPlan(); // Get the DMS Action's Action Plan
+			if (ap != this) { // It's not part of this Action Plan and currently active
+				break;
+			}
+			if (!getActive()) {
+				status = "Inactive";
+				break;
+			}
+			SignGroup sg = da.getSignGroup(); // Gets the sign group of this Action
+			Iterator<DmsSignGroup> dsgIt = DmsSignGroupHelper.iterator(); // DMS Sign Group list
+			while (dsgIt.hasNext()) { // While there are DMS Sign Groups remaining
+				DmsSignGroup dsg = dsgIt.next(); // Get a DMS Sign Group
+				if (dsg.getSignGroup() != sg) { // It's not part of this Sign Group
+					break;
+				}
+				DMS dms = dsg.getDms(); // Get its DMS
+				if (!(dms instanceof DMSImpl)) {
+					// throw exception
+				}
+				if (!((DMSImpl) dms).isOnline()) {
+					status = dms.getName() + " offline";
+				}
+				if (((DMSImpl) dms).isFailed()) { // DMS is problematic
+					status = dms.getName() + " failed";
+					break;
+				}
+				String prevPollMsg = dms.getMessageCurrent().stripMulti();
+				String currPollMsg = da.getQuickMessage().stripMulti();
+				if (!prevPollMsg.equals(currPollMsg)) {
+					status = dms.getName() + " msg err";
+					break;
+				}
+			}
+		}
+		return status;
 	}
 }

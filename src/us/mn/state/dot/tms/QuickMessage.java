@@ -45,6 +45,10 @@ public interface QuickMessage extends SonarObject {
 	 * @see us.mn.state.dot.tms.utils.MultiString */
 	String getMulti();
 
+	/** Strip all tags from a MULTI string.
+	 *  @return Message text without MULTI tags.*/
+	String stripMulti();
+
 	/** Set the message MULTI string.
 	 * @multi Message text in MULTI markup.
 	 * @see us.mn.state.dot.tms.utils.MultiString */
