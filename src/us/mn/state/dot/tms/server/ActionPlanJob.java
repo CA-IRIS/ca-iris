@@ -71,6 +71,7 @@ public class ActionPlanJob extends Job {
 		performBeaconActions();
 		performLaneActions();
 		performMeterActions();
+		updatePlanStatus();
 	}
 
 	/** Update the action plan phases */
@@ -81,6 +82,19 @@ public class ActionPlanJob extends Job {
 			if(ap instanceof ActionPlanImpl) {
 				ActionPlanImpl api = (ActionPlanImpl)ap;
 				api.updatePhase();
+			}
+		}
+	}
+
+	/** Update the action plan status */
+	private void updatePlanStatus() throws TMSException {
+		Iterator<ActionPlan> it = ActionPlanHelper.iterator();
+		while(it.hasNext()) {
+			ActionPlan ap = it.next();
+			if(ap instanceof ActionPlanImpl) {
+				ActionPlanImpl api = (ActionPlanImpl)ap;
+				String s = api.checkPlanStatus(api.getPhase());
+				api.doSetPlanStatus(s);
 			}
 		}
 	}

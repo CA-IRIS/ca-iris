@@ -22,31 +22,17 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+
+import us.mn.state.dot.sched.TimeSteward;
+import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.ActionPlan;
-import us.mn.state.dot.tms.Beacon;
-import us.mn.state.dot.tms.BeaconAction;
-import us.mn.state.dot.tms.BeaconActionHelper;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DmsAction;
-import us.mn.state.dot.tms.DmsActionHelper;
-import us.mn.state.dot.tms.DmsSignGroup;
-import us.mn.state.dot.tms.DmsSignGroupHelper;
-import us.mn.state.dot.tms.LaneAction;
-import us.mn.state.dot.tms.LaneActionHelper;
-import us.mn.state.dot.tms.LaneMarking;
-import us.mn.state.dot.tms.MeterAction;
-import us.mn.state.dot.tms.MeterActionHelper;
-import us.mn.state.dot.tms.PlanPhase;
-import us.mn.state.dot.tms.SignGroup;
-import us.mn.state.dot.tms.RampMeter;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
-import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
-import us.mn.state.dot.tms.client.proxy.ProxyView;
-import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
+import us.mn.state.dot.tms.client.proxy.*;
 import us.mn.state.dot.tms.client.widget.IPanel;
 import us.mn.state.dot.tms.utils.I18N;
+
+import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
  * A plan dispatcher is a GUI panel for dispatching action plans
@@ -73,8 +59,11 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 	/** Meter count component */
 	private final JLabel meter_lbl = createValueLabel();
 
-	/** Sign package status component */
+	/** Plan status component */
 	private final JLabel plan_lbl = createValueLabel();
+
+	/** Status time component */
+	private final JLabel time_lbl = createValueLabel();
 
 	/** Plan phase combo box */
 	private final JComboBox<PlanPhase> phase_cbx =
@@ -98,16 +87,46 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		}
 	};
 
+	/** Currently selected Action Plan */
+	private ActionPlan selected = null;
+
+	/** Proxy listener */
+	private final ProxyListener<ActionPlan> proxy_listener =
+			new ProxyListener<ActionPlan>()
+			{
+				public void proxyAdded(ActionPlan ap) {}
+				public void enumerationComplete() {}
+				public void proxyRemoved(ActionPlan ap) {}
+				public void proxyChanged(final ActionPlan proxy, final String a) {
+					if (proxy != selected)
+						return;
+					if ((a == null) || ("planStatus".equals(a))) {
+						//final String stat = proxy.getPlanStatus();
+						runSwing(new IrisRunnable() {
+							public void run() {
+								customMessage = "proxyChanged, " + proxy.getTypeName() + ": "
+										+ proxy.getName() + ", attr=" + a;
+								updatePlanStatus(proxy);
+							}
+						});
+					}
+				}
+			};
+
 	/** Proxy watcher */
 	private final ProxyWatcher<ActionPlan> watcher;
+
+	/** Cache of Action Plan proxy objects */
+	private final TypeCache<ActionPlan> cache;
 
 	/** Create a new plan dispatcher */
 	public PlanDispatcher(Session s, PlanManager m) {
 		session = s;
 		manager = m;
 		sel_model = manager.getSelectionModel();
-		TypeCache<ActionPlan> cache =s.getSonarState().getActionPlans();
+		cache =s.getSonarState().getActionPlans();
 		watcher = new ProxyWatcher<ActionPlan>(cache, this, true);
+		cache.addProxyListener(proxy_listener);
 	}
 
 	/** Initialize the widgets on the panel */
@@ -129,6 +148,8 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		add(meter_lbl, Stretch.LAST);
 		add("action.plan.status");
 		add(plan_lbl, Stretch.LAST);
+		add("action.plan.status.updated");
+		add(time_lbl, Stretch.LAST);
 		add("action.plan.phase");
 		add(phase_cbx, Stretch.LAST);
 		watcher.initialize();
@@ -141,12 +162,15 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 	public void dispose() {
 		watcher.dispose();
 		sel_model.removeProxySelectionListener(sel_listener);
+		cache.removeProxyListener(proxy_listener);
+		selected = null;
 		clear();
 		super.dispose();
 	}
 
 	/** Set the selected action plan */
 	public void setSelected(ActionPlan ap) {
+		selected = ap;
 		watcher.setProxy(ap);
 	}
 
@@ -168,8 +192,11 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 			lane_lbl.setText(Integer.toString(countLanes(ap)));
 			meter_lbl.setText(Integer.toString(countMeters(ap)));
 			description_lbl.setText(ap.getDescription());
-			plan_lbl.setText(ap.getPlanStatus());
 		}
+		if (a == null || a.equals("planStatus"))
+			plan_lbl.setText(ap.getPlanStatus());
+		if (a == null || a.equals("statusCheck"))
+			time_lbl.setText(ap.getStatusCheck());
 		if (a == null || a.equals("phase")) {
 			phase_cbx.setAction(null);
 			ComboBoxModel mdl = phase_cbx.getModel();
@@ -184,6 +211,14 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 			phase_cbx.setAction(new ChangePhaseAction(ap,
 				phase_cbx));
 		}
+	}
+
+	/**
+	 * Update the Plan Status field and Status Updated field.
+	 * @param ap  Action Plan proxy
+	 */
+	private void updatePlanStatus(ActionPlan ap) {
+		plan_lbl.setText(ap.getPlanStatus());
 	}
 
 	/** Create a combo box model for plan phases */
@@ -325,6 +360,7 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		meter_lbl.setText("");
 		phase_cbx.setAction(null);
 		plan_lbl.setText("");
+		time_lbl.setText("");
 		phase_cbx.setModel(new DefaultComboBoxModel<PlanPhase>());
 		phase_cbx.setSelectedItem(null);
 		phase_cbx.setEnabled(false);
