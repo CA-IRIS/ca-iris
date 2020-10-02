@@ -409,6 +409,8 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 			return;
 		setPlanStatus(s);
 		notifyAttribute("planStatus");
+		doSetStatusCheck();
+		notifyAttribute("statusCheck");
 	}
 
 	/**
@@ -427,7 +429,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 			if (!getActive()) {
 				status = "Inactive";
 				logPlan(getCurrentDate() +
-						", plan msg " + ap.getName() +
+						": Plan " + ap.getName() +
 						" not active");
 				break;
 			}
@@ -435,7 +437,8 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 				continue;
 			status = checkDmsStatus(da, status);
 		}
-		doSetStatusCheck(); // Keep track of latest status check
+		status = checkPhaseCms(p, status);
+		doSetStatusCheck(); // Keep track of latest status check -- FIX NAME HERE
 		return status.equals("") ? "Active" : status;
 	}
 
@@ -443,7 +446,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	 * Check if DMS is online and not failed
 	 * @param da Current DMS Action
 	 * @param status Current plan status
-	 * @return Empty string or DMS offline or DMS failed
+	 * @return Passed status or DMS offline or DMS failed
 	 * @throws ChangeVetoException
 	 */
 	public String checkDmsStatus(DmsAction da, String status) throws ChangeVetoException {
@@ -459,15 +462,15 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 						da.getName() + " not an instance of DMSImpl");
 			}
 			if (!((DMSImpl) dms).isOnline()) {
-				status = dms.getName() + " offline";
-				logPlan(getCurrentDate() + ", plan msg " + da.getActionPlan() +
-						", dms: " + dms.getName() + " not online");
+				status = dms.getName() + ": Controller condition is not active";
+				logPlan(getCurrentDate() + ", Plan " + da.getActionPlan() +
+						", DMS: " + dms.getName() + " controller condition is not active");
 				break;
 			}
 			if (((DMSImpl) dms).isFailed()) {
-				status = dms.getName() + " failed";
-				logPlan(getCurrentDate() + ", plan msg " + da.getActionPlan() +
-						", dms: "+ dms.getName() + " failed");
+				status = dms.getName() + ": Controller failed";
+				logPlan(getCurrentDate() + ", Plan " + da.getActionPlan() +
+						", DMS: "+ dms.getName() + " controller failed");
 				break;
 			}
 			status = checkDmsMessage(da, dms, status);
@@ -480,7 +483,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	 * @param da Current DMS Action
 	 * @param dms Current DMS
 	 * @param status Current DMS status
-	 * @return Empty string or DMS message error
+	 * @return Passed status or DMS message error
 	 */
 	public String checkDmsMessage(DmsAction da, DMS dms, String status) {
 		String pollMsg = dms.getMessageCurrent().getMulti().replaceAll("\\[[^\\[\\]]*\\]", "");
@@ -489,14 +492,33 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 			return status;
 		}
 		if (!Objects.equals(pollMsg, deployedMsg)) {
-			logPlan(getCurrentDate() + ", deployed msg " + deployedMsg +
-					"does not match polled msg " + pollMsg + " : msg err");
-			return dms.getName() + " msg err";
+			logPlan(getCurrentDate() + ", Polled msg " + pollMsg +
+					"does not match selected Phase msg " + deployedMsg);
+			return dms.getName() + ": Poll msg does not match selected Phase msg";
 		}
 		return status;
 	}
 
-	/** Action Plan status */
+	/**
+	 * Check if phase contains any CMS
+	 * @param p Current plan phase
+	 * @param status Current plan status
+	 * @return Passed status or warning no devices in phase
+	 */
+	private String checkPhaseCms(PlanPhase p, String status) {
+		Iterator<DmsAction> it = DmsActionHelper.iterator();
+		int cms = 0;
+		while (it.hasNext()) {
+			DmsAction da = it.next();
+			if (da.getActionPlan() == this && da.getPhase() == p)
+				cms++;
+		}
+		if (status.equals("") && cms == 0)
+			status = "Active: Some Plan devices are not configured for this Phase";
+		return status;
+	}
+
+	/**  */
 	protected String status_check;
 
 	/** Set the status check */
