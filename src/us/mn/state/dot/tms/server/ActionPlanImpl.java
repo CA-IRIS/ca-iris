@@ -408,10 +408,11 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		if (s == null || s.equals(planStatus))
 			return;
 		setPlanStatus(s);
+		notifyAttribute("planStatus");
 	}
 
 	/**
-	 * Check the status of messages deployed in the current phase.
+	 * Check the status of current plan.
 	 * @param p - Current plan phase
 	 * @throws ChangeVetoException
 	 */
