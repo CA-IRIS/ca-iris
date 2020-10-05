@@ -20,14 +20,10 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import us.mn.state.dot.sonar.User;
-import us.mn.state.dot.tms.BitmapGraphic;
-import us.mn.state.dot.tms.DeviceRequest;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.DMSMessagePriority;
-import us.mn.state.dot.tms.EventType;
-import us.mn.state.dot.tms.IrisUserHelper;
+import us.mn.state.dot.tms.*;
+
 import static us.mn.state.dot.tms.SignMsgSource.external;
-import us.mn.state.dot.tms.SystemAttrEnum;
+
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
@@ -254,9 +250,8 @@ class OpQueryMsg extends OpDms {
 	private String updatePageOnTime(String multi, Interval pt) {
 		MultiString m = new MultiString(multi);
 		int npgs = m.getNumPages();
-		// if one page, use page on-time of zero.
 		if (npgs <= 1)
-			pt = new Interval(0);
+			pt = PageTimeHelper.defaultPageOnInterval();
 		String ret = m.replacePageTime(pt.round(DECISECONDS), null);
 		LOG.log("OpQueryMsg.updatePageOnTime(): " +
 			"updated multi w/ page display time: " + ret);

@@ -20,6 +20,8 @@ import java.util.Iterator;
 import us.mn.state.dot.tms.units.Interval;
 import us.mn.state.dot.tms.utils.MultiString;
 
+import static us.mn.state.dot.tms.units.Interval.Units.DECISECONDS;
+
 /**
  * Helper class for quick messages.
  *
@@ -83,12 +85,9 @@ public class QuickMessageHelper extends BaseHelper {
 
 	/** if the MultiString lacks a page-on-time tag, prepend one. */
 	static public String prependPageOnTime(MultiString ms) {
-		if (ms.singlePage()) {
-			Integer pt_on = Math.round(SystemAttrEnum.DMS_PAGE_ON_DEFAULT_SECS.getFloat()) * 10;
-			Integer pt_off = ms.pageOffInterval().round(Interval.Units.DECISECONDS); // Use MultiString pageOff value
-			return ms.replacePageTime(pt_on, pt_off);
-		}
-		return ms.toString();
+			Interval pt_on = PageTimeHelper.defaultPageOnInterval();
+			Interval pt_off = PageTimeHelper.defaultPageOffInterval();
+			return ms.replacePageTime(pt_on.round(DECISECONDS), pt_off.round(DECISECONDS));
 	}
 
 	/**
