@@ -29,14 +29,7 @@ import javax.swing.SwingUtilities;
 
 import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.Controller;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.GeoLoc;
-import us.mn.state.dot.tms.ItemStyle;
-import us.mn.state.dot.tms.RasterGraphic;
-import us.mn.state.dot.tms.SignMessageHelper;
-import us.mn.state.dot.tms.SystemAttrEnum;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.proxy.GeoLocManager;
 import us.mn.state.dot.tms.client.proxy.MapAction;
@@ -206,6 +199,9 @@ public class DMSManager extends ProxyManager<DMS> {
 		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
 			theme.addStyle(ItemStyle.AWS_CONTROLLED,
 				COLOR_HELIOTROPE);
+		if (SystemAttrEnum.DMS_PLAN_ENABLE.getBoolean()) {
+			theme.addStyle(ItemStyle.AWS_DEPLOYED, ProxyTheme.COLOR_AWS_DEPLOYED);
+		}
 		// NOTE: If a sign doesn't fit in one of the other themes,
 		//       it will be rendered using the ALL theme.
 		theme.addStyle(ItemStyle.ALL);

@@ -95,7 +95,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		namespace.registerType(SONAR_TYPE, DMSImpl.class);
 		store.query("SELECT name, geo_loc, controller, pin, notes, " +
 			"beacon, preset, aws_allowed, aws_controlled, " +
-			"default_font FROM iris." + SONAR_TYPE  + ";",
+			"plan_allowed, plan_controlled, default_font FROM iris." +
+			SONAR_TYPE  + ";",
 			new ResultFactory()
 		{
 			public void create(ResultSet row) throws Exception {
@@ -108,8 +109,10 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 					row.getString(6),	// beacon
 					row.getString(7),	// preset
 					row.getBoolean(8),	// aws_allowed
-					row.getBoolean(9),     // aws_controlled
-					row.getString(10)	// default_font
+					row.getBoolean(9),   // aws_controlled
+					row.getBoolean(10),  // plan_allowed
+					row.getBoolean(11),  // plan_controlled
+					row.getString(12)	// default_font
 				));
 			}
 		});
@@ -139,6 +142,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		map.put("preset", preset);
 		map.put("aws_allowed", awsAllowed);
 		map.put("aws_controlled", awsControlled);
+		map.put("plan_allowed", planAllowed);
+		map.put("plan_controlled", planControlled);
 		map.put("default_font", default_font);
 		return map;
 	}
@@ -178,7 +183,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Create a dynamic message sign */
 	private DMSImpl(String n, GeoLocImpl loc, ControllerImpl c,
 		int p, String nt, Beacon b, CameraPreset cp, boolean aa,
-		boolean ac, Font df)
+		boolean ac, boolean pa, boolean pc, Font df)
 	{
 		super(n, c, p, nt);
 		geo_loc = loc;
@@ -186,6 +191,8 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		setPreset(cp);
 		awsAllowed = aa;
 		awsControlled = ac;
+		planAllowed = pa;
+		planControlled = pc;
 		default_font = df;
 		toll_formatter = new TollingFormatter(n, loc);
 		formatter = new MultiFormatter(this, toll_formatter);
@@ -195,10 +202,10 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Create a dynamic message sign */
 	private DMSImpl(String n, String loc, String c,
 		int p, String nt, String b, String cp, boolean aa, boolean ac,
-		String df)
+		boolean pa, boolean pc, String df)
 	{
 		this(n, lookupGeoLoc(loc), lookupController(c), p, nt,
-		     lookupBeacon(b), lookupPreset(cp), aa, ac,
+		     lookupBeacon(b), lookupPreset(cp), aa, ac, pa, pc,
 		     FontHelper.lookup(df));
 	}
 
@@ -368,6 +375,58 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	@Override
 	public boolean getAwsControlled() {
 		return awsControlled;
+	}
+
+	// HERE HERE HERE HERE HERE
+	// HERE HERE HERE HERE HERE
+	// HERE HERE HERE HERE HERE
+	// HERE HERE HERE HERE HERE
+	// HERE HERE HERE HERE HERE
+
+	/** Administrator allowed Plan control */
+	private boolean planAllowed;
+
+	/** Allow (or deny) sign control by a Plan */
+	@Override
+	public void setPlanAllowed(boolean a) {
+		planAllowed = a;
+	}
+
+	/** Allow (or deny) sign control by Plan */
+	public void doSetPlanAllowed(boolean a) throws TMSException {
+		if (a != planAllowed) {
+			store.update(this, "plan_allowed", a); // Update the database?
+			setPlanAllowed(a);
+		}
+	}
+
+	/** Is sign allowed to be controlled by a Plan? */
+	@Override
+	public boolean getPlanAllowed() {
+		return planAllowed;
+	}
+
+	/** AWS controlled */
+	private boolean planControlled;
+
+	/** Set sign to Plan controlled */
+	@Override
+	public void setPlanControlled(boolean a) {
+		planControlled = a;
+	}
+
+	/** Set sign to Plan controlled */
+	public void doSetPlanControlled(boolean a) throws TMSException {
+		if (a != planControlled) {
+			store.update(this, "plan_controlled", a);
+			setPlanControlled(a);
+		}
+	}
+
+	/** Is sign controlled by a Plan? */
+	@Override
+	public boolean getPlanControlled() {
+		return planControlled;
 	}
 
 	/** Default font */
@@ -1806,6 +1865,12 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		return sm.getRunTimePriority() == AWS.ordinal();
 	}
 
+	/** Test if the current message is in Plan */
+	private boolean isMsgPlanned() {
+		SignMessage sm = getMessageCurrent();
+		return sm.getRunTimePriority() == SCHEDULED.ordinal();
+	}
+
 	/** Test if a DMS is active, not failed and deployed */
 	public boolean isMsgDeployed() {
 		return isOnline() && !isMsgBlank();
@@ -1834,6 +1899,16 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Test if a DMS can be controlled by AWS */
 	private boolean isAwsControlled() {
 		return getAwsAllowed() && getAwsControlled();
+	}
+
+	/** Test if a DMS is active, not failed and used by a Plan */
+	private boolean isPlanDeployed() {
+		return isMsgDeployed() && isMsgPlanned();
+	}
+
+	/** Test if a DMS can be controlled by Plan */
+	private boolean isPlanControlled() {
+		return getPlanAllowed() && getPlanControlled();
 	}
 
 	/** Test if DMS needs maintenance */
@@ -1881,6 +1956,10 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 					s |= ItemStyle.AWS_DEPLOYED.bit();
 				if (isAwsControlled())
 					s |= ItemStyle.AWS_CONTROLLED.bit();
+				if (isPlanDeployed())
+					s |= ItemStyle.PLAN_DEPLOYED.bit();
+				if (isPlanControlled())
+					s |= ItemStyle.PLAN_CONTROLLED.bit();
 			}
 		setStyles(s);
 	}

@@ -1,9 +1,15 @@
 -- current as of MnDOT 4.35.4
 
+<<<<<<< HEAD
+=======
+
+-- updates required before rest of updates
+>>>>>>> f53c9bddd... Moving from Windows (local) to SUSE12 (remote)
 \set ON_ERROR_STOP
 
 SET SESSION AUTHORIZATION 'tms';
 
+<<<<<<< HEAD
 --INSERT INTO iris.system_attribute (name, value) VALUES ('dms_querymsg_after_send_new_msg', false);
 
 UPDATE iris.system_attribute
@@ -75,4 +81,27 @@ INSERT INTO iris.lane_use_indication ("id", description) VALUES (16, 'Vehicles')
 
 -- 10.5 Make msg_num in Lane Use Multi NOT UNQIUE
 DROP INDEX iris.lane_use_multi_msg_num_idx;
+=======
+-- updates CA-only protocols (that haven't been given to MnDOT)
+
+-- ADDITIONS for CA-IRIS v10.5 go at the bottom
+
+
+
+
+-- ============================================================================
+-- BEGIN: MnDOT updates
+-- ============================================================================
+
+
+
+-- ============================================================================
+-- BEGIN 10.5 changes
+-- ============================================================================
+
+-- feature 631 dms plan control / allowed
+ALTER TABLE iris._dms
+ADD COLUMN plan_allowed BOOLEAN DEFAULT false,
+ADD COLUMN plan_controlled BOOLEAN DEFAULT false;
+>>>>>>> f53c9bddd... Moving from Windows (local) to SUSE12 (remote)
 
