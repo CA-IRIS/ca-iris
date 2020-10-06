@@ -67,6 +67,7 @@ public enum SystemAttrEnum {
 	DICT_ALLOWED_SCHEME(0, 0, 2),
 	DICT_BANNED_SCHEME(0, 0, 2),
 	DMS_AWS_ENABLE(false),
+	DMS_PLAN_ENABLE(false),
 	DMS_AWS_MSG_FILE_URL("http://iris/iris_aws.txt"),
 	DMS_AWS_USER_NAME("IRISAWS"),
 	DMS_BRIGHTNESS_ENABLE(true, Change.RESTART_CLIENT),

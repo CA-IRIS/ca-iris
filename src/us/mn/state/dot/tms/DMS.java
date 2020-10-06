@@ -53,6 +53,18 @@ public interface DMS extends Device {
 	/** Is sign controlled by Automated Warning System? */
 	boolean getAwsControlled();
 
+	/** Allow (or deny) sign control by Plan */
+	void setPlanAllowed(boolean a);
+
+	/** Is sign allowed to be controlled by a Plan? */
+	boolean getPlanAllowed();
+
+	/** Set sign to Plan controlled */
+	void setPlanControlled(boolean a);
+
+	/** Is sign controlled by a Plan? */
+	boolean getPlanControlled();
+
 	/** Set the default font */
 	void setDefaultFont(Font f);
 

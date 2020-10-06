@@ -83,6 +83,19 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		}
 	});
 
+	/** Plan controlled checkbox (optional) */
+	private final JCheckBox plan_control_chk = new JCheckBox(
+			new IAction("item.style.plan.controlled")
+			{
+				protected void doActionPerformed(ActionEvent e) {
+					DMS proxy = watching;
+					if(proxy != null) {
+						proxy.setPlanControlled(
+								plan_control_chk.isSelected());
+					}
+				}
+			});
+
 	/** Displays the controller status */
 	private final JLabel status_lbl = createValueLabel();
 
@@ -186,6 +199,11 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 			aws_control_chk.setHorizontalTextPosition(
 				SwingConstants.LEFT);
 			add(aws_control_chk, Stretch.LEFT);
+		}
+		if(SystemAttrEnum.DMS_PLAN_ENABLE.getBoolean()) {
+			plan_control_chk.setHorizontalTextPosition(
+					SwingConstants.LEFT);
+			add(plan_control_chk, Stretch.LEFT);
 		}
 		tab.add(I18N.get("dms.msg.current"), current_pnl);
 		tab.add(I18N.get("dms.msg.preview"), preview_pnl);
@@ -298,6 +316,8 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		location_lbl.setText("");
 		aws_control_chk.setEnabled(false);
 		aws_control_chk.setSelected(false);
+		plan_control_chk.setEnabled(false);
+		plan_control_chk.setSelected(false);
 		status_lbl.setText("");
 		status_lbl.setForeground(null);
 		status_lbl.setBackground(null);
@@ -345,6 +365,12 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		}
 		if(a == null || a.equals("awsControlled"))
 			aws_control_chk.setSelected(dms.getAwsControlled());
+		if(a == null || a.equals("planAllowed")) {
+			plan_control_chk.setEnabled(
+					dispatcher.isPlanPermitted(dms));
+		}
+		if(a == null || a.equals("planControlled"))
+			plan_control_chk.setSelected(dms.getPlanControlled());
 		if(a == null || a.equals("opStatus"))
 			op_status_lbl.setText(dms.getOpStatus());
 	}

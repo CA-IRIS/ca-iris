@@ -49,6 +49,8 @@ public enum ItemStyle {
 	TRAVEL_TIME,
 	AWS_CONTROLLED,
 	AWS_DEPLOYED,
+	PLAN_CONTROLLED,
+	PLAN_DEPLOYED,
 	/* Camera styles */
 	PLAYLIST,
 	UNPUBLISHED,
