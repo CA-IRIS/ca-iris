@@ -24,12 +24,13 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
-import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.*;
+import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
+import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
+import us.mn.state.dot.tms.client.proxy.ProxyView;
+import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.widget.IPanel;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -168,7 +169,7 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 			plan_lbl.setText(ap.getPlanStatus());
 		}
 		if (a == null || a.equals("statusCheck")) {
-			time_lbl.setText(ap.getStatusCheck());
+			time_lbl.setText(ap.getPlanStatusTimestamp());
 		}
 		if (a == null || a.equals("phase")) {
 			phase_cbx.setAction(null);

@@ -68,8 +68,8 @@ public interface ActionPlan extends SonarObject {
     /** Set the sign plan status */
     void setPlanStatus(String s);
 
-    /** Get the status check */
-    String getStatusCheck();
+    /** Get the plan status timestamp */
+    String getPlanStatusTimestamp();
 
 	/** Get the current date/time */
 	String getCurrentDate();
