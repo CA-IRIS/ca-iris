@@ -19,6 +19,8 @@ package us.mn.state.dot.tms.server.comm.dmsxml;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import org.eclipse.ui.part.Page;
 import us.mn.state.dot.sonar.User;
 import us.mn.state.dot.tms.*;
 
@@ -249,9 +251,9 @@ class OpQueryMsg extends OpDms {
 	 *  @return MULTI string containing updated page on time. */
 	private String updatePageOnTime(String multi, Interval pt) {
 		MultiString m = new MultiString(multi);
-		int npgs = m.getNumPages();
-		if (npgs <= 1)
-			pt = PageTimeHelper.defaultPageOnInterval();
+		// if one page, use page on-time of zero.
+		pt = m.getNumPages() <= 1 ?
+				new Interval(0) : PageTimeHelper.defaultPageOnInterval();
 		String ret = m.replacePageTime(pt.round(DECISECONDS), null);
 		LOG.log("OpQueryMsg.updatePageOnTime(): " +
 			"updated multi w/ page display time: " + ret);

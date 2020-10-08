@@ -76,7 +76,8 @@ public class MultiFormatter {
 		rv = (rv != null) ? slow_warn.replaceSlowWarning(rv) : null;
 		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
 		MultiString ms = new MultiString(rv);
-		if (ms.pageOnInterval().seconds() == 0)
+		short protocol = dms.getController().getCommLink().getProtocol();
+		if (ms.pageOnInterval().seconds() == 0 && protocol != 9) // Check if DMSXML
 			rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(ms) : null;
 		return rv;
 	}
