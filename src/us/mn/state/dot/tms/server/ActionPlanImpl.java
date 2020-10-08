@@ -398,19 +398,13 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		return planStatus;
 	}
 
-	/** Set the sign package status */
-	@Override
-	public void setPlanStatus(String s) {
-		planStatus = s;
-	}
-
 	public void doSetPlanStatus(String s) throws TMSException {
 		if (s == null || s.equals(planStatus))
 			return;
-		setPlanStatus(s);
+		planStatus = s;
 		notifyAttribute("planStatus");
 		doSetPlanStatusTimestamp();
-		notifyAttribute("statusCheck");
+		notifyAttribute("planStatusTimestamp");
 	}
 
 	/**
@@ -520,26 +514,26 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		return status;
 	}
 
-	/**  */
-	protected String status_check;
+	/** Timestamp of Plan Status check */
+	private String planStatusTimestamp;
 
-	/** Set the status check */
+	/** Set the plan status timestamp */
 	private void setPlanStatusTimestamp(String s) {
-		status_check = s;
+		planStatusTimestamp = s;
 	}
 
-	/** Set the status check */
+	/** Set the plan status timestamp*/
 	private void doSetPlanStatusTimestamp() {
 		Date date = new Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 		setPlanStatusTimestamp(formatter.format(date));
 	}
 
-	/** Gets the last status checked.
-	 * @return String status check
+	/** Gets the plan status timestamp.
+	 * @return String plan status timestamp
 	 */
 	@Override
-	public String getPlanStatusTimestamp() { return status_check; }
+	public String getPlanStatusTimestamp() { return planStatusTimestamp; }
 
 	/** Get the current date/time */
 	public String getCurrentDate() {

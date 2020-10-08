@@ -168,7 +168,7 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		if (a == null || a.equals("planStatus")) {
 			plan_lbl.setText(ap.getPlanStatus());
 		}
-		if (a == null || a.equals("statusCheck")) {
+		if (a == null || a.equals("planStatusTimestamp")) {
 			time_lbl.setText(ap.getPlanStatusTimestamp());
 		}
 		if (a == null || a.equals("phase")) {
