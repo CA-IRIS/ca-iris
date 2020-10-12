@@ -119,6 +119,9 @@ public class NtcipPoller extends MessagePoller implements DMSPoller, LCSPoller {
 	{
 		if (dms.isMessageCurrentEquivalent(sm))
 			addOperation(new OpUpdateDMSDuration(dms, sm));
+
+		if (dms.getIsLcs())
+			addOperation(new OpSendLCSMessage(dms, sm, o));
 		else
 			addOperation(new OpSendDMSMessage(dms, sm, o));
 	}

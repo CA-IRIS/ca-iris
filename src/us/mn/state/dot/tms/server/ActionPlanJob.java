@@ -20,28 +20,13 @@ import java.util.Iterator;
 import java.util.Map;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.ActionPlan;
-import us.mn.state.dot.tms.ActionPlanHelper;
-import us.mn.state.dot.tms.Beacon;
-import us.mn.state.dot.tms.BeaconAction;
-import us.mn.state.dot.tms.BeaconActionHelper;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.DmsAction;
-import us.mn.state.dot.tms.DmsActionHelper;
-import us.mn.state.dot.tms.DmsSignGroup;
-import us.mn.state.dot.tms.DmsSignGroupHelper;
-import us.mn.state.dot.tms.LaneAction;
-import us.mn.state.dot.tms.LaneActionHelper;
-import us.mn.state.dot.tms.LaneMarking;
-import us.mn.state.dot.tms.MeterAction;
-import us.mn.state.dot.tms.MeterActionHelper;
-import us.mn.state.dot.tms.PlanPhase;
-import us.mn.state.dot.tms.RampMeter;
-import us.mn.state.dot.tms.SignGroup;
-import us.mn.state.dot.tms.TimeAction;
-import us.mn.state.dot.tms.TimeActionHelper;
-import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.client.proxy.TeslaAction;
+import us.mn.state.dot.tms.server.comm.DMSPoller;
+import us.mn.state.dot.tms.server.comm.DevicePoller;
+import us.mn.state.dot.tms.server.comm.ntcip.*;
+
+import static us.mn.state.dot.tms.R_Node.MAX_LANES;
 
 /**
  * Job to update action plans
@@ -133,12 +118,45 @@ public class ActionPlanJob extends Job {
 		while(it.hasNext()) {
 			DmsSignGroup dsg = it.next();
 			if(dsg.getSignGroup() == sg) {
-				DMS dms = dsg.getDms();
-				if(dms instanceof DMSImpl) {
-					DMSImpl dmsi = (DMSImpl)dms;
+				DMS dms1 = dsg.getDms();
+				if(checkDmsInLcsArray(dms1, da))
+					break;
+				if(dms1 instanceof DMSImpl) {
+					DMSImpl dmsi = (DMSImpl) dms1;
 					dmsi.performAction(da);
 				}
 			}
+		}
+	}
+
+	/** Check if DMS exists in LCSArray */
+	private boolean checkDmsInLcsArray(DMS dms1, DmsAction da) {
+		Iterator<LCSArray> it = LCSArrayHelper.iterator();
+		DMS dms2;
+		while(it.hasNext()) {
+			LCSArray lcs = it.next();
+			for(int i = 1; i <= MAX_LANES; i++) {
+				dms2 = LCSArrayHelper.lookupDMS(lcs, i);
+				if(dms1 == dms2) {
+					DMSImpl dmsi = (DMSImpl) dms2;
+					dmsi.setIsLcs(true);
+					performLcsAction(dmsi, da);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** Deploy DMSAction if valid Lane-Use MULTI exists */
+	private void performLcsAction(DMSImpl dmsi, DmsAction da) {
+		QuickMessage q = da.getQuickMessage();
+		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+		while(it.hasNext()) {
+			// Get the Lane-Use MULTI as QuickMessage
+			QuickMessage laneQm = it.next().getQuickMessage();
+			if (q == laneQm)
+				dmsi.performAction(da);
 		}
 	}
 

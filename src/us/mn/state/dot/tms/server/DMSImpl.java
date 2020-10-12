@@ -481,6 +481,19 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		return dms_type.ordinal();
 	}
 
+	/** Dms also an Lcs */
+	private boolean isLcs;
+
+	/** Set Dms isLcs flag */
+	public void setIsLcs(boolean b) {
+		isLcs = b;
+	}
+
+	/** Get Dms isLcs flag */
+	public boolean getIsLcs() {
+		return isLcs;
+	}
+
 	/** Sign legend string */
 	private transient String legend;
 
