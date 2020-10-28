@@ -21,7 +21,25 @@ import java.util.*;
 import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
-import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.ActionPlan;
+import us.mn.state.dot.tms.Beacon;
+import us.mn.state.dot.tms.BeaconAction;
+import us.mn.state.dot.tms.BeaconActionHelper;
+import us.mn.state.dot.tms.ChangeVetoException;
+import us.mn.state.dot.tms.DMS;
+import us.mn.state.dot.tms.DmsAction;
+import us.mn.state.dot.tms.DmsActionHelper;
+import us.mn.state.dot.tms.DmsSignGroup;
+import us.mn.state.dot.tms.DmsSignGroupHelper;
+import us.mn.state.dot.tms.LaneAction;
+import us.mn.state.dot.tms.LaneActionHelper;
+import us.mn.state.dot.tms.LaneMarking;
+import us.mn.state.dot.tms.MeterAction;
+import us.mn.state.dot.tms.MeterActionHelper;
+import us.mn.state.dot.tms.PlanPhase;
+import us.mn.state.dot.tms.RampMeter;
+import us.mn.state.dot.tms.SignGroup;
+import us.mn.state.dot.tms.TMSException;
 
 import javax.swing.*;
 
@@ -398,12 +416,12 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		return planStatus;
 	}
 
-	public void doSetPlanStatus(String s) throws TMSException {
+	public void setPlanStatus(String s) throws TMSException {
 		if (s == null || s.equals(planStatus))
 			return;
 		planStatus = s;
 		notifyAttribute("planStatus");
-		doSetPlanStatusTimestamp();
+		setPlanStatusTimestamp();
 		notifyAttribute("planStatusTimestamp");
 	}
 
@@ -430,7 +448,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 			status = checkDmsStatus(da, status, logTime);
 		}
 		status = checkPhaseCms(p, status);
-		doSetPlanStatusTimestamp();
+		setPlanStatusTimestamp();
 		return status.equals("") ? "Active" : status;
 	}
 
@@ -442,7 +460,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	 * @return Passed status or DMS offline or DMS failed
 	 * @throws ChangeVetoException
 	 */
-	public String checkDmsStatus(DmsAction da, String status, String logTime) throws ChangeVetoException {
+	private String checkDmsStatus(DmsAction da, String status, String logTime) throws ChangeVetoException {
 		SignGroup sg = da.getSignGroup();
 		Iterator<DmsSignGroup> dsgIt = DmsSignGroupHelper.iterator();
 		String log = logTime;
@@ -484,9 +502,6 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	private String checkDmsMessage(DmsAction da, DMS dms, String status, String logTime) {
 		String pollMsg = dms.getMessageCurrent().getMulti();
 		String deployedMsg = da.getQuickMessage().getMulti();
-		if (pollMsg.isEmpty()) { // If plan was inactive
-			return status;
-		}
 		if (!Objects.equals(pollMsg, deployedMsg)) {
 			logPlan(logTime + ": Polled msg: \"" + pollMsg +
 					"\" does not match selected Phase msg \"" + deployedMsg + "\"");
@@ -518,15 +533,10 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	private String planStatusTimestamp;
 
 	/** Set the plan status timestamp */
-	private void setPlanStatusTimestamp(String s) {
-		planStatusTimestamp = s;
-	}
-
-	/** Set the plan status timestamp*/
-	private void doSetPlanStatusTimestamp() {
+	private void setPlanStatusTimestamp() {
 		Date date = new Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
-		setPlanStatusTimestamp(formatter.format(date));
+		planStatusTimestamp = formatter.format(date);
 	}
 
 	/** Gets the plan status timestamp.
@@ -536,7 +546,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	public String getPlanStatusTimestamp() { return planStatusTimestamp; }
 
 	/** Get the current date/time */
-	public String getCurrentDate() {
+	private String getCurrentDate() {
 		Date date = new Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 		return formatter.format(date);

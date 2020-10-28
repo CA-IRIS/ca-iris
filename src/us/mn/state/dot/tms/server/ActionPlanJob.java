@@ -94,7 +94,7 @@ public class ActionPlanJob extends Job {
 			if(ap instanceof ActionPlanImpl) {
 				ActionPlanImpl api = (ActionPlanImpl)ap;
 				String s = api.checkPlanStatus(api.getPhase());
-				api.doSetPlanStatus(s);
+				api.setPlanStatus(s);
 			}
 		}
 	}
