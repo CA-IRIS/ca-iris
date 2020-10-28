@@ -250,8 +250,10 @@ class OpQueryMsg extends OpDms {
 	 *  @return MULTI string containing updated page on time. */
 	private String updatePageOnTime(String multi, Interval pt) {
 		MultiString m = new MultiString(multi);
+		int npgs = m.getNumPages();
 		// if one page, use page on-time of zero.
-		pt = m.singlePage() ? new Interval(0) : PageTimeHelper.defaultPageOnInterval();
+		if (npgs <= 1)
+			pt = new Interval(0);
 		String ret = m.replacePageTime(pt.round(DECISECONDS), null);
 		LOG.log("OpQueryMsg.updatePageOnTime(): " +
 			"updated multi w/ page display time: " + ret);
