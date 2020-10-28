@@ -14,9 +14,13 @@
  */
 package us.mn.state.dot.tms;
 
+import us.mn.state.dot.tms.server.DMSImpl;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TreeMap;
+
+import static us.mn.state.dot.tms.R_Node.MAX_LANES;
 
 /**
  * Helper class for LCSArrays.
@@ -73,6 +77,22 @@ public class LCSArrayHelper extends BaseHelper {
 			return DMSHelper.lookup(lcs.getName());
 		else
 			return null;
+	}
+
+	/** Check if DMS exists in LCSArray */
+	 static public DMS lookupDmsInLcs(DMS dms1) {
+		Iterator<LCSArray> it = LCSArrayHelper.iterator();
+		DMS dms2;
+		while(it.hasNext()) {
+			LCSArray lcs = it.next();
+			for(int i = 1; i <= MAX_LANES; i++) {
+				dms2 = lookupDMS(lcs, i);
+				if(dms1 == dms2) {
+					return dms2;
+				}
+			}
+		}
+		return null;
 	}
 
 	/** Lookup the camera preset for an LCS array */

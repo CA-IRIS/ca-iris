@@ -119,9 +119,10 @@ public class ActionPlanJob extends Job {
 			DmsSignGroup dsg = it.next();
 			if(dsg.getSignGroup() == sg) {
 				DMS dms1 = dsg.getDms();
-				if(checkDmsInLcsArray(dms1, da))
+				if(LCSArrayHelper.lookupDmsInLcs(dms1) != null) {
+					performLcsAction((DMSImpl) dms1, da);
 					break;
-				if(dms1 instanceof DMSImpl) {
+				} else if(dms1 instanceof DMSImpl) {
 					DMSImpl dmsi = (DMSImpl) dms1;
 					dmsi.performAction(da);
 				}
@@ -129,31 +130,11 @@ public class ActionPlanJob extends Job {
 		}
 	}
 
-	/** Check if DMS exists in LCSArray */
-	private boolean checkDmsInLcsArray(DMS dms1, DmsAction da) {
-		Iterator<LCSArray> it = LCSArrayHelper.iterator();
-		DMS dms2;
-		while(it.hasNext()) {
-			LCSArray lcs = it.next();
-			for(int i = 1; i <= MAX_LANES; i++) {
-				dms2 = LCSArrayHelper.lookupDMS(lcs, i);
-				if(dms1 == dms2) {
-					DMSImpl dmsi = (DMSImpl) dms2;
-					dmsi.setIsLcs(true);
-					performLcsAction(dmsi, da);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	/** Deploy DMSAction if valid Lane-Use MULTI exists */
 	private void performLcsAction(DMSImpl dmsi, DmsAction da) {
 		QuickMessage q = da.getQuickMessage();
 		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
 		while(it.hasNext()) {
-			// Get the Lane-Use MULTI as QuickMessage
 			QuickMessage laneQm = it.next().getQuickMessage();
 			if (q == laneQm)
 				dmsi.performAction(da);

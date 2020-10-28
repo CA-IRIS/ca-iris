@@ -242,7 +242,7 @@ public class OpQueryDMSConfiguration extends OpDMS {
 	}
 
 	/** Phase to query graphics objects */
-	private class QueryGraphics extends Phase {
+	protected class QueryGraphics extends Phase {
 
 		/** Query graphics objects */
 		@SuppressWarnings("unchecked")

@@ -1,6 +1,8 @@
 package us.mn.state.dot.tms.server.comm.ntcip;
 
 import us.mn.state.dot.sonar.User;
+import us.mn.state.dot.tms.InvalidMessageException;
+import us.mn.state.dot.tms.LaneUseMulti;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.SignMessageHelper;
 import us.mn.state.dot.tms.server.DMSImpl;
@@ -40,15 +42,19 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
     /** Message CRC */
     private final int message_crc;
 
-    /** Create a new send DMS message operation */
-    public OpSendLCSMessage(DMSImpl d, SignMessage sm, User o) {
+    /** Create a new send LCS message operation */
+    public OpSendLCSMessage(DMSImpl d, SignMessage sm, User o) throws InvalidMessageException {
         super(d, sm, o);
         message = sm;
-        multi = parseMulti(sm.getMulti());
+        multi = sm.getMulti();
         owner = o;
         message_crc = DmsMessageCRC.calculate(multi,
                 sm.getBeaconEnabled(), 0);
-        msg_num = lookupMsgNum(multi);
+        LaneUseMulti lcsMulti = findLaneUseMulti(multi);
+        if (lcsMulti != null)
+            msg_num = lcsMulti.getMsgNum();
+        else
+            throw new InvalidMessageException("Invalid Lane Use Multi Configuration");
     }
 
     /** Operation equality test */
@@ -76,7 +82,7 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
     protected class ActivateBlankMsg extends Phase {
 
         /** Activate a blank message */
-        @SuppressWarnings("unchecked")
+        @Override
         protected Phase poll(CommMessage mess) throws IOException {
             MessageActivationCode act = new MessageActivationCode(
                     dmsActivateMessage.node);
@@ -92,9 +98,6 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
                 mess.storeProps();
             }
             catch (NoSuchName e) {
-                // Some Ledstar signs will return NoSuchName
-                // when trying to set dmsActivateMessage with
-                // the "wrong" community name (Public).
                 setErrorStatus("READ ONLY (NoSuchName)");
                 return null;
             }
@@ -110,13 +113,13 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
     protected class ActivateMsg extends Phase {
 
         /** Activate the message */
-        @SuppressWarnings("unchecked")
+        @Override
         protected Phase poll(CommMessage mess) throws IOException {
             MessageActivationCode act = new MessageActivationCode(
                     dmsActivateMessage.node);
             act.setDuration(getDuration());
             act.setPriority(MAX_MESSAGE_PRIORITY);
-            act.setMemoryType(DmsMessageMemoryType.changeable);
+            act.setMemoryType(DmsMessageMemoryType.permanent);
             act.setNumber(msg_num);
             act.setCrc(message_crc);
             act.setAddress(0);
@@ -126,9 +129,6 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
                 mess.storeProps();
             }
             catch (NoSuchName e) {
-                // Some Ledstar signs will return NoSuchName
-                // when trying to set dmsActivateMessage with
-                // the "wrong" community name (Public).
                 setErrorStatus("READ ONLY (NoSuchName)");
                 return null;
             }

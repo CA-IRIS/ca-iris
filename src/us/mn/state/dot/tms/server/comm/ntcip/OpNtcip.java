@@ -69,7 +69,7 @@ abstract public class OpNtcip extends OpDevice {
 	}
 
 	/** Find a lane-use MULTI which matches a MULTI string */
-	static private LaneUseMulti findLaneUseMulti(String multi) {
+	protected static LaneUseMulti findLaneUseMulti(String multi) {
 		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
 		while (it.hasNext()) {
 			LaneUseMulti lum = it.next();
@@ -80,13 +80,26 @@ abstract public class OpNtcip extends OpDevice {
 		return null;
 	}
 
+	/** Find a lane-use MULTI which matches a message number */
+	protected static LaneUseMulti findMultiMsgNum(int msg_num) {
+		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+		while (it.hasNext()) {
+			LaneUseMulti lum = it.next();
+			int num = lum.getMsgNum();
+			if (num == msg_num)
+				return lum;
+		}
+		return null;
+	}
+
 	/** Test if a quick message matches a multi string.
 	 * @param qm Quick message.
 	 * @param multi MULTI string to compare.
 	 * @return true if they match. */
 	static private boolean match(QuickMessage qm, String multi) {
-		String re = createRegex(parseMulti(qm.getMulti()));
-		return Pattern.matches(re, multi);
+		String re = qm.getMulti();
+		String stripMulti = multi.replaceAll("\\[[^\\[\\]]*\\]", "");
+		return Pattern.matches(re, stripMulti);
 	}
 
 	/** Create a regex which matches any speed advisory values */
