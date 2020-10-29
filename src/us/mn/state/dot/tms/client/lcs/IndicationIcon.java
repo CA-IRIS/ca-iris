@@ -14,13 +14,7 @@
  */
 package us.mn.state.dot.tms.client.lcs;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import javax.swing.Icon;
@@ -75,6 +69,27 @@ abstract public class IndicationIcon implements Icon {
 		path.lineTo(0.5f, 0.75f);
 		path.lineTo(0.75f, 0.5f);
 		SMALL_ARROW_SHAPE = path;
+	}
+
+	/** Shape to draw a T for TRUCKS */
+	static protected final Shape TRUCK_SHAPE;
+	static {
+		GeneralPath path = new GeneralPath();
+		path.moveTo(SHAPE_BORDER, SHAPE_BORDER);
+		path.lineTo(1 - SHAPE_BORDER, SHAPE_BORDER);
+		path.moveTo(0.5f, SHAPE_BORDER);
+		path.lineTo(0.5f, 1 - SHAPE_BORDER);
+		TRUCK_SHAPE = path;
+	}
+
+	/** Shape to draw a V for VEHICLES */
+	static protected final Shape VEHICLE_SHAPE;
+	static {
+		GeneralPath path = new GeneralPath();
+		path.moveTo(SHAPE_BORDER, SHAPE_BORDER);
+		path.lineTo(0.5f, 1 - SHAPE_BORDER);
+		path.lineTo(1 - SHAPE_BORDER, SHAPE_BORDER);
+		VEHICLE_SHAPE = path;
 	}
 
 	/** Shape to draw an X */
@@ -149,6 +164,10 @@ abstract public class IndicationIcon implements Icon {
 			return new VariableSpeedIndicationIcon(p);
 		case LOW_VISIBILITY:
 			return new LowVisibilityIndicationIcon(p);
+		case TRUCKS:
+			return new TrucksIndicationIcon(p);
+		case VEHICLES:
+			return new VehiclesIndicationIcon(p);
 		default:
 			return new UnknownIndicationIcon(p);
 		}
@@ -406,6 +425,42 @@ abstract public class IndicationIcon implements Icon {
 			g2.setColor(Color.GREEN);
 			g2.setStroke(stroke);
 			g2.draw(SMALL_ARROW_SHAPE);
+		}
+	}
+
+
+
+	/** Icon for TRUCKS lane-use indication */
+	static protected class TrucksIndicationIcon
+			extends IndicationIcon
+	{
+		protected TrucksIndicationIcon(int p) {
+			super(p);
+		}
+		protected void paintIcon(Graphics2D g2) {
+			g2.setColor(Color.BLACK);
+			g2.setStroke(shadow);
+			g2.draw(TRUCK_SHAPE);
+			g2.setStroke(stroke);
+			g2.setColor(AMBER);
+			g2.draw(TRUCK_SHAPE);
+		}
+	}
+
+	/** Icon for VEHICLES lane-use indication */
+	static protected class VehiclesIndicationIcon
+			extends IndicationIcon
+	{
+		protected VehiclesIndicationIcon(int p) {
+			super(p);
+		}
+		protected void paintIcon(Graphics2D g2) {
+			g2.setColor(Color.BLACK);
+			g2.setStroke(shadow);
+			g2.draw(VEHICLE_SHAPE);
+			g2.setStroke(stroke);
+			g2.setColor(AMBER);
+			g2.draw(VEHICLE_SHAPE);
 		}
 	}
 

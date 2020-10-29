@@ -68,7 +68,13 @@ public enum LaneUseIndication {
 	LOW_VISIBILITY(I18N.get("lane.use.low.visibility")),
 
 	/** HOV / HOT begins (white diamond) (14) */
-	HOV_BEGINS(I18N.get("lane.use.hov.hot.begins"));
+	HOV_BEGINS(I18N.get("lane.use.hov.hot.begins")),
+
+	/** Trucks (15) */
+	TRUCKS(I18N.get("lane.use.trucks")),
+
+	/** Vehicles (16) */
+	VEHICLES(I18N.get("lane.use.vehicles"));
 
 	/** Create a new lane use indication */
 	private LaneUseIndication(String d) {
