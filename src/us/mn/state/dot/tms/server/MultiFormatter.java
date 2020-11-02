@@ -14,8 +14,10 @@
  */
 package us.mn.state.dot.tms.server;
 
+import us.mn.state.dot.tms.CommProtocol;
 import us.mn.state.dot.tms.DmsAction;
 import us.mn.state.dot.tms.GeoLoc;
+import us.mn.state.dot.tms.LCSArrayHelper;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.QuickMessageHelper;
 import us.mn.state.dot.tms.SystemAttrEnum;
@@ -80,9 +82,10 @@ public class MultiFormatter {
 		rv = (rv != null) ? slow_warn.replaceSlowWarning(rv) : null;
 		rv = (rv != null) ? toll_form.replaceTolling(rv) : null;
 		MultiString ms = new MultiString(rv);
-		short protocol = dms.getController().getCommLink().getProtocol();
-		short dmsxml = (short) CommProtocol.DMSXML.ordinal();
-		if (ms.pageOnInterval().seconds() == 0 && protocol != dmsxml)
+		boolean notDMSXML = dms.getController().getCommLink().getProtocol() !=
+							(short) CommProtocol.DMSXML.ordinal();
+		boolean notLCS = LCSArrayHelper.lookupDmsInLcs(dms) == null;
+		if (ms.pageOnInterval().seconds() == 0 && notDMSXML && notLCS)
 			rv = (rv != null) ? QuickMessageHelper.prependPageOnTime(ms) : null;
 		return rv;
 	}

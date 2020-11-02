@@ -18,13 +18,18 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.DMS;
+import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.Graphic;
 import us.mn.state.dot.tms.GraphicHelper;
+import us.mn.state.dot.tms.InvalidMessageException;
+import us.mn.state.dot.tms.LCSIndication;
 import us.mn.state.dot.tms.LaneUseIndication;
 import us.mn.state.dot.tms.LaneUseMulti;
 import us.mn.state.dot.tms.LaneUseMultiHelper;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -75,21 +80,31 @@ abstract public class OpNtcip extends OpDevice {
 			LaneUseMulti lum = it.next();
 			QuickMessage qm = lum.getQuickMessage();
 			if (qm != null && match(qm, multi))
-				return lum;
+				return lum; // And IF LUM configured for this DMS
 		}
 		return null;
 	}
 
 	/** Find a lane-use MULTI which matches a message number */
-	protected static LaneUseMulti findMultiMsgNum(int msg_num) {
+	protected LaneUseMulti findLaneUseMultiIndication(int msg_num) throws IOException {
 		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+		DMSImpl dmsi = (DMSImpl) device;
+		LaneUseIndication[] ind = DMSHelper.lookupIndications((DMS) dmsi);
 		while (it.hasNext()) {
 			LaneUseMulti lum = it.next();
+			boolean blankLum = lum.getQuickMessage().getMulti().isEmpty(); // is QM empty? (LaneUseHelper)
+			if (blankLum)
+				continue;
 			int num = lum.getMsgNum();
-			if (num == msg_num)
-				return lum;
+			if (num == msg_num) {
+				for (LaneUseIndication i : ind) {
+					if (lum.getIndication() == i.ordinal())
+						return lum;
+				}
+			}
 		}
-		return null;
+		// set failed
+		throw new IOException("Invalid Lane Use Multi Configuration");
 	}
 
 	/** Test if a quick message matches a multi string.

@@ -50,7 +50,7 @@ public class OpQueryDMSMessage extends OpDMS {
 		dmsMsgTableSource.node);
 
 	/** Process the message table source from the sign controller */
-	protected Phase processMessageSource() {
+	private Phase processMessageSource() throws IOException {
 		DmsMessageMemoryType mem_type = source.getMemoryType();
 		if (mem_type != null) {
 			/* We have to test isBlank before "valid", because some
@@ -73,7 +73,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process a valid message source from the sign controller */
-	protected Phase processMessageValid() {
+	protected Phase processMessageValid() throws IOException {
 		/* The sign is not blank.  If IRIS thinks it is blank, then
 		 * we need to query the current message on the sign. */
 		if (dms.isMsgBlank())
