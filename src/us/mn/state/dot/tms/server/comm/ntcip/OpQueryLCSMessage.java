@@ -8,9 +8,11 @@ import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageMemoryType;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageStatus;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Enum;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Integer;
+import us.mn.state.dot.tms.server.comm.snmp.ASN1String;
 
 import java.io.IOException;
 
+import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsMessageMultiString;
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsMessageRunTimePriority;
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsMessageStatus;
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsMessageTimeRemaining;
@@ -30,37 +32,17 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
     }
 
     @Override
-    protected Phase processMessageValid() throws IOException {
-        if (source.getMemoryType() == DmsMessageMemoryType.permanent) {
-            int msg_num = source.getNumber();
-            String multi = findLaneUseMultiIndication(msg_num).getQuickMessage().getMulti();
-            int crc = DmsMessageCRC.calculate(multi, false,0);
-            setCurrentMessage(dms.getMessageCurrent()); // create new SM with ACTUAL priority and ACTUAL duration
-        } else {
-            logError("INVALID SOURCE");
-            setErrorStatus(source.toString());
+    protected Phase processMessageSource() throws IOException {
+        DmsMessageMemoryType mem_type = source.getMemoryType();
+        if (mem_type != null) {
+            /* We have to test isBlank before "valid", because some
+             * signs use 'undefined' source for blank messages. */
+            if (mem_type.isBlank())
+                return processMessageBlank();
+            else if (mem_type.valid)
+                return new QueryCurrentMsgPrior();
         }
-        return null;
-    }
-
-    private ASN1Enum<DmsMessageStatus> lcsStatus;
-
-    /** Phase to query the message status */
-    protected class QueryCurrentMsgStatus extends Phase {
-
-        /** Query the message status */
-        @Override
-        protected Phase poll(CommMessage mess) throws IOException {
-            ASN1Enum<DmsMessageStatus> status = new ASN1Enum<
-                    DmsMessageStatus>(DmsMessageStatus.class,
-                    dmsMessageStatus.node,
-                    DmsMessageMemoryType.permanent.ordinal(),1);
-            lcsStatus = status; // Set OpQueryLCSMessage status
-            mess.add(status);
-            mess.queryProps();
-            logQuery(status);
-            return new QueryCurrentMsgPrior();
-        }
+        return processMessageInvalid();
     }
 
     private ASN1Enum<DMSMessagePriority> lcsPrior;
@@ -69,12 +51,11 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
     protected class QueryCurrentMsgPrior extends Phase {
 
         /** Query the message priority */
-        @Override
         protected Phase poll(CommMessage mess) throws IOException {
             ASN1Enum<DMSMessagePriority> prior = new ASN1Enum<
                     DMSMessagePriority>(DMSMessagePriority.class,
                     dmsMessageRunTimePriority.node,
-                    DmsMessageMemoryType.permanent.ordinal(),1);
+                    DmsMessageMemoryType.permanent.ordinal(), 1);
             lcsPrior = prior; // Set OpQueryLCSMessage priority
             mess.add(prior);
             mess.queryProps();
@@ -89,31 +70,41 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
     protected class QueryCurrentMsgTime extends Phase {
 
         /** Query the message time */
-        @Override
         protected Phase poll(CommMessage mess) throws IOException {
             ASN1Integer time = dmsMessageTimeRemaining.makeInt();
             lcsTime = time; // Set OpQueryLCSMessage time
             mess.add(time);
             mess.queryProps();
             logQuery(time);
-            buildMessage();
-            return null;
+            return processMessageValid();
         }
     }
 
-    private void buildMessage() throws IOException {
-        if (lcsStatus.getEnum() == DmsMessageStatus.valid) {
-            Integer d = parseDuration(lcsTime.getInteger());
-            DMSMessagePriority rp = lcsPrior.getEnum();
-            /* If it's null, IRIS didn't send it ... */
-            if (rp == null)
-                rp = DMSMessagePriority.OTHER_SYSTEM;
+    @Override
+    protected Phase processMessageValid() throws IOException {
+        if (source.getMemoryType() == DmsMessageMemoryType.permanent) {
             String multi = findLaneUseMultiIndication(source.getNumber()).
                     getQuickMessage().getMulti();
-            setCurrentMessage(multi, 0, rp, d);
+            int crc = DmsMessageCRC.calculate(multi,
+                    false, source.getNumber());
+            source.setCrc(crc);
+            setCurrentMessage();
         } else {
-            logError("INVALID STATUS");
-            setErrorStatus(lcsStatus.toString());
+            logError("INVALID SOURCE");
+            setErrorStatus(source.toString());
         }
+        return null;
+    }
+
+    private void setCurrentMessage() throws IOException {
+        Integer d = parseDuration(lcsTime.getInteger());
+        DMSMessagePriority prior = lcsPrior.getEnum();
+        /* If it's null, IRIS didn't send it ... */
+//        if (prior == null)
+//            prior = DMSMessagePriority.OTHER_SYSTEM;
+        prior = DMSMessagePriority.SCHEDULED;
+        String multi = findLaneUseMultiIndication(source.getNumber()).
+                getQuickMessage().getMulti();
+        setCurrentMessage(multi, 0, prior, d);
     }
 }

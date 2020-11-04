@@ -10,12 +10,14 @@ import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageCRC;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageMemoryType;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.MessageActivationCode;
+import us.mn.state.dot.tms.server.comm.snmp.ASN1Integer;
 import us.mn.state.dot.tms.server.comm.snmp.GenError;
 import us.mn.state.dot.tms.server.comm.snmp.NoSuchName;
 
 import java.io.IOException;
 
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsActivateMessage;
+import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.dmsMessageCRC;
 
 public class OpSendLCSMessage extends OpSendDMSMessage {
 
@@ -48,8 +50,7 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
         message = sm;
         multi = sm.getMulti();
         owner = o;
-        message_crc = DmsMessageCRC.calculate(multi,
-                sm.getBeaconEnabled(), 0);
+        message_crc = DmsMessageCRC.calculate(multi, false, 0);
         LaneUseMulti lcsMulti = findLaneUseMulti(multi);
         if (lcsMulti != null)
             msg_num = lcsMulti.getMsgNum();
@@ -75,7 +76,7 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
         if (SignMessageHelper.isBlank(message))
             return new ActivateBlankMsg();
         else
-            return new ActivateMsg();
+            return new ChkMsgCrc();
     }
 
     /** Phase to activate a blank message */
@@ -106,6 +107,21 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
             }
             dms.setMessageCurrent(message, owner);
             return new SetLossMsgs();
+        }
+    }
+
+    /** Phase to check message CRC */
+    protected class ChkMsgCrc extends Phase {
+
+        /** Query the message CRC */
+        @SuppressWarnings("unchecked")
+        protected Phase poll(CommMessage mess) throws IOException {
+            ASN1Integer crc = dmsMessageCRC.makeInt(
+                    DmsMessageMemoryType.permanent, msg_num);
+            mess.add(crc);
+            mess.queryProps();
+            logQuery(crc);
+            return new ActivateMsg();
         }
     }
 

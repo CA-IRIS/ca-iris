@@ -50,7 +50,7 @@ public class OpQueryDMSMessage extends OpDMS {
 		dmsMsgTableSource.node);
 
 	/** Process the message table source from the sign controller */
-	private Phase processMessageSource() throws IOException {
+	protected Phase processMessageSource() throws IOException {
 		DmsMessageMemoryType mem_type = source.getMemoryType();
 		if (mem_type != null) {
 			/* We have to test isBlank before "valid", because some
