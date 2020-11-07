@@ -126,6 +126,18 @@ public class NtcipPoller extends MessagePoller implements DMSPoller, LCSPoller {
 				case RESET_DEVICE:
 					addOperation(new OpResetDMS(dms));
 					break;
+				case BRIGHTNESS_TOO_DIM:
+					addOperation(new OpUpdateDMSBrightness(dms,
+							EventType.DMS_BRIGHT_LOW));
+					break;
+				case BRIGHTNESS_GOOD:
+					addOperation(new OpUpdateDMSBrightness(dms,
+							EventType.DMS_BRIGHT_GOOD));
+					break;
+				case BRIGHTNESS_TOO_BRIGHT:
+					addOperation(new OpUpdateDMSBrightness(dms,
+							EventType.DMS_BRIGHT_HIGH));
+					break;
 				case SEND_SETTINGS:
 				default:
 					break;

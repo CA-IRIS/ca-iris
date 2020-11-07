@@ -55,7 +55,7 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
             ASN1Enum<DMSMessagePriority> prior = new ASN1Enum<
                     DMSMessagePriority>(DMSMessagePriority.class,
                     dmsMessageRunTimePriority.node,
-                    DmsMessageMemoryType.permanent.ordinal(), 1);
+                    DmsMessageMemoryType.currentBuffer.ordinal(), 1);
             lcsPrior = prior; // Set OpQueryLCSMessage priority
             mess.add(prior);
             mess.queryProps();
@@ -84,11 +84,12 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
     protected Phase processMessageValid() throws IOException {
         if (source.getMemoryType() == DmsMessageMemoryType.permanent) {
             String multi = findLaneUseMultiIndication(source.getNumber()).
-                    getQuickMessage().getMulti();
-            int crc = DmsMessageCRC.calculate(multi,
-                    false, source.getNumber());
-            source.setCrc(crc);
-            setCurrentMessage();
+                            getQuickMessage().getMulti();
+            int msg_num = findLaneUseMultiIndication(source.getNumber()).getMsgNum();
+            if (source.getNumber() == msg_num)
+                setCurrentMessage();
+            else
+                source.setMemoryType(DmsMessageMemoryType.undefined);
         } else {
             logError("INVALID SOURCE");
             setErrorStatus(source.toString());
@@ -98,11 +99,7 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
 
     private void setCurrentMessage() throws IOException {
         Integer d = parseDuration(lcsTime.getInteger());
-        DMSMessagePriority prior = lcsPrior.getEnum();
-        /* If it's null, IRIS didn't send it ... */
-//        if (prior == null)
-//            prior = DMSMessagePriority.OTHER_SYSTEM;
-        prior = DMSMessagePriority.SCHEDULED;
+        DMSMessagePriority prior = DMSMessagePriority.SCHEDULED;
         String multi = findLaneUseMultiIndication(source.getNumber()).
                 getQuickMessage().getMulti();
         setCurrentMessage(multi, 0, prior, d);

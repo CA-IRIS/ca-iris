@@ -51,7 +51,7 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
         multi = sm.getMulti();
         owner = o;
         message_crc = DmsMessageCRC.calculate(multi, false, 0);
-        LaneUseMulti lcsMulti = findLaneUseMulti(multi);
+        LaneUseMulti lcsMulti = findDmsLaneUseMulti(multi);
         if (lcsMulti != null)
             msg_num = lcsMulti.getMsgNum();
         else

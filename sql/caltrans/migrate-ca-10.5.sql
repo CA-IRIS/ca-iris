@@ -68,6 +68,9 @@ UPDATE iris.dms_action
 	SET r_priority = 13
 	WHERE r_priority = 15;
 
--- 10.5
+-- 10.5: Add Trucks and Vehicles into Lane Use Indications
 INSERT INTO iris.lane_use_indication ("id", description) VALUES (15, 'Trucks');
 INSERT INTO iris.lane_use_indication ("id", description) VALUES (16, 'Vehicles');
+
+-- 10.5 Make msg_num in Lane Use Multi NOT UNQIUE
+DROP INDEX iris.lane_use_multi_msg_num_idx;
