@@ -365,10 +365,6 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		}
 		if(a == null || a.equals("awsControlled"))
 			aws_control_chk.setSelected(dms.getAwsControlled());
-		if(a == null || a.equals("planAllowed")) {
-			plan_control_chk.setEnabled(
-					dispatcher.isPlanPermitted(dms));
-		}
 		if(a == null || a.equals("planControlled"))
 			plan_control_chk.setSelected(dms.getPlanControlled());
 		if(a == null || a.equals("opStatus"))

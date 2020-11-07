@@ -570,7 +570,7 @@ public class DMSDispatcher extends JPanel {
 
 	/** Check if Plan is allowed and user has permission to change */
 	public boolean isPlanPermitted(DMS dms) {
-		return dms.getPlanAllowed() &&
+		return dms.getPlanControlled() &&
 				isUpdatePermitted(dms, "planControlled");
 	}
 }

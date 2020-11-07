@@ -50,7 +50,6 @@ public enum ItemStyle {
 	AWS_CONTROLLED,
 	AWS_DEPLOYED,
 	PLAN_CONTROLLED,
-	PLAN_DEPLOYED,
 	/* Camera styles */
 	PLAYLIST,
 	UNPUBLISHED,

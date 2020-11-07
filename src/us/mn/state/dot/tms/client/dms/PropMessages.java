@@ -103,15 +103,6 @@ public class PropMessages extends JPanel {
 		}
 	});
 
-	/** Plan allowed check box */
-	private final JCheckBox plan_allowed_chk = new JCheckBox(
-			new IAction("dms.plan.allowed")
-			{
-				protected void doActionPerformed(ActionEvent e) {
-					proxy.setPlanAllowed(plan_allowed_chk.isSelected());
-				}
-			});
-
 	/** Plan controlled check box */
 	private final JCheckBox plan_control_chk = new JCheckBox(
 			new IAction("item.style.plan.controlled")
@@ -209,7 +200,6 @@ public class PropMessages extends JPanel {
 			hg.addComponent(aws_control_chk);
 		}
 		if (SystemAttributeHelper.planEnabled()) {
-			hg.addComponent(plan_allowed_chk);
 			hg.addComponent(plan_control_chk);
 		}
 		return hg;
@@ -243,8 +233,6 @@ public class PropMessages extends JPanel {
 			vg.addComponent(aws_control_chk);
 		}
 		if (SystemAttributeHelper.planEnabled()) {
-			vg.addGap(UI.vgap);
-			vg.addComponent(plan_allowed_chk);
 			vg.addGap(UI.vgap);
 			vg.addComponent(plan_control_chk);
 		}
@@ -334,7 +322,6 @@ public class PropMessages extends JPanel {
 		font_cbx.setEnabled(canUpdate("defaultFont"));
 		aws_allowed_chk.setEnabled(canUpdate("awsAllowed"));
 		aws_control_chk.setEnabled(canUpdate("awsControlled"));
-		plan_allowed_chk.setEnabled(canUpdate("planAllowed"));
 		plan_control_chk.setEnabled(canUpdate("planControlled"));
 	}
 
@@ -349,8 +336,6 @@ public class PropMessages extends JPanel {
 			aws_allowed_chk.setSelected(proxy.getAwsAllowed());
 		if (a == null || a.equals("awsControlled"))
 			aws_control_chk.setSelected(proxy.getAwsControlled());
-		if (a == null || a.equals("planAllowed"))
-			plan_allowed_chk.setSelected(proxy.getPlanAllowed());
 		if (a == null || a.equals("planControlled"))
 			plan_control_chk.setSelected(proxy.getPlanControlled());
 		// NOTE: messageCurrent attribute changes after all sign
