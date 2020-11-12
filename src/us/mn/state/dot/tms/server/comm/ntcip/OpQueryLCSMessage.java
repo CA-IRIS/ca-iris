@@ -144,27 +144,20 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
 
     @Override
     protected Phase processMessageValid() throws IOException {
-        if (source.getMemoryType() == DmsMessageMemoryType.permanent) {
-            try {
-                SignMessage sm = dms.getMessageCurrent();
-                int msg_num = findDmsLaneUseMulti(sm.getMulti()).getMsgNum();
-                if (source.getNumber() == msg_num)
-                    setCurrentMessage(sm);
-                else
-                    return new QueryCurrentMsgPrior();
-            } catch (InvalidMessageException e) {
-                e.printStackTrace();
-            }
-        } else {
-            return new QueryCurrentMsgPrior();
+        if (source.getMemoryType() == DmsMessageMemoryType.permanent
+                && !dms.isMsgBlank()) {
+            SignMessage sm = dms.getMessageCurrent();
+            int msg_num = findDmsLaneUseMulti(sm.getMulti()).getMsgNum();
+            if (source.getNumber() == msg_num)
+                setCurrentMessage(sm);
         }
-        return null;
+        return new QueryCurrentMsgPrior();
     }
 
     private void setCurrentMessage() throws IOException {
         Integer d = parseDuration(lcsTime.getInteger());
         DMSMessagePriority rp = lcsPrior.getEnum();
-        /* If it's null, IRIS didn't send it ... */
+        /* If we arrive here, IRIS didn't send it */
         if (rp == null)
             rp = DMSMessagePriority.OTHER_SYSTEM;
         setCurrentMessage(lcsMulti.getValue(),

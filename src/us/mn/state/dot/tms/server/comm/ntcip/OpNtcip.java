@@ -86,58 +86,61 @@ abstract public class OpNtcip extends OpDevice {
 	}
 
 	/** Find a lane-use MULTI which matches a MULTI string on a specific DMS */
-	protected LaneUseMulti findDmsLaneUseMulti(String multi) throws InvalidMessageException {
-		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
-		DMS dms = (DMS) device;
-		LaneUseIndication[] luis = DMSHelper.lookupIndications(dms);
-		while (it.hasNext()) {
-			LaneUseMulti lum = it.next();
-			for (LaneUseIndication lui : luis) {
-				if (lui.ordinal() == lum.getIndication()) {
-					QuickMessage qm = lum.getQuickMessage();
-					if (qm == null)
-						throw new InvalidMessageException("Invalid Quick Message");
-					else {
-						String lumMulti = qm.getMulti();
-						if (lumMulti.equals(multi))
-							return lum;
+	protected LaneUseMulti findDmsLaneUseMulti(String multi) {
+		try {
+			Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+			DMS dms = (DMS) device;
+			LaneUseIndication[] luis = DMSHelper.lookupIndications(dms);
+			while (it.hasNext()) {
+				LaneUseMulti lum = it.next();
+				for (LaneUseIndication lui : luis) {
+					if (lui.ordinal() == lum.getIndication()) {
+						QuickMessage qm = lum.getQuickMessage();
+						if (qm == null)
+							throw new InvalidMessageException("Invalid Quick Message");
+						else {
+							String lumMulti = qm.getMulti();
+							if (lumMulti.equals(multi))
+								return lum;
+						}
 					}
 				}
 			}
+		} catch (InvalidMessageException e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
 
 	/** Find a lane-use MULTI which matches a message number */
-	protected LaneUseMulti findLaneUseMultiIndication(int msg_num) throws IOException {
-		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
-		DMS dms = (DMS) device;
-		LaneUseIndication[] ind = DMSHelper.lookupIndications(dms);
-		while (it.hasNext()) {
-			LaneUseMulti lum = it.next();
-			boolean blankLum = lum.getQuickMessage().getMulti().isEmpty();
-			if (blankLum)
-				continue;
-			int num = lum.getMsgNum();
-			if (num == msg_num) {
-				for (LaneUseIndication i : ind) {
-					if (lum.getIndication() == i.ordinal())
-						return lum;
-				}
-			}
-		}
-		// set failed
-		throw new IOException("Invalid Lane Use Multi Configuration");
-	}
+//	protected LaneUseMulti findLaneUseMultiIndication(int msg_num) throws IOException {
+//		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+//		DMS dms = (DMS) device;
+//		LaneUseIndication[] ind = DMSHelper.lookupIndications(dms);
+//		while (it.hasNext()) {
+//			LaneUseMulti lum = it.next();
+//			boolean blankLum = lum.getQuickMessage().getMulti().isEmpty();
+//			if (blankLum)
+//				continue;
+//			int num = lum.getMsgNum();
+//			if (num == msg_num) {
+//				for (LaneUseIndication i : ind) {
+//					if (lum.getIndication() == i.ordinal())
+//						return lum;
+//				}
+//			}
+//		}
+//		// set failed
+//		throw new IOException("Invalid Lane Use Multi Configuration");
+//	}
 
 	/** Test if a quick message matches a multi string.
 	 * @param qm Quick message.
 	 * @param multi MULTI string to compare.
 	 * @return true if they match. */
 	static private boolean match(QuickMessage qm, String multi) {
-		String re = qm.getMulti();
-		String stripMulti = multi.replaceAll("\\[[^\\[\\]]*\\]", "");
-		return Pattern.matches(re, stripMulti);
+		String re = createRegex(parseMulti(qm.getMulti()));
+		return Pattern.matches(re, multi);
 	}
 
 	/** Create a regex which matches any speed advisory values */

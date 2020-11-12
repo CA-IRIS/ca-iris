@@ -138,7 +138,14 @@ public class NtcipPoller extends MessagePoller implements DMSPoller, LCSPoller {
 					addOperation(new OpUpdateDMSBrightness(dms,
 							EventType.DMS_BRIGHT_HIGH));
 					break;
+				case QUERY_PIXEL_FAILURES:
+					addOperation(new OpTestDMSPixels(dms, false));
+					break;
+				case TEST_PIXELS:
+					addOperation(new OpTestDMSPixels(dms, true));
+					break;
 				case SEND_SETTINGS:
+				case SEND_LEDSTAR_SETTINGS:
 				default:
 					break;
 			}
