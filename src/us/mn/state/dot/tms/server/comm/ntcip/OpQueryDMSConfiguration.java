@@ -15,6 +15,9 @@
 package us.mn.state.dot.tms.server.comm.ntcip;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -249,7 +252,11 @@ public class OpQueryDMSConfiguration extends OpDMS {
 		protected Phase poll(CommMessage mess) throws IOException {
 			mess.add(num_graphics);
 			mess.add(max_size);
-			mess.add(available_memory);
+			String regex = "^Model 7"; // Handle case for Caltrans Model 700, 710, 7*, ...
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(dms.getModel());
+			if (matcher.matches())
+				mess.add(available_memory);
 			try {
 				mess.queryProps();
 			}

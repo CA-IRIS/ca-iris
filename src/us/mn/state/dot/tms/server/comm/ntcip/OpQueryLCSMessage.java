@@ -151,7 +151,7 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
             if (source.getNumber() == msg_num)
                 setCurrentMessage(sm);
         }
-        return new QueryCurrentMsgPrior();
+        return null;
     }
 
     private void setCurrentMessage() throws IOException {

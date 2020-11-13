@@ -79,7 +79,9 @@ public class LCSArrayHelper extends BaseHelper {
 			return null;
 	}
 
-	/** Check if DMS exists in LCSArray */
+	/** Check if DMS exists in LCSArray
+	 * @return dms2 DMS is in an LCSArray, returns null if not
+	 */
 	 static public DMS lookupDmsInLcs(DMS dms1) {
 		Iterator<LCSArray> it = LCSArrayHelper.iterator();
 		DMS dms2;

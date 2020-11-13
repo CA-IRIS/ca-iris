@@ -112,28 +112,6 @@ abstract public class OpNtcip extends OpDevice {
 		return null;
 	}
 
-	/** Find a lane-use MULTI which matches a message number */
-//	protected LaneUseMulti findLaneUseMultiIndication(int msg_num) throws IOException {
-//		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
-//		DMS dms = (DMS) device;
-//		LaneUseIndication[] ind = DMSHelper.lookupIndications(dms);
-//		while (it.hasNext()) {
-//			LaneUseMulti lum = it.next();
-//			boolean blankLum = lum.getQuickMessage().getMulti().isEmpty();
-//			if (blankLum)
-//				continue;
-//			int num = lum.getMsgNum();
-//			if (num == msg_num) {
-//				for (LaneUseIndication i : ind) {
-//					if (lum.getIndication() == i.ordinal())
-//						return lum;
-//				}
-//			}
-//		}
-//		// set failed
-//		throw new IOException("Invalid Lane Use Multi Configuration");
-//	}
-
 	/** Test if a quick message matches a multi string.
 	 * @param qm Quick message.
 	 * @param multi MULTI string to compare.

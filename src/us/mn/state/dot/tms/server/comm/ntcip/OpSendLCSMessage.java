@@ -11,6 +11,7 @@ import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageCRC;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageMemoryType;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.MessageActivationCode;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Integer;
+import us.mn.state.dot.tms.server.comm.snmp.ASN1String;
 import us.mn.state.dot.tms.server.comm.snmp.GenError;
 import us.mn.state.dot.tms.server.comm.snmp.NoSuchName;
 
@@ -33,7 +34,7 @@ public class OpSendLCSMessage extends OpSendDMSMessage {
     /** User who deployed the message */
     private final User owner;
 
-    /** Message number (row in changeable message table).  This is normally
+    /** Message number (row in message table).  This is normally
      * 1 for uncached messages.  If a number greater than 1 is used, an
      * attempt will be made to activate that message -- if that fails, the
      * changeable message table will be updated and then the message will
