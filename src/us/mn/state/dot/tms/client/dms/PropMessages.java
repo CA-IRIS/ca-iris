@@ -109,6 +109,7 @@ public class PropMessages extends JPanel {
 			{
 				protected void doActionPerformed(ActionEvent e) {
 					proxy.setPlanControlled(plan_control_chk.isSelected());
+//					ComposerButtonPanel.send_btn.setDisabledIcon();
 				}
 			});
 
@@ -199,9 +200,9 @@ public class PropMessages extends JPanel {
 			hg.addComponent(aws_allowed_chk);
 			hg.addComponent(aws_control_chk);
 		}
-		if (SystemAttributeHelper.planEnabled()) {
+//		if (SystemAttributeHelper.planEnabled()) {
 			hg.addComponent(plan_control_chk);
-		}
+//		}
 		return hg;
 	}
 
@@ -232,10 +233,10 @@ public class PropMessages extends JPanel {
 			vg.addGap(UI.vgap);
 			vg.addComponent(aws_control_chk);
 		}
-		if (SystemAttributeHelper.planEnabled()) {
+//		if (SystemAttributeHelper.planEnabled()) {
 			vg.addGap(UI.vgap);
 			vg.addComponent(plan_control_chk);
-		}
+//		}
 		return vg;
 	}
 
