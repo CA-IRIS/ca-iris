@@ -68,8 +68,10 @@ public class MultipleSignTab extends JPanel {
 	/** Selection model */
 	private final ProxySelectionModel<DMS> sel_model;
 
+	private final DMSDispatcher dmsDispatcher;
+
 	/** Detector comparator */
-	static private final Comparator<DMS> comparitor = new Comparator<DMS>() {
+	static private final Comparator<DMS> comparator = new Comparator<DMS>() {
 		public int compare(DMS a, DMS b) {
 			return NumericAlphaComparator.compareStrings(a.getName(), b.getName());
 		}
@@ -85,7 +87,7 @@ public class MultipleSignTab extends JPanel {
 	};
 
 	/** Create a new multiple sign tab */
-	public MultipleSignTab(DmsCache cache, ProxySelectionModel<DMS> sm) {
+	public MultipleSignTab(DmsCache cache, ProxySelectionModel<DMS> sm, DMSDispatcher d) {
 		super(new GridBagLayout());
 		TypeCache<SignGroup> gc = cache.getSignGroups();
 		sign_group_model = new ProxyListModel<SignGroup>(gc) {
@@ -94,6 +96,7 @@ public class MultipleSignTab extends JPanel {
 				return !proxy.getLocal();
 			}
 		};
+		dmsDispatcher = d;
 		dms_sign_groups = cache.getDmsSignGroups();
 		group_list = new JList<SignGroup>(sign_group_model);
 		group_list.setSelectionMode(SINGLE_SELECTION);
@@ -164,14 +167,18 @@ public class MultipleSignTab extends JPanel {
 		sign_mdl.clear();
 		SignGroup group = getSelectedGroup();
 		ArrayList<DMS> selected = new ArrayList<DMS>(sel_model.getSelected());
-		Collections.sort(selected, comparitor);
+		Collections.sort(selected, comparator);
+		boolean planControlled = false;
 		for (DMS dms : selected) {
+			if (dms.getPlanControlled())
+				planControlled = true;
 			sign_mdl.addElement(dms);
 			if (group != null && !isGroupMember(dms, group)) {
 				group_list.clearSelection();
 				group = null;
 			}
 		}
+		dmsDispatcher.setEnabled(!planControlled);
 		updateSelectedLabel();
 	}
 

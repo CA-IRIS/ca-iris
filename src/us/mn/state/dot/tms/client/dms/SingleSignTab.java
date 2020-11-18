@@ -200,11 +200,9 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 				SwingConstants.LEFT);
 			add(aws_control_chk, Stretch.LEFT);
 		}
-//		if(SystemAttrEnum.DMS_PLAN_ENABLE.getBoolean()) {
-			plan_control_chk.setHorizontalTextPosition(
-					SwingConstants.LEFT);
-			add(plan_control_chk, Stretch.LEFT);
-//		}
+		plan_control_chk.setHorizontalTextPosition(
+				SwingConstants.LEFT);
+		add(plan_control_chk, Stretch.LEFT);
 		tab.add(I18N.get("dms.msg.current"), current_pnl);
 		tab.add(I18N.get("dms.msg.preview"), preview_pnl);
 		add(tab, Stretch.CENTER);
@@ -365,8 +363,10 @@ public class SingleSignTab extends IPanel implements ProxyListener<DMS> {
 		}
 		if(a == null || a.equals("awsControlled"))
 			aws_control_chk.setSelected(dms.getAwsControlled());
-		if(a == null || a.equals("planControlled"))
+		if(a == null || a.equals("planControlled")) {
 			plan_control_chk.setSelected(dms.getPlanControlled());
+			dispatcher.setEnabled(!dispatcher.isPlanPermitted(dms));
+		}
 		if(a == null || a.equals("opStatus"))
 			op_status_lbl.setText(dms.getOpStatus());
 	}

@@ -100,7 +100,7 @@ public class DMSDispatcher extends JPanel {
 		creator = new SignMessageCreator(s, user);
 		sel_model = manager.getSelectionModel();
 		singleTab = new SingleSignTab(session, this);
-		multipleTab = new MultipleSignTab(dms_cache, sel_model);
+		multipleTab = new MultipleSignTab(dms_cache, sel_model, this);
 		composer = new SignMessageComposer(session, this, manager);
 		tabPane.addTab(I18N.get("dms.single"), singleTab);
 		tabPane.addTab(I18N.get("dms.multiple"), multipleTab);
@@ -369,6 +369,8 @@ public class DMSDispatcher extends JPanel {
 		if (!areBuilderAndComposerValid()) {
 			builder = null;
 			for (DMS s: sel_model.getSelected()) {
+				if (s.getPlanControlled())
+					setEnabled(false);
 				createBuilder(s);
 				break;
 			}
@@ -399,6 +401,7 @@ public class DMSDispatcher extends JPanel {
 	/** Update the selected sign(s) */
 	private void updateSelected() {
 		Set<DMS> sel = sel_model.getSelected();
+		boolean planControlled = false;
 		if (sel.size() == 0)
 			clearSelected();
 		else if (sel.size() == 1) {
@@ -406,7 +409,14 @@ public class DMSDispatcher extends JPanel {
 				setSelected(dms);
 		} else {
 			singleTab.setSelected(null);
-			setEnabled(true);
+			for (DMS dms : sel) {
+				if (dms.getPlanControlled())
+					planControlled = true;
+			}
+			if (!planControlled)
+				setEnabled(true);
+			else
+				setEnabled(false);
 			selectMultipleTab();
 		}
 	}
@@ -516,6 +526,8 @@ public class DMSDispatcher extends JPanel {
 		if (sel.isEmpty())
 			return false;
 		for (DMS dms: sel) {
+			if (dms.getPlanControlled())
+				return false;
 			if (!canSend(dms, checkMsg))
 				return false;
 		}
