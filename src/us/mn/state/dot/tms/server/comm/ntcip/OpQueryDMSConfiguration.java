@@ -252,23 +252,17 @@ public class OpQueryDMSConfiguration extends OpDMS {
 		protected Phase poll(CommMessage mess) throws IOException {
 			mess.add(num_graphics);
 			mess.add(max_size);
-			String regex = "^Model 7";
-			Pattern pattern = Pattern.compile(regex);
-			Matcher matcher = pattern.matcher(dms.getModel());
-			boolean model700 = matcher.matches(); // Handle case for Caltrans Model 700, 710, 7*, ...
-			if (!model700)
-				mess.add(available_memory);
+			mess.add(available_memory);
 			try {
 				mess.queryProps();
 			}
-			catch (Exception e) {
-				logError("no graphics support");
+			catch (Exception e) {					  // Made exception generic for Caltrans AVMS
+				logError("no graphics support"); // software (returns int instead of counter)
 				return null;
 			}
 			logQuery(num_graphics);
 			logQuery(max_size);
-			if (!model700)
-				logQuery(available_memory);
+			logQuery(available_memory);
 			return null;
 		}
 	}
