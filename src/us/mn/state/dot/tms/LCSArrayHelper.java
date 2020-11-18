@@ -119,6 +119,25 @@ public class LCSArrayHelper extends BaseHelper {
 			return null;
 	}
 
+	/** Lookup the location of the LCS array */
+	static public boolean lookupDmsPlanControl(LCSArray lcs_array) {
+		Iterator<LCSArray> it = LCSArrayHelper.iterator();
+		DMS dms;
+		while(it.hasNext()) {
+			LCSArray lcs = it.next();
+			if (lcs == lcs_array) {
+				for(int i = 1; i <= MAX_LANES; i++) {
+					dms = lookupDMS(lcs, i);
+					if (dms == null)
+						continue;
+					if(dms.getPlanControlled())
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/** Get the controller status */
 	static public String getStatus(LCSArray lcs_array) {
 		String st = "???";

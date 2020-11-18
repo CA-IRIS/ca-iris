@@ -373,7 +373,7 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		return awsControlled;
 	}
 
-	/** AWS controlled */
+	/** Plan controlled */
 	private boolean planControlled;
 
 	/** Set sign to Plan controlled */

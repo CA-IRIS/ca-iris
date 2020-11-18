@@ -109,7 +109,6 @@ public class PropMessages extends JPanel {
 			{
 				protected void doActionPerformed(ActionEvent e) {
 					proxy.setPlanControlled(plan_control_chk.isSelected());
-//					ComposerButtonPanel.send_btn.setDisabledIcon();
 				}
 			});
 
