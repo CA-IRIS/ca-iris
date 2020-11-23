@@ -16,22 +16,13 @@ package us.mn.state.dot.tms.client.lcs;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.util.*;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import us.mn.state.dot.sonar.User;
+import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.CameraPreset;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.LCS;
-import us.mn.state.dot.tms.LCSArray;
-import us.mn.state.dot.tms.LCSArrayHelper;
-import us.mn.state.dot.tms.LCSArrayLock;
+import us.mn.state.dot.tms.*;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.camera.CameraPresetAction;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
@@ -41,6 +32,8 @@ import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.roads.LaneConfigurationPanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
+
+import static us.mn.state.dot.tms.LCSArrayHelper.lookupDmsPlanControl;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -71,6 +64,32 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 					setSelected(sel_model.getSingleSelection());
 				}
 			};
+//
+//	/** Detect transition from AWS message to blank sign */
+//	private final ProxyListener<DMS> dms_listener = new ProxyListener<DMS>() {
+//
+//		/** All AWS-deployed signs */
+//		private final Set<String> aws_signs = new HashSet<>();
+//
+//		@Override
+//		public void proxyAdded(DMS proxy) {
+//			handleAwsChange(proxy);
+//		}
+//
+//		@Override
+//		public void enumerationComplete() { }
+//
+//		@Override
+//		public synchronized void proxyRemoved(DMS proxy) {
+//			aws_signs.remove(proxy.getName());
+//		}
+//
+//		@Override
+//		public void proxyChanged(DMS proxy, String a) {
+//			handleAwsChange(proxy);
+//		}
+//
+//	};
 
 	/** Name of the selected LCS array */
 	private final JLabel name_lbl = createValueLabel();
