@@ -16,10 +16,7 @@
 package us.mn.state.dot.tms.client.dms;
 
 import java.awt.Color;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -114,7 +111,7 @@ public class DMSManager extends ProxyManager<DMS> {
 
         @Override
         public void proxyChanged(DMS proxy, String a) {
-			handleAwsChange(proxy);
+        	handleAwsChange(proxy);
         }
 
         /** @param proxy The DMS where AWS state has changed. */
@@ -199,9 +196,6 @@ public class DMSManager extends ProxyManager<DMS> {
 		if (SystemAttrEnum.DMS_AWS_ENABLE.getBoolean())
 			theme.addStyle(ItemStyle.AWS_CONTROLLED,
 				COLOR_HELIOTROPE);
-//		if (SystemAttrEnum.DMS_PLAN_ENABLE.getBoolean()) {
-			theme.addStyle(ItemStyle.PLAN_CONTROLLED, ProxyTheme.COLOR_AWS_DEPLOYED);
-//		}
 		// NOTE: If a sign doesn't fit in one of the other themes,
 		//       it will be rendered using the ALL theme.
 		theme.addStyle(ItemStyle.ALL);
