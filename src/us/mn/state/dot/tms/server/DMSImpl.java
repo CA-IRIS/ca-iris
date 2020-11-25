@@ -156,16 +156,16 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 		return SONAR_TYPE;
 	}
 
-	public DmsColorScheme color_scheme;
+	public Integer color_scheme;
 
 	/** Get the color scheme
 	 * @return color scheme */
-	public DmsColorScheme getColorScheme() {
+	public Integer getColorScheme() {
 		return color_scheme;
 	}
 
 	/** Set the color scheme */
-	public void setColorScheme(DmsColorScheme scheme) {
+	public void setColorScheme(Integer scheme) {
 		color_scheme = scheme;
 	}
 
