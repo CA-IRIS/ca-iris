@@ -193,12 +193,6 @@ public interface DMS extends Device {
 	/** Get item style bits */
 	long getStyles();
 
-	/** Get the color scheme */
-	DmsColorScheme getColorScheme();
-
-	/** Set the color scheme */
-	void setColorScheme(DmsColorScheme scheme);
-
 	/* Manufacturer-specific attributes */
 
 	/* LEDSTAR attributes */

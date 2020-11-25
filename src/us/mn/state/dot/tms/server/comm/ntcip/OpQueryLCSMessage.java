@@ -33,22 +33,6 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
         return new QueryMessageSource();
     }
 
-    @Override
-    protected Phase processMessageSource() throws IOException {
-        DmsMessageMemoryType mem_type = source.getMemoryType();
-        if (mem_type != null) {
-            /* We have to test isBlank before "valid", because some
-             * signs use 'undefined' source for blank messages. */
-            if (mem_type.isBlank())
-                return processMessageBlank();
-            else if (mem_type.valid) {
-                return processMessageValid();
-            } else
-                return new QueryCurrentMsgPrior();
-        }
-        return processMessageInvalid();
-    }
-
     private ASN1Enum<DMSMessagePriority> lcsPrior;
 
     /** Phase to query the message priority */
@@ -60,10 +44,10 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
                     DMSMessagePriority>(DMSMessagePriority.class,
                     dmsMessageRunTimePriority.node,
                     DmsMessageMemoryType.currentBuffer.ordinal(), 1);
-            lcsPrior = prior; // Set OpQueryLCSMessage priority
             mess.add(prior);
             mess.queryProps();
             logQuery(prior);
+            lcsPrior = prior; // Set OpQueryLCSMessage priority
             return new QueryCurrentMsgTime();
         }
     }
@@ -76,10 +60,10 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
         /** Query the message time */
         protected Phase poll(CommMessage mess) throws IOException {
             ASN1Integer time = dmsMessageTimeRemaining.makeInt();
-            lcsTime = time; // Set OpQueryLCSMessage time
             mess.add(time);
             mess.queryProps();
             logQuery(time);
+            lcsTime = time; // Set OpQueryLCSMessage time
             return new QueryMsgMultiString(); // look at OpQueryDMSMessage as reference
         }
     }
@@ -97,8 +81,8 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
                     .ordinal(), 1);
             mess.add(ms);
             mess.queryProps();
-            lcsMulti = ms;
             logQuery(ms);
+            lcsMulti = ms;
             return new QueryMsgBeacon();
         }
     }
@@ -115,8 +99,8 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
             DmsMessageMemoryType.currentBuffer, 1);
             mess.add(beacon);
             mess.queryProps();
-            lcsBeacon = beacon;
             logQuery(beacon);
+            lcsBeacon = beacon;
             return new QueryMsgStatus();
         }
     }
@@ -135,8 +119,8 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
             DmsMessageMemoryType.currentBuffer.ordinal(),1);
             mess.add(status);
             mess.queryProps();
-            lcsStatus = status;
             logQuery(status);
+            lcsStatus = status;
             setCurrentMessage();
             return null;
         }
@@ -148,19 +132,26 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
                 && !dms.isMsgBlank()) {
             SignMessage sm = dms.getMessageCurrent();
             int msg_num = findDmsLaneUseMulti(sm.getMulti()).getMsgNum();
-            if (source.getNumber() == msg_num)
+            if (source.getNumber() == msg_num) {
                 setCurrentMessage(sm);
+                return null;
+            }
         }
-        return null;
+        return new QueryCurrentMsgPrior();
     }
 
     private void setCurrentMessage() throws IOException {
-        Integer d = parseDuration(lcsTime.getInteger());
-        DMSMessagePriority rp = lcsPrior.getEnum();
-        /* If we arrive here, IRIS didn't send it */
-        if (rp == null)
-            rp = DMSMessagePriority.OTHER_SYSTEM;
-        setCurrentMessage(lcsMulti.getValue(),
-                lcsBeacon.getInteger(), rp, d);
+        if (lcsStatus.getEnum() == DmsMessageStatus.valid) {
+            Integer d = parseDuration(lcsTime.getInteger());
+            DMSMessagePriority rp = lcsPrior.getEnum();
+            /* If we arrive here, IRIS didn't send it */
+            if (rp == null)
+                rp = DMSMessagePriority.OTHER_SYSTEM;
+            setCurrentMessage(lcsMulti.getValue(),
+                    lcsBeacon.getInteger(), rp, d);
+        } else {
+            logError("INVALID STATUS");
+            setErrorStatus(lcsStatus.toString());
+        }
     }
 }

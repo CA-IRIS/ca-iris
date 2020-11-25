@@ -64,32 +64,6 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 					setSelected(sel_model.getSingleSelection());
 				}
 			};
-//
-//	/** Detect transition from AWS message to blank sign */
-//	private final ProxyListener<DMS> dms_listener = new ProxyListener<DMS>() {
-//
-//		/** All AWS-deployed signs */
-//		private final Set<String> aws_signs = new HashSet<>();
-//
-//		@Override
-//		public void proxyAdded(DMS proxy) {
-//			handleAwsChange(proxy);
-//		}
-//
-//		@Override
-//		public void enumerationComplete() { }
-//
-//		@Override
-//		public synchronized void proxyRemoved(DMS proxy) {
-//			aws_signs.remove(proxy.getName());
-//		}
-//
-//		@Override
-//		public void proxyChanged(DMS proxy, String a) {
-//			handleAwsChange(proxy);
-//		}
-//
-//	};
 
 	/** Name of the selected LCS array */
 	private final JLabel name_lbl = createValueLabel();

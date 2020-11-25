@@ -235,7 +235,7 @@ public class OpQueryDMSConfiguration extends OpDMS {
 				logQuery(tags);
 				logQuery(pages);
 				logQuery(m_len);
-				dms.setColorScheme(color_scheme.getEnum());
+				dms.setColorScheme(color_scheme.getEnum().ordinal());
 			}
 			catch (NoSuchName e) {
 				// Sign supports 1203v1 only

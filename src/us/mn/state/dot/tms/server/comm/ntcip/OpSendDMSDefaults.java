@@ -145,29 +145,34 @@ public class OpSendDMSDefaults extends OpDMS {
 		/** Set the message defaults */
 		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
-			DmsColorScheme scheme = dms.getColorScheme();
+			Integer scheme = dms.getColorScheme();
+			if (scheme == null) {
+				logError("Attempted to set default foreground and background but sign color scheme was unknown. " +
+						"If this is not an error, attempt to Query Configuration, then Send Settings again.");
+				return new LedstarDefaults();
+			}
 			byte[] defaultBG;
 			byte[] defaultFG;
 			switch (scheme) {
-				case monochrome1bit:
+				case 1:
 					defaultBG = new byte[] {0};
 					defaultFG = new byte[] {1};
 					break;
-				case color24bit:
+				case 4:
 					defaultBG = new byte[] { 0, 0, 0 };
 					defaultFG = new byte[] { (byte) AMBER.red,
 							(byte) AMBER.green, (byte) AMBER.blue };
 					break;
-				case undefined:
-				case monochrome8bit:
-				case colorClassic:
 				default:
 					defaultBG = null;
 					defaultFG = null;
 					break;
 			}
-			if (defaultBG == null || defaultFG == null)
+			if (defaultBG == null || defaultFG == null) {
+				logError("Attempted to set default foreground and background but sign color scheme is not yet" +
+						"implemented or recognized.");
 				return new LedstarDefaults();
+			}
 			ASN1OctetString background = new ASN1OctetString(
 				defaultBackgroundRGB.node);
 			ASN1OctetString foreground = new ASN1OctetString(
