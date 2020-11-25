@@ -131,10 +131,11 @@ public class OpQueryDMSMessage extends OpDMS {
 					DMSMessagePriority>(DMSMessagePriority.class,
 					dmsMessageRunTimePriority.node,
 					DmsMessageMemoryType.currentBuffer.ordinal(),1);
+			// DMS Message Status memory type and message number
+			// changed to source values due to errors from CMS 700 Series signs
 			ASN1Enum<DmsMessageStatus> status = new ASN1Enum<
 					DmsMessageStatus>(DmsMessageStatus.class,
-					dmsMessageStatus.node,
-					DmsMessageMemoryType.currentBuffer.ordinal(),1);
+					dmsMessageStatus.node, source.getMemoryType().ordinal(), source.getNumber());
 			ASN1Integer time = dmsMessageTimeRemaining.makeInt();
 			mess.add(ms);
 			mess.add(beacon);

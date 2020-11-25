@@ -80,7 +80,7 @@ abstract public class OpNtcip extends OpDevice {
 			LaneUseMulti lum = it.next();
 			QuickMessage qm = lum.getQuickMessage();
 			if (qm != null && match(qm, multi))
-				return lum; // And IF LUM configured for this DMS
+				return lum;
 		}
 		return null;
 	}

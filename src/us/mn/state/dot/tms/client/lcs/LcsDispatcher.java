@@ -353,7 +353,7 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 		lock_cbx.setEnabled(false);
 		lock_cbx.setSelectedItem(null);
 		ind_selector.setEnabled(false);
-		send.setEnabled(false);
+		send_btn.setEnabled(false);
 		blank_btn.setEnabled(false);
 		lcs_pnl.clear();
 		lane_config.clear();

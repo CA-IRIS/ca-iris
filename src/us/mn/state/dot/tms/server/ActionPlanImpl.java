@@ -417,7 +417,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 	}
 
 	public void setPlanStatus(String s) throws TMSException {
-		if (s == null || s.equals(planStatus))
+		if (s == null)
 			return;
 		planStatus = s;
 		notifyAttribute("planStatus");
@@ -534,9 +534,7 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 
 	/** Set the plan status timestamp */
 	private void setPlanStatusTimestamp() {
-		Date date = new Date();
-		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
-		planStatusTimestamp = formatter.format(date);
+		planStatusTimestamp = getCurrentDate();
 	}
 
 	/** Gets the plan status timestamp.
