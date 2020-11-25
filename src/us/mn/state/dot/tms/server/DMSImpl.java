@@ -62,6 +62,7 @@ import static us.mn.state.dot.tms.server.XmlWriter.createAttribute;
 import us.mn.state.dot.tms.server.aws.AwsActionHistory;
 import us.mn.state.dot.tms.server.comm.DevicePoller;
 import us.mn.state.dot.tms.server.comm.DMSPoller;
+import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsColorScheme;
 import us.mn.state.dot.tms.server.event.BrightnessSample;
 import us.mn.state.dot.tms.server.event.PriceMessageEvent;
 import us.mn.state.dot.tms.server.event.SignStatusEvent;
@@ -153,6 +154,19 @@ public class DMSImpl extends DeviceImpl implements DMS, Comparable<DMSImpl> {
 	/** Get the SONAR type name */
 	public String getTypeName() {
 		return SONAR_TYPE;
+	}
+
+	public DmsColorScheme color_scheme;
+
+	/** Get the color scheme
+	 * @return color scheme */
+	public DmsColorScheme getColorScheme() {
+		return color_scheme;
+	}
+
+	/** Set the color scheme */
+	public void setColorScheme(DmsColorScheme scheme) {
+		color_scheme = scheme;
 	}
 
 	/** Compare to another holiday */

@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms;
 
 import us.mn.state.dot.sonar.User;
+import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsColorScheme;
 
 /**
  * DMS -- Dynamic Message Sign
@@ -191,6 +192,12 @@ public interface DMS extends Device {
 
 	/** Get item style bits */
 	long getStyles();
+
+	/** Get the color scheme */
+	DmsColorScheme getColorScheme();
+
+	/** Set the color scheme */
+	void setColorScheme(DmsColorScheme scheme);
 
 	/* Manufacturer-specific attributes */
 
