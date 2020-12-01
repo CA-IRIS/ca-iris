@@ -68,6 +68,7 @@ public class MultipleSignTab extends JPanel {
 	/** Selection model */
 	private final ProxySelectionModel<DMS> sel_model;
 
+	/** DMS dispatcher */
 	private final DMSDispatcher dmsDispatcher;
 
 	/** Detector comparator */

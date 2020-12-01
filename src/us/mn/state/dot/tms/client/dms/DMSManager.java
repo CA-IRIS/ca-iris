@@ -16,7 +16,10 @@
 package us.mn.state.dot.tms.client.dms;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;

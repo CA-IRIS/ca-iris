@@ -232,10 +232,8 @@ public class PropMessages extends JPanel {
 			vg.addGap(UI.vgap);
 			vg.addComponent(aws_control_chk);
 		}
-//		if (SystemAttributeHelper.planEnabled()) {
-			vg.addGap(UI.vgap);
-			vg.addComponent(plan_control_chk);
-//		}
+		vg.addGap(UI.vgap);
+		vg.addComponent(plan_control_chk);
 		return vg;
 	}
 

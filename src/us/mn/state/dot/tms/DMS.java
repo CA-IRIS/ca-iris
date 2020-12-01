@@ -15,7 +15,6 @@
 package us.mn.state.dot.tms;
 
 import us.mn.state.dot.sonar.User;
-import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsColorScheme;
 
 /**
  * DMS -- Dynamic Message Sign

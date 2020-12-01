@@ -92,13 +92,5 @@ public class SystemAttributeHelper extends BaseHelper {
 		return SystemAttrEnum.DMS_AWS_ENABLE.getBoolean();
 	}
 
-	/**
-	 * Is Plan enabled?
-	 * @return True if Plan is enabled, else false.
-	 */
-//	static public boolean planEnabled() {
-//		return SystemAttrEnum.DMS_PLAN_ENABLE.getBoolean();
-//	}
-
 }
 

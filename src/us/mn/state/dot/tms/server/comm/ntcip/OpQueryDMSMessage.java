@@ -50,7 +50,7 @@ public class OpQueryDMSMessage extends OpDMS {
 		dmsMsgTableSource.node);
 
 	/** Process the message table source from the sign controller */
-	protected Phase processMessageSource() throws IOException {
+	private Phase processMessageSource() throws IOException {
 		DmsMessageMemoryType mem_type = source.getMemoryType();
 		if (mem_type != null) {
 			/* We have to test isBlank before "valid", because some
@@ -64,7 +64,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process a blank message source from the sign controller */
-	protected Phase processMessageBlank() {
+	private Phase processMessageBlank() {
 		/* The sign is blank.  If IRIS thinks there is a message on it,
 		 * that's wrong and needs to be updated. */
 		if (!dms.isMsgBlank())
@@ -93,7 +93,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process an invalid message source from the sign controller */
-	protected Phase processMessageInvalid() {
+	private Phase processMessageInvalid() {
 		/* The source table is not valid.  This condition has been
 		 * observed in old Skyline signs after being powered down for
 		 * extended periods of time.  It can be cleared up by sending
@@ -117,7 +117,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Phase to query the current message */
-	protected class QueryCurrentMessage extends Phase {
+	private class QueryCurrentMessage extends Phase {
 
 		/** Query the current message */
 		@SuppressWarnings("unchecked")
@@ -131,8 +131,9 @@ public class OpQueryDMSMessage extends OpDMS {
 					DMSMessagePriority>(DMSMessagePriority.class,
 					dmsMessageRunTimePriority.node,
 					DmsMessageMemoryType.currentBuffer.ordinal(),1);
-			// DMS Message Status memory type and message number
-			// changed to source values due to errors from CMS 700 Series signs
+			// dmsMessageStatus OID memoryType and msgNum values
+			// changed to source values due to errors from
+			// CMS 700 Series signs using NTCIP
 			ASN1Enum<DmsMessageStatus> status = new ASN1Enum<
 					DmsMessageStatus>(DmsMessageStatus.class,
 					dmsMessageStatus.node, source.getMemoryType().ordinal(), source.getNumber());

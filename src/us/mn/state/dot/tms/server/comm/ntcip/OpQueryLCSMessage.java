@@ -144,7 +144,6 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
         if (lcsStatus.getEnum() == DmsMessageStatus.valid) {
             Integer d = parseDuration(lcsTime.getInteger());
             DMSMessagePriority rp = lcsPrior.getEnum();
-            /* If we arrive here, IRIS didn't send it */
             if (rp == null)
                 rp = DMSMessagePriority.OTHER_SYSTEM;
             setCurrentMessage(lcsMulti.getValue(),

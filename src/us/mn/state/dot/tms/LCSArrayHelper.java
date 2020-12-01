@@ -119,7 +119,7 @@ public class LCSArrayHelper extends BaseHelper {
 			return null;
 	}
 
-	/** Lookup the location of the LCS array */
+	/** Lookup if CMS in LCS array is under plan control */
 	static public boolean lookupDmsPlanControl(LCSArray lcs_array) {
 		Iterator<LCSArray> it = LCSArrayHelper.iterator();
 		DMS dms;
