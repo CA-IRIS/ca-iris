@@ -16,13 +16,22 @@ package us.mn.state.dot.tms.client.lcs;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.util.*;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import us.mn.state.dot.sonar.User;
-import us.mn.state.dot.sonar.client.ProxyListener;
 import us.mn.state.dot.sonar.client.TypeCache;
-import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.CameraPreset;
+import us.mn.state.dot.tms.DMS;
+import us.mn.state.dot.tms.DMSHelper;
+import us.mn.state.dot.tms.LCS;
+import us.mn.state.dot.tms.LCSArray;
+import us.mn.state.dot.tms.LCSArrayHelper;
+import us.mn.state.dot.tms.LCSArrayLock;
 import us.mn.state.dot.tms.client.Session;
 import us.mn.state.dot.tms.client.camera.CameraPresetAction;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
@@ -32,8 +41,6 @@ import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.roads.LaneConfigurationPanel;
 import us.mn.state.dot.tms.client.widget.IAction;
 import us.mn.state.dot.tms.client.widget.IPanel;
-
-import static us.mn.state.dot.tms.LCSArrayHelper.lookupDmsPlanControl;
 import static us.mn.state.dot.tms.client.widget.Widgets.UI;
 import us.mn.state.dot.tms.utils.I18N;
 
@@ -58,38 +65,12 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 
 	/** Selection listener */
 	private final ProxySelectionListener sel_listener =
-			new ProxySelectionListener()
-			{
-				public void selectionChanged() {
-					setSelected(sel_model.getSingleSelection());
-				}
-			};
-//
-//	/** Detect transition from AWS message to blank sign */
-//	private final ProxyListener<DMS> dms_listener = new ProxyListener<DMS>() {
-//
-//		/** All AWS-deployed signs */
-//		private final Set<String> aws_signs = new HashSet<>();
-//
-//		@Override
-//		public void proxyAdded(DMS proxy) {
-//			handleAwsChange(proxy);
-//		}
-//
-//		@Override
-//		public void enumerationComplete() { }
-//
-//		@Override
-//		public synchronized void proxyRemoved(DMS proxy) {
-//			aws_signs.remove(proxy.getName());
-//		}
-//
-//		@Override
-//		public void proxyChanged(DMS proxy, String a) {
-//			handleAwsChange(proxy);
-//		}
-//
-//	};
+		new ProxySelectionListener()
+	{
+		public void selectionChanged() {
+			setSelected(sel_model.getSingleSelection());
+		}
+	};
 
 	/** Name of the selected LCS array */
 	private final JLabel name_lbl = createValueLabel();
@@ -108,18 +89,18 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 
 	/** LCS lock combo box component */
 	private final JComboBox<LCSArrayLock> lock_cbx = new JComboBox
-			<LCSArrayLock>(LCSArrayLock.values());
+		<LCSArrayLock>(LCSArrayLock.values());
 
 	/** Lane configuration panel */
 	private final LaneConfigurationPanel lane_config =
-			new LaneConfigurationPanel(LCS_SIZE, true);
+		new LaneConfigurationPanel(LCS_SIZE, true);
 
 	/** Panel for drawing an LCS array */
 	private final LCSArrayPanel lcs_pnl = new LCSArrayPanel(LCS_SIZE);
 
 	/** LCS indicaiton selector */
 	private final IndicationSelector ind_selector =
-			new IndicationSelector(LCS_SIZE);
+		new IndicationSelector(LCS_SIZE);
 
 	/** Action to send new indications to the LCS array */
 	private final IAction send = new IAction("lcs.send") {
@@ -130,9 +111,6 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 
 	/** Button to blank the LCS array indications */
 	private final JButton blank_btn = new JButton();
-
-	/** Button to send the LCS array indications */
-	private JButton send_btn = new JButton();
 
 	/** Action to blank selected LCS */
 	private final BlankLcsAction blank;
@@ -154,10 +132,9 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 		sel_model = manager.getSelectionModel();
 		blank = new BlankLcsAction(sel_model, user);
 		blank_btn.setAction(blank);
-		send_btn.setAction(send);
 		manager.setBlankAction(blank);
 		TypeCache<LCSArray> cache =
-				session.getSonarState().getLcsCache().getLCSArrays();
+			session.getSonarState().getLcsCache().getLCSArrays();
 		watcher = new ProxyWatcher<LCSArray>(cache, this, true);
 	}
 
@@ -166,7 +143,7 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 	public void initialize() {
 		super.initialize();
 		preset_btn.setBorder(BorderFactory.createEtchedBorder(
-				EtchedBorder.LOWERED));
+			EtchedBorder.LOWERED));
 		// Make label opaque so that we can set the background color
 		status_lbl.setOpaque(true);
 		setTitle(I18N.get("lcs.selected"));
@@ -201,9 +178,8 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 
 	/** Create the button panel */
 	private Box createButtonPanel() {
-		send_btn = new JButton(send);
 		Box box = Box.createHorizontalBox();
-		box.add(send_btn);
+		box.add(new JButton(send));
 		box.add(Box.createHorizontalStrut(UI.hgap));
 		box.add(blank_btn);
 		return box;
@@ -246,7 +222,7 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 			// users from sending multiple operations at once
 			// RE: None -- see server.DeviceImpl.getOperation()
 			send.setEnabled(isUpdatePermitted(la) &&
-					op.equals("None"));
+				op.equals("None"));
 		}
 		if (a == null || a.equals("lcsLock")) {
 			Integer lk = la.getLcsLock();
@@ -259,12 +235,12 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 			Integer[] ind = la.getIndicationsCurrent();
 			lcs_pnl.setIndications(ind, la.getShift());
 			lcs_pnl.setClickHandler(
-					new LCSArrayPanel.ClickHandler()
-					{
-						public void handleClick(int lane) {
-							selectDMS(la, lane);
-						}
-					});
+				new LCSArrayPanel.ClickHandler()
+			{
+				public void handleClick(int lane) {
+					selectDMS(la, lane);
+				}
+			});
 			ind_selector.setIndications(ind);
 		}
 	}
@@ -279,11 +255,9 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 			lock_cbx.setAction(new LockLcsAction(la, lock_cbx));
 		else
 			lock_cbx.setAction(null);
-		update &= !LCSArrayHelper.lookupDmsPlanControl(la);
 		lock_cbx.setEnabled(update);
-		send_btn.setEnabled(update);
+		send.setEnabled(update);
 		blank_btn.setEnabled(update);
-		super.setEnabled(update);
 	}
 
 	/** Set the camera preset action */
@@ -334,7 +308,7 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 			DMS dms = DMSHelper.lookup(lcs.getName());
 			if(dms != null) {
 				session.getDMSManager().getSelectionModel().
-						setSelected(dms);
+					setSelected(dms);
 			}
 		}
 	}
@@ -378,7 +352,7 @@ public class LcsDispatcher extends IPanel implements ProxyView<LCSArray> {
 	/** Check if the user is permitted to update the given LCS array */
 	private boolean isUpdatePermitted(LCSArray la) {
 		return isUpdatePermitted(la, "indicationsNext") &&
-				isUpdatePermitted(la, "ownerNext");
+		       isUpdatePermitted(la, "ownerNext");
 	}
 
 	/** Check if the user is permitted to update a given LCS attribute */

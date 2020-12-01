@@ -189,8 +189,14 @@ public class QuickMessageCBox extends JComboBox<QuickMessage>
 		adjusting++;
 		if(ms.isEmpty())
 			setSelectedItem(null);
-		else
-			setSelectedItem(QuickMessageHelper.find(ms));
+		else {
+			for (QuickMessage qm: msgs) {
+				if (ms.equals(qm.getMulti())) {
+					setSelectedItem(qm);
+					break;
+				}
+			}
+		}
 		adjusting--;
 	}
 

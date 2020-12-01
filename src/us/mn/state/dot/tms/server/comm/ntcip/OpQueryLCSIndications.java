@@ -15,10 +15,17 @@
 package us.mn.state.dot.tms.server.comm.ntcip;
 
 import us.mn.state.dot.tms.DMSHelper;
+import us.mn.state.dot.tms.InvalidMessageException;
+import us.mn.state.dot.tms.LaneUseIndication;
+import us.mn.state.dot.tms.LaneUseMulti;
+import us.mn.state.dot.tms.LaneUseMultiHelper;
+import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignMessage;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.LCSArrayImpl;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
+
+import java.util.Iterator;
 
 /**
  * Operation to query indicaitons on a Lane Control Signal array.
@@ -54,8 +61,21 @@ public class OpQueryLCSIndications extends OpLCS {
 		if (dms.isFailed() || DMSHelper.hasCriticalError(dms))
 			return null;
 		else {
+			Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
 			SignMessage sm = dms.getMessageCurrent();
-			return lookupIndication(sm);
+			LaneUseIndication[] luis = DMSHelper.lookupIndications(dms);
+			while (it.hasNext()) {
+				LaneUseMulti lum = it.next();
+				for (LaneUseIndication lui : luis) {
+					if (lui.ordinal() == lum.getIndication()) {
+						QuickMessage qm = lum.getQuickMessage();
+						String lumMulti = qm.getMulti();
+						if (lumMulti.equals(sm.getMulti()))
+							return lum.getIndication();
+					}
+				}
+			}
+			return null;
 		}
 	}
 }

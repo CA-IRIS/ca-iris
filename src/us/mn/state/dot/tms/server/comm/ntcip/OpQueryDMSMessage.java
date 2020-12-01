@@ -46,11 +46,11 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Source table (memory type) or the currently displayed message */
-	private final MessageIDCode source = new MessageIDCode(
+	protected final MessageIDCode source = new MessageIDCode(
 		dmsMsgTableSource.node);
 
 	/** Process the message table source from the sign controller */
-	private Phase processMessageSource() {
+	protected Phase processMessageSource() throws IOException {
 		DmsMessageMemoryType mem_type = source.getMemoryType();
 		if (mem_type != null) {
 			/* We have to test isBlank before "valid", because some
@@ -64,7 +64,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process a blank message source from the sign controller */
-	private Phase processMessageBlank() {
+	protected Phase processMessageBlank() {
 		/* The sign is blank.  If IRIS thinks there is a message on it,
 		 * that's wrong and needs to be updated. */
 		if (!dms.isMsgBlank())
@@ -73,7 +73,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process a valid message source from the sign controller */
-	private Phase processMessageValid() {
+	protected Phase processMessageValid() throws IOException {
 		/* The sign is not blank.  If IRIS thinks it is blank, then
 		 * we need to query the current message on the sign. */
 		if (dms.isMsgBlank())
@@ -93,7 +93,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Process an invalid message source from the sign controller */
-	private Phase processMessageInvalid() {
+	protected Phase processMessageInvalid() {
 		/* The source table is not valid.  This condition has been
 		 * observed in old Skyline signs after being powered down for
 		 * extended periods of time.  It can be cleared up by sending
@@ -123,18 +123,19 @@ public class OpQueryDMSMessage extends OpDMS {
 		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
 			ASN1String ms = new ASN1String(dmsMessageMultiString
-				.node, DmsMessageMemoryType.currentBuffer
-				.ordinal(), 1);
+					.node, DmsMessageMemoryType.currentBuffer
+					.ordinal(), 1);
 			ASN1Integer beacon = dmsMessageBeacon.makeInt(
-				DmsMessageMemoryType.currentBuffer, 1);
+					DmsMessageMemoryType.currentBuffer, 1);
 			ASN1Enum<DMSMessagePriority> prior = new ASN1Enum<
-				DMSMessagePriority>(DMSMessagePriority.class,
-				dmsMessageRunTimePriority.node,
-				DmsMessageMemoryType.currentBuffer.ordinal(),1);
+					DMSMessagePriority>(DMSMessagePriority.class,
+					dmsMessageRunTimePriority.node,
+					DmsMessageMemoryType.currentBuffer.ordinal(),1);
+			// DMS Message Status memory type and message number
+			// changed to source values due to errors from CMS 700 Series signs
 			ASN1Enum<DmsMessageStatus> status = new ASN1Enum<
-				DmsMessageStatus>(DmsMessageStatus.class,
-				dmsMessageStatus.node,
-				DmsMessageMemoryType.currentBuffer.ordinal(),1);
+					DmsMessageStatus>(DmsMessageStatus.class,
+					dmsMessageStatus.node, source.getMemoryType().ordinal(), source.getNumber());
 			ASN1Integer time = dmsMessageTimeRemaining.makeInt();
 			mess.add(ms);
 			mess.add(beacon);
@@ -154,7 +155,7 @@ public class OpQueryDMSMessage extends OpDMS {
 				if (rp == null)
 					rp = DMSMessagePriority.OTHER_SYSTEM;
 				setCurrentMessage(ms.getValue(),
-					beacon.getInteger(), rp, d);
+						beacon.getInteger(), rp, d);
 			} else {
 				logError("INVALID STATUS");
 				setErrorStatus(status.toString());
@@ -164,8 +165,8 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Set the current message on the sign */
-	private void setCurrentMessage(String multi, int be,
-		DMSMessagePriority p, Integer duration)
+	protected void setCurrentMessage(String multi, int be,
+									 DMSMessagePriority p, Integer duration)
 	{
 		SignMsgSource src = DMSMessagePriority.isScheduled(p)
 		                  ? SignMsgSource.schedule
@@ -175,7 +176,7 @@ public class OpQueryDMSMessage extends OpDMS {
 	}
 
 	/** Set the current message on the sign */
-	private void setCurrentMessage(SignMessage sm) {
+	protected void setCurrentMessage(SignMessage sm) {
 		if (sm != null)
 			dms.setMessageCurrent(sm, null);
 		else

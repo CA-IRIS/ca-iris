@@ -112,12 +112,16 @@ public class OpSendLCSIndications extends OpLCS {
 	 * SONAR task processor thread, which might have a queue of tasks
 	 * already pending. */
 	private SignMessage createSignMessage(DMSImpl dms, String ms, int ind) {
-		DMSMessagePriority ap = getActivationPriority(ind);
+		DMSMessagePriority ap;
 		MultiString multi = new MultiString(ms);
-		if (multi.isBlank())
+		if (multi.isBlank()) {
+			ap = OVERRIDE;
 			return dms.createMsgBlank(ap);
-		else
-			return dms.createMsg(ms, false, ap, OPERATOR, lcs,null);
+		}
+		else {
+			ap = OPERATOR;
+			return dms.createMsg(ms, false, ap, OPERATOR, lcs, null);
+		}
 	}
 
 	/** Create a MULTI string for a lane use indication */

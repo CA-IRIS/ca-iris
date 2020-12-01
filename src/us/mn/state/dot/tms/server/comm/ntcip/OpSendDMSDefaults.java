@@ -24,6 +24,7 @@ import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.ControllerException;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.*;
+import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsColorScheme;
 import static us.mn.state.dot.tms.server.comm.ntcip.mib1203.MIB1203.*;
 import us.mn.state.dot.tms.server.comm.ntcip.mibledstar.*;
 import static us.mn.state.dot.tms.server.comm.ntcip.mibledstar.MIB.*;
@@ -144,13 +145,40 @@ public class OpSendDMSDefaults extends OpDMS {
 		/** Set the message defaults */
 		@SuppressWarnings("unchecked")
 		protected Phase poll(CommMessage mess) throws IOException {
+			Integer scheme = dms.getColorScheme();
+			if (scheme == null) {
+				logError("Attempted to set default foreground and background but sign color scheme was unknown. " +
+						"If this is not an error, attempt to Query Configuration, then Send Settings again.");
+				return new LedstarDefaults();
+			}
+			byte[] defaultBG;
+			byte[] defaultFG;
+			switch (scheme) {
+				case 1:
+					defaultBG = new byte[] {0};
+					defaultFG = new byte[] {1};
+					break;
+				case 4:
+					defaultBG = new byte[] { 0, 0, 0 };
+					defaultFG = new byte[] { (byte) AMBER.red,
+							(byte) AMBER.green, (byte) AMBER.blue };
+					break;
+				default:
+					defaultBG = null;
+					defaultFG = null;
+					break;
+			}
+			if (defaultBG == null || defaultFG == null) {
+				logError("Attempted to set default foreground and background but sign color scheme is not yet" +
+						"implemented or recognized.");
+				return new LedstarDefaults();
+			}
 			ASN1OctetString background = new ASN1OctetString(
 				defaultBackgroundRGB.node);
 			ASN1OctetString foreground = new ASN1OctetString(
 				defaultForegroundRGB.node);
-			background.setOctetString(new byte[] { 0, 0, 0 });
-			foreground.setOctetString(new byte[] { (byte) AMBER.red,
-				(byte) AMBER.green, (byte) AMBER.blue });
+			background.setOctetString(defaultBG);
+			foreground.setOctetString(defaultFG);
 			mess.add(background);
 			mess.add(foreground);
 			logStore(background);

@@ -18,13 +18,18 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import us.mn.state.dot.sched.DebugLog;
+import us.mn.state.dot.tms.DMS;
+import us.mn.state.dot.tms.DMSHelper;
 import us.mn.state.dot.tms.Graphic;
 import us.mn.state.dot.tms.GraphicHelper;
+import us.mn.state.dot.tms.InvalidMessageException;
+import us.mn.state.dot.tms.LCSIndication;
 import us.mn.state.dot.tms.LaneUseIndication;
 import us.mn.state.dot.tms.LaneUseMulti;
 import us.mn.state.dot.tms.LaneUseMultiHelper;
 import us.mn.state.dot.tms.QuickMessage;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.DeviceImpl;
 import us.mn.state.dot.tms.server.comm.OpDevice;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -69,13 +74,40 @@ abstract public class OpNtcip extends OpDevice {
 	}
 
 	/** Find a lane-use MULTI which matches a MULTI string */
-	static private LaneUseMulti findLaneUseMulti(String multi) {
+	protected static LaneUseMulti findLaneUseMulti(String multi) {
 		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
 		while (it.hasNext()) {
 			LaneUseMulti lum = it.next();
 			QuickMessage qm = lum.getQuickMessage();
 			if (qm != null && match(qm, multi))
 				return lum;
+		}
+		return null;
+	}
+
+	/** Find a lane-use MULTI which matches a MULTI string on a specific DMS */
+	protected LaneUseMulti findDmsLaneUseMulti(String multi) {
+		try {
+			Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+			DMS dms = (DMS) device;
+			LaneUseIndication[] luis = DMSHelper.lookupIndications(dms);
+			while (it.hasNext()) {
+				LaneUseMulti lum = it.next();
+				for (LaneUseIndication lui : luis) {
+					if (lui.ordinal() == lum.getIndication()) {
+						QuickMessage qm = lum.getQuickMessage();
+						if (qm == null)
+							throw new InvalidMessageException("Invalid Quick Message");
+						else {
+							String lumMulti = qm.getMulti();
+							if (lumMulti.equals(multi))
+								return lum;
+						}
+					}
+				}
+			}
+		} catch (InvalidMessageException e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

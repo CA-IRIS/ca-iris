@@ -14,6 +14,7 @@
  */
 package us.mn.state.dot.tms.client.schedule;
 
+import java.lang.reflect.Proxy;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+
 import us.mn.state.dot.sonar.client.TypeCache;
 import us.mn.state.dot.tms.ActionPlan;
 import us.mn.state.dot.tms.Beacon;
@@ -38,15 +40,17 @@ import us.mn.state.dot.tms.LaneMarking;
 import us.mn.state.dot.tms.MeterAction;
 import us.mn.state.dot.tms.MeterActionHelper;
 import us.mn.state.dot.tms.PlanPhase;
-import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.RampMeter;
+import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.client.Session;
-import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxySelectionModel;
+import us.mn.state.dot.tms.client.proxy.ProxySelectionListener;
 import us.mn.state.dot.tms.client.proxy.ProxyView;
 import us.mn.state.dot.tms.client.proxy.ProxyWatcher;
 import us.mn.state.dot.tms.client.widget.IPanel;
 import us.mn.state.dot.tms.utils.I18N;
+
+import static us.mn.state.dot.tms.client.widget.SwingRunner.runSwing;
 
 /**
  * A plan dispatcher is a GUI panel for dispatching action plans
@@ -73,6 +77,12 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 	/** Meter count component */
 	private final JLabel meter_lbl = createValueLabel();
 
+	/** Plan status component */
+	private final JLabel plan_lbl = createValueLabel();
+
+	/** Status time component */
+	private final JLabel time_lbl = createValueLabel();
+
 	/** Plan phase combo box */
 	private final JComboBox<PlanPhase> phase_cbx =
 		new JComboBox<PlanPhase>();
@@ -98,12 +108,15 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 	/** Proxy watcher */
 	private final ProxyWatcher<ActionPlan> watcher;
 
+	/** Cache of Action Plan proxy objects */
+	private final TypeCache<ActionPlan> cache;
+
 	/** Create a new plan dispatcher */
 	public PlanDispatcher(Session s, PlanManager m) {
 		session = s;
 		manager = m;
 		sel_model = manager.getSelectionModel();
-		TypeCache<ActionPlan> cache =s.getSonarState().getActionPlans();
+		cache =s.getSonarState().getActionPlans();
 		watcher = new ProxyWatcher<ActionPlan>(cache, this, true);
 	}
 
@@ -113,19 +126,23 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		super.initialize();
 		setTitle(I18N.get("action.plan.selected"));
 		add("action.plan.name");
-		add(name_lbl, Stretch.LAST);
+		add(name_lbl, Stretch.LEFT);
 		add("device.description");
-		add(description_lbl, Stretch.LAST);
+		add(description_lbl, Stretch.LEFT);
 		add("dms");
-		add(dms_lbl, Stretch.LAST);
+		add(dms_lbl, Stretch.LEFT);
 		add("beacons");
-		add(beacon_lbl, Stretch.LAST);
+		add(beacon_lbl, Stretch.LEFT);
 		add("lane_marking.title");
-		add(lane_lbl, Stretch.LAST);
+		add(lane_lbl, Stretch.LEFT);
 		add("ramp_meter.title");
-		add(meter_lbl, Stretch.LAST);
+		add(meter_lbl, Stretch.LEFT);
+		add("action.plan.status");
+		add(plan_lbl, Stretch.LEFT);
+		add("action.plan.status.updated");
+		add(time_lbl, Stretch.LEFT);
 		add("action.plan.phase");
-		add(phase_cbx, Stretch.LAST);
+		add(phase_cbx, Stretch.LEFT);
 		watcher.initialize();
 		clear();
 		sel_model.addProxySelectionListener(sel_listener);
@@ -162,6 +179,13 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 			beacon_lbl.setText(Integer.toString(countBeacons(ap)));
 			lane_lbl.setText(Integer.toString(countLanes(ap)));
 			meter_lbl.setText(Integer.toString(countMeters(ap)));
+			description_lbl.setText(ap.getDescription());
+		}
+		if (a == null || a.equals("planStatus")) {
+			plan_lbl.setText(ap.getPlanStatus());
+		}
+		if (a == null || a.equals("planStatusTimestamp")) {
+			time_lbl.setText(ap.getPlanStatusTimestamp());
 		}
 		if (a == null || a.equals("phase")) {
 			phase_cbx.setAction(null);
@@ -317,6 +341,8 @@ public class PlanDispatcher extends IPanel implements ProxyView<ActionPlan> {
 		lane_lbl.setText("");
 		meter_lbl.setText("");
 		phase_cbx.setAction(null);
+		plan_lbl.setText("");
+		time_lbl.setText("");
 		phase_cbx.setModel(new DefaultComboBoxModel<PlanPhase>());
 		phase_cbx.setSelectedItem(null);
 		phase_cbx.setEnabled(false);

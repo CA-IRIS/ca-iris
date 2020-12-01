@@ -61,4 +61,11 @@ public interface ActionPlan extends SonarObject {
 
 	/** Get the phase */
 	PlanPhase getPhase();
+
+	/** Get the sign plan status. */
+    String getPlanStatus();
+
+    /** Get the plan status timestamp */
+    String getPlanStatusTimestamp();
+
 }

@@ -15,9 +15,10 @@
 package us.mn.state.dot.tms.server;
 
 import java.sql.ResultSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import us.mn.state.dot.sched.DebugLog;
 import us.mn.state.dot.sched.TimeSteward;
 import us.mn.state.dot.sonar.Namespace;
 import us.mn.state.dot.tms.ActionPlan;
@@ -40,12 +41,17 @@ import us.mn.state.dot.tms.RampMeter;
 import us.mn.state.dot.tms.SignGroup;
 import us.mn.state.dot.tms.TMSException;
 
+import javax.swing.*;
+
 /**
  * An action plan is a set of actions which can be deployed together.
  *
  * @author Douglas Lau
  */
 public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
+
+	/** Action Plan debug log */
+	static private final DebugLog PLAN_LOG = new DebugLog("plan");
 
 	/** Load all the action plans */
 	static protected void loadAll() throws TMSException {
@@ -394,4 +400,154 @@ public class ActionPlanImpl extends BaseObjectImpl implements ActionPlan {
 		long elapsed = TimeSteward.currentTimeMillis() - phase_time;
 		return (int)(elapsed / 1000);
 	}
+
+	/** Log an Action Plan message */
+	private void logPlan(String msg) {
+		if (PLAN_LOG.isOpen())
+			PLAN_LOG.log(getName() + ": " + msg);
+	}
+
+	/** Sign plan status */
+	private String planStatus = "";
+
+	/** Get the sign plan status */
+	@Override
+	public String getPlanStatus() {
+		return planStatus;
+	}
+
+	public void setPlanStatus(String s) throws TMSException {
+		if (s == null)
+			return;
+		planStatus = s;
+		notifyAttribute("planStatus");
+		setPlanStatusTimestamp();
+		notifyAttribute("planStatusTimestamp");
+	}
+
+	/**
+	 * Check the status of current plan.
+	 * @param p - Current plan phase
+	 * @throws ChangeVetoException
+	 */
+	public String checkPlanStatus(PlanPhase p) throws ChangeVetoException {
+		String status = "";
+		String logTime = getCurrentDate();
+		if (!getActive()) {
+			logPlan(logTime + ": Plan not active");
+			return "Inactive";
+		}
+		Iterator<DmsAction> it = DmsActionHelper.iterator();
+		while (it.hasNext()) {
+			DmsAction da = it.next();
+			ActionPlan ap = da.getActionPlan();
+			if (ap != this)
+				continue;
+			if (da.getPhase() != p)
+				continue;
+			status = checkDmsStatus(da, status, logTime);
+		}
+		status = checkPhaseCms(p, status);
+		setPlanStatusTimestamp();
+		return status.equals("") ? "Active" : status;
+	}
+
+	/**
+	 * Check if DMS is online and not failed
+	 * @param da Current DMS Action
+	 * @param status Current plan status
+	 * @param logTime Log Time from Plan Status check
+	 * @return Passed status or DMS offline or DMS failed
+	 * @throws ChangeVetoException
+	 */
+	private String checkDmsStatus(DmsAction da, String status, String logTime) throws ChangeVetoException {
+		SignGroup sg = da.getSignGroup();
+		Iterator<DmsSignGroup> dsgIt = DmsSignGroupHelper.iterator();
+		String log = logTime;
+		while (dsgIt.hasNext()) {
+			DmsSignGroup dsg = dsgIt.next();
+			if (dsg.getSignGroup() != sg)
+				continue;
+			DMS dms = dsg.getDms();
+			if (!(dms instanceof DMSImpl)) {
+				throw new ChangeVetoException("DMS instance " +
+						da.getName() + " not an instance of DMSImpl");
+			}
+			if (!((DMSImpl) dms).isOnline()) {
+				status = dms.getName() + ": Controller condition is inactive or failed";
+				log = log + ": Plan: " + da.getActionPlan() +
+						", DMS: " + dms.getName() + " controller condition is inactive or failed";
+				break;
+			}
+			if (((DMSImpl) dms).isFailed()) {
+				status = dms.getName() + ": Controller failed";
+				log = log + ": Plan: " + da.getActionPlan() +
+						", DMS: "+ dms.getName() + " controller failed";
+				break;
+			}
+			status = checkDmsMessage(da, dms, status, logTime);
+		}
+		logPlan(log);
+		return status;
+	}
+
+	/**
+	 * Check poll DMS message against deployed DMS message
+	 * @param da Current DMS Action
+	 * @param dms Current DMS
+	 * @param status Current DMS status
+	 * @param logTime Log Time from Plan Status check
+	 * @return Passed status or DMS message error
+	 */
+	private String checkDmsMessage(DmsAction da, DMS dms, String status, String logTime) {
+		String pollMsg = dms.getMessageCurrent().getMulti();
+		String deployedMsg = da.getQuickMessage().getMulti();
+		if (!Objects.equals(pollMsg, deployedMsg)) {
+			logPlan(logTime + ": Polled msg: \"" + pollMsg +
+					"\" does not match selected Phase msg \"" + deployedMsg + "\"");
+			return dms.getName() + ": Poll msg does not match selected Phase msg";
+		}
+		return status;
+	}
+
+	/**
+	 * Check if phase contains any CMS
+	 * @param p Current plan phase
+	 * @param status Current plan status
+	 * @return Passed status or warning no devices in phase
+	 */
+	private String checkPhaseCms(PlanPhase p, String status) {
+		Iterator<DmsAction> it = DmsActionHelper.iterator();
+		int cms = 0;
+		while (it.hasNext()) {
+			DmsAction da = it.next();
+			if (da.getActionPlan() == this && da.getPhase() == p)
+				cms++;
+		}
+		if (status.equals("") && cms == 0)
+			status = "Active: No Plan devices are configured for this Phase";
+		return status;
+	}
+
+	/** Timestamp of Plan Status check */
+	private String planStatusTimestamp;
+
+	/** Set the plan status timestamp */
+	private void setPlanStatusTimestamp() {
+		planStatusTimestamp = getCurrentDate();
+	}
+
+	/** Gets the plan status timestamp.
+	 * @return String plan status timestamp
+	 */
+	@Override
+	public String getPlanStatusTimestamp() { return planStatusTimestamp; }
+
+	/** Get the current date/time */
+	private String getCurrentDate() {
+		Date date = new Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+		return formatter.format(date);
+	}
+
 }

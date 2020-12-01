@@ -20,28 +20,13 @@ import java.util.Iterator;
 import java.util.Map;
 import us.mn.state.dot.sched.Job;
 import us.mn.state.dot.sched.TimeSteward;
-import us.mn.state.dot.tms.ActionPlan;
-import us.mn.state.dot.tms.ActionPlanHelper;
-import us.mn.state.dot.tms.Beacon;
-import us.mn.state.dot.tms.BeaconAction;
-import us.mn.state.dot.tms.BeaconActionHelper;
-import us.mn.state.dot.tms.DMS;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.DmsAction;
-import us.mn.state.dot.tms.DmsActionHelper;
-import us.mn.state.dot.tms.DmsSignGroup;
-import us.mn.state.dot.tms.DmsSignGroupHelper;
-import us.mn.state.dot.tms.LaneAction;
-import us.mn.state.dot.tms.LaneActionHelper;
-import us.mn.state.dot.tms.LaneMarking;
-import us.mn.state.dot.tms.MeterAction;
-import us.mn.state.dot.tms.MeterActionHelper;
-import us.mn.state.dot.tms.PlanPhase;
-import us.mn.state.dot.tms.RampMeter;
-import us.mn.state.dot.tms.SignGroup;
-import us.mn.state.dot.tms.TimeAction;
-import us.mn.state.dot.tms.TimeActionHelper;
-import us.mn.state.dot.tms.TMSException;
+import us.mn.state.dot.tms.*;
+import us.mn.state.dot.tms.client.proxy.TeslaAction;
+import us.mn.state.dot.tms.server.comm.DMSPoller;
+import us.mn.state.dot.tms.server.comm.DevicePoller;
+import us.mn.state.dot.tms.server.comm.ntcip.*;
+
+import static us.mn.state.dot.tms.R_Node.MAX_LANES;
 
 /**
  * Job to update action plans
@@ -71,6 +56,7 @@ public class ActionPlanJob extends Job {
 		performBeaconActions();
 		performLaneActions();
 		performMeterActions();
+		updatePlanStatus();
 	}
 
 	/** Update the action plan phases */
@@ -81,6 +67,19 @@ public class ActionPlanJob extends Job {
 			if(ap instanceof ActionPlanImpl) {
 				ActionPlanImpl api = (ActionPlanImpl)ap;
 				api.updatePhase();
+			}
+		}
+	}
+
+	/** Update the action plan status */
+	private void updatePlanStatus() throws TMSException {
+		Iterator<ActionPlan> it = ActionPlanHelper.iterator();
+		while(it.hasNext()) {
+			ActionPlan ap = it.next();
+			if(ap instanceof ActionPlanImpl) {
+				ActionPlanImpl api = (ActionPlanImpl)ap;
+				String s = api.checkPlanStatus(api.getPhase());
+				api.setPlanStatus(s);
 			}
 		}
 	}
@@ -119,12 +118,26 @@ public class ActionPlanJob extends Job {
 		while(it.hasNext()) {
 			DmsSignGroup dsg = it.next();
 			if(dsg.getSignGroup() == sg) {
-				DMS dms = dsg.getDms();
-				if(dms instanceof DMSImpl) {
-					DMSImpl dmsi = (DMSImpl)dms;
+				DMS dms1 = dsg.getDms();
+				if(LCSArrayHelper.lookupDmsInLcs(dms1) != null) {
+					performLcsAction((DMSImpl) dms1, da);
+					break;
+				} else if(dms1 instanceof DMSImpl) {
+					DMSImpl dmsi = (DMSImpl) dms1;
 					dmsi.performAction(da);
 				}
 			}
+		}
+	}
+
+	/** Deploy DMSAction if valid Lane-Use MULTI exists */
+	private void performLcsAction(DMSImpl dmsi, DmsAction da) {
+		QuickMessage q = da.getQuickMessage();
+		Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
+		while(it.hasNext()) {
+			QuickMessage laneQm = it.next().getQuickMessage();
+			if (q == laneQm)
+				dmsi.performAction(da);
 		}
 	}
 

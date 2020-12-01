@@ -18,6 +18,8 @@ package us.mn.state.dot.tms;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
+
 import us.mn.state.dot.tms.utils.MultiString;
 import us.mn.state.dot.tms.utils.SString;
 
@@ -374,6 +376,21 @@ public class DMSHelper extends BaseHelper {
 			// the proxy has just been removed
 			return false;
 		}
+	}
+
+	/** Lookup the lane-use indications for a DMS */
+	static public LaneUseIndication[] lookupIndications(DMS dms) {
+		TreeSet<LaneUseIndication> indications =
+				new TreeSet<LaneUseIndication>();
+		Iterator<LCSIndication> it = LCSIndicationHelper.iterator();
+		while(it.hasNext()) {
+			LCSIndication li = it.next();
+			if(li.getLcs().getName().equals(dms.getName())) {
+				indications.add(LaneUseIndication.fromOrdinal(
+						li.getIndication()));
+			}
+		}
+		return indications.toArray(new LaneUseIndication[indications.size()]);
 	}
 
 	/** Get an unsorted list of all dms */

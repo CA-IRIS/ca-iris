@@ -15,6 +15,7 @@
 package us.mn.state.dot.tms.client.schedule;
 
 import java.awt.BorderLayout;
+
 import us.mn.state.dot.tms.ActionPlan;
 import us.mn.state.dot.tms.client.MapTab;
 import us.mn.state.dot.tms.client.Session;

@@ -15,6 +15,9 @@
 package us.mn.state.dot.tms.server.comm.ntcip;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
 import us.mn.state.dot.tms.server.comm.PriorityLevel;
@@ -232,6 +235,7 @@ public class OpQueryDMSConfiguration extends OpDMS {
 				logQuery(tags);
 				logQuery(pages);
 				logQuery(m_len);
+				dms.setColorScheme(color_scheme.getEnum().ordinal());
 			}
 			catch (NoSuchName e) {
 				// Sign supports 1203v1 only
@@ -242,7 +246,7 @@ public class OpQueryDMSConfiguration extends OpDMS {
 	}
 
 	/** Phase to query graphics objects */
-	private class QueryGraphics extends Phase {
+	protected class QueryGraphics extends Phase {
 
 		/** Query graphics objects */
 		@SuppressWarnings("unchecked")
@@ -253,8 +257,8 @@ public class OpQueryDMSConfiguration extends OpDMS {
 			try {
 				mess.queryProps();
 			}
-			catch (NoSuchName e) {
-				logError("no graphics support");
+			catch (Exception e) {					  // Made exception generic for Caltrans AVMS
+				logError("no graphics support"); // software (returns int instead of counter)
 				return null;
 			}
 			logQuery(num_graphics);

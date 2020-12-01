@@ -19,15 +19,12 @@ package us.mn.state.dot.tms.server.comm.dmsxml;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
 import us.mn.state.dot.sonar.User;
-import us.mn.state.dot.tms.BitmapGraphic;
-import us.mn.state.dot.tms.DeviceRequest;
-import us.mn.state.dot.tms.DMSHelper;
-import us.mn.state.dot.tms.DMSMessagePriority;
-import us.mn.state.dot.tms.EventType;
-import us.mn.state.dot.tms.IrisUserHelper;
+import us.mn.state.dot.tms.*;
+
 import static us.mn.state.dot.tms.SignMsgSource.external;
-import us.mn.state.dot.tms.SystemAttrEnum;
+
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.SignMessageImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
