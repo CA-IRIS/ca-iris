@@ -4,14 +4,8 @@
 
 SET SESSION AUTHORIZATION 'tms';
 
---INSERT INTO iris.system_attribute (name, value) VALUES ('dms_querymsg_after_send_new_msg', false);
-
 UPDATE iris.system_attribute
-<<<<<<< HEAD
-    SET value = regexp_replace(value, '10\.5\.\d+.*\s+\[', '10.5 [')
-=======
     SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.5 [')
->>>>>>> 32aa11b4ada6b3406a76974835ed7d927e8a19ed
     WHERE NAME = 'window_title';
 
 -- CAIRISINT48/TT623
@@ -77,8 +71,8 @@ UPDATE iris.dms_action
 INSERT INTO iris.lane_use_indication ("id", description) VALUES (15, 'Trucks');
 INSERT INTO iris.lane_use_indication ("id", description) VALUES (16, 'Vehicles');
 
+
 -- 10.5: Make msg_num in Lane Use Multi NOT UNQIUE
-<<<<<<< HEAD
 DROP INDEX iris.lane_use_multi_msg_num_idx;
 
 
@@ -87,25 +81,14 @@ ALTER TABLE iris._dms ADD COLUMN plan_controlled BOOLEAN;
 
 
 -- 10.5: Alter DMS View to include plan_controlled
-=======
-DROP INDEX IF EXISTS iris.lane_use_multi_msg_num_idx;
-
-
--- 10.5: Alter DMS View to include plan_controlled
-ALTER TABLE iris._dms ADD COLUMN plan_controlled BOOLEAN;
-
->>>>>>> 32aa11b4ada6b3406a76974835ed7d927e8a19ed
 CREATE OR REPLACE VIEW iris.dms AS
 	SELECT dms.name, geo_loc, controller, pin, notes, beacon, preset,
 	       aws_allowed, aws_controlled, default_font, plan_controlled
 	FROM iris._dms dms
 	JOIN iris._device_io d ON dms.name = d.name
 	JOIN iris._device_preset p ON dms.name = p.name;
-<<<<<<< HEAD
-
-=======
 GRANT SELECT ON dms_view TO PUBLIC;
->>>>>>> 32aa11b4ada6b3406a76974835ed7d927e8a19ed
+
 
 -- 10.5: DROP and CREATE FUNCTION insert() for DMS to include plan_controlled
 CREATE OR REPLACE FUNCTION iris.dms_insert() RETURNS TRIGGER AS
@@ -159,9 +142,6 @@ DROP TRIGGER dms_update_trig on iris.dms;
 
 CREATE TRIGGER dms_update_trig
     INSTEAD OF UPDATE ON iris.dms
-<<<<<<< HEAD
-    FOR EACH ROW EXECUTE PROCEDURE iris.dms_update();
-=======
     FOR EACH ROW EXECUTE PROCEDURE iris.dms_update();
 
 -- 10.5: DROP and CREATE FUNCTION delete() for DMS
@@ -197,4 +177,3 @@ CREATE OR REPLACE VIEW dms_view AS
 	LEFT JOIN iris.camera_preset p ON d.preset = p.name
 	LEFT JOIN iris.geo_loc l ON d.geo_loc = l.name;
 GRANT SELECT ON dms_view TO PUBLIC;
->>>>>>> 32aa11b4ada6b3406a76974835ed7d927e8a19ed
