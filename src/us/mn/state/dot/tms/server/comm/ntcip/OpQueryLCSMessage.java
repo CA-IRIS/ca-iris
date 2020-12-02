@@ -140,7 +140,7 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
                     return null;
                 }
             }
-        } catch (Exception e) {
+        } catch (InvalidMessageException exception) {
             logError("INVALID LANE USE MULTI");
         }
         return new QueryCurrentMsgPrior();
