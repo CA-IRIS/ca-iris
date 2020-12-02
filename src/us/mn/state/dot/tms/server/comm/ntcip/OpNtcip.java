@@ -86,8 +86,7 @@ abstract public class OpNtcip extends OpDevice {
 	}
 
 	/** Find a lane-use MULTI which matches a MULTI string on a specific DMS */
-	protected LaneUseMulti findDmsLaneUseMulti(String multi) {
-		try {
+	protected LaneUseMulti findDmsLaneUseMulti(String multi) throws InvalidMessageException {
 			Iterator<LaneUseMulti> it = LaneUseMultiHelper.iterator();
 			DMS dms = (DMS) device;
 			LaneUseIndication[] luis = DMSHelper.lookupIndications(dms);
@@ -106,9 +105,6 @@ abstract public class OpNtcip extends OpDevice {
 					}
 				}
 			}
-		} catch (InvalidMessageException e) {
-			e.printStackTrace();
-		}
 		return null;
 	}
 

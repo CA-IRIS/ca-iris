@@ -3,8 +3,10 @@ package us.mn.state.dot.tms.server.comm.ntcip;
 import us.mn.state.dot.tms.DMSMessagePriority;
 import us.mn.state.dot.tms.InvalidMessageException;
 import us.mn.state.dot.tms.SignMessage;
+import us.mn.state.dot.tms.TMSException;
 import us.mn.state.dot.tms.server.DMSImpl;
 import us.mn.state.dot.tms.server.comm.CommMessage;
+import us.mn.state.dot.tms.server.comm.ControllerException;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageMemoryType;
 import us.mn.state.dot.tms.server.comm.ntcip.mib1203.DmsMessageStatus;
 import us.mn.state.dot.tms.server.comm.snmp.ASN1Enum;
@@ -128,14 +130,18 @@ public class OpQueryLCSMessage extends OpQueryDMSMessage {
 
     @Override
     protected Phase processMessageValid() throws IOException {
-        if (source.getMemoryType() == DmsMessageMemoryType.permanent
-                && !dms.isMsgBlank()) {
-            SignMessage sm = dms.getMessageCurrent();
-            int msg_num = findDmsLaneUseMulti(sm.getMulti()).getMsgNum();
-            if (source.getNumber() == msg_num) {
-                setCurrentMessage(sm);
-                return null;
+        try {
+            if (source.getMemoryType() == DmsMessageMemoryType.permanent
+                    && !dms.isMsgBlank()) {
+                SignMessage sm = dms.getMessageCurrent();
+                int msg_num = findDmsLaneUseMulti(sm.getMulti()).getMsgNum();
+                if (source.getNumber() == msg_num) {
+                    setCurrentMessage(sm);
+                    return null;
+                }
             }
+        } catch (Exception e) {
+            logError("INVALID LANE USE MULTI");
         }
         return new QueryCurrentMsgPrior();
     }
