@@ -926,6 +926,10 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 		if (io instanceof DMSImpl) {
 			DMSImpl dms = (DMSImpl) io;
 			if (dms.isPeriodicallyQueriable()) {
+				// Caltrans districts use the CommLink poll period to QUERY_STATUS
+				// at the same interval as the poll for QUERY_MESSAGE.
+				//
+				// See corresponding change to MainServer's scheduleTimerJobs.
 				dms.sendDeviceRequest(QUERY_STATUS);
 				dms.sendDeviceRequest(QUERY_MESSAGE);
 			}
