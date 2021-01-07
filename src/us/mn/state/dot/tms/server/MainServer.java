@@ -198,7 +198,19 @@ public class MainServer {
 	/** Schedule jobs on TIMER thread */
 	static private void scheduleTimerJobs() {
 		TIMER.addJob(new LcsQueryMsgJob(TIMER));
-		TIMER.addJob(new DmsQueryStatusJob());
+		// Caltrans districts use the CommLink poll period to QUERY_STATUS
+		// at the same interval as the poll for QUERY_MESSAGE
+		// rather than using a fixed, system-wide rate.
+		//
+		// This was changed to accommodate NTCIP sites which have
+		// cellular modems in the network path from IRIS to the sign but
+		// appear to be IP-based from the perspective of IRIS. As part
+		// of TT 289 (ability to specify all CMS configuration via IRIS client),
+		// the cmsconfig.xml field "ConnectionType" could be moved to
+		// the IRIS CommLink/Controller, and these sites could make
+		// use of the DmsQueryDialupJob's logic.
+		//
+		// TIMER.addJob(new DmsQueryStatusJob());
 		TIMER.addJob(new DmsQueryDialupJob());
 		TIMER.addJob(new MeteringJob(FLUSH));
 		TIMER.addJob(new MeterQueryJob());

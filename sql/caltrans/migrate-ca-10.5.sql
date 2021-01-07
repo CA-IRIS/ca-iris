@@ -8,6 +8,10 @@ UPDATE iris.system_attribute
     SET value = regexp_replace(value, '10\.4\.\d+.*\s+\[', '10.5 [')
     WHERE NAME = 'window_title';
 
+
+INSERT INTO iris.system_attribute (name, value) VALUES ('dms_querymsg_after_send_new_msg', false);
+
+
 -- CAIRISINT48/TT623
 
 -- update sign_message table

@@ -925,8 +925,10 @@ public class ControllerImpl extends BaseObjectImpl implements Controller {
 	private void pollDevice(ControllerIO io) {
 		if (io instanceof DMSImpl) {
 			DMSImpl dms = (DMSImpl) io;
-			if (dms.isPeriodicallyQueriable())
+			if (dms.isPeriodicallyQueriable()) {
+				dms.sendDeviceRequest(QUERY_STATUS);
 				dms.sendDeviceRequest(QUERY_MESSAGE);
+			}
 			// FIXME: perform DMS actions with feed tags now
 		}
 		if (io instanceof GateArmImpl) {
