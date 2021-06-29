@@ -880,15 +880,16 @@ CREATE TABLE iris._dms (
 	beacon VARCHAR(10) REFERENCES iris._beacon,
 	aws_allowed BOOLEAN NOT NULL,
 	aws_controlled BOOLEAN NOT NULL,
-	default_font VARCHAR(16) REFERENCES iris.font
+	default_font VARCHAR(16) REFERENCES iris.font,
+	plan_controlled BOOLEAN
 );
 
 ALTER TABLE iris._dms ADD CONSTRAINT _dms_fkey
 	FOREIGN KEY (name) REFERENCES iris._device_io(name) ON DELETE CASCADE;
 
 CREATE VIEW iris.dms AS
-	SELECT d.name, geo_loc, controller, pin, notes, beacon, preset,
-	       aws_allowed, aws_controlled, default_font
+	SELECT dms.name, geo_loc, controller, pin, notes, beacon, preset,
+	       aws_allowed, aws_controlled, default_font, plan_controlled
 	FROM iris._dms dms
 	JOIN iris._device_io d ON dms.name = d.name
 	JOIN iris._device_preset p ON dms.name = p.name;
@@ -901,9 +902,10 @@ BEGIN
 	INSERT INTO iris._device_preset (name, preset)
 	     VALUES (NEW.name, NEW.preset);
 	INSERT INTO iris._dms (name, geo_loc, notes, beacon, aws_allowed,
-	                       aws_controlled, default_font)
+	                       aws_controlled, default_font, plan_controlled)
 	     VALUES (NEW.name, NEW.geo_loc, NEW.notes, NEW.beacon,
-	             NEW.aws_allowed, NEW.aws_controlled, NEW.default_font);
+	             NEW.aws_allowed, NEW.aws_controlled, NEW.default_font,
+	             NEW.plan_controlled);
 	RETURN NEW;
 END;
 $dms_insert$ LANGUAGE plpgsql;
@@ -928,7 +930,8 @@ BEGIN
 	       beacon = NEW.beacon,
 	       aws_allowed = NEW.aws_allowed,
 	       aws_controlled = NEW.aws_controlled,
-	       default_font = NEW.default_font
+	       default_font = NEW.default_font,
+	       plan_controlled = NEW.plan_controlled
 	 WHERE name = OLD.name;
 	RETURN NEW;
 END;
@@ -1443,8 +1446,8 @@ CREATE TABLE iris.lane_use_multi (
 CREATE UNIQUE INDEX lane_use_multi_indication_idx ON iris.lane_use_multi
 	USING btree (indication, width, height);
 
-CREATE UNIQUE INDEX lane_use_multi_msg_num_idx ON iris.lane_use_multi
-	USING btree (msg_num, width, height);
+--CREATE UNIQUE INDEX lane_use_multi_msg_num_idx ON iris.lane_use_multi
+--	USING btree (msg_num, width, height);
 
 CREATE TABLE iris.plan_phase (
 	name VARCHAR(12) PRIMARY KEY,
@@ -1929,13 +1932,12 @@ GRANT SELECT ON controller_loc_view TO PUBLIC;
 CREATE VIEW dms_view AS
 	SELECT d.name, d.geo_loc, d.controller, d.pin, d.notes, d.beacon,
 	       p.camera, p.preset_num, d.aws_allowed, d.aws_controlled,
-	       d.default_font,
+	       d.default_font, d.plan_controlled,
 	       l.roadway, l.road_dir, l.cross_mod, l.cross_street, l.cross_dir,
 	       l.lat, l.lon
 	FROM iris.dms d
 	LEFT JOIN iris.camera_preset p ON d.preset = p.name
-	LEFT JOIN geo_loc_view l ON d.geo_loc = l.name;
-GRANT SELECT ON dms_view TO PUBLIC;
+	LEFT JOIN iris.geo_loc l ON d.geo_loc = l.name;
 
 CREATE VIEW lcs_array_view AS
 	SELECT name, shift, notes, lcs_lock
@@ -2411,6 +2413,8 @@ COPY iris.lane_use_indication (id, description) FROM stdin;
 12	Variable speed limit
 13	Low visibility
 14	HOV / HOT begins
+15	Trucks
+16	Vehicles
 \.
 
 COPY iris.lcs_lock (id, description) FROM stdin;
